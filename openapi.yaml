@@ -1,0 +1,438 @@
+openapi: 3.1.0
+info:
+  title: Sail-event API
+  version: 0.1.0
+  description: API contract for the Sail-event application.
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+
+paths:
+  /api/auth/register:
+    post:
+      operationId: register
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/auth/login:
+    post:
+      operationId: login
+      summary: Authenticate a user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/criteria:
+    get:
+      operationId: getCriteria
+      summary: Get the current user's search criteria
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Criteria'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      operationId: saveCriteria
+      summary: Replace the current user's search criteria
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveCriteriaRequest'
+      responses:
+        '200':
+          description: Criteria saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Criteria'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/thresholds:
+    get:
+      operationId: getThresholds
+      summary: Get the current user's score thresholds
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current thresholds
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Thresholds'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      operationId: saveThresholds
+      summary: Replace the current user's score thresholds
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Thresholds'
+      responses:
+        '200':
+          description: Thresholds saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Thresholds'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/search:
+    post:
+      operationId: runSearch
+      summary: Trigger a search for the current user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Search completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/events:
+    get:
+      operationId: listEvents
+      summary: List the current user's events
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/EventStatus'
+      responses:
+        '200':
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/events/{id}/decision:
+    post:
+      operationId: decideEvent
+      summary: Accept or reject an event
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+      responses:
+        '200':
+          description: Event updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/health:
+    get:
+      operationId: healthCheck
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                properties:
+                  status:
+                    type: string
+
+  /api/search/all:
+    post:
+      operationId: searchAll
+      summary: Trigger search for all users (scheduler)
+      security:
+        - apiKeyAuth: []
+      responses:
+        '200':
+          description: Search completed for all users
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - usersProcessed
+                properties:
+                  usersProcessed:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/calendar/{ics_token}:
+    get:
+      operationId: getCalendarFeed
+      summary: ICS calendar feed for a user
+      security: []
+      parameters:
+        - name: ics_token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Calendar feed
+          content:
+            text/calendar:
+              schema:
+                type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    AuthResponse:
+      type: object
+      required:
+        - token
+        - username
+      properties:
+        token:
+          type: string
+        username:
+          type: string
+
+    Criteria:
+      type: object
+      required:
+        - text
+        - updatedAt
+      properties:
+        text:
+          type: string
+        updatedAt:
+          type: string
+
+    Thresholds:
+      type: object
+      required:
+        - lowerThreshold
+        - upperThreshold
+      properties:
+        lowerThreshold:
+          type: number
+        upperThreshold:
+          type: number
+
+    SearchResult:
+      type: object
+      required:
+        - runId
+        - eventsFound
+        - eventsNew
+      properties:
+        runId:
+          type: string
+        eventsFound:
+          type: integer
+        eventsNew:
+          type: integer
+
+    EventStatus:
+      type: string
+      enum:
+        - new
+        - accepted
+        - rejected
+        - queued
+
+    Event:
+      type: object
+      required:
+        - id
+        - title
+        - dateTime
+        - place
+        - link
+        - description
+        - score
+        - scoreReason
+        - status
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        dateTime:
+          type: string
+        place:
+          type: string
+        link:
+          type: string
+        description:
+          type: string
+        score:
+          type: number
+        scoreReason:
+          type: string
+        status:
+          $ref: '#/components/schemas/EventStatus'
+
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    SaveCriteriaRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+
+    DecisionRequest:
+      type: object
+      required:
+        - decision
+      properties:
+        decision:
+          type: string
+          enum:
+            - accepted
+            - rejected
+
+    Error:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Malformed request body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflict (duplicate username)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
