@@ -91,7 +91,9 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   subagent) → I did the browser walk-through myself (built-in browser): all good → closed.
   S5 COMPLETE (issues 5-8). lesson: QA subagents lack the built-in browser; browser checks are mine.
 - issue #9 S6 ORM + Alembic: DONE. eng 9153884..e14d614 → QA PASS 21/21 (1 gap → #13) → closed.
-- next: issue #10 S6 swap in-memory store for ORM
+- issue #10 S6 store→ORM: DONE. eng 5a66fe3+4090425 → QA PASS 23/23 (4 gaps → #13) → closed.
+- 2026-10-16 ponytail lite ON in my session; its rule added to _docs/team/software-engineer.md (13f0fd3)
+- next: issue #11 S6 search-run pipeline (Run rows, /search/all hardening, new-recovery)
 - toolchain: uv 0.11, python 3.13 (arch says 3.12: PM to pin), node 24, npm 11, docker up
 
 ## Notes
