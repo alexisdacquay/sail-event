@@ -69,6 +69,10 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   team/{pm,software-engineer,qa-engineer}.md — course texts, my review, committed
 - git: origin = github.com/alexisdacquay/sail-event (public). work/ is pushed too (no secrets).
 
+## Phase 2 started 2026-10-16 — orchestrator loop (process.md)
+- issue #1 S4 scaffold: PM grooming (Opus) → my review → engineer → QA → close
+- toolchain: uv 0.11, python 3.13 (arch says 3.12: PM to pin), node 24, npm 11, docker up
+
 ## Notes
 - datasheet-info-collector is a desktop-app session skill (Application Support/Claude/...),
   not removable from here; user manages it in the app's Skills settings.
