@@ -61,9 +61,10 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - S2b architecture.md + tasks.md: draft v1 (28 tasks) → QA: arch PASS w/ defects (openapi
   direction, triage boundary inclusive vs plan's strict, hourly flow single-user, `new` status
   recovery), tasks FAIL (S13 misplaced after S12, task 19 depends on S13, split 5 & 8, merge
-  12/18/25) + mine (no EventBridge trigger task) → 12-point revision in progress → I verify
+  12/18/25) + mine (no EventBridge trigger task) → 12-point revision → I verified (order,
+  merges, arch diff) → DONE 2026-10-16: _docs/architecture.md v2, _docs/tasks.md v2 (28 tasks)
 - S2c GitHub issues: needs public repo → USER DECIDES name/visibility (blocking)
-- S3 AGENTS.md, process.md, task-template.md, team/: after S2b
+- S3 AGENTS.md, process.md, task-template.md, team/: Opus drafting (started while S2c waits)
 - git: branch main, no remote yet, tree clean at 3abcb4a
 
 ## Notes
