@@ -42,8 +42,12 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - 2026-10-16 RUBRIC CHANGED (12 criteria, 24 pts, pass 10; lesson 5 ungraded). recorded in
   work/PHASES.md with plan v2 (S1-S14). UNDERSTANDING.md rubric section is stale: see PHASES.md.
   user: keep the removed-but-good practices; judge 3 sources; less is more.
-  -> PHASES.md v3: practices attached to steps, no new steps; ponytail = install (ask),
-  12-factor = reference, interview-me = skip. awaiting: v3, S13 position, S14, ponytail.
+  -> PHASES.md v3 ADOPTED 2026-10-16. ponytail installed (project scope). 12-factor =
+  work/REFERENCES.md. S13 after S9 (recommended, user to confirm). S14 last, optional.
+
+## PAUSED 2026-10-16 — user sorts git before implementation
+- resume point: S1 (README problem section) then S2 (stack options prompt, METHOD.md step 3)
+- nothing in _docs/ beyond plan.md; no code yet
 
 ## Notes
 - datasheet-info-collector is a desktop-app session skill (Application Support/Claude/...),

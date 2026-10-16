@@ -75,8 +75,23 @@ Mock boundary: S4–S12 run on a fixture provider and a deterministic fake score
 
 Against ponytail: it is a sixth plugin after the five of yesterday. If one must go, drop feature-dev (overlaps with the course's PM/engineer roles).
 
-### Open
+### Decisions 2026-10-16
 
-- S13 position: end (as placed) or after S6
-- S14: do at all
-- install ponytail at project scope: yes / no
+- v3 adopted (user: "Adopt v3, yes.")
+- ponytail installed at project scope (.claude/settings.json). the marketplace entry is
+  user-level by design of the CLI; the plugin is enabled only here. 4 userConfig options
+  unset: `/plugin configure ponytail@ponytail` later.
+- 12-factor-agents is a document, not a plugin: nothing to install. reference recorded
+  in work/REFERENCES.md; read at S12 and S13.
+- S13 (real search + scorer): recommended after S9, before S10. the hourly job, alert on
+  failed/empty run and responder (S11–S12) only mean something against a real provider;
+  against a fixture every incident is staged. against it: keys and quotas enter CI and
+  the deployment before the ops stack exists to watch them. mitigation: key-less mode
+  stays the default in CI.
+- S14 (agent pack): last, only if time remains. 0 points; its practices (skills,
+  subagents) are already in use from S3.
+- user pauses here; sorts git before implementation.
+
+### Order after decisions
+
+S1 S2 S3 | S4 S5 S6 | S7 S8 S9 | S13 | S10 S11 S12 | S14?
