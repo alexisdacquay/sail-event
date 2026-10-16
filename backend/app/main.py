@@ -1,14 +1,28 @@
-"""FastAPI app — wire routers and 422→400 validation handler."""
+"""FastAPI app — wire routers, CORS, and 422→400 validation handler."""
 
 from __future__ import annotations
 
+import os
+
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .routers import auth, calendar, criteria, events, health, search, thresholds
 
 app = FastAPI()
+
+# CORS — origins from env, default to Vite dev server
+_origins_raw = os.environ.get("CORS_ORIGINS", "http://localhost:5173")
+_origins = [o.strip() for o in _origins_raw.split(",") if o.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    allow_credentials=True,
+)
 
 # 422 → 400 for all request validation errors
 @app.exception_handler(RequestValidationError)
