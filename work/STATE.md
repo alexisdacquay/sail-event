@@ -97,7 +97,10 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   recovery, derive_queries, cap) → QA PASS 15/15 live (3 gaps → #13) → closed.
 - issue #12 S6 ICS feed + calendar-url + dashboard copy: DONE. eng ffae95d+edff16d → QA PASS
   21/21 live (3 gaps → #13) → closed.
-- next: issue #13 S6 backend test gap-fill + docs/testing.md (carry-overs from #9-#12)
+- issue #13 S6 test gap-fill + docs/testing.md: DONE. eng ad888e4+509154c (+18 tests; found and
+  fixed: `new` events were decidable; Makefile claim disproved, exit 2) → QA PASS 22/22 → closed.
+  S6 COMPLETE (issues 9-13). tests: 128 backend, 22 frontend.
+- next: issue #14 S7 Dockerfile (one image, backend serves built frontend)
 - toolchain: uv 0.11, python 3.13 (arch says 3.12: PM to pin), node 24, npm 11, docker up
 
 ## Notes

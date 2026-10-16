@@ -45,9 +45,8 @@ def test_get_criteria_fresh_user_returns_empty_text(client, auth_headers):
     assert "updatedAt" in body
 
 
-def test_save_criteria_empty_text_returns_400(client, auth_headers):
-    # Code does not reject empty text — document that and assert 200.
-    # If a validation rule is added later, change this to assert 400.
+def test_save_criteria_empty_text_is_accepted(client, auth_headers):
+    # Empty criteria text is allowed; a register creates it empty.
     h = auth_headers("demo", "demo")
     r = client.put("/api/criteria", json={"text": ""}, headers=h)
     assert r.status_code == 200
