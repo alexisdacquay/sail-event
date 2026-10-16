@@ -7,7 +7,7 @@ import type {
   EventStatus,
 } from './api'
 
-let mockEvents: Event[] = [
+const INITIAL_EVENTS: Event[] = [
   {
     id: 'evt-1',
     title: 'React London Meetup',
@@ -64,6 +64,13 @@ let mockEvents: Event[] = [
     status: 'new',
   },
 ]
+
+let mockEvents: Event[] = INITIAL_EVENTS.map((e) => ({ ...e }))
+
+/** Reset mock events to initial state. Test-only. */
+export function _resetMockEvents() {
+  mockEvents = INITIAL_EVENTS.map((e) => ({ ...e }))
+}
 
 let mockCriteria: Criteria = {
   text: 'sailing regattas in the Mediterranean, July 2026',

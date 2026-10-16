@@ -1,16 +1,14 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { QueuePage } from './QueuePage'
 import * as mock from '@/services/mock'
 import type { Event } from '@/services/api'
 
-// Reset mock data before each test so mutations don't leak
-function resetMockEvents() {
-  // Re-import won't reset module state, so we use decideEvent to restore.
-  // Instead, we'll test with fresh renders and verify the initial state.
-}
-
 describe('QueuePage', () => {
+  beforeEach(() => {
+    mock._resetMockEvents()
+  })
+
   it('shows only queued events', async () => {
     render(<QueuePage />)
 
@@ -72,5 +70,35 @@ describe('QueuePage', () => {
     const events = await mock.listEvents()
     const aws = events.find((e: Event) => e.id === 'evt-3')
     expect(aws?.status).toBe('rejected')
+  })
+
+  it('rejected event stays out of queue across remounts', async () => {
+    const { unmount } = render(<QueuePage />)
+
+    await screen.findByText('Jazz in the Park')
+
+    // Reject evt-2
+    const card = screen.getByTestId('event-card-evt-2')
+    const buttons = card.querySelectorAll('button')
+    fireEvent.click(buttons[1]) // Reject
+
+    await waitFor(() => {
+      expect(screen.queryByText('Jazz in the Park')).not.toBeInTheDocument()
+    })
+
+    unmount()
+
+    // Re-render a fresh QueuePage
+    render(<QueuePage />)
+
+    // evt-3 should still be queued
+    await screen.findByText('AWS re:Invent Watch Party')
+
+    // evt-2 must not reappear
+    expect(screen.queryByText('Jazz in the Park')).not.toBeInTheDocument()
+
+    // Verify at the data layer
+    const queued = await mock.listEvents('queued')
+    expect(queued.find((e: Event) => e.id === 'evt-2')).toBeUndefined()
   })
 })

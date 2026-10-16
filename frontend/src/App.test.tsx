@@ -1,7 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
 import App from './App'
 import * as mock from './services/mock'
+
+beforeEach(() => {
+  mock._resetMockEvents()
+})
 
 async function loginAsTestUser() {
   render(<App />)
@@ -144,5 +148,43 @@ describe('Search', () => {
     const result = await screen.findByTestId('search-result')
     expect(result).toHaveTextContent('12 events found')
     expect(result).toHaveTextContent('4 new')
+  })
+})
+
+describe('Tab bar and queue count', () => {
+  it('shows tabs with queue count and decrements on accept', async () => {
+    await loginAsTestUser()
+
+    // Tab bar shows all three tabs
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' })
+    expect(nav).toHaveTextContent('Dashboard')
+    expect(nav).toHaveTextContent('Events')
+    expect(nav).toHaveTextContent('Queue')
+
+    // Queue count equals mock's queued events (2)
+    await waitFor(() => {
+      expect(nav).toHaveTextContent('(2)')
+    })
+
+    // Navigate to Queue tab
+    fireEvent.click(screen.getByRole('button', { name: /Queue/ }))
+
+    // Wait for queued events to render
+    await screen.findByText('Jazz in the Park')
+
+    // Accept evt-2
+    const card = screen.getByTestId('event-card-evt-2')
+    const acceptButton = card.querySelector('button')!
+    fireEvent.click(acceptButton)
+
+    // Event leaves the queue
+    await waitFor(() => {
+      expect(screen.queryByText('Jazz in the Park')).not.toBeInTheDocument()
+    })
+
+    // Queue count decrements to 1
+    await waitFor(() => {
+      expect(nav).toHaveTextContent('(1)')
+    })
   })
 })
