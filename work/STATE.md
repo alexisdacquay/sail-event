@@ -87,7 +87,10 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   → QA PASS → closed. first real bug caught by the loop.
 - issue #7 S5 auth: DONE. PM (bcrypt pin fixed 4.3→5.0) → eng d7e3a11..21bc6a4 → QA FAIL
   (validation handler echoed plaintext password) → fix db3499a → QA PASS → closed.
-- next: issue #8 S5 connect frontend to the real backend
+- issue #8 S5 connect: DONE. eng bc2344a+a60b386 → QA PASS (curl + reading; no browser for the
+  subagent) → I did the browser walk-through myself (built-in browser): all good → closed.
+  S5 COMPLETE (issues 5-8). lesson: QA subagents lack the built-in browser; browser checks are mine.
+- next: issue #9 S6 ORM models + Alembic
 - toolchain: uv 0.11, python 3.13 (arch says 3.12: PM to pin), node 24, npm 11, docker up
 
 ## Notes
