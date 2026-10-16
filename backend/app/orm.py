@@ -88,3 +88,4 @@ class Run(Base):
     events_found: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     events_new: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     trigger: Mapped[str] = mapped_column(String, nullable=False)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
