@@ -104,9 +104,11 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   python:3.12-slim, uv sync --no-dev --frozen, alembic in entrypoint, /data volume).
   ENGINEER IN FLIGHT at pause time 2026-10-16 (laptop closed). Not pushed.
 
-## RESUMED 2026-10-16: found a33bc24 committed + Dockerfile/.dockerignore/Makefile uncommitted;
-  docker daemon was down (OrbStack), started. Fresh engineer finishing #14 with two corrections:
-  pin the uv image tag; fix the tsc build instead of bypassing it.
+## RESUMED 2026-10-16: a33bc24 was committed; Dockerfile etc. uncommitted; docker (OrbStack) down → started.
+- issue #14 S7 Dockerfile: DONE. eng ae645df (uv pinned, tsc build fixed) → QA FAIL (SPA fallback
+  answered /api/*) → fix dd304bb → my checks + browser flow on the container → closed. image 350 MB.
+  note: host port 8000 is the user's order-tracker stack (HW4); our runs use 8010.
+- next: issue #15 S7 Postgres + docker-compose
 
 ## (kept) PAUSE PROCEDURE 2026-10-16
 1. `git -C /Users/ad/code/ProjectOne status --short` and `git log --oneline -5`.
