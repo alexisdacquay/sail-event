@@ -21,7 +21,7 @@ export type Event = {
   status: EventStatus
 }
 
-const useHttp = !!import.meta.env.VITE_API_URL
+const useHttp = import.meta.env.VITE_API_URL !== undefined
 
 const mod = useHttp
   ? await import('./http')

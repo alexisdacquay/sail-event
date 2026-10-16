@@ -1,19 +1,23 @@
-"""FastAPI app — wire routers, CORS, seed, and 422→400 validation handler."""
+"""FastAPI app — wire routers, CORS, seed, SPA static files, and 422→400 validation handler."""
 
 from __future__ import annotations
 
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from .auth import hash_password
 from .db import get_db
 from . import orm
 from .routers import auth, calendar, criteria, events, health, search, thresholds
+
+_STATIC_DIR = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
 
 
 def _seed_demo() -> None:
@@ -77,3 +81,12 @@ app.include_router(thresholds.router)
 app.include_router(search.router)
 app.include_router(events.router)
 app.include_router(calendar.router)
+
+# --- SPA static files (served only when frontend/dist exists) ---
+if _STATIC_DIR.is_dir():
+    app.mount("/assets", StaticFiles(directory=_STATIC_DIR / "assets"), name="static-assets")
+
+    @app.get("/{full_path:path}")
+    async def _spa_fallback(request: Request, full_path: str) -> FileResponse:
+        """Return index.html for any path not matched by API routers."""
+        return FileResponse(_STATIC_DIR / "index.html")
