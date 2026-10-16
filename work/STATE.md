@@ -90,7 +90,8 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - issue #8 S5 connect: DONE. eng bc2344a+a60b386 → QA PASS (curl + reading; no browser for the
   subagent) → I did the browser walk-through myself (built-in browser): all good → closed.
   S5 COMPLETE (issues 5-8). lesson: QA subagents lack the built-in browser; browser checks are mine.
-- next: issue #9 S6 ORM models + Alembic
+- issue #9 S6 ORM + Alembic: DONE. eng 9153884..e14d614 → QA PASS 21/21 (1 gap → #13) → closed.
+- next: issue #10 S6 swap in-memory store for ORM
 - toolchain: uv 0.11, python 3.13 (arch says 3.12: PM to pin), node 24, npm 11, docker up
 
 ## Notes
