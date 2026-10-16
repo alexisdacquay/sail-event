@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -45,7 +46,7 @@ class SearchResult(BaseModel):
 class DecisionRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    decision: str
+    decision: Literal["accepted", "rejected"]
 
 
 class Event(BaseModel):
