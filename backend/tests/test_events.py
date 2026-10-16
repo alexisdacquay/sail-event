@@ -132,8 +132,8 @@ def test_triage_exact_boundaries(client, auth_headers):
             return (_sv, f"stub score {_sv}")
 
         with (
-            patch("app.routers.search.get_search_provider") as mock_sp,
-            patch("app.routers.search.get_scorer") as mock_sc,
+            patch("app.services.pipeline.get_search_provider") as mock_sp,
+            patch("app.services.pipeline.get_scorer") as mock_sc,
         ):
             mock_sp.return_value.search.return_value = [raw]
             mock_sc.return_value.score.side_effect = fake_score
