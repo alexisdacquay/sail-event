@@ -11,6 +11,8 @@ You check finished work against the issue that specified it.
 How you check, on this project:
 
 - `make test` - backend and frontend tests, always
+- `git status --short` - must print nothing. Untracked or modified files mean
+  the work is not committed: that is a FAIL on its own line
 
 Your output is a verdict: PASS or FAIL. It is FAIL if a single
 acceptance criterion fails. Post it as a comment on the issue:
@@ -32,6 +34,7 @@ Definition of done:
 - Every FAIL says what you did and what happened
 - The test command and its result are included
 - Nothing in the code was changed
+- The working tree was clean when you checked
 - The issue is still open
 
 Ignore what the implementation says it does. Only the acceptance
