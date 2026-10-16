@@ -24,12 +24,19 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - 2026-10-15 idea K (event finder) is the working idea; formal confirmation comes out of
   the lesson-1 brainstorm (plan.md), not a chat yes.
 
+- 2026-10-15 brainstorm closed (Q1-Q9 in work/BRAINSTORM.md). name: Sail-event.
+  users: multi. source: web search only. criteria: free text, model-scored. triage:
+  auto-accept / auto-reject / queue. calendar: ICS feed per user. run: hourly + button.
+  no notifications. self-maintenance = lesson 4/5, later phase.
+
 ## Where we are in the method (see work/METHOD.md)
-- lesson 1, step 1: brainstorm, one question at a time. Q&A log: work/BRAINSTORM.md
-- next: plan.md -> stack options -> tasks.md -> AGENTS.md/process.md -> roles
+- lesson 1 step 1 done: _docs/plan.md v1 (2026-10-15), awaiting user review
+- step 2 bootstrap: git exists; plan committed
+- next: step 3 stack options ("Read _docs/plan.md. Propose multiple options for the
+  tech stack...") -> step 4 tasks.md -> step 5 AGENTS.md/process.md -> roles
 
 ## Open asks
-- brainstorm Q1 pending (see BRAINSTORM.md)
+- user reviews _docs/plan.md; corrections -> plan.md v2 (never overwrite silently)
 
 ## Notes
 - datasheet-info-collector is a desktop-app session skill (Application Support/Claude/...),
