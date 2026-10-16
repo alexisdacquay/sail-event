@@ -40,10 +40,32 @@ reviewer comprehension, and how natural the MCP tool / incident demo is.
 - + meta-relevant to the course; clear workflow for integration tests.
 - - it is the course platform; risks looking like a copy. GitHub API adds a credential.
 
-## Recommendation
-A. Smallest surface that still exercises every criterion, zero reviewer friction,
-natural conflict logic for tests and incidents.
-Strongest fact against A: it is the least distinctive idea; the grade will ride on
-documentation and workflow quality, not the app.
-If you want domain flavour with low extra cost: A with resources = switches from
-your datasheet data (B-lite), kept to Resource + Reservation only.
+## 2026-10-15 round 2 — user feedback
+- B withdrawn: datacentre domain came from my inference, not from the user. too niche.
+- A rewritten generic: shared-resource booking (rooms, desks, equipment).
+- user asked for more variety, in the register of past homework (kanban, chores, API).
+
+## E. Expense splitter (Splitwise-like)
+- groups, shared bills, who-owes-whom, settle-up with minimal transfers.
+- testable core: balance + settlement algorithm. MCP: `balances(group)`.
+## F. Shared trip itinerary
+- days, stops, notes; several people edit live (WebSocket, mirrors M2 collab).
+- testable core: reorder/move stops, conflict on concurrent edit. MCP: `itinerary(trip)`.
+## G. Flashcards with spaced repetition
+- decks, cards, review sessions; SM-2 scheduling decides next review date.
+- testable core: scheduling math, pure function. MCP: `due_cards(deck)`.
+## H. Live polls / quiz room
+- host creates questions, participants join by code, results update live.
+- testable core: vote once per participant, tally. MCP: `results(poll)`.
+## I. Meal planner -> shopping list
+- recipes with ingredients, weekly plan, list aggregates quantities by unit.
+- testable core: unit aggregation (2x200g + 1x0.5kg). MCP: `shopping_list(week)`.
+## J. Habit tracker with streaks
+- habits, daily check-ins, streak + heatmap.
+- testable core: streak rules across timezones/missed days. MCP: `streaks(user)`.
+
+## Recommendation (round 2)
+Any of A, E, F, G, H, I, J fits the rubric. Highest test/incident/MCP payoff per
+unit of UI work: E (settlement math) and G (scheduling math).
+Strongest fact against E and G: both are well-trodden clones; distinctiveness
+must come from the workflow and docs, not the app.

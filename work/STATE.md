@@ -15,4 +15,15 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - (none yet)
 
 ## Open asks
-- which idea: A lab booking (recommended) / B switch inventory / C ADR board / D peer-review queue
+- which idea: A booking / C ADR board / D peer-review / E..J (see IDEAS.md round 2). B withdrawn.
+- (closed) user: just unload the sonic/datasheet skills, no deletion. I cannot unload a skill
+  from a running session (list is injected by the harness); rule: never invoke or infer from them.
+- install project-scoped plugins (feature-dev, frontend-design, pr-review-toolkit,
+  security-guidance, context7) via `claude plugin install X@claude-plugins-official --scope project`?
+  writes ProjectOne/.claude/settings.json only. (user word pending)
+
+## Notes
+- datasheet-info-collector is a desktop-app session skill (Application Support/Claude/...),
+  not removable from here; user manages it in the app's Skills settings.
+- engineering:* skills (architecture, system-design, testing-strategy...) come from a
+  desktop-app bundled plugin, global, not project-scoped.
