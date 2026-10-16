@@ -63,8 +63,9 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   recovery), tasks FAIL (S13 misplaced after S12, task 19 depends on S13, split 5 & 8, merge
   12/18/25) + mine (no EventBridge trigger task) → 12-point revision → I verified (order,
   merges, arch diff) → DONE 2026-10-16: _docs/architecture.md v2, _docs/tasks.md v2 (28 tasks)
-- S2c GitHub issues: needs public repo → USER DECIDES name/visibility (blocking)
-- S3 AGENTS.md, process.md, task-template.md, team/: Opus drafting (started while S2c waits)
+- S2c GitHub issues: BLOCKED on user: repo name/visibility (proposed alexisdacquay/sail-event, public)
+- S3 DONE 2026-10-16: AGENTS.md, CLAUDE.md=@AGENTS.md, _docs/process.md, task-template.md,
+  team/{pm,software-engineer,qa-engineer}.md — course texts, my review, committed
 - git: branch main, no remote yet, tree clean at 3abcb4a
 
 ## Notes
