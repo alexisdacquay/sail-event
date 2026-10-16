@@ -45,9 +45,19 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   -> PHASES.md v3 ADOPTED 2026-10-16. ponytail installed (project scope). 12-factor =
   work/REFERENCES.md. S13 after S9, S14 last optional: CONFIRMED by user 2026-10-16.
 
-## PAUSED 2026-10-16 — user sorts git before implementation
-- resume point: S1 (README problem section) then S2 (stack options prompt, METHOD.md step 3)
-- nothing in _docs/ beyond plan.md; no code yet
+## Phase 1 started 2026-10-16 (user: "progressing with the next phase", orchestration mode)
+- mode: I orchestrate; Opus agents draft; a fresh Opus agent reviews; I arbitrate.
+- S1 README: draft v1 → my review (kayaker example, "local" cut) → QA PASS, auth step
+  missing → fix in progress
+- S2a stack options: draft v1 → QA FAIL (Fly free tier gone, Railway/Render prices wrong,
+  2024 versions, course default incomplete, generic bullets, python-jose) + my flag
+  (free tier sleeps → in-process scheduler dies) → v2 → QA#2: facts verified, 2 residuals
+  (Render "1 service", Railway $0 unverified), wrong counter-fact → I applied 7 edits = v3.
+  README: QA PASS + auth step added. BOTH AWAIT USER: stack pick, scheduler/deploy arrangement.
+- S2b tasks.md: after stack pick
+- S2c GitHub issues: needs public repo → USER DECIDES name/visibility (blocking)
+- S3 AGENTS.md, process.md, task-template.md, team/: after S2b
+- git: branch main, no remote yet, tree clean at 3abcb4a
 
 ## Notes
 - datasheet-info-collector is a desktop-app session skill (Application Support/Claude/...),
