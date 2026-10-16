@@ -87,6 +87,27 @@ reviewer comprehension, and how natural the MCP tool / incident demo is.
   scoring = rules, LLM optional behind a flag; review UI accept/decline; ICS export;
   nightly job in compose; everything else = non-goals in product-spec.md.
 
+## K shape v2 — user proposal 2026-10-15: "standard searches, matching criteria, public calendar"
+- standard searches (web search engines as the event source):
+  + closest to hermes' real value (the open web, not one platform).
+  - every search engine API needs a key; scraping result pages is ToS-hostile and bot-blocked.
+  mitigation: ONE provider with a free tier (hermes used exa, brave, serper, tavily, firecrawl,
+  linkup; free-tier limits NOT verified yet), README says "sign up for a free key" (allowed by
+  logistics page), plus recorded fixtures so tests/CI/reviewers run with no key.
+- matching criteria (rules: topics, city, date window, keywords; no LLM):
+  + deterministic, unit-testable, reviewer-runnable, cheap.
+  - hermes README, 2026-10-03: "The keyword prefilter and its Gleaner were deleted" because
+    relevance became the LLM judge's call. the user already tried and rejected pure keywords.
+  mitigation: criteria = hard filters (place, date, dedupe) + a transparent score; LLM rank
+  optional behind a flag, never required.
+- public calendar:
+  reading: public Luma/Google calendars via ICS URL as a zero-key source. good.
+  writing: the app SERVES a public ICS feed of accepted events; any calendar app subscribes.
+  no Google Calendar API, no OAuth. good for reproducibility.
+  - public = anyone with the URL sees the holds. acceptable for a demo; note it in security/.
+- verdict: accept all three with the mitigations. open: which search provider (needs a
+  free-tier check), and whether "public calendar" meant read, write, or both.
+
 ## Recommendation (round 3)
 K, from scratch, with the v1 cut above. Beats A/E/G on motivation and on the M4/M5
 story. Strongest fact against K: reproducibility for peer reviewers; without the
