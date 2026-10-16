@@ -53,7 +53,10 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   2024 versions, course default incomplete, generic bullets, python-jose) + my flag
   (free tier sleeps → in-process scheduler dies) → v2 → QA#2: facts verified, 2 residuals
   (Render "1 service", Railway $0 unverified), wrong counter-fact → I applied 7 edits = v3.
-  README: QA PASS + auth step added. BOTH AWAIT USER: stack pick, scheduler/deploy arrangement.
+  README: QA PASS + auth step added.
+  DECIDED 2026-10-16: deploy = AWS course path (EC2 per env via CloudFormation, lessons 3-4
+  prompts verbatim); hourly run = EventBridge cron → search endpoint (to verify at S8).
+  AWAITING: stack confirmation (A = React+TS, Tailwind+shadcn/ui, FastAPI, SQLite→Postgres).
 - S2b tasks.md: after stack pick
 - S2c GitHub issues: needs public repo → USER DECIDES name/visibility (blocking)
 - S3 AGENTS.md, process.md, task-template.md, team/: after S2b
