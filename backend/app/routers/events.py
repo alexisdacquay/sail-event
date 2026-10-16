@@ -57,10 +57,10 @@ async def decide_event(
     if event is None:
         return JSONResponse(status_code=404, content={"detail": "Event not found"})
 
-    if event.status == EventStatus.rejected.value:
+    if event.status not in (EventStatus.queued.value, EventStatus.accepted.value):
         return JSONResponse(
             status_code=400,
-            content={"detail": "Cannot change decision on a rejected event"},
+            content={"detail": "Only queued and accepted events can be decided"},
         )
 
     event.status = body.decision

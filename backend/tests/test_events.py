@@ -190,6 +190,58 @@ def test_decide_event_no_auth_returns_401(client):
     assert r.status_code == 401
 
 
+def test_decide_new_event_returns_400(client, auth_headers, _db_session):
+    """Events in 'new' status are not decidable — only queued and accepted are."""
+    from app.orm import User, Event as OrmEvent
+
+    h = auth_headers("demo", "demo")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    new_evt = OrmEvent(
+        user_id=user.id,
+        title="Still new",
+        date_time="2026-01-01T00:00:00",
+        place="P",
+        link="https://example.com/still-new",
+        description="d",
+        status="new",
+    )
+    _db_session.add(new_evt)
+    _db_session.commit()
+
+    r = client.post(
+        f"/api/events/{new_evt.id}/decision",
+        json={"decision": "accepted"},
+        headers=h,
+    )
+    assert r.status_code == 400
+
+
+def test_decide_event_other_users_event_returns_404(client, auth_headers, _db_session):
+    """User A cannot decide user B's queued event."""
+    from app.orm import User, Event as OrmEvent
+
+    h_a = auth_headers("userA", "pw")
+    h_b = auth_headers("userB", "pw")
+
+    # Give B criteria and run search to get events
+    client.put("/api/criteria", headers=h_b, json={"text": "anything"})
+    client.post("/api/search", headers=h_b)
+
+    queued = client.get("/api/events?status=queued", headers=h_b).json()
+    if not queued:
+        # If no queued events, use any event
+        queued = client.get("/api/events", headers=h_b).json()
+    assert len(queued) > 0
+    eid = queued[0]["id"]
+
+    r = client.post(
+        f"/api/events/{eid}/decision",
+        json={"decision": "accepted"},
+        headers=h_a,
+    )
+    assert r.status_code == 404
+
+
 def test_user_isolation_events(client, auth_headers):
     """User A cannot see or decide user B's events."""
     h_a = auth_headers("alice", "pw1")

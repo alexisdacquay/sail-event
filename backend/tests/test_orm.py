@@ -138,6 +138,11 @@ def test_threshold_check(db: Session) -> None:
         _insert_user(db, username="eve", lower_threshold=70, upper_threshold=70)
 
 
+def test_threshold_lower_gt_upper_raises_integrity_error(db: Session) -> None:
+    with pytest.raises(IntegrityError):
+        _insert_user(db, username="flip", lower_threshold=80, upper_threshold=70)
+
+
 # --- (e) invalid status on Event ---
 
 def test_invalid_event_status(db: Session) -> None:

@@ -13,6 +13,19 @@ def test_register_success(client):
     assert body["username"] == "newuser"
 
 
+def test_register_populates_ics_token(client):
+    r = client.post("/api/auth/register", json={"username": "icsuser", "password": "pw"})
+    assert r.status_code == 201
+    token = r.json()["token"]
+    r2 = client.get("/api/calendar-url", headers={"Authorization": f"Bearer {token}"})
+    assert r2.status_code == 200
+    url = r2.json()["url"]
+    assert "/api/calendar/" in url
+    # Extract ics_token from url and verify non-empty
+    ics_token = url.split("/api/calendar/")[-1]
+    assert ics_token != ""
+
+
 def test_register_creates_default_thresholds_and_criteria(client, auth_headers):
     h = auth_headers("newuser2", "pw")
     r = client.get("/api/thresholds", headers=h)
@@ -242,3 +255,37 @@ def test_user_isolation_criteria_and_thresholds(client, auth_headers):
     assert client.get("/api/thresholds", headers=h_b).json() == {
         "lowerThreshold": 25, "upperThreshold": 75,
     }
+
+
+# ---------- malformed bearer tokens ----------
+
+def test_malformed_bearer_header_returns_401(client):
+    r = client.get("/api/criteria", headers={"Authorization": "Bearer"})
+    assert r.status_code == 401
+
+
+def test_bearer_with_extra_segments_returns_401(client):
+    r = client.get("/api/criteria", headers={"Authorization": "Bearer a.b.c.d"})
+    assert r.status_code == 401
+
+
+# ---------- seed_demo idempotency ----------
+
+def test_seed_demo_idempotent(_db_session):
+    from unittest.mock import patch
+    from app.main import _seed_demo
+    from app.orm import User
+
+    count_before = _db_session.query(User).count()
+
+    # Prevent _seed_demo from closing the shared test session
+    original_close = _db_session.close
+    _db_session.close = lambda: None
+    try:
+        with patch("app.main.get_db", lambda: (s for s in [_db_session])):
+            _seed_demo()
+            _seed_demo()
+    finally:
+        _db_session.close = original_close
+
+    assert _db_session.query(User).count() == count_before

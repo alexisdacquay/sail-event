@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from app.orm import Event, Run
 from app.services.pipeline import derive_queries
@@ -211,3 +211,84 @@ def test_search_all_continues_after_failure(client, auth_headers, _db_session, m
     assert len(runs) == 2
     errors = [r for r in runs if r.error]
     assert len(errors) == 1
+
+
+# ---------- carry-over tests ----------
+
+
+def test_run_partial_failure_records_events_found_with_error(
+    client, auth_headers, _db_session,
+):
+    h = auth_headers("partial", "partial")
+    client.put("/api/criteria", headers=h, json={"text": "anything"})
+
+    call_count = 0
+
+    def partial_fail(event, criteria):
+        nonlocal call_count
+        call_count += 1
+        if call_count > 2:
+            raise RuntimeError("scorer partial boom")
+        return (50, "ok")
+
+    with patch("app.services.pipeline.get_scorer") as mock_sc:
+        mock_sc.return_value.score.side_effect = partial_fail
+        r = client.post("/api/search", headers=h)
+
+    assert r.status_code == 500
+
+    from app.orm import User
+    user = _db_session.query(User).filter(User.username == "partial").first()
+    run = (
+        _db_session.query(Run)
+        .filter(Run.user_id == user.id, Run.error.isnot(None))
+        .first()
+    )
+    assert run is not None
+    assert run.events_found > 0
+    assert run.error is not None
+
+
+def test_events_found_vs_events_new_under_cap_and_dedup(
+    client, auth_headers, _db_session, monkeypatch,
+):
+    h = auth_headers("dedup", "dedup")
+    client.put("/api/criteria", headers=h, json={"text": "anything"})
+
+    # Pre-insert 3 events with links matching fixture events
+    from app.orm import User
+    user = _db_session.query(User).filter(User.username == "dedup").first()
+    fixture_links = [
+        "https://events.example.com/photo-meetup-nov",
+        "https://events.example.com/ceramic-glazing",
+        "https://events.example.com/jazz-stars-dec",
+    ]
+    for link in fixture_links:
+        _db_session.add(Event(
+            user_id=user.id,
+            title="pre",
+            date_time="2026-01-01",
+            place="p",
+            link=link,
+            description="d",
+            status="accepted",
+        ))
+    _db_session.commit()
+
+    monkeypatch.setenv("MAX_EVENTS_PER_RUN", "3")
+    body = client.post("/api/search", headers=h).json()
+
+    assert body["eventsFound"] > body["eventsNew"]
+    assert body["eventsNew"] <= 3
+
+
+def test_pipeline_calls_derive_queries_with_user_criteria(
+    client, auth_headers, _db_session,
+):
+    h = auth_headers("dquser", "dquser")
+    client.put("/api/criteria", headers=h, json={"text": "sailing, regattas"})
+
+    with patch("app.services.pipeline.derive_queries", wraps=derive_queries) as spy:
+        client.post("/api/search", headers=h)
+
+    spy.assert_called_once_with("sailing, regattas")

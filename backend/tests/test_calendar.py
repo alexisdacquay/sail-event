@@ -176,3 +176,78 @@ def test_calendar_url_authenticated(client, auth_headers):
 def test_calendar_url_unauthenticated(client):
     r = client.get("/api/calendar-url")
     assert r.status_code == 401
+
+
+# --- carry-over and audit tests ---
+
+def test_bad_date_time_logs_warning(client, _db_session, caplog):
+    import logging
+    from app.orm import User
+
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    bad = Event(
+        user_id=user.id,
+        title="Bad date caplog",
+        date_time="not-a-date",
+        place="Nowhere",
+        link="https://example.com/bad-date-caplog",
+        description="desc",
+        score=99,
+        status="accepted",
+    )
+    _db_session.add(bad)
+    _db_session.commit()
+
+    with caplog.at_level(logging.WARNING, logger="app.routers.calendar"):
+        client.get("/api/calendar/demo-ics-token")
+
+    assert any("unparseable date_time" in m for m in caplog.messages)
+
+
+def test_dtstamp_equals_created_at(client, _db_session):
+    from app.orm import User
+
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    evt = Event(
+        user_id=user.id,
+        title="Known created_at",
+        date_time="2026-11-07T10:00:00",
+        place="Here",
+        link="https://example.com/dtstamp-test",
+        description="d",
+        score=99,
+        status="accepted",
+    )
+    _db_session.add(evt)
+    _db_session.commit()
+    _db_session.refresh(evt)
+    # ICS DTSTAMP drops microseconds; compare at second resolution
+    expected = evt.created_at.replace(microsecond=0)
+
+    r = client.get("/api/calendar/demo-ics-token")
+    cal = Calendar.from_ical(r.content)
+    for c in cal.walk():
+        if c.name == "VEVENT" and str(c["UID"]) == f"{evt.id}@sail-event":
+            got = c["DTSTAMP"].dt.replace(tzinfo=None)
+            assert got == expected
+            break
+    else:
+        raise AssertionError("VEVENT not found")
+
+
+def test_calendar_content_type_full_value(client):
+    r = client.get("/api/calendar/demo-ics-token")
+    assert r.headers["content-type"] == "text/calendar; charset=utf-8"
+
+
+def test_calendar_feed_freshly_registered_user(client, auth_headers):
+    h = auth_headers("caluser", "pw")
+    r = client.get("/api/calendar-url", headers=h)
+    ics_token = r.json()["url"].split("/api/calendar/")[-1]
+
+    r2 = client.get(f"/api/calendar/{ics_token}")
+    assert r2.status_code == 200
+    cal = Calendar.from_ical(r2.content)
+    assert cal["VERSION"] == "2.0"
+    vevents = [c for c in cal.walk() if c.name == "VEVENT"]
+    assert len(vevents) == 0

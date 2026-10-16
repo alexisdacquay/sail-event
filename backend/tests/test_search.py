@@ -56,3 +56,21 @@ def test_search_all_correct_key(client, monkeypatch):
 def test_run_search_no_auth_returns_401(client):
     r = client.post("/api/search")
     assert r.status_code == 401
+
+
+def test_search_all_skips_user_without_criteria(client, auth_headers, _db_session, monkeypatch):
+    monkeypatch.setenv("SEARCH_ALL_API_KEY", "k")
+
+    # Register user then delete their criteria row
+    auth_headers("nocrit", "nocrit")
+    from app.orm import User, Criteria, Run
+    user = _db_session.query(User).filter(User.username == "nocrit").first()
+    _db_session.query(Criteria).filter(Criteria.user_id == user.id).delete()
+    _db_session.commit()
+
+    r = client.post("/api/search/all", headers={"X-API-Key": "k"})
+    assert r.status_code == 200
+
+    # No Run row for the criteria-less user
+    runs = _db_session.query(Run).filter(Run.user_id == user.id).all()
+    assert len(runs) == 0
