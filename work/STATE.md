@@ -5,13 +5,14 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 
 ## Status
 - [x] git init, work file created (2026-10-15)
-- [ ] fetch project instructions + rubric
-- [ ] read course modules 01-05
-- [ ] record understanding (work/UNDERSTANDING.md)
-- [ ] propose ideas (work/IDEAS.md) -> user decides
+- [x] fetch project instructions + rubric
+- [x] read course modules 01-05
+- [x] record understanding (work/UNDERSTANDING.md)
+- [x] propose ideas (work/IDEAS.md)
+- [ ] user picks idea (OPEN ASK since 2026-10-15)
 
 ## Decisions
 - (none yet)
 
 ## Open asks
-- (none yet)
+- which idea: A lab booking (recommended) / B switch inventory / C ADR board / D peer-review queue
