@@ -1,0 +1,13 @@
+node_modules
+**/.venv
+*.db
+.git
+work/
+_docs/
+e2e/
+.github/
+observability/
+incident-response/
+**/__pycache__
+*.pyc
+frontend/dist

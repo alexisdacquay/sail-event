@@ -104,7 +104,11 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   python:3.12-slim, uv sync --no-dev --frozen, alembic in entrypoint, /data volume).
   ENGINEER IN FLIGHT at pause time 2026-10-16 (laptop closed). Not pushed.
 
-## PAUSED 2026-10-16 (user closing laptop) — RESUME PROCEDURE
+## RESUMED 2026-10-16: found a33bc24 committed + Dockerfile/.dockerignore/Makefile uncommitted;
+  docker daemon was down (OrbStack), started. Fresh engineer finishing #14 with two corrections:
+  pin the uv image tag; fix the tsc build instead of bypassing it.
+
+## (kept) PAUSE PROCEDURE 2026-10-16
 1. `git -C /Users/ad/code/ProjectOne status --short` and `git log --oneline -5`.
    - commits with prefix "S7:" present and tree clean → engineer finished: run QA on #14
      (fresh Opus agent, role _docs/team/qa-engineer.md; verify docker build/run live, SPA

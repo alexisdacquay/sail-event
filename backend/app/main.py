@@ -86,7 +86,7 @@ app.include_router(calendar.router)
 if _STATIC_DIR.is_dir():
     app.mount("/assets", StaticFiles(directory=_STATIC_DIR / "assets"), name="static-assets")
 
-    @app.get("/{full_path:path}")
+    @app.get("/{full_path:path}", include_in_schema=False)
     async def _spa_fallback(request: Request, full_path: str) -> FileResponse:
         """Return index.html for any path not matched by API routers."""
         return FileResponse(_STATIC_DIR / "index.html")

@@ -1,4 +1,4 @@
-.PHONY: run run-frontend run-backend test
+.PHONY: run run-frontend run-backend test docker-build docker-run
 
 run-frontend:
 	cd frontend && npm run dev
@@ -17,3 +17,9 @@ run:
 test:
 	cd backend && uv run pytest
 	cd frontend && npm test
+
+docker-build:
+	docker build -t sail-event:local .
+
+docker-run:
+	docker run --rm -p 8000:8000 -v sail-data:/data sail-event:local
