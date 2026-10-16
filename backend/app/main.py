@@ -87,6 +87,8 @@ if _STATIC_DIR.is_dir():
     app.mount("/assets", StaticFiles(directory=_STATIC_DIR / "assets"), name="static-assets")
 
     @app.get("/{full_path:path}", include_in_schema=False)
-    async def _spa_fallback(request: Request, full_path: str) -> FileResponse:
-        """Return index.html for any path not matched by API routers."""
+    async def _spa_fallback(request: Request, full_path: str):
+        """Return index.html for SPA routes; 404 JSON for unmatched /api paths."""
+        if full_path.startswith("api/") or full_path == "api":
+            return JSONResponse(status_code=404, content={"detail": "Not found"})
         return FileResponse(_STATIC_DIR / "index.html")
