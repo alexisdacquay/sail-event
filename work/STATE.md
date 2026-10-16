@@ -41,7 +41,9 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   mocks. user: "good."
 - 2026-10-16 RUBRIC CHANGED (12 criteria, 24 pts, pass 10; lesson 5 ungraded). recorded in
   work/PHASES.md with plan v2 (S1-S14). UNDERSTANDING.md rubric section is stale: see PHASES.md.
-  awaiting user's word on plan v2 + S13 position + S14 yes/no.
+  user: keep the removed-but-good practices; judge 3 sources; less is more.
+  -> PHASES.md v3: practices attached to steps, no new steps; ponytail = install (ask),
+  12-factor = reference, interview-me = skip. awaiting: v3, S13 position, S14, ponytail.
 
 ## Notes
 - datasheet-info-collector is a desktop-app session skill (Application Support/Claude/...),

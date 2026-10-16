@@ -52,7 +52,31 @@ Guidance on the page: ~20 hours, "a small idea is fine", one app taken all the w
 
 Mock boundary: S4–S12 run on a fixture provider and a deterministic fake scorer.
 
-## Open decisions for the user
+## v3 (2026-10-16): same 14 steps; unscored practices attached; sources judged
 
-- S13 position: real search and scorer earn 0 points. End (as placed) or after S6?
-- S14: do at all?
+### Practices dropped from the rubric, kept as practice (no new steps)
+
+| Practice | Why keep | Attached to |
+|---|---|---|
+| OpenAPI contract, frontend built on it | lesson 2 method; backend has a precise target | S4 |
+| Frontend tests | catches the service-layer swap | S6 |
+| DB agnostic via env var (SQLite ↔ Postgres) | lesson 2 prompt says so; S7 needs it | S6 → S7 |
+| Reproducibility doc: setup, run, test, deploy | reviewers must run it | S8, S9 |
+| Security audit: Semgrep + model review, human disposition | lesson 4 module deliverable | S12 |
+| Agent extension pack | lesson 5 deliverable | S14, optional |
+
+### Sources suggested by the user
+
+| Source | What it is | Verdict | Where |
+|---|---|---|---|
+| humanlayer/12-factor-agents | 12 principles for production LLM software (own prompts, tools = structured outputs, own control flow, stateless reducer) | use as design reference, not a checklist | S12 responder, S13 scorer |
+| DietrichGebert/ponytail | coding-agent skill: write only what the task needs; `/ponytail-review`, `/ponytail-audit` | install at project scope; it enforces "less is more" in code | S4–S13 |
+| Sorbh/interview-me | spec interview skill + spec-vs-code drift check | skip now: the brainstorm is done and the PM role grooms tasks; `--verify` maybe later | — |
+
+Against ponytail: it is a sixth plugin after the five of yesterday. If one must go, drop feature-dev (overlaps with the course's PM/engineer roles).
+
+### Open
+
+- S13 position: end (as placed) or after S6
+- S14: do at all
+- install ponytail at project scope: yes / no
