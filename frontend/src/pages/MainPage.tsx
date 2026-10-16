@@ -19,7 +19,11 @@ import {
 import type { SearchResult } from '@/services/api'
 import { useAuth } from '@/contexts/AuthContext'
 
-export function MainPage() {
+type MainPageProps = {
+  embedded?: boolean
+}
+
+export function MainPage({ embedded }: MainPageProps) {
   const { auth, logout } = useAuth()
 
   const [criteriaText, setCriteriaText] = useState('')
@@ -66,18 +70,20 @@ export function MainPage() {
   }
 
   return (
-    <div className="min-h-screen p-8 max-w-2xl mx-auto flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Sail Event</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">
-            {auth?.username}
-          </span>
-          <Button variant="outline" size="sm" onClick={logout}>
-            Logout
-          </Button>
+    <div className={embedded ? 'flex flex-col gap-6' : 'min-h-screen p-8 max-w-2xl mx-auto flex flex-col gap-6'}>
+      {!embedded && (
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Sail Event</h1>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">
+              {auth?.username}
+            </span>
+            <Button variant="outline" size="sm" onClick={logout}>
+              Logout
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       <Card>
         <CardHeader>

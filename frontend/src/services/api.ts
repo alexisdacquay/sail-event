@@ -7,6 +7,20 @@ export type SearchResult = {
   eventsNew: number
 }
 
+export type EventStatus = 'new' | 'accepted' | 'rejected' | 'queued'
+
+export type Event = {
+  id: string
+  title: string
+  dateTime: string
+  place: string
+  link: string
+  description: string
+  score: number
+  scoreReason: string
+  status: EventStatus
+}
+
 export {
   register,
   login,
@@ -15,4 +29,6 @@ export {
   getThresholds,
   saveThresholds,
   runSearch,
+  listEvents,
+  decideEvent,
 } from './mock'
