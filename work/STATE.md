@@ -100,7 +100,24 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - issue #13 S6 test gap-fill + docs/testing.md: DONE. eng ad888e4+509154c (+18 tests; found and
   fixed: `new` events were decidable; Makefile claim disproved, exit 2) → QA PASS 22/22 → closed.
   S6 COMPLETE (issues 9-13). tests: 128 backend, 22 frontend.
-- next: issue #14 S7 Dockerfile (one image, backend serves built frontend)
+- issue #14 S7 Dockerfile: PM groomed (same-origin VITE_API_URL="", SPA fallback, node:24-alpine +
+  python:3.12-slim, uv sync --no-dev --frozen, alembic in entrypoint, /data volume).
+  ENGINEER IN FLIGHT at pause time 2026-10-16 (laptop closed). Not pushed.
+
+## PAUSED 2026-10-16 (user closing laptop) — RESUME PROCEDURE
+1. `git -C /Users/ad/code/ProjectOne status --short` and `git log --oneline -5`.
+   - commits with prefix "S7:" present and tree clean → engineer finished: run QA on #14
+     (fresh Opus agent, role _docs/team/qa-engineer.md; verify docker build/run live, SPA
+     fallback, persistence via volume, no pytest in image), then close, push, go to #15.
+   - tree dirty or no S7 commits → engineer was cut: `git stash` or discard partial work
+     (`git checkout -- . && git clean -fd` after reading what is there), re-run the engineer
+     on #14 from the groomed issue.
+   - also check `docker ps -a` for a leftover sail-event container; remove it.
+2. loop continues: #15 Postgres+compose → #16 integration+e2e → STOP before #17 (needs the
+   user's AWS credentials and account decisions).
+3. process reminders: QA role checks git status; engineer role carries the lean-code rule;
+   orchestrator does the browser walk-through itself (subagents have no browser);
+   carry test gaps to the next test issue; one issue at a time.
 - toolchain: uv 0.11, python 3.13 (arch says 3.12: PM to pin), node 24, npm 11, docker up
 
 ## Notes
