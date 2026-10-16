@@ -1,0 +1,168 @@
+"""Tests for POST /api/auth/register and POST /api/auth/login."""
+
+from __future__ import annotations
+
+
+# ---------- register ----------
+
+def test_register_success(client):
+    r = client.post("/api/auth/register", json={"username": "newuser", "password": "pw123"})
+    assert r.status_code == 201
+    body = r.json()
+    assert "token" in body and body["token"] != ""
+    assert body["username"] == "newuser"
+
+
+def test_register_creates_default_thresholds_and_criteria(client, auth_headers):
+    h = auth_headers("newuser2", "pw")
+    r = client.get("/api/thresholds", headers=h)
+    assert r.json() == {"lowerThreshold": 30, "upperThreshold": 70}
+
+    r = client.get("/api/criteria", headers=h)
+    assert r.json()["text"] == ""
+
+
+def test_register_duplicate_username_returns_409(client):
+    client.post("/api/auth/register", json={"username": "dup", "password": "pw"})
+    r = client.post("/api/auth/register", json={"username": "dup", "password": "pw"})
+    assert r.status_code == 409
+    assert "detail" in r.json()
+
+
+def test_register_seeded_demo_returns_409(client):
+    r = client.post("/api/auth/register", json={"username": "demo", "password": "whatever"})
+    assert r.status_code == 409
+
+
+def test_register_empty_username_returns_400(client):
+    r = client.post("/api/auth/register", json={"username": "", "password": "pw"})
+    assert r.status_code == 400
+
+
+def test_register_empty_password_returns_400(client):
+    r = client.post("/api/auth/register", json={"username": "user1", "password": ""})
+    assert r.status_code == 400
+
+
+def test_register_missing_username_returns_400(client):
+    r = client.post("/api/auth/register", json={"password": "pw"})
+    assert r.status_code == 400
+
+
+def test_register_missing_password_returns_400(client):
+    r = client.post("/api/auth/register", json={"username": "user1"})
+    assert r.status_code == 400
+
+
+def test_register_whitespace_only_username_returns_400(client):
+    r = client.post("/api/auth/register", json={"username": "   ", "password": "pw"})
+    assert r.status_code == 400
+
+
+def test_register_whitespace_only_password_returns_400(client):
+    r = client.post("/api/auth/register", json={"username": "user1", "password": "   "})
+    assert r.status_code == 400
+
+
+# ---------- login ----------
+
+def test_login_demo_user(client):
+    r = client.post("/api/auth/login", json={"username": "demo", "password": "demo"})
+    assert r.status_code == 200
+    body = r.json()
+    assert "token" in body and body["token"] != ""
+    assert body["username"] == "demo"
+
+
+def test_login_wrong_password_returns_401(client):
+    r = client.post("/api/auth/login", json={"username": "demo", "password": "wrong"})
+    assert r.status_code == 401
+    assert "detail" in r.json()
+
+
+def test_login_unknown_user_returns_401(client):
+    r = client.post("/api/auth/login", json={"username": "noone", "password": "pw"})
+    assert r.status_code == 401
+
+
+def test_login_empty_username_returns_400(client):
+    r = client.post("/api/auth/login", json={"username": "", "password": "pw"})
+    assert r.status_code == 400
+
+
+def test_login_empty_password_returns_400(client):
+    r = client.post("/api/auth/login", json={"username": "demo", "password": ""})
+    assert r.status_code == 400
+
+
+def test_login_missing_username_returns_400(client):
+    r = client.post("/api/auth/login", json={"password": "pw"})
+    assert r.status_code == 400
+
+
+def test_login_missing_password_returns_400(client):
+    r = client.post("/api/auth/login", json={"username": "demo"})
+    assert r.status_code == 400
+
+
+# ---------- token usage ----------
+
+def test_token_from_register_works_as_bearer(client):
+    r = client.post("/api/auth/register", json={"username": "tk1", "password": "pw"})
+    token = r.json()["token"]
+    r2 = client.get("/api/criteria", headers={"Authorization": f"Bearer {token}"})
+    assert r2.status_code == 200
+
+
+def test_token_from_login_works_as_bearer(client):
+    r = client.post("/api/auth/login", json={"username": "demo", "password": "demo"})
+    token = r.json()["token"]
+    r2 = client.get("/api/criteria", headers={"Authorization": f"Bearer {token}"})
+    assert r2.status_code == 200
+
+
+def test_invalid_token_returns_401(client):
+    r = client.get("/api/criteria", headers={"Authorization": "Bearer garbage.token.here"})
+    assert r.status_code == 401
+
+
+def test_expired_token_returns_401(client, monkeypatch):
+    monkeypatch.setenv("JWT_EXPIRY_MINUTES", "0")
+    import time
+    r = client.post("/api/auth/login", json={"username": "demo", "password": "demo"})
+    token = r.json()["token"]
+    time.sleep(1)
+    r2 = client.get("/api/criteria", headers={"Authorization": f"Bearer {token}"})
+    assert r2.status_code == 401
+
+
+def test_no_password_in_any_response(client):
+    """No response body ever contains password or password_hash."""
+    # Register
+    r = client.post("/api/auth/register", json={"username": "sec1", "password": "secret"})
+    text = r.text
+    assert "secret" not in text or "sec1" in text  # 'secret' could be substring of username
+    assert "password_hash" not in text
+    assert "password" not in text.replace("password_hash", "")
+
+    # Login
+    r = client.post("/api/auth/login", json={"username": "sec1", "password": "secret"})
+    assert "password_hash" not in r.text
+
+
+# ---------- unprotected endpoints stay open ----------
+
+def test_health_no_auth_required(client):
+    r = client.get("/api/health")
+    assert r.status_code == 200
+
+
+def test_calendar_no_auth_required(client):
+    r = client.get("/api/calendar/demo-ics-token")
+    assert r.status_code == 200
+
+
+def test_search_all_no_bearer_required(client, monkeypatch):
+    monkeypatch.setenv("SEARCH_ALL_API_KEY", "key")
+    r = client.post("/api/search/all", headers={"X-API-Key": "key"})
+    assert r.status_code == 200

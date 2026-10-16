@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import os
 
-
-def test_run_search_returns_search_result(client):
-    r = client.post("/api/search")
+def test_run_search_returns_search_result(client, auth_headers):
+    h = auth_headers("demo", "demo")
+    r = client.post("/api/search", headers=h)
     assert r.status_code == 200
     body = r.json()
     assert "runId" in body
@@ -14,17 +13,19 @@ def test_run_search_returns_search_result(client):
     assert "eventsNew" in body
 
 
-def test_run_search_dedup_no_new_events(client):
+def test_run_search_dedup_no_new_events(client, auth_headers):
     """All fixture events are already seeded; a second run produces 0 new."""
-    r = client.post("/api/search")
+    h = auth_headers("demo", "demo")
+    r = client.post("/api/search", headers=h)
     body = r.json()
     assert body["eventsFound"] == 9  # raw fixture count including dup
     assert body["eventsNew"] == 0
 
 
-def test_run_search_increments_run_id(client):
-    r1 = client.post("/api/search")
-    r2 = client.post("/api/search")
+def test_run_search_increments_run_id(client, auth_headers):
+    h = auth_headers("demo", "demo")
+    r1 = client.post("/api/search", headers=h)
+    r2 = client.post("/api/search", headers=h)
     assert int(r2.json()["runId"]) > int(r1.json()["runId"])
 
 
@@ -50,3 +51,8 @@ def test_search_all_correct_key(client, monkeypatch):
     r = client.post("/api/search/all", headers={"X-API-Key": "test-secret"})
     assert r.status_code == 200
     assert r.json() == {"usersProcessed": 1}
+
+
+def test_run_search_no_auth_returns_401(client):
+    r = client.post("/api/search")
+    assert r.status_code == 401
