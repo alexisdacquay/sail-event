@@ -6,7 +6,7 @@ Documents
 - `_docs/plan.md` - what the product does
 - `_docs/architecture.md` - how it is built
 - `_docs/process.md` - how work is organised
-- `_docs/tasks.md` - backlog until it moves to GitHub issues
+- GitHub issues at github.com/alexisdacquay/sail-event/issues - the backlog; issue N = task N of the original `_docs/outdated/tasks.md`
 
 Commands
 

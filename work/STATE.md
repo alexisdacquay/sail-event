@@ -63,10 +63,11 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   recovery), tasks FAIL (S13 misplaced after S12, task 19 depends on S13, split 5 & 8, merge
   12/18/25) + mine (no EventBridge trigger task) → 12-point revision → I verified (order,
   merges, arch diff) → DONE 2026-10-16: _docs/architecture.md v2, _docs/tasks.md v2 (28 tasks)
-- S2c GitHub issues: BLOCKED on user: repo name/visibility (proposed alexisdacquay/sail-event, public)
+- S2c DONE 2026-10-16: public repo github.com/alexisdacquay/sail-event, main pushed, labels
+  mvp/post-mvp, issues #1-#28 = tasks 1-28 (#28 post-mvp). tasks.md -> _docs/outdated/.
 - S3 DONE 2026-10-16: AGENTS.md, CLAUDE.md=@AGENTS.md, _docs/process.md, task-template.md,
   team/{pm,software-engineer,qa-engineer}.md — course texts, my review, committed
-- git: branch main, no remote yet, tree clean at 3abcb4a
+- git: origin = github.com/alexisdacquay/sail-event (public). work/ is pushed too (no secrets).
 
 ## Notes
 - datasheet-info-collector is a desktop-app session skill (Application Support/Claude/...),
