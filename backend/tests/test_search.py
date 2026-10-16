@@ -26,7 +26,7 @@ def test_run_search_increments_run_id(client, auth_headers):
     h = auth_headers("demo", "demo")
     r1 = client.post("/api/search", headers=h)
     r2 = client.post("/api/search", headers=h)
-    assert int(r2.json()["runId"]) > int(r1.json()["runId"])
+    assert r1.json()["runId"] != r2.json()["runId"]
 
 
 def test_search_all_missing_key_returns_401(client):

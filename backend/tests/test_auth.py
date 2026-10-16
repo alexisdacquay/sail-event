@@ -196,14 +196,16 @@ def test_put_thresholds_no_auth_returns_401(client):
 
 # ---------- deleted user's token → 401 ----------
 
-def test_deleted_user_token_returns_401(client):
-    import app.store as store_mod
+def test_deleted_user_token_returns_401(client, _db_session):
     r = client.post("/api/auth/register", json={"username": "ghost", "password": "pw"})
     token = r.json()["token"]
-    # Remove the user from the store
-    s = store_mod.store
-    uid = s.username_to_user_id.pop("ghost")
-    del s.users[uid]
+    # Remove the user from the DB
+    from app.orm import User, Criteria, Event
+    user = _db_session.query(User).filter(User.username == "ghost").first()
+    _db_session.query(Event).filter(Event.user_id == user.id).delete()
+    _db_session.query(Criteria).filter(Criteria.user_id == user.id).delete()
+    _db_session.delete(user)
+    _db_session.commit()
     r2 = client.get("/api/criteria", headers={"Authorization": f"Bearer {token}"})
     assert r2.status_code == 401
 

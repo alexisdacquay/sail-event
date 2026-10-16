@@ -1,28 +1,106 @@
-"""Shared test fixtures — reset store before each test."""
+"""Shared test fixtures — per-test in-memory SQLite via ORM."""
 
 from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
-import app.deps as deps_mod
-import app.routers.auth as auth_router_mod
-import app.routers.calendar as calendar_mod
-import app.routers.search as search_mod
-import app.store as store_mod
+from app.adapters import FakeScorer, FixtureSearchProvider
+from app.auth import hash_password
+from app.db import get_db
 from app.main import app
+from app.orm import Base, Criteria, Event, User
+
+
+def _seed(db: Session) -> None:
+    """Insert demo user, criteria, and fixture events."""
+    user = User(
+        username="demo",
+        password_hash=hash_password("demo"),
+        upper_threshold=70,
+        lower_threshold=30,
+        ics_token="demo-ics-token",
+    )
+    db.add(user)
+    db.flush()
+
+    criteria = Criteria(
+        user_id=user.id,
+        text="outdoor activities, live music, and art workshops near Portland",
+    )
+    db.add(criteria)
+    db.flush()
+
+    # Generate fixture events: search, dedup, score, triage
+    provider = FixtureSearchProvider()
+    scorer = FakeScorer()
+    raw_events = provider.search([])
+
+    seen_links: set[str] = set()
+    for raw in raw_events:
+        if raw.link in seen_links:
+            continue
+        seen_links.add(raw.link)
+
+        score_val, reason = scorer.score(raw, criteria.text)
+
+        if score_val > user.upper_threshold:
+            status = "accepted"
+        elif score_val < user.lower_threshold:
+            status = "rejected"
+        else:
+            status = "queued"
+
+        evt = Event(
+            user_id=user.id,
+            title=raw.title,
+            date_time=raw.date_time,
+            place=raw.place,
+            link=raw.link,
+            description=raw.description,
+            score=score_val,
+            score_reason=reason,
+            status=status,
+        )
+        db.add(evt)
+
+    db.commit()
 
 
 @pytest.fixture(autouse=True)
-def _reset_store():
-    """Replace the global store with a fresh seed before every test."""
-    fresh = store_mod._seed()
-    store_mod.store = fresh
-    deps_mod.store = fresh
-    search_mod.store = fresh
-    calendar_mod.store = fresh
-    auth_router_mod.store = fresh
-    yield
+def _db_session():
+    """Per-test in-memory SQLite with schema and seed data."""
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+
+    @event.listens_for(engine, "connect")
+    def _pragma(dbapi_conn, _rec):
+        import sqlite3
+        if isinstance(dbapi_conn, sqlite3.Connection):
+            dbapi_conn.execute("PRAGMA foreign_keys = ON")
+
+    Base.metadata.create_all(engine)
+    TestingSessionLocal = sessionmaker(bind=engine)
+
+    session = TestingSessionLocal()
+    _seed(session)
+
+    def override_get_db():
+        try:
+            yield session
+        finally:
+            pass  # session stays open for the whole test
+
+    app.dependency_overrides[get_db] = override_get_db
+    yield session
+    session.close()
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture()
