@@ -43,7 +43,7 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   work/PHASES.md with plan v2 (S1-S14). UNDERSTANDING.md rubric section is stale: see PHASES.md.
   user: keep the removed-but-good practices; judge 3 sources; less is more.
   -> PHASES.md v3 ADOPTED 2026-10-16. ponytail installed (project scope). 12-factor =
-  work/REFERENCES.md. S13 after S9 (recommended, user to confirm). S14 last, optional.
+  work/REFERENCES.md. S13 after S9, S14 last optional: CONFIRMED by user 2026-10-16.
 
 ## PAUSED 2026-10-16 — user sorts git before implementation
 - resume point: S1 (README problem section) then S2 (stack options prompt, METHOD.md step 3)
