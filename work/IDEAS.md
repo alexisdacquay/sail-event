@@ -64,6 +64,34 @@ reviewer comprehension, and how natural the MCP tool / incident demo is.
 - habits, daily check-ins, streak + heatmap.
 - testable core: streak rules across timezones/missed days. MCP: `streaks(user)`.
 
+## K. Personal event finder / scheduler (user's own idea, 2026-10-15)
+- prior art: github.com/alexisdacquay/hermes-pa. read: README, tree. ~13.6k LOC python,
+  CSV as the store, python review UI, nightly cron on a personal VPS, 6 paid search
+  APIs + Luma + Meetup auth + Google Calendar, LLM judge against a personal taste.md,
+  self-maintenance (scribe + fix agent). docs: prd, architecture, engineering, bugs.
+- user: could start from scratch; wants to bring the idea to production-ready using the course.
+- fit to rubric, if rebuilt from scratch and cut:
+  + problem is real and reviewer-understandable (find events, score, review, hold)
+  + natural entities: Source, Event, Decision, Profile. natural relation + workflow.
+  + M4 story is native: nightly ingest job -> alert on failed run / 0 events -> responder.
+    hermes already has scribe/fix-agent; the course adds the guardrails it lacks.
+  + MCP tools obvious: `upcoming_events(city, days)`, `decide(event, accept|decline)`.
+  + user has a PRD and decision history: spec phase (M1) starts warm.
+  - reproducibility is the main risk: paid search APIs, auth feeds, LLM keys, personal
+    calendar. mitigation: key-less mode (seeded fixtures, rule-based scorer), ICS export
+    instead of Google Calendar write, 1-2 public sources only in v1.
+  - shape mismatch: hermes is a pipeline, rubric wants frontend+backend+OpenAPI+DB.
+    mitigation: web app first (FastAPI + Postgres + JS frontend), ingest = backend job.
+  - scope creep: 13.6k LOC to be tempted to port. rule: port ideas, not code.
+- v1 cut (proposal): sources = Luma public calendar + manual add + ICS import;
+  scoring = rules, LLM optional behind a flag; review UI accept/decline; ICS export;
+  nightly job in compose; everything else = non-goals in product-spec.md.
+
+## Recommendation (round 3)
+K, from scratch, with the v1 cut above. Beats A/E/G on motivation and on the M4/M5
+story. Strongest fact against K: reproducibility for peer reviewers; without the
+key-less mode it loses points on 10/14 and reviewers may fail to run it at all.
+
 ## Recommendation (round 2)
 Any of A, E, F, G, H, I, J fits the rubric. Highest test/incident/MCP payoff per
 unit of UI work: E (settlement math) and G (scheduling math).

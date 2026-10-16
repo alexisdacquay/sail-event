@@ -15,7 +15,8 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - (none yet)
 
 ## Open asks
-- which idea: A booking / C ADR board / D peer-review / E..J (see IDEAS.md round 2). B withdrawn.
+- which idea: K event finder (recommended, see IDEAS.md) / A / E..J. B, C withdrawn.
+- if K: approve the v1 cut (key-less mode, ICS export, 1-2 sources) as spec non-goals?
 - (closed) user: just unload the sonic/datasheet skills, no deletion. I cannot unload a skill
   from a running session (list is injected by the harness); rule: never invoke or infer from them.
 - install project-scoped plugins (feature-dev, frontend-design, pr-review-toolkit,
