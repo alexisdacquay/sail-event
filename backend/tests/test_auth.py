@@ -166,3 +166,77 @@ def test_search_all_no_bearer_required(client, monkeypatch):
     monkeypatch.setenv("SEARCH_ALL_API_KEY", "key")
     r = client.post("/api/search/all", headers={"X-API-Key": "key"})
     assert r.status_code == 200
+
+
+# ---------- validation errors never echo input ----------
+
+def test_register_missing_username_does_not_echo_password(client):
+    r = client.post("/api/auth/register", json={"password": "supersecret99"})
+    assert r.status_code == 400
+    assert "supersecret99" not in r.text
+
+
+def test_login_missing_username_does_not_echo_password(client):
+    r = client.post("/api/auth/login", json={"password": "supersecret99"})
+    assert r.status_code == 400
+    assert "supersecret99" not in r.text
+
+
+# ---------- PUT no-auth → 401 ----------
+
+def test_put_criteria_no_auth_returns_401(client):
+    r = client.put("/api/criteria", json={"text": "x"})
+    assert r.status_code == 401
+
+
+def test_put_thresholds_no_auth_returns_401(client):
+    r = client.put("/api/thresholds", json={"lowerThreshold": 20, "upperThreshold": 80})
+    assert r.status_code == 401
+
+
+# ---------- deleted user's token → 401 ----------
+
+def test_deleted_user_token_returns_401(client):
+    import app.store as store_mod
+    r = client.post("/api/auth/register", json={"username": "ghost", "password": "pw"})
+    token = r.json()["token"]
+    # Remove the user from the store
+    s = store_mod.store
+    uid = s.username_to_user_id.pop("ghost")
+    del s.users[uid]
+    r2 = client.get("/api/criteria", headers={"Authorization": f"Bearer {token}"})
+    assert r2.status_code == 401
+
+
+# ---------- cross-user isolation: criteria and thresholds ----------
+
+def test_user_isolation_criteria_and_thresholds(client, auth_headers):
+    h_a = auth_headers("alice", "pw1")
+    h_b = auth_headers("bob", "pw2")
+
+    # Alice sets her criteria and thresholds
+    client.put("/api/criteria", json={"text": "alice-criteria"}, headers=h_a)
+    client.put(
+        "/api/thresholds",
+        json={"lowerThreshold": 10, "upperThreshold": 90},
+        headers=h_a,
+    )
+
+    # Bob sets different criteria and thresholds
+    client.put("/api/criteria", json={"text": "bob-criteria"}, headers=h_b)
+    client.put(
+        "/api/thresholds",
+        json={"lowerThreshold": 25, "upperThreshold": 75},
+        headers=h_b,
+    )
+
+    # Each sees only their own
+    assert client.get("/api/criteria", headers=h_a).json()["text"] == "alice-criteria"
+    assert client.get("/api/criteria", headers=h_b).json()["text"] == "bob-criteria"
+
+    assert client.get("/api/thresholds", headers=h_a).json() == {
+        "lowerThreshold": 10, "upperThreshold": 90,
+    }
+    assert client.get("/api/thresholds", headers=h_b).json() == {
+        "lowerThreshold": 25, "upperThreshold": 75,
+    }

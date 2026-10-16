@@ -13,7 +13,14 @@ app = FastAPI()
 # 422 → 400 for all request validation errors
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
-    return JSONResponse(status_code=400, content={"detail": str(exc)})
+    # Build a short detail string from field locations + messages only.
+    # Never include the raw input — it may contain passwords or secrets.
+    parts = []
+    for err in exc.errors():
+        loc = ".".join(str(s) for s in err["loc"] if s != "body")
+        parts.append(f"{loc}: {err['msg']}" if loc else err["msg"])
+    detail = "; ".join(parts)
+    return JSONResponse(status_code=400, content={"detail": detail})
 
 
 app.include_router(auth.router)
