@@ -95,7 +95,9 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - 2026-10-16 ponytail lite ON in my session; its rule added to _docs/team/software-engineer.md (13f0fd3)
 - issue #11 S6 pipeline: DONE. eng 6394a7a..11912b5 (services/pipeline.py, Run rows + error,
   recovery, derive_queries, cap) → QA PASS 15/15 live (3 gaps → #13) → closed.
-- next: issue #12 S6 ICS calendar feed
+- issue #12 S6 ICS feed + calendar-url + dashboard copy: DONE. eng ffae95d+edff16d → QA PASS
+  21/21 live (3 gaps → #13) → closed.
+- next: issue #13 S6 backend test gap-fill + docs/testing.md (carry-overs from #9-#12)
 - toolchain: uv 0.11, python 3.13 (arch says 3.12: PM to pin), node 24, npm 11, docker up
 
 ## Notes
