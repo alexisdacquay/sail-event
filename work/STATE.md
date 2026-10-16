@@ -81,7 +81,8 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   QA PASS 15/15, 4 gaps → +2 tests ef87cec → closed.
 - issue #4 S4 openapi.yaml + docs/api.md: DONE. PM (no fix) → eng a3dd774 → QA PASS 12/12 → closed.
   S4 COMPLETE (issues 1-4).
-- next: issue #5 S5 adapter interfaces + fixture/fake implementations
+- issue #5 S5 adapters: DONE. eng 6bc4ff9 → QA PASS 22/22, 6 gaps → +3 tests 4758aae → closed.
+- next: issue #6 S5 FastAPI routers + in-memory store
 - toolchain: uv 0.11, python 3.13 (arch says 3.12: PM to pin), node 24, npm 11, docker up
 
 ## Notes
