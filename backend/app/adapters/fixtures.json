@@ -1,0 +1,65 @@
+[
+  {
+    "title": "Outdoor Photography Meetup",
+    "date_time": "2026-11-07T10:00:00",
+    "place": "Riverside Park, Portland",
+    "link": "https://events.example.com/photo-meetup-nov",
+    "description": "Bring your camera and join fellow photographers for a morning walk through the park."
+  },
+  {
+    "title": "Introduction to Ceramic Glazing",
+    "date_time": "2026-11-14T14:00:00",
+    "place": "Clay Studio, Austin",
+    "link": "https://events.example.com/ceramic-glazing",
+    "description": "Hands-on workshop covering basic glazing techniques for beginners."
+  },
+  {
+    "title": "Jazz Under the Stars",
+    "date_time": "2026-12-01T20:00:00",
+    "place": "Rooftop Terrace, Chicago",
+    "link": "https://events.example.com/jazz-stars-dec",
+    "description": "An evening of live jazz with local quartet The Blue Notes."
+  },
+  {
+    "title": "Blockchain for Non-Engineers",
+    "date_time": "2026-11-20T18:30:00",
+    "place": "Downtown Library, Denver",
+    "link": "https://events.example.com/blockchain-talk",
+    "description": "A plain-language talk explaining distributed ledgers and smart contracts."
+  },
+  {
+    "title": "Weekend Trail Run",
+    "date_time": "2026-11-22T07:00:00",
+    "place": "Eagle Creek Trailhead, Portland",
+    "link": "https://events.example.com/trail-run-nov",
+    "description": "Guided 10K trail run through old-growth forest. All paces welcome."
+  },
+  {
+    "title": "Fermentation Workshop",
+    "date_time": "2026-12-05T11:00:00",
+    "place": "Community Kitchen, Seattle",
+    "link": "https://events.example.com/fermentation-ws",
+    "description": "Learn to make kimchi, sauerkraut, and kombucha from scratch."
+  },
+  {
+    "title": "Classical Guitar Concert",
+    "date_time": "2026-12-12T19:30:00",
+    "place": "Recital Hall, San Francisco",
+    "link": "https://events.example.com/guitar-concert-dec",
+    "description": "Solo recital featuring works by Tárrega, Barrios, and Villa-Lobos."
+  },
+  {
+    "title": "Startup Pitch Night",
+    "date_time": "2026-11-28T18:00:00",
+    "place": "Innovation Hub, Austin",
+    "link": "https://events.example.com/blockchain-talk",
+    "description": "Five early-stage startups pitch to a panel of local investors."
+  },
+  {
+    "title": "Watercolor Landscapes",
+    "date_time": "2026-12-10T09:00:00",
+    "place": "Art Centre, Denver",
+    "link": "https://events.example.com/watercolor-dec",
+    "description": "Half-day painting session focused on mountain and sky techniques."
+  }
+]
