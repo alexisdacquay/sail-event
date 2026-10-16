@@ -82,7 +82,10 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - issue #4 S4 openapi.yaml + docs/api.md: DONE. PM (no fix) → eng a3dd774 → QA PASS 12/12 → closed.
   S4 COMPLETE (issues 1-4).
 - issue #5 S5 adapters: DONE. eng 6bc4ff9 → QA PASS 22/22, 6 gaps → +3 tests 4758aae → closed.
-- next: issue #6 S5 FastAPI routers + in-memory store
+- issue #6 S5 routers + store + pipeline: DONE. eng 13a9fe4+3b122fa → pyyaml dev dep approved
+  (contract test reads openapi.yaml) 9b1c537 → QA FAIL (invalid decision → 500) → fix 8940b2a
+  → QA PASS → closed. first real bug caught by the loop.
+- next: issue #7 S5 user authentication
 - toolchain: uv 0.11, python 3.13 (arch says 3.12: PM to pin), node 24, npm 11, docker up
 
 ## Notes
