@@ -1,17 +1,50 @@
-"""FastAPI app — wire routers, CORS, and 422→400 validation handler."""
+"""FastAPI app — wire routers, CORS, seed, and 422→400 validation handler."""
 
 from __future__ import annotations
 
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from .auth import hash_password
+from .db import get_db
+from . import orm
 from .routers import auth, calendar, criteria, events, health, search, thresholds
 
-app = FastAPI()
+
+def _seed_demo() -> None:
+    """Create demo user + criteria row if absent. Idempotent."""
+    db = next(get_db())
+    try:
+        existing = db.query(orm.User).filter(orm.User.username == "demo").first()
+        if existing is None:
+            user = orm.User(
+                username="demo",
+                password_hash=hash_password("demo"),
+                upper_threshold=70,
+                lower_threshold=30,
+            )
+            db.add(user)
+            db.flush()
+            c = orm.Criteria(user_id=user.id, text="")
+            db.add(c)
+            db.commit()
+    finally:
+        db.close()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if os.environ.get("SEED_DEMO") == "1":
+        _seed_demo()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 # CORS — origins from env, default to Vite dev server
 _origins_raw = os.environ.get("CORS_ORIGINS", "http://localhost:5173")

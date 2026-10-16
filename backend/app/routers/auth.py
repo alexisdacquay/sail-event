@@ -2,21 +2,23 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from uuid import uuid4
-
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
 from ..auth import create_token, hash_password, verify_password
-from ..models import RegisterRequest, LoginRequest, Criteria, Thresholds
-from ..store import UserRecord, store
+from ..db import get_db
+from ..models import RegisterRequest, LoginRequest
+from .. import orm
 
 router = APIRouter()
 
 
 @router.post("/api/auth/register", operation_id="register", status_code=201)
-async def register(body: RegisterRequest) -> JSONResponse:
+async def register(
+    body: RegisterRequest,
+    db: Session = Depends(get_db),
+) -> JSONResponse:
     if not body.username or not body.username.strip():
         return JSONResponse(
             status_code=400,
@@ -28,24 +30,26 @@ async def register(body: RegisterRequest) -> JSONResponse:
             content={"detail": "password must not be empty"},
         )
 
-    if body.username in store.username_to_user_id:
+    existing = db.query(orm.User).filter(orm.User.username == body.username).first()
+    if existing is not None:
         return JSONResponse(
             status_code=409,
             content={"detail": f"Username '{body.username}' is already taken"},
         )
 
-    user_id = str(uuid4())
-    record = UserRecord(
-        user_id=user_id,
+    user = orm.User(
         username=body.username,
         password_hash=hash_password(body.password),
-        criteria=Criteria(text="", updated_at=datetime.now(UTC).isoformat()),
-        thresholds=Thresholds(lower_threshold=30, upper_threshold=70),
-        ics_token=str(uuid4()),
+        upper_threshold=70,
+        lower_threshold=30,
     )
-    store.add_user(record)
+    db.add(user)
+    db.flush()
+    criteria = orm.Criteria(user_id=user.id, text="")
+    db.add(criteria)
+    db.commit()
 
-    token = create_token(user_id)
+    token = create_token(user.id)
     return JSONResponse(
         status_code=201,
         content={"token": token, "username": body.username},
@@ -53,7 +57,10 @@ async def register(body: RegisterRequest) -> JSONResponse:
 
 
 @router.post("/api/auth/login", operation_id="login")
-async def login(body: LoginRequest) -> JSONResponse:
+async def login(
+    body: LoginRequest,
+    db: Session = Depends(get_db),
+) -> JSONResponse:
     if not body.username or not body.username.strip():
         return JSONResponse(
             status_code=400,
@@ -65,21 +72,20 @@ async def login(body: LoginRequest) -> JSONResponse:
             content={"detail": "password must not be empty"},
         )
 
-    user_id = store.username_to_user_id.get(body.username)
-    if user_id is None:
+    user = db.query(orm.User).filter(orm.User.username == body.username).first()
+    if user is None:
         return JSONResponse(
             status_code=401,
             content={"detail": "Invalid username or password"},
         )
 
-    user = store.users[user_id]
     if not verify_password(body.password, user.password_hash):
         return JSONResponse(
             status_code=401,
             content={"detail": "Invalid username or password"},
         )
 
-    token = create_token(user_id)
+    token = create_token(user.id)
     return JSONResponse(
         content={"token": token, "username": user.username},
     )

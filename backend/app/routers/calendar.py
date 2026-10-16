@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse, Response
+from sqlalchemy.orm import Session
 
-from ..store import store
+from ..db import get_db
+from .. import orm
 
 router = APIRouter()
 
@@ -18,9 +20,12 @@ _VCALENDAR_EMPTY = (
 
 
 @router.get("/api/calendar/{ics_token}", operation_id="getCalendarFeed")
-async def get_calendar_feed(ics_token: str) -> Response:
-    user_id = store.ics_token_to_user.get(ics_token)
-    if user_id is None:
+async def get_calendar_feed(
+    ics_token: str,
+    db: Session = Depends(get_db),
+) -> Response:
+    user = db.query(orm.User).filter(orm.User.ics_token == ics_token).first()
+    if user is None:
         return JSONResponse(status_code=404, content={"detail": "Not found"})
 
     return Response(content=_VCALENDAR_EMPTY, media_type="text/calendar")

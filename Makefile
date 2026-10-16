@@ -4,10 +4,10 @@ run-frontend:
 	cd frontend && npm run dev
 
 run-backend:
-	cd backend && uv run uvicorn app.main:app --reload
+	cd backend && uv run alembic upgrade head && uv run uvicorn app.main:app --reload
 
 run:
-	cd backend && uv run uvicorn app.main:app --reload & \
+	cd backend && uv run alembic upgrade head && SEED_DEMO=1 uv run uvicorn app.main:app --reload & \
 	PID_BACK=$$!; \
 	cd frontend && VITE_API_URL=http://localhost:8000 npm run dev & \
 	PID_FRONT=$$!; \

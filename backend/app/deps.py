@@ -1,21 +1,24 @@
-"""FastAPI dependencies — JWT bearer-token auth."""
+"""FastAPI dependencies — JWT bearer-token auth, DB session."""
 
 from __future__ import annotations
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.orm import Session
 
 import jwt
 
 from .auth import decode_token
-from .store import UserRecord, store
+from .db import get_db
+from . import orm
 
 _bearer_scheme = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
-) -> UserRecord:
+    db: Session = Depends(get_db),
+) -> orm.User:
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -35,7 +38,7 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
         )
-    user = store.users.get(user_id)
+    user = db.query(orm.User).filter(orm.User.id == user_id).first()
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

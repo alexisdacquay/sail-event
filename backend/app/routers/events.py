@@ -6,69 +6,64 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
+from ..db import get_db
 from ..deps import get_current_user
 from ..models import DecisionRequest, EventStatus
-from ..store import UserRecord
+from .. import orm
 
 router = APIRouter()
+
+
+def _event_dict(e: orm.Event) -> dict:
+    return {
+        "id": e.id,
+        "title": e.title,
+        "dateTime": e.date_time,
+        "place": e.place,
+        "link": e.link,
+        "description": e.description,
+        "score": e.score,
+        "scoreReason": e.score_reason,
+        "status": e.status,
+    }
 
 
 @router.get("/api/events", operation_id="listEvents")
 async def list_events(
     status: Optional[str] = None,
-    user: UserRecord = Depends(get_current_user),
+    user: orm.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ) -> list[dict]:
-    events = list(user.events.values())
+    query = db.query(orm.Event).filter(orm.Event.user_id == user.id)
     if status is not None:
-        events = [e for e in events if e.status.value == status]
-    return [
-        {
-            "id": e.id,
-            "title": e.title,
-            "dateTime": e.date_time,
-            "place": e.place,
-            "link": e.link,
-            "description": e.description,
-            "score": e.score,
-            "scoreReason": e.score_reason,
-            "status": e.status.value,
-        }
-        for e in events
-    ]
+        query = query.filter(orm.Event.status == status)
+    events = query.all()
+    return [_event_dict(e) for e in events]
 
 
 @router.post("/api/events/{id}/decision", operation_id="decideEvent")
 async def decide_event(
     id: str,
     body: DecisionRequest,
-    user: UserRecord = Depends(get_current_user),
+    user: orm.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ) -> JSONResponse:
-    event = user.events.get(id)
+    event = db.query(orm.Event).filter(
+        orm.Event.id == id,
+        orm.Event.user_id == user.id,
+    ).first()
     if event is None:
         return JSONResponse(status_code=404, content={"detail": "Event not found"})
 
-    if event.status == EventStatus.rejected:
+    if event.status == EventStatus.rejected.value:
         return JSONResponse(
             status_code=400,
             content={"detail": "Cannot change decision on a rejected event"},
         )
 
-    # Apply decision
-    new_status = EventStatus(body.decision)
-    # accepted → accepted is a no-op 200
-    event.status = new_status
+    event.status = body.decision
+    db.commit()
 
-    return JSONResponse(
-        content={
-            "id": event.id,
-            "title": event.title,
-            "dateTime": event.date_time,
-            "place": event.place,
-            "link": event.link,
-            "description": event.description,
-            "score": event.score,
-            "scoreReason": event.score_reason,
-            "status": event.status.value,
-        },
-    )
+    return JSONResponse(content=_event_dict(event))
