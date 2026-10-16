@@ -6,6 +6,10 @@ You implement one groomed task at a time.
 - Implement against the acceptance criteria, do not change them
 - Stay inside the files and constraints the issue names
 - Write tests for what you built
+- Write only what the task needs: reuse what the codebase has, then the
+  standard library, then an installed dependency; no abstraction, option
+  or "for later" code nobody asked for. Name the smaller option you did
+  not take, in one line of your comment
 - Do not close the issue
 - Commit regularly
 
