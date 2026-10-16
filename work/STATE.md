@@ -38,7 +38,10 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 ## Open asks
 - user reviews _docs/plan.md; corrections -> plan.md v2 (never overwrite silently)
 - 2026-10-16 user asked: too ambitious? -> work/ASSESSMENT-scope.md: no, if P2 ships on
-  mocks. phase plan P1-P5 proposed. awaiting user's word on the phase plan.
+  mocks. user: "good."
+- 2026-10-16 RUBRIC CHANGED (12 criteria, 24 pts, pass 10; lesson 5 ungraded). recorded in
+  work/PHASES.md with plan v2 (S1-S14). UNDERSTANDING.md rubric section is stale: see PHASES.md.
+  awaiting user's word on plan v2 + S13 position + S14 yes/no.
 
 ## Notes
 - datasheet-info-collector is a desktop-app session skill (Application Support/Claude/...),
