@@ -19,10 +19,17 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - 2026-10-15 skills sonic-hw-recon / datasheet-info-collector: cannot unload mid-session;
   rule: never invoke or infer from them.
 
+- 2026-10-15 user: shape axes (sources, relevance, output, users, operations, non-goals)
+  are seeds, keep them all. We follow the course method, lesson by lesson. work/METHOD.md.
+- 2026-10-15 idea K (event finder) is the working idea; formal confirmation comes out of
+  the lesson-1 brainstorm (plan.md), not a chat yes.
+
+## Where we are in the method (see work/METHOD.md)
+- lesson 1, step 1: brainstorm, one question at a time. Q&A log: work/BRAINSTORM.md
+- next: plan.md -> stack options -> tasks.md -> AGENTS.md/process.md -> roles
+
 ## Open asks
-- CONFIRM idea K with the user's shape: standard searches + matching criteria + public
-  calendar (user proposed 2026-10-15; my assessment in IDEAS.md "K shape v2"). word pending.
-- B, C withdrawn. A, E..J remain fallbacks.
+- brainstorm Q1 pending (see BRAINSTORM.md)
 
 ## Notes
 - datasheet-info-collector is a desktop-app session skill (Application Support/Claude/...),
