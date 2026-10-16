@@ -12,4 +12,13 @@ options:
   a) you only, one profile (hermes as it is)
   b) several people, each with their own profile and private shortlist
   c) a group sharing one feed (a community calendar)
+answer: "b)" (2026-10-15)
+decision: multi-user; each user has own profile and private shortlist. my cap
+(username + password, no sharing, no teams in v1) is a proposal, not yet decided.
+
+## Q2 — where do events come from in v1?
+options:
+  a) public calendar feeds only (ICS URLs the user pastes: Luma calendars, Meetup groups)
+  b) web search only (one provider, queries built from the user's criteria)
+  c) both, plus manual add (the seed from earlier)
 answer: (pending)

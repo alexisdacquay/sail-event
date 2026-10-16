@@ -103,5 +103,99 @@ FAIL: back to engineer with the QA comment -> PASS: close -> repeat.
 `/goal work through the backlog`. Note from the article: costs much more; often a
 simple loop is enough.
 
+# LESSON 2 — Build and Ship (article read 2026-10-15)
+Order: spec -> frontend with mocked service layer -> openapi.yaml from the frontend
+client -> FastAPI backend with in-memory store -> connect -> SQLite via SQLAlchemy.
+"At each stage we get something concrete that we can test." New session per step.
+Repo shape: /backend /docs /frontend AGENTS.md openapi.yaml. Spec -> docs/spec.md.
+Homework 2 adds: name the app in the brainstorm; spec settles on 2-4 features (HW1).
+Prompts, verbatim:
+```
+Create a <app>.
+[Paste the specification here.]
+Centralize every backend call in one services layer, and create a mock
+implementation of it so the whole app runs without a real backend.
+Add tests.
+```
+```
+Read the frontend's API client in frontend/
+Create openapi.yaml at the repository root.
+Specify the backend this frontend expects: every endpoint, method, path, request body, response body, and which endpoints need authentication.
+```
+```
+Build a FastAPI backend in backend/ that implements the openapi.yaml spec.
+Use an in-memory store and seed it with data so the frontend has something to show. Add authentication with hashed passwords and bearer tokens for the endpoints that need it.
+Split the code into modules - routers, models, store, auth
+Write tests
+```
+`Create a Makefile so I can easily run it.` / `Switch the frontend to use the real backend client.`
+```
+Replace the in-memory store with a database. Use SQLite and SQLAlchemy.
+Use an environment variable to configure which DB the server should connect to.
+Make it database-agnostic - later we will add support for other databases (e.g. Postgres).
+```
+
+# LESSON 3 — Deploy (article read 2026-10-15)
+Order: one container (backend serves built frontend) -> Postgres -> docker-compose ->
+integration + Playwright e2e against compose -> deploy (AWS CloudFormation in the
+article; Render/Fly/Railway fine) -> CI/CD with OIDC, deploy only on green, health check.
+Prompts, verbatim:
+```
+Create a Dockerfile that builds the frontend with Node, then builds a Python image with the backend and the frontend static files.
+Backend should serve the frontend.
+```
+`Add Postgres support to the backend.` / `Create docker-compose.yaml with two services: Postgres and the app.`
+`Create integration tests that run against docker-compose.yaml. What scenarios should we test?`
+```
+Add an end-to-end test that runs against docker-compose.yaml.
+Use Playwright to: <numbered user journey, two sessions>
+Put the tests in the e2e/ folder in the repository root.
+```
+`Deploy this application to AWS. Use AWS CloudFormation.`
+```
+Create a CI/CD pipeline that:
+- runs backend and frontend tests in parallel
+- builds the Docker Compose stack and runs integration and end-to-end tests against it
+- deploys to AWS using a GitHub OIDC role
+- validates that the deploy is successful by checking the health endpoint
+```
+Homework 3 variant: kind (local k8s) + act; "keep the existing version running and stop
+the deployment" when a test fails.
+
+# LESSON 4 — DevOps and observability (article read 2026-10-15)
+Order: dev + prod envs -> manual promotion workflow -> build/deploy split with a
+registry, tag YYYYMMDD-HHMMSS-shortsha -> OTel instrumentation (service, env,
+version) -> collector + Prometheus/Loki/Tempo/Grafana in observability/ as a separate
+compose -> app-specific metrics -> dashboard -> actionable alert (threshold, duration,
+service, env, version, owner, dashboard URL) -> on-call agent: poll alerts, headless
+agent with the on-call prompt -> introduce a realistic bug to test the loop.
+Module page adds the guardrails the article skips: evidence packet (read-only,
+allowlisted), autonomy policy, verify recovery, escalation, Semgrep audit, capability
+table, operations-and-security-report.md.
+On-call prompt, verbatim:
+```
+You are the on-call engineer for this repository. An alert just fired.
+Investigate the root cause. Read the code and reproduce the failure.
+If you find a real bug, make the smallest correction, run the backend tests,
+and commit the fix with a clear message.
+If the alert is a false positive, explain why and do not change the code.
+```
+Homework 4: responder at POST /alerts :8001, Grafana webhook, 5xx alert.
+
+# LESSON 5 — skills and subagents (article read 2026-10-15)
+- skill = SKILL.md with name/description frontmatter in .agents/skills/<name>/
+  (.claude/skills symlink). Create it AFTER doing the task once with corrections:
+```
+Save this as a skill. Cover the workflow we followed and keep all the corrections I made in mind, so the next agent can do the task correctly from the start.
+This skill is specific to this project, so don't create a global skill.
+```
+- subagent = .agents/agents/<name>.md (.claude/agents/), can just say
+  "Read your role definition from _docs/team/swe.md". Fresh context per role:
+  never test in the session that implemented.
+- orchestrator in process.md; parallel = one worktree per issue, up to five agents,
+  fresh reviewer, merge one at a time, never implement itself.
+Module deliverable: AGENTS.md, 1 skill, 1 subagent, 1 MCP server, 1 hook, 1 plugin
+or custom agent, permissions note, demo script.
+
 ## Where ProjectOne is in this method
 - Step 1 in progress (2026-10-15). Idea K, event finder. Shape seeds kept in IDEAS.md.
