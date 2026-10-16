@@ -4,6 +4,7 @@ import App from './App'
 import * as mock from './services/mock'
 
 beforeEach(() => {
+  localStorage.clear()
   mock._resetMockEvents()
 })
 

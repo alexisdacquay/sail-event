@@ -21,14 +21,18 @@ export type Event = {
   status: EventStatus
 }
 
-export {
-  register,
-  login,
-  getCriteria,
-  saveCriteria,
-  getThresholds,
-  saveThresholds,
-  runSearch,
-  listEvents,
-  decideEvent,
-} from './mock'
+const useHttp = !!import.meta.env.VITE_API_URL
+
+const mod = useHttp
+  ? await import('./http')
+  : await import('./mock')
+
+export const register = mod.register
+export const login = mod.login
+export const getCriteria = mod.getCriteria
+export const saveCriteria = mod.saveCriteria
+export const getThresholds = mod.getThresholds
+export const saveThresholds = mod.saveThresholds
+export const runSearch = mod.runSearch
+export const listEvents = mod.listEvents
+export const decideEvent = mod.decideEvent
