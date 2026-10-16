@@ -73,7 +73,9 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - issue #1 S4 scaffold: DONE 2026-10-16. PM (Node pin fixed 22→24) → engineer 6ccfdec →
   QA PASS 10/10 (missed dirty tree) → cleanup 48cf3c3 → I verified → closed.
   lesson: QA must check `git status` explicitly; add to qa-engineer.md before #2.
-- next: issue #2 S4 criteria editor + dashboard UI (mocked service layer)
+- issue #2 S4 criteria/thresholds/auth screens + mock service layer: DONE 2026-10-16.
+  PM (no correction) → engineer 5e7620e → QA PASS 16/16, 4 test gaps → +tests 2ffedb2 → closed.
+- next: issue #3 S4 event list + approval queue UI
 - toolchain: uv 0.11, python 3.13 (arch says 3.12: PM to pin), node 24, npm 11, docker up
 
 ## Notes
