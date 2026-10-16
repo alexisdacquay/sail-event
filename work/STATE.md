@@ -56,8 +56,9 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   README: QA PASS + auth step added.
   DECIDED 2026-10-16: deploy = AWS course path (EC2 per env via CloudFormation, lessons 3-4
   prompts verbatim); hourly run = EventBridge cron → search endpoint (to verify at S8).
-  AWAITING: stack confirmation (A = React+TS, Tailwind+shadcn/ui, FastAPI, SQLite→Postgres).
-- S2b tasks.md: after stack pick
+  DECIDED 2026-10-16 stack A: React+TS+Vite, Tailwind+shadcn/ui, FastAPI, SQLAlchemy, SQLite→Postgres,
+  bcrypt auth, pytest+Playwright, EventBridge cron for the hourly run.
+- S2b architecture.md + tasks.md: Opus drafting → QA → user
 - S2c GitHub issues: needs public repo → USER DECIDES name/visibility (blocking)
 - S3 AGENTS.md, process.md, task-template.md, team/: after S2b
 - git: branch main, no remote yet, tree clean at 3abcb4a
