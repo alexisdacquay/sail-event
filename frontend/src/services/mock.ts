@@ -136,3 +136,7 @@ export async function decideEvent(
   event.status = decision
   return { ...event }
 }
+
+export async function getCalendarUrl(): Promise<{ url: string }> {
+  return { url: 'http://localhost:8000/api/calendar/mock-ics-token' }
+}

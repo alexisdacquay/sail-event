@@ -15,6 +15,7 @@ import {
   getThresholds,
   saveThresholds,
   runSearch,
+  getCalendarUrl,
 } from '@/services/api'
 import type { SearchResult } from '@/services/api'
 import { useAuth } from '@/contexts/AuthContext'
@@ -31,6 +32,8 @@ export function MainPage({ embedded }: MainPageProps) {
   const [upper, setUpper] = useState(100)
   const [thresholdError, setThresholdError] = useState('')
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null)
+  const [calendarUrl, setCalendarUrl] = useState('')
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     getCriteria().then((c) => setCriteriaText(c.text))
@@ -38,6 +41,7 @@ export function MainPage({ embedded }: MainPageProps) {
       setLower(t.lowerThreshold)
       setUpper(t.upperThreshold)
     })
+    getCalendarUrl().then((r) => setCalendarUrl(r.url))
   }, [])
 
   async function handleSaveCriteria() {
@@ -67,6 +71,16 @@ export function MainPage({ embedded }: MainPageProps) {
   async function handleSearch() {
     const result = await runSearch()
     setSearchResult(result)
+  }
+
+  async function handleCopyCalendarUrl() {
+    try {
+      await navigator.clipboard.writeText(calendarUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // clipboard API unavailable (e.g. test environments)
+    }
   }
 
   return (
@@ -146,6 +160,30 @@ export function MainPage({ embedded }: MainPageProps) {
           )}
         </CardContent>
       </Card>
+
+      {calendarUrl && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Calendar Feed</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <p className="text-sm text-muted-foreground">
+              Subscribe from your calendar app
+            </p>
+            <div className="flex gap-2">
+              <Input
+                readOnly
+                value={calendarUrl}
+                data-testid="calendar-url"
+                aria-label="Calendar feed URL"
+              />
+              <Button onClick={handleCopyCalendarUrl} data-testid="copy-calendar-url">
+                {copied ? 'Copied' : 'Copy'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

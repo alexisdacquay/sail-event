@@ -108,3 +108,7 @@ export async function decideEvent(
     body: JSON.stringify({ decision }),
   })
 }
+
+export async function getCalendarUrl(): Promise<{ url: string }> {
+  return request<{ url: string }>('/api/calendar-url')
+}

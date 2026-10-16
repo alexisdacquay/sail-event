@@ -36,3 +36,4 @@ export const saveThresholds = mod.saveThresholds
 export const runSearch = mod.runSearch
 export const listEvents = mod.listEvents
 export const decideEvent = mod.decideEvent
+export const getCalendarUrl = mod.getCalendarUrl
