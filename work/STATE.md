@@ -79,7 +79,9 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   known stops ahead: #17 (AWS credentials), #19/#20 (search + model API keys).
 - issue #3 S4 events list + queue: DONE. PM (fixed 'sailing' mock titles) → eng 9b6d9c7 →
   QA PASS 15/15, 4 gaps → +2 tests ef87cec → closed.
-- next: issue #4 S4 openapi.yaml from the service layer
+- issue #4 S4 openapi.yaml + docs/api.md: DONE. PM (no fix) → eng a3dd774 → QA PASS 12/12 → closed.
+  S4 COMPLETE (issues 1-4).
+- next: issue #5 S5 adapter interfaces + fixture/fake implementations
 - toolchain: uv 0.11, python 3.13 (arch says 3.12: PM to pin), node 24, npm 11, docker up
 
 ## Notes
