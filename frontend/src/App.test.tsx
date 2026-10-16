@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import App from './App'
+import * as mock from './services/mock'
 
 async function loginAsTestUser() {
   render(<App />)
@@ -53,9 +54,24 @@ describe('Auth', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Logout' }))
     expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument()
   })
+
+  it('unauthenticated render shows no criteria editor', () => {
+    render(<App />)
+    expect(screen.queryByLabelText('Criteria')).not.toBeInTheDocument()
+  })
 })
 
 describe('Criteria', () => {
+  it('initial value equals mock canned criteria text', async () => {
+    await loginAsTestUser()
+    const textarea = screen.getByLabelText('Criteria')
+    await waitFor(() => {
+      expect(textarea).toHaveValue(
+        'sailing regattas in the Mediterranean, July 2026',
+      )
+    })
+  })
+
   it('save round-trips criteria text', async () => {
     await loginAsTestUser()
     const textarea = screen.getByLabelText('Criteria')
@@ -70,6 +86,31 @@ describe('Criteria', () => {
 })
 
 describe('Thresholds', () => {
+  it('initial values equal mock canned thresholds', async () => {
+    await loginAsTestUser()
+    const lowerInput = screen.getByLabelText('Lower Threshold')
+    const upperInput = screen.getByLabelText('Upper Threshold')
+    await waitFor(() => {
+      expect(lowerInput).toHaveValue(30)
+      expect(upperInput).toHaveValue(70)
+    })
+  })
+
+  it('equal thresholds shows error and saveThresholds is not called', async () => {
+    const spy = vi.spyOn(mock, 'saveThresholds')
+    await loginAsTestUser()
+    const lowerInput = screen.getByLabelText('Lower Threshold')
+    const upperInput = screen.getByLabelText('Upper Threshold')
+    fireEvent.change(lowerInput, { target: { value: '50' } })
+    fireEvent.change(upperInput, { target: { value: '50' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save Thresholds' }))
+    expect(
+      screen.getByText('Lower threshold must be less than upper threshold'),
+    ).toBeInTheDocument()
+    expect(spy).not.toHaveBeenCalled()
+    spy.mockRestore()
+  })
+
   it('rejects lower >= upper with inline error', async () => {
     await loginAsTestUser()
     const lowerInput = screen.getByLabelText('Lower Threshold')
