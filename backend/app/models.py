@@ -61,3 +61,18 @@ class Event(BaseModel):
     score: int
     score_reason: str = Field(alias="scoreReason")
     status: EventStatus
+
+
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class AuthResponse(BaseModel):
+    token: str
+    username: str

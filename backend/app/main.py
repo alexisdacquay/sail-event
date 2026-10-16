@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from .routers import calendar, criteria, events, health, search, thresholds
+from .routers import auth, calendar, criteria, events, health, search, thresholds
 
 app = FastAPI()
 
@@ -16,6 +16,7 @@ async def validation_exception_handler(request, exc):
     return JSONResponse(status_code=400, content={"detail": str(exc)})
 
 
+app.include_router(auth.router)
 app.include_router(health.router)
 app.include_router(criteria.router)
 app.include_router(thresholds.router)

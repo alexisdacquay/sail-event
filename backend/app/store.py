@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from .adapters import FakeScorer, FixtureSearchProvider
+from .auth import hash_password
 from .models import Criteria, Event, EventStatus, Thresholds
 
 
@@ -14,12 +15,14 @@ class UserRecord:
         self,
         user_id: str,
         username: str,
+        password_hash: str,
         criteria: Criteria,
         thresholds: Thresholds,
         ics_token: str,
     ) -> None:
         self.user_id = user_id
         self.username = username
+        self.password_hash = password_hash
         self.criteria = criteria
         self.thresholds = thresholds
         self.ics_token = ics_token
@@ -30,6 +33,7 @@ class UserRecord:
 class Store:
     def __init__(self) -> None:
         self.users: dict[str, UserRecord] = {}  # user_id -> UserRecord
+        self.username_to_user_id: dict[str, str] = {}  # username -> user_id
         self.ics_token_to_user: dict[str, str] = {}  # ics_token -> user_id
         self._run_counter: int = 0
 
@@ -39,6 +43,7 @@ class Store:
 
     def add_user(self, record: UserRecord) -> None:
         self.users[record.user_id] = record
+        self.username_to_user_id[record.username] = record.user_id
         self.ics_token_to_user[record.ics_token] = record.user_id
 
     def add_event(self, user_id: str, event: Event) -> None:
@@ -61,6 +66,7 @@ def _seed() -> Store:
     user = UserRecord(
         user_id=user_id,
         username="demo",
+        password_hash=hash_password("demo"),
         criteria=criteria,
         thresholds=thresholds,
         ics_token=ics_token,
