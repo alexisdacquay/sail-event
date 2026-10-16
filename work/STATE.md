@@ -58,7 +58,10 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   prompts verbatim); hourly run = EventBridge cron → search endpoint (to verify at S8).
   DECIDED 2026-10-16 stack A: React+TS+Vite, Tailwind+shadcn/ui, FastAPI, SQLAlchemy, SQLite→Postgres,
   bcrypt auth, pytest+Playwright, EventBridge cron for the hourly run.
-- S2b architecture.md + tasks.md: Opus drafting → QA → user
+- S2b architecture.md + tasks.md: draft v1 (28 tasks) → QA: arch PASS w/ defects (openapi
+  direction, triage boundary inclusive vs plan's strict, hourly flow single-user, `new` status
+  recovery), tasks FAIL (S13 misplaced after S12, task 19 depends on S13, split 5 & 8, merge
+  12/18/25) + mine (no EventBridge trigger task) → 12-point revision in progress → I verify
 - S2c GitHub issues: needs public repo → USER DECIDES name/visibility (blocking)
 - S3 AGENTS.md, process.md, task-template.md, team/: after S2b
 - git: branch main, no remote yet, tree clean at 3abcb4a
