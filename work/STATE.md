@@ -77,7 +77,9 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   PM (no correction) → engineer 5e7620e → QA PASS 16/16, 4 test gaps → +tests 2ffedb2 → closed.
 - 2026-10-16 user: chain issues without asking; stop only on a problem I cannot resolve.
   known stops ahead: #17 (AWS credentials), #19/#20 (search + model API keys).
-- next: issue #3 S4 event list + approval queue UI
+- issue #3 S4 events list + queue: DONE. PM (fixed 'sailing' mock titles) → eng 9b6d9c7 →
+  QA PASS 15/15, 4 gaps → +2 tests ef87cec → closed.
+- next: issue #4 S4 openapi.yaml from the service layer
 - toolchain: uv 0.11, python 3.13 (arch says 3.12: PM to pin), node 24, npm 11, docker up
 
 ## Notes
