@@ -23,24 +23,18 @@ Strongest fact against: the 2025 full-score CRUD apps had zero run-time external
 dependencies; ours has two paid APIs at run time. If the key-less mode slips, the
 reproducibility criterion (14) and the live deployment (10) both drop a point.
 
-## Phase plan, mirroring HW1-5
-P1 lesson 1 (now): plan.md -> stack options -> tasks.md -> AGENTS.md, process.md,
-   team roles. deliverable: backlog as GitHub issues.
-P2 lesson 2: frontend with mocked service layer -> openapi.yaml -> FastAPI with
-   in-memory store -> connect -> SQLite/SQLAlchemy. App v0 = accounts, criteria,
-   event list, queue accept/reject, ICS feed. search = fixture provider, scorer =
-   fake (deterministic). unit + frontend tests. docs/ai-usage-report.md.
-P3 lesson 3: real search provider + real model behind env flags, key-less mode kept;
-   Postgres; Dockerfile + compose; integration tests + Playwright e2e; deploy; CI/CD.
-P4 lesson 4: hourly run as a job; OTel; alert on failed/empty run; evidence packet;
-   headless responder (= the self-maintenance the user wants); Semgrep audit;
-   operations-and-security-report.md.
-P5 lesson 5: agent extension pack (skill, subagent, MCP server exposing
-   upcoming_events/decide, hook, permissions note, demo script).
-Each phase ends with something a reviewer can run. P2 alone already covers rubric
-criteria 1-7 at full marks.
+## Phase plan
 
-## Simplifications available if time runs short (in order)
-1. drop the hourly scheduler: "Search now" only (P4 keeps an alert on a manual run)
-2. one threshold instead of two: accept/queue, no auto-reject
-3. scorer stays fake in production (demo mode), real model documented as optional
+| Phase | Lesson | Build | Search / scorer | Reviewer can run | Rubric |
+|---|---|---|---|---|---|
+| P1 | 1 | spec, stack, backlog, AGENTS.md, roles | — | backlog | 1, 2 |
+| P2 | 2 | frontend (mock service) → openapi → FastAPI → SQLite. accounts, criteria, events, queue, ICS feed | fixture + fake | local app, tests | 3–7 |
+| P3 | 3 | Postgres, compose, integration + e2e, deploy, CI/CD | real, behind flags; key-less kept | public URL | 8–11, 14 |
+| P4 | 4 | hourly job, OTel, alert, evidence, responder, Semgrep | — | incident report | 13 |
+| P5 | 5 | skill, subagent, MCP server, hook, permissions | — | agent demo | 12 |
+
+## If time runs short, cut in this order
+
+1. hourly job → "Search now" only
+2. two thresholds → one (accept / queue)
+3. real scorer → fake stays, real documented as optional
