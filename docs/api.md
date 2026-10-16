@@ -13,4 +13,5 @@
 | `decideEvent`     | `decideEvent`    | POST   | `/api/events/{id}/decision` |
 | —                 | `healthCheck`    | GET    | `/api/health`               |
 | —                 | `searchAll`      | POST   | `/api/search/all`           |
+| `getCalendarUrl`  | `getCalendarUrl` | GET    | `/api/calendar-url`         |
 | —                 | `getCalendarFeed`| GET    | `/api/calendar/{ics_token}` |
