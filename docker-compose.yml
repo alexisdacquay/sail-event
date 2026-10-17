@@ -20,7 +20,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: "postgresql+psycopg://sail:sail@postgres:5432/sail_event"
-      JWT_SECRET: "${JWT_SECRET:-dev-jwt-secret}"
+      JWT_SECRET: "${JWT_SECRET:-}"
       SEARCH_ALL_API_KEY: "${SEARCH_ALL_API_KEY:-dev-api-key}"
       SEED_DEMO: "${SEED_DEMO:-1}"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"

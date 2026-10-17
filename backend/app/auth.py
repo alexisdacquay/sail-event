@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 import os
+import secrets
+import sys
 from datetime import UTC, datetime, timedelta
 
 import bcrypt
@@ -11,18 +13,29 @@ import jwt
 
 logger = logging.getLogger(__name__)
 
-_DEV_SECRET = "sail-event-dev-secret-do-not-use-in-prod"
+
+def _compute_jwt_secret() -> str:
+    """Resolve JWT signing secret from environment.
+
+    Called once at import time; result cached in ``_SECRET``.
+    """
+    secret = os.environ.get("JWT_SECRET", "").strip()
+    if secret:
+        return secret
+    if os.environ.get("APP_ENV", "").strip().lower() == "prod":
+        sys.exit("FATAL: JWT_SECRET environment variable is missing or empty (APP_ENV=prod)")
+    logger.warning(
+        "JWT_SECRET is unset — generated a random dev secret. "
+        "Tokens will not survive restarts."
+    )
+    return secrets.token_hex(32)
+
+
+_SECRET: str = _compute_jwt_secret()
 
 
 def _jwt_secret() -> str:
-    secret = os.environ.get("JWT_SECRET", "").strip()
-    if not secret:
-        logger.warning(
-            "JWT_SECRET is unset or empty — using hardcoded dev default. "
-            "Do NOT use this in production."
-        )
-        return _DEV_SECRET
-    return secret
+    return _SECRET
 
 
 def _jwt_expiry_minutes() -> int:

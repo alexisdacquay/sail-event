@@ -289,3 +289,25 @@ def test_seed_demo_idempotent(_db_session):
         _db_session.close = original_close
 
     assert _db_session.query(User).count() == count_before
+
+
+# ---------- _compute_jwt_secret ----------
+
+def test_compute_jwt_secret_raises_in_prod_without_secret(monkeypatch):
+    """APP_ENV=prod with no JWT_SECRET must exit immediately."""
+    monkeypatch.setenv("APP_ENV", "prod")
+    monkeypatch.delenv("JWT_SECRET", raising=False)
+    import pytest
+    from app.auth import _compute_jwt_secret
+    with pytest.raises(SystemExit):
+        _compute_jwt_secret()
+
+
+def test_compute_jwt_secret_random_in_dev(monkeypatch):
+    """Without JWT_SECRET and APP_ENV!=prod, returns a random non-empty secret."""
+    monkeypatch.delenv("JWT_SECRET", raising=False)
+    monkeypatch.delenv("APP_ENV", raising=False)
+    from app.auth import _compute_jwt_secret
+    secret = _compute_jwt_secret()
+    assert isinstance(secret, str) and len(secret) > 0
+    assert secret != "sail-event-dev-secret-do-not-use-in-prod"
