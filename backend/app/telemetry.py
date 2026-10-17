@@ -48,6 +48,18 @@ def init(*, app: object | None = None) -> None:
     else:
         FastAPIInstrumentor.instrument()
 
+    # Logs — export via OTLP so the collector receives them directly
+    # (fallback for environments where the filelog bind mount is empty, e.g. OrbStack)
+    import logging as _logging
+    from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+    from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+    from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
+
+    lp = LoggerProvider(resource=resource)
+    lp.add_log_record_processor(BatchLogRecordProcessor(OTLPLogExporter()))
+    handler = LoggingHandler(level=_logging.NOTSET, logger_provider=lp)
+    _logging.getLogger().addHandler(handler)
+
     # Inject trace_id / span_id into stdlib log records
     LoggingInstrumentor().instrument(
         set_logging_format=False,
