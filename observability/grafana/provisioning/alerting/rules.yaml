@@ -1,0 +1,121 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: sail-event-search
+    folder: Sail-event Alerts
+    interval: 60s
+    rules:
+      - uid: search-run-failures
+        title: SearchRunFailures
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: 'increase(sail_runs_total{outcome="error"}[10m])'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: ""
+              refId: B
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 1
+              refId: C
+        noDataState: NoData
+        execErrState: Error
+        for: 5m0s
+        labels:
+          service: sail-event-backend
+          environment: '{{ $$labels.deployment_environment | default "dev" }}'
+          version: '{{ $$labels.service_version | default "dev" }}'
+          severity: critical
+          owner: alexisdacquay
+        annotations:
+          summary: Two or more search runs failed in the last 10 minutes
+          description: 'Observed {{ $values.B.Value | printf "%.0f" }} failed run(s) in a 10-minute window'
+          dashboard_url: http://localhost:3001/d/sail-event-overview
+          runbook: TODO
+
+      - uid: search-runs-silent
+        title: SearchRunsSilent
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: prometheus
+            model:
+              editorMode: code
+              expr: 'increase(sail_runs_total[2h])'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: ""
+              refId: B
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: lt
+                    params:
+                      - 1
+              refId: C
+        noDataState: OK
+        execErrState: Error
+        for: 10m0s
+        labels:
+          service: sail-event-backend
+          environment: '{{ $$labels.deployment_environment | default "dev" }}'
+          version: '{{ $$labels.service_version | default "dev" }}'
+          severity: critical
+          owner: alexisdacquay
+        annotations:
+          summary: No search runs completed in the last 2 hours
+          description: Zero runs recorded in a 2-hour window; the hourly scheduler may be stopped
+          dashboard_url: http://localhost:3001/d/sail-event-overview
+          runbook: TODO
