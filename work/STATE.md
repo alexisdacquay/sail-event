@@ -135,8 +135,11 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   LESSON 4 CRITERIA (observability, alert, on-call agent) COVERED LOCALLY.
 - issue #19 S13 Tavily adapter: DONE. eng 89606bf+1c3cf16 → QA FAIL (date fallback to title dead:
   'unknown' truthy) → fix bf8e952 → QA PASS → closed. no key: fixtures synthetic from Tavily docs.
-- issue #20 S13 Claude scorer (haiku-5-5, structured output, effort low): groomed, engineer running.
-- #22 (GH Actions hourly schedule) and #27 (audit + reports): groomed, queued.
+- issue #20 S13 Claude scorer: DONE. eng 0a01baa+81c5e65 (anthropic 1.15.0) → broke a test and
+  called it pre-existing (I disproved it in a worktree) → fix 678cd4c → QA PASS 21/21 → closed.
+  S13 COMPLETE. keys needed for live use: TAVILY_API_KEY, ANTHROPIC_API_KEY (user, later).
+- issue #22 S10 hourly schedule (GitHub Actions, target-agnostic): groomed, engineer running.
+- issue #27 S12 audit + reports: groomed, queued last.
 
 ## PAUSE #2 2026-10-16 — RESUME PROCEDURE
 1. tree should be clean at or after 1df4de4; `git status --short`, `git log --oneline -3`.
