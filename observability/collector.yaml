@@ -1,0 +1,75 @@
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+  filelog:
+    include:
+      - /var/lib/docker/containers/*/*.log
+    include_file_path: true
+    operators:
+      - type: json_parser
+        id: docker_json
+        parse_from: body
+      - type: json_parser
+        id: inner_parse
+        parse_from: attributes.log
+        if: attributes.log != nil and attributes.log matches "^\\{"
+        severity:
+          parse_from: attributes.level
+          mapping:
+            debug: DEBUG
+            info: INFO
+            warn: WARNING
+            error: ERROR
+            critical: CRITICAL
+
+processors:
+  batch:
+    timeout: 2s
+    send_batch_size: 512
+  resource/logs:
+    attributes:
+      - key: service.name
+        value: sail-event-backend
+        action: upsert
+      - key: deployment.environment
+        value: dev
+        action: upsert
+      - key: service.version
+        value: dev
+        action: upsert
+
+exporters:
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    resource_to_telemetry_conversion:
+      enabled: true
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/tempo]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp, filelog]
+      processors: [batch]
+      exporters: [otlphttp/loki]

@@ -1,4 +1,4 @@
-.PHONY: run run-frontend run-backend test test-integration test-e2e docker-build docker-run compose-up compose-down
+.PHONY: run run-frontend run-backend test test-integration test-e2e docker-build docker-run compose-up compose-down observability-network observability-up observability-down up-all
 
 HOST_PORT ?= 8000
 
@@ -51,3 +51,16 @@ else
 	cd $(CURDIR) && HOST_PORT=$(HOST_PORT) docker compose down -v; \
 	exit $$rc
 endif
+
+observability-network:
+	docker network create sail-observability || true
+
+observability-up: observability-network
+	docker compose -f observability/docker-compose.yml up -d --wait
+
+observability-down:
+	docker compose -f observability/docker-compose.yml down -v
+
+up-all: observability-network
+	docker compose -f observability/docker-compose.yml up -d --wait
+	OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318 HOST_PORT=$(HOST_PORT) docker compose up --build -d --wait

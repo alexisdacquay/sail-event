@@ -29,6 +29,9 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
     ports:
       - "${HOST_PORT:-8000}:8000"
+    networks:
+      - default
+      - sail-observability
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/health', timeout=2).status == 200 else 1)"]
       interval: 5s
@@ -37,3 +40,7 @@ services:
 
 volumes:
   pgdata:
+
+networks:
+  sail-observability:
+    external: true

@@ -1,0 +1,113 @@
+{
+  "uid": "sail-event-overview",
+  "title": "Sail-event — Search Run Journey",
+  "tags": ["sail-event"],
+  "timezone": "browser",
+  "editable": true,
+  "templating": {
+    "list": [
+      {
+        "name": "environment",
+        "type": "query",
+        "datasource": { "uid": "prometheus" },
+        "query": "label_values(sail_runs_total, deployment_environment)",
+        "current": { "text": "All", "value": "$__all" },
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 2
+      },
+      {
+        "name": "version",
+        "type": "query",
+        "datasource": { "uid": "prometheus" },
+        "query": "label_values(sail_runs_total, service_version)",
+        "current": { "text": "All", "value": "$__all" },
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 2
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Search runs per trigger & outcome",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "increase(sail_runs_total{deployment_environment=~\"$environment\", service_version=~\"$version\"}[$__rate_interval])",
+          "legendFormat": "{{trigger}} / {{outcome}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Events found / new",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "increase(sail_events_found_total{deployment_environment=~\"$environment\", service_version=~\"$version\"}[$__rate_interval])",
+          "legendFormat": "found"
+        },
+        {
+          "expr": "increase(sail_events_new_total{deployment_environment=~\"$environment\", service_version=~\"$version\"}[$__rate_interval])",
+          "legendFormat": "new"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Run duration p50 / p95",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(sail_run_duration_seconds_bucket{deployment_environment=~\"$environment\", service_version=~\"$version\"}[$__rate_interval]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(sail_run_duration_seconds_bucket{deployment_environment=~\"$environment\", service_version=~\"$version\"}[$__rate_interval]))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "HTTP request rate & 5xx rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "rate(http_server_request_duration_seconds_count{deployment_environment=~\"$environment\", service_version=~\"$version\"}[$__rate_interval])",
+          "legendFormat": "req/s"
+        },
+        {
+          "expr": "rate(http_server_request_duration_seconds_count{http_response_status_code=~\"5..\", deployment_environment=~\"$environment\", service_version=~\"$version\"}[$__rate_interval])",
+          "legendFormat": "5xx/s"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Logs",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 16 },
+      "datasource": { "uid": "loki" },
+      "targets": [
+        {
+          "expr": "{service_name=\"sail-event-backend\"} | json",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "time": { "from": "now-1h", "to": "now" },
+  "refresh": "10s",
+  "schemaVersion": 39
+}
