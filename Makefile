@@ -1,4 +1,4 @@
-.PHONY: run run-frontend run-backend test docker-build docker-run
+.PHONY: run run-frontend run-backend test docker-build docker-run compose-up compose-down
 
 run-frontend:
 	cd frontend && npm run dev
@@ -23,3 +23,9 @@ docker-build:
 
 docker-run:
 	docker run --rm -p 8000:8000 -v sail-data:/data sail-event:local
+
+compose-up:
+	docker compose up --build -d --wait
+
+compose-down:
+	docker compose down
