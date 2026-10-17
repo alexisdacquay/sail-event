@@ -129,7 +129,11 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - issue #25 S12 alerts: DONE. eng d7f0eea+d06f549 → QA PASS 18/18 live (fire + resolve + webhooks)
   → closed. fact: Loki & collector images have no shell/wget (I tested); healthchecks stay validation-only.
   Grafana 13 stores {{ $labels }} literally in provisioned labels; real labels come from the query.
-- issue #26 S12 responder: groomed (claude -p sonnet, worktree, budget $1, human merges), engineer running.
+- issue #26 S12 responder: DONE. eng e766b84..dda836d; first incident 20261017-052050 → verdict fix
+  dae24e9 on branch incident/...; QA PASS → closed. caveats: test-incident.sh run stepwise; first
+  branch made by hand; claude -p needs CLAUDE_* env vars cleared when spawned from Claude Desktop.
+  LESSON 4 CRITERIA (observability, alert, on-call agent) COVERED LOCALLY.
+- issue #19 Tavily adapter: groomed, engineer running. #20 Claude scorer: groomed, next.
 
 ## PAUSE #2 2026-10-16 — RESUME PROCEDURE
 1. tree should be clean at or after 1df4de4; `git status --short`, `git log --oneline -3`.
