@@ -120,7 +120,9 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   2026-10-17 user could not get through AWS sign-in; AWS deferred. Render proposed as the easy
   alternative (user to decide later). UNATTENDED RUN 2-3h without a cloud target, order:
   #18 CI-only → #23 → #24 → #25 → #26 → #19 → #20 → #22 (GH Actions schedule) → #27.
-  #17, #21 blocked on AWS; #18 CD half and #22's target URL filled in once a target exists.
+  #17, #21 blocked on AWS; #18 CD half = new issue #29; #22's target URL filled in once a target exists.
+- issue #18 S9 CI: DONE. PR #30 merged a719004, CI green on PR and main → QA PASS → closed.
+- issue #23 S11 OTel instrumentation: groomed, engineer running.
 
 ## PAUSE #2 2026-10-16 — RESUME PROCEDURE
 1. tree should be clean at or after 1df4de4; `git status --short`, `git log --oneline -3`.
