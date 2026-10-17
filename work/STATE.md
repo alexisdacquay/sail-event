@@ -108,7 +108,9 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - issue #14 S7 Dockerfile: DONE. eng ae645df (uv pinned, tsc build fixed) → QA FAIL (SPA fallback
   answered /api/*) → fix dd304bb → my checks + browser flow on the container → closed. image 350 MB.
   note: host port 8000 is the user's order-tracker stack (HW4); our runs use 8010.
-- next: issue #15 S7 Postgres + docker-compose
+- issue #15 S7 Postgres + compose: DONE. eng c64207d+d34dda2 → QA FAIL (healthcheck curl missing;
+  engineer had claimed --wait ok) → fix 7dec86d → I verified healthy → closed. psycopg 3.3.6.
+- next: issue #16 S7 integration tests against compose + Playwright e2e
 
 ## (kept) PAUSE PROCEDURE 2026-10-16
 1. `git -C /Users/ad/code/ProjectOne status --short` and `git log --oneline -5`.
