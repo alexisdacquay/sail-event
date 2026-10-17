@@ -25,12 +25,12 @@
 | model-012 | medium | Scorer prompt injection via search results | accepted | Inherent to LLM scoring of external content; scorer output is a bounded int (0-100) with reason truncation at 120 chars. Risk is manipulated scores, not data exfiltration. |
 | model-013 | medium | Demo user weak credentials | accepted | Demo user exists only when `SEED_DEMO=1` (dev convenience). Production should not set it. |
 | model-014 | medium | No input length limits | deferred | Deferred to #35 |
-| model-015 | medium | CI no explicit permissions | fixed | Fixed in this commit — added `permissions: contents: read` to `ci.yml`. |
+| model-015 | medium | CI no explicit permissions | fixed | Fixed in commit `17f122e` — added `permissions: contents: read` to `ci.yml`. |
 | model-016 | low | ICS token no rotation | deferred | Deferred to #36 |
 | model-017 | low | CORS allows all methods/headers | deferred | Deferred to #36 |
 | model-018 | low | Pipeline error stored verbatim | accepted | Run records are not exposed via any API endpoint; only visible in database. |
 | model-019 | info | DATABASE_URL defaults to SQLite | accepted | Dev convenience; production always sets DATABASE_URL via compose or env. |
-| model-020 | info | Events status filter accepts arbitrary strings | fixed | Fixed in this commit — added validation against `EventStatus` values. |
+| model-020 | info | Events status filter accepts arbitrary strings | fixed | Fixed in commit `17f122e` — added validation against `EventStatus` values. |
 
 ## Recommended follow-up
 

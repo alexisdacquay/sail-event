@@ -180,6 +180,20 @@ def test_filter_rejected_returns_only_rejected(client, auth_headers):
     assert all(e["status"] == "rejected" for e in rejected)
 
 
+def test_invalid_status_filter_returns_400(client, auth_headers):
+    h = auth_headers("demo", "demo")
+    r = client.get("/api/events?status=bogus", headers=h)
+    assert r.status_code == 400
+    assert "detail" in r.json()
+
+
+def test_valid_status_filter_still_works(client, auth_headers):
+    h = auth_headers("demo", "demo")
+    r = client.get("/api/events?status=accepted", headers=h)
+    assert r.status_code == 200
+    assert isinstance(r.json(), list)
+
+
 def test_list_events_no_auth_returns_401(client):
     r = client.get("/api/events")
     assert r.status_code == 401
