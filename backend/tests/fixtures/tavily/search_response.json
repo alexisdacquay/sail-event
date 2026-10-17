@@ -1,0 +1,45 @@
+{
+  "_comment": "Synthetic fixture built from the Tavily API documented response schema (https://docs.tavily.com/documentation/api-reference/endpoint/search). Not from a live call.",
+  "query": "sailing regattas 2026",
+  "follow_up_questions": null,
+  "answer": null,
+  "images": [],
+  "results": [
+    {
+      "title": "Round the Island Race 2026",
+      "url": "https://example.com/round-island-2026",
+      "content": "The Round the Island Race returns on 2026-06-20 with over 1,500 boats expected. Registration opens in March. The race circumnavigates the Isle of Wight.",
+      "raw_content": null,
+      "score": 0.95
+    },
+    {
+      "title": "Cowes Week Schedule",
+      "url": "https://example.com/cowes-week",
+      "content": "Cowes Week runs from August 1 to August 8. The event on January 15, 2026 is the early-bird registration deadline for this premier sailing regatta.",
+      "raw_content": null,
+      "score": 0.91
+    },
+    {
+      "title": "Mediterranean Sailing Festival",
+      "url": "https://example.com/med-sailing",
+      "content": "A week-long celebration of sailing culture in the Mediterranean. Activities include races, workshops, and boat shows. No specific dates announced yet.",
+      "raw_content": null,
+      "score": 0.88
+    },
+    {
+      "title": "Sydney to Hobart Dec 26, 2026",
+      "url": "https://example.com/sydney-hobart",
+      "content": "The iconic Sydney to Hobart yacht race starts every year on Boxing Day. Crews prepare months in advance for this grueling ocean race.",
+      "raw_content": null,
+      "score": 0.85
+    },
+    {
+      "title": "Volvo Ocean Race Update",
+      "url": "https://example.com/round-island-2026",
+      "content": "The Volvo Ocean Race 2026-2027 edition will visit 10 ports across 6 continents. Leg 1 departs Alicante on 2026-10-15T14:00.",
+      "raw_content": null,
+      "score": 0.82
+    }
+  ],
+  "response_time": 1.23
+}

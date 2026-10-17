@@ -74,6 +74,16 @@ To run against an already-running stack:
 SAIL_BASE_URL=http://localhost:8010 make test-e2e
 ```
 
+## Real adapters
+
+To smoke-test the Tavily adapter against the live API (not run in CI):
+
+```
+SEARCH_PROVIDER=tavily TAVILY_API_KEY=... uv run python -m app.adapters.search_tavily "sailing regattas 2026"
+```
+
+CI stays fixture-only; `make test` never hits the network.
+
 ## Adapter-stub approach
 
 `FixtureSearchProvider` returns canned events from `fixtures.json`.
