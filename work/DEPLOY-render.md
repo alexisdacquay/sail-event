@@ -35,10 +35,9 @@ SEARCH_ALL_API_KEY  Render-generated; same value in GitHub Actions secret
 - promote.yml written: hook + `ref=<sha>`, polls /api/health `commit` field (new, from RENDER_GIT_COMMIT) until it equals the sha
 - working tree: health.py, test_health.py, openapi.yaml, promote.yml, docs — commit on word
 
+- [x] 2026-10-17: dev DATABASE_URL set, prod auto-deploy off, secret RENDER_PROD_DEPLOY_HOOK set (user); commit 10d4701 pushed → dev auto-deployed; promote run 39077343738 put 10d4701 on prod; #21 closed
+
 ## Not done yet
-- [ ] dev: paste DATABASE_URL (Render → sail-event-dev-db → Connect → Internal URL, prefix postgresql+psycopg://) — user
-- [ ] prod: Settings → Auto-Deploy off; Deploy Hook → `gh secret set RENDER_PROD_DEPLOY_HOOK` — user
-- [ ] run promote.yml once as proof, then close #21
 - [ ] delete old DB user `sail_event_db_user` (Credential Rotation, bin icon) once it shows 0 open connections — user
 - [ ] health check path on the web service is empty in Render Settings; set to `/api/health` — user
 - [ ] SEARCH_PROVIDER=tavily + TAVILY_API_KEY; SCORER=claude + ANTHROPIC_API_KEY — keys are the user's

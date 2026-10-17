@@ -84,7 +84,8 @@ The live deployment is <https://sail-event.onrender.com>. Register your own acco
           OpenTelemetry ──▶ collector ──▶ Prometheus + Loki + Tempo ──▶ Grafana
 
    GitHub Actions cron (:07 every hour) ──▶ POST /api/search/all ──▶ one run per user
-   push to main ──▶ Render builds the Dockerfile ──▶ live
+   push to main ──▶ Render builds the Dockerfile ──▶ dev
+   promote workflow (manual, by commit) ──▶ prod ──▶ health reports that commit
 ```
 
 | Layer | Choice | Where |
@@ -144,8 +145,9 @@ How they are organised: [docs/testing.md](docs/testing.md).
 | Step | What happens | Where |
 |---|---|---|
 | Pull request | CI runs backend, frontend, then integration and e2e | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
-| Merge to main | Render builds the image from the Dockerfile and deploys it | [docs/deployment.md](docs/deployment.md) |
-| Rollback | Render dashboard, previous deploy, Rollback | [docs/release-process.md](docs/release-process.md) |
+| Merge to main | Render builds the image and deploys it to **dev** (sail-event-dev.onrender.com) | [docs/deployment.md](docs/deployment.md) |
+| Promote to prod | Manual workflow: pick a commit, Render deploys it to **prod**, the job waits until `/api/health` reports that commit | [`.github/workflows/promote.yml`](.github/workflows/promote.yml) |
+| Rollback | Run the promote workflow with the previous commit | [docs/release-process.md](docs/release-process.md) |
 | Hourly search | GitHub Actions cron calls `POST /api/search/all` with a shared key | [`.github/workflows/hourly-search.yml`](.github/workflows/hourly-search.yml) |
 
 ## When it breaks
@@ -196,7 +198,7 @@ Policy, prompt and limits: [`incident-response/`](incident-response/). Security 
 | Testing | `make test`, `make test-integration`, `make test-e2e`; [docs/testing.md](docs/testing.md) |
 | Containerization | [`Dockerfile`](Dockerfile), [`docker-compose.yml`](docker-compose.yml) |
 | Deployment | <https://sail-event.onrender.com>, [docs/deployment.md](docs/deployment.md) |
-| CI/CD | [`ci.yml`](.github/workflows/ci.yml) on PRs, Render deploys on merge; no separate prod yet |
+| CI/CD | [`ci.yml`](.github/workflows/ci.yml) on PRs, Render deploys merges to dev, [`promote.yml`](.github/workflows/promote.yml) deploys to prod by hand |
 | Observability | `make up-all`, Grafana on 3001, [`observability/`](observability/) |
 | Alerting on user impact | [`observability/grafana/provisioning/alerting/`](observability/grafana/provisioning/alerting/) |
 | On-call agent | [`incident-response/`](incident-response/) and the recorded incident above |
@@ -204,5 +206,5 @@ Policy, prompt and limits: [`incident-response/`](incident-response/). Security 
 ## Status
 
 - Live and searching hourly with fixture adapters; real web search and model scoring switch on with two API keys on Render ([docs/deployment.md](docs/deployment.md)).
-- One environment serves as dev and prod; a separate prod with manual promotion is open as [#21](https://github.com/alexisdacquay/sail-event/issues/21).
+- Two environments on Render: dev follows main, prod moves only by the promote workflow.
 - Security findings deferred to post-MVP are issues [#33 to #36](https://github.com/alexisdacquay/sail-event/issues?q=is%3Aissue+label%3Apost-mvp).

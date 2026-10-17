@@ -66,8 +66,8 @@
 ## Environments
 | Aspect | Dev | Prod |
 |---|---|---|
-| DB | SQLite (local) / Postgres (compose) | Render Postgres |
-| URL | localhost | https://sail-event.onrender.com |
+| DB | SQLite (local) / Postgres (compose) / Render Postgres (dev service) | Render Postgres |
+| URL | localhost / https://sail-event-dev.onrender.com | https://sail-event.onrender.com (promoted by hand) |
 | Secrets | .env file | Render env vars |
 | Adapters | fixture + fake scorer | real (env var toggles) |
 | Scheduler | manual / compose | GitHub Actions hourly |
