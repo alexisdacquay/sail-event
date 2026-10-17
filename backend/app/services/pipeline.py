@@ -181,6 +181,7 @@ def _score_and_triage(
             score_val, reason = scorer.score(raw, criteria_text)
             evt.score = score_val
             evt.score_reason = reason
+            evt.scorer_model = getattr(scorer, 'model_id', None)
 
     with tracer.start_as_current_span("triage"):
         for evt in events:

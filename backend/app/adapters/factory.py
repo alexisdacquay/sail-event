@@ -22,4 +22,7 @@ def get_scorer() -> FakeScorer:
     value = os.environ.get("SCORER", "fake")
     if value == "fake":
         return FakeScorer()
+    if value == "claude":
+        from .scorer_claude import ClaudeScorer
+        return ClaudeScorer()
     raise ValueError(f"Unknown SCORER: {value!r}")
