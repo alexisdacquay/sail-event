@@ -28,6 +28,29 @@ Tag the image and deploy to production via manual workflow dispatch. Not yet aut
 
 Redeploy the previous image tag.
 
+## Scheduled search
+
+`.github/workflows/hourly-search.yml` runs `POST /api/search/all` every hour (`:07`). It also supports manual dispatch.
+
+**Setup** (one-time per environment):
+
+```bash
+# Point the workflow at your deployment
+gh variable set SAIL_BASE_URL --body "https://your-host.example.com"
+
+# Set the shared API key (must match SEARCH_ALL_API_KEY on the server)
+gh secret set SEARCH_ALL_API_KEY
+```
+
+If `SAIL_BASE_URL` is not set, the workflow exits cleanly — safe to merge before any deployment exists.
+
+**Manual trigger and logs:**
+
+```bash
+gh workflow run hourly-search.yml
+gh run list --workflow=hourly-search.yml
+```
+
 ## Tag convention
 
 `YYYYMMDD-HHMMSS-shortsha` (e.g. `20261016-143022-a1b2c3d`).

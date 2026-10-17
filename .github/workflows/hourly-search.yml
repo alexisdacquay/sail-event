@@ -1,0 +1,47 @@
+name: Hourly search
+
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: hourly-search
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Run scheduled search
+        env:
+          SAIL_BASE_URL: ${{ vars.SAIL_BASE_URL }}
+          SEARCH_ALL_API_KEY: ${{ secrets.SEARCH_ALL_API_KEY }}
+        run: |
+          if [ -z "$SAIL_BASE_URL" ]; then
+            echo "SAIL_BASE_URL not set — skipping (no deployment target yet)"
+            exit 0
+          fi
+
+          echo "Health check: $SAIL_BASE_URL/api/health"
+          HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' "$SAIL_BASE_URL/api/health")
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::Health check failed (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+          echo "Health check passed"
+
+          RESPONSE=$(curl -s -w '\n%{http_code}' \
+            -X POST "$SAIL_BASE_URL/api/search/all" \
+            -H "X-API-Key: $SEARCH_ALL_API_KEY")
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::error::POST /api/search/all failed (HTTP $HTTP_CODE): $BODY"
+            exit 1
+          fi
+
+          USERS=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin)['usersProcessed'])")
+          echo "usersProcessed: $USERS"
