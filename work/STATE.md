@@ -133,7 +133,10 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   dae24e9 on branch incident/...; QA PASS → closed. caveats: test-incident.sh run stepwise; first
   branch made by hand; claude -p needs CLAUDE_* env vars cleared when spawned from Claude Desktop.
   LESSON 4 CRITERIA (observability, alert, on-call agent) COVERED LOCALLY.
-- issue #19 Tavily adapter: groomed, engineer running. #20 Claude scorer: groomed, next.
+- issue #19 S13 Tavily adapter: DONE. eng 89606bf+1c3cf16 → QA FAIL (date fallback to title dead:
+  'unknown' truthy) → fix bf8e952 → QA PASS → closed. no key: fixtures synthetic from Tavily docs.
+- issue #20 S13 Claude scorer (haiku-5-5, structured output, effort low): groomed, engineer running.
+- #22 (GH Actions hourly schedule) and #27 (audit + reports): groomed, queued.
 
 ## PAUSE #2 2026-10-16 — RESUME PROCEDURE
 1. tree should be clean at or after 1df4de4; `git status --short`, `git log --oneline -3`.
