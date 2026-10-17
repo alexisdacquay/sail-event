@@ -49,4 +49,7 @@ def init(*, app: object | None = None) -> None:
         FastAPIInstrumentor.instrument()
 
     # Inject trace_id / span_id into stdlib log records
-    LoggingInstrumentor().instrument(set_logging_format=False)
+    LoggingInstrumentor().instrument(
+        set_logging_format=False,
+        inject_trace_context=True,
+    )

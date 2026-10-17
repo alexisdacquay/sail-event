@@ -23,6 +23,10 @@ services:
       JWT_SECRET: "${JWT_SECRET:-dev-jwt-secret}"
       SEARCH_ALL_API_KEY: "${SEARCH_ALL_API_KEY:-dev-api-key}"
       SEED_DEMO: "${SEED_DEMO:-1}"
+      APP_ENV: "${APP_ENV:-dev}"
+      APP_VERSION: "${APP_VERSION:-dev}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
     ports:
       - "${HOST_PORT:-8000}:8000"
     healthcheck:
