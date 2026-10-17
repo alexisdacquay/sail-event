@@ -18,7 +18,7 @@ Trunk-based development. All work lands on `main` via pull request.
 
 ## CD to dev on merge
 
-Render builds the root `Dockerfile` and deploys on every push to `main` (auto-deploy, trigger: commit). Render checks `/api/health` before switching traffic. See `docs/deployment.md`.
+Render builds the root `Dockerfile` and deploys on every push to `main` (auto-deploy, trigger: commit). See `docs/deployment.md`.
 
 ## Manual promotion to prod
 
