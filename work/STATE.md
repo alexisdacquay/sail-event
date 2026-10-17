@@ -141,7 +141,19 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - issue #22 S10 hourly schedule: DONE. PR #31 643d990 (merged on red integration job: regression
   from #24's external network; fixed PR #32 668f5f3, main green) → QA PASS 13/13 → closed.
   rule added to engineer role: merge only on all-green CI.
-- issue #27 S12 audit + reports: groomed, queued last.
+- issue #27 S12 security audit + ops report + ai-usage report: DONE. eng 17f122e..c23be33
+  (Semgrep 2 false positives; model review 20: 2 fixed, 7 accepted, 11 deferred → #33-#36) →
+  QA FAIL (no SHAs, no status test) → fix b34dde4 → QA PASS → closed.
+
+## UNATTENDED RUN COMPLETE 2026-10-17
+- closed: 1-16, 18-20, 22-27 (25 of 28 + #29-#36 created). tests: 164 backend, 22 frontend,
+  7 integration, 2 e2e. CI green on main.
+- rubric coverage without a cloud target: criteria 1-7 full; 9 CI only (1/3); 10, 11, 12 covered
+  locally (observability, alert, on-call agent); 8 deployment 0 until a target exists.
+- REMAINING, all need the user: #17 deploy dev (AWS or Render decision), #21 prod + manual
+  promotion, #29 CD on merge; then set repo variable SAIL_BASE_URL + secrets SEARCH_ALL_API_KEY,
+  TAVILY_API_KEY, ANTHROPIC_API_KEY for live search/scoring. #28 agent pack optional (0 pts).
+- follow-ups filed post-mvp: #33-#36 (security findings deferred).
 
 ## PAUSE #2 2026-10-16 — RESUME PROCEDURE
 1. tree should be clean at or after 1df4de4; `git status --short`, `git log --oneline -3`.
