@@ -12,6 +12,7 @@ dependencies = [
     "pyjwt==2.15.1",
     "sqlalchemy==2.1.5",
     "uvicorn==0.34.3",
+    "psycopg[binary]==3.3.6",
 ]
 
 [tool.pytest.ini_options]
