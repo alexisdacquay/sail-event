@@ -1,0 +1,27 @@
+# Autonomy policy for the on-call incident agent.
+# The responder enforces these via --allowedTools and worktree isolation.
+
+allowed:
+  edit:
+    - backend/app/**
+    - backend/tests/**
+  run:
+    - make test
+  git:
+    - checkout -b
+    - add
+    - commit
+    - log
+    - diff
+    - status
+
+forbidden:
+  - push
+  - modify Dockerfile
+  - modify docker-compose.yml
+  - modify .github/
+  - modify observability/
+  - touch .env
+  - call external APIs
+
+max_runtime_seconds: 300
