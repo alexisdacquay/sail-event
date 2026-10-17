@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["verdict", "summary"],
+  "properties": {
+    "verdict": { "enum": ["fix", "false_positive", "escalate"] },
+    "summary": { "type": "string" },
+    "files_changed": { "type": "array", "items": { "type": "string" } },
+    "tests_run": { "type": "array", "items": { "type": "string" } },
+    "commit": { "type": "string" }
+  },
+  "additionalProperties": false
+}
