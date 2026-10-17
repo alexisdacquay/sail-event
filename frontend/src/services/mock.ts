@@ -137,6 +137,13 @@ export async function decideEvent(
   return { ...event }
 }
 
+let mockIcsToken = 'mock-ics-token'
+
 export async function getCalendarUrl(): Promise<{ url: string }> {
-  return { url: 'http://localhost:8000/api/calendar/mock-ics-token' }
+  return { url: `http://localhost:8000/api/calendar/${mockIcsToken}` }
+}
+
+export async function rotateCalendarUrl(): Promise<{ url: string }> {
+  mockIcsToken = 'mock-ics-token-' + Date.now()
+  return { url: `http://localhost:8000/api/calendar/${mockIcsToken}` }
 }

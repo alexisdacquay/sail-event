@@ -263,6 +263,22 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/calendar/rotate:
+    post:
+      operationId: rotateCalendarUrl
+      summary: Rotate the authenticated user's ICS token and return the new feed URL
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: New calendar feed URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarUrlResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /api/calendar/{ics_token}:
     get:
       operationId: getCalendarFeed

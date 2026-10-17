@@ -14,4 +14,5 @@
 | —                 | `healthCheck`    | GET    | `/api/health`               |
 | —                 | `searchAll`      | POST   | `/api/search/all`           |
 | `getCalendarUrl`  | `getCalendarUrl` | GET    | `/api/calendar-url`         |
+| `rotateCalendarUrl` | `rotateCalendarUrl` | POST | `/api/calendar/rotate`    |
 | —                 | `getCalendarFeed`| GET    | `/api/calendar/{ics_token}` |

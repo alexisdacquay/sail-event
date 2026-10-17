@@ -16,6 +16,7 @@ import {
   saveThresholds,
   runSearch,
   getCalendarUrl,
+  rotateCalendarUrl,
 } from '@/services/api'
 import type { SearchResult } from '@/services/api'
 import { useAuth } from '@/contexts/AuthContext'
@@ -34,6 +35,7 @@ export function MainPage({ embedded }: MainPageProps) {
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null)
   const [calendarUrl, setCalendarUrl] = useState('')
   const [copied, setCopied] = useState(false)
+  const [rotateConfirm, setRotateConfirm] = useState(false)
 
   useEffect(() => {
     getCriteria().then((c) => setCriteriaText(c.text))
@@ -180,6 +182,39 @@ export function MainPage({ embedded }: MainPageProps) {
               <Button onClick={handleCopyCalendarUrl} data-testid="copy-calendar-url">
                 {copied ? 'Copied' : 'Copy'}
               </Button>
+              {!rotateConfirm ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setRotateConfirm(true)}
+                  data-testid="rotate-calendar-url"
+                >
+                  Rotate link
+                </Button>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-sm" data-testid="rotate-confirm">
+                  Are you sure?
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={async () => {
+                      const r = await rotateCalendarUrl()
+                      setCalendarUrl(r.url)
+                      setRotateConfirm(false)
+                    }}
+                    data-testid="rotate-confirm-yes"
+                  >
+                    Confirm
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setRotateConfirm(false)}
+                    data-testid="rotate-confirm-cancel"
+                  >
+                    Cancel
+                  </Button>
+                </span>
+              )}
             </div>
           </CardContent>
         </Card>

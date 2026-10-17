@@ -112,3 +112,7 @@ export async function decideEvent(
 export async function getCalendarUrl(): Promise<{ url: string }> {
   return request<{ url: string }>('/api/calendar-url')
 }
+
+export async function rotateCalendarUrl(): Promise<{ url: string }> {
+  return request<{ url: string }>('/api/calendar/rotate', { method: 'POST' })
+}

@@ -73,11 +73,26 @@ async def get_calendar_feed(
     return Response(content=body, media_type="text/calendar; charset=utf-8")
 
 
+def _build_feed_url(request: Request, user: orm.User) -> str:
+    base = str(request.base_url).rstrip("/")
+    return f"{base}/api/calendar/{user.ics_token}"
+
+
 @router.get("/api/calendar-url", operation_id="getCalendarUrl")
 async def get_calendar_url(
     request: Request,
     user: orm.User = Depends(get_current_user),
 ) -> JSONResponse:
-    base = str(request.base_url).rstrip("/")
-    url = f"{base}/api/calendar/{user.ics_token}"
-    return JSONResponse(content={"url": url})
+    return JSONResponse(content={"url": _build_feed_url(request, user)})
+
+
+@router.post("/api/calendar/rotate", operation_id="rotateCalendarUrl")
+async def rotate_calendar_url(
+    request: Request,
+    user: orm.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> JSONResponse:
+    user.ics_token = orm._uuid()
+    db.commit()
+    db.refresh(user)
+    return JSONResponse(content={"url": _build_feed_url(request, user)})

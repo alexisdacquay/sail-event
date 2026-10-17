@@ -240,6 +240,40 @@ def test_calendar_content_type_full_value(client):
     assert r.headers["content-type"] == "text/calendar; charset=utf-8"
 
 
+# --- POST /api/calendar/rotate ---
+
+def test_rotate_returns_new_url(client, auth_headers):
+    headers = auth_headers("demo", "demo")
+    r = client.post("/api/calendar/rotate", headers=headers)
+    assert r.status_code == 200
+    body = r.json()
+    assert "url" in body
+    assert "/api/calendar/" in body["url"]
+    assert "demo-ics-token" not in body["url"]
+
+
+def test_old_token_404_after_rotate(client, auth_headers):
+    headers = auth_headers("demo", "demo")
+    client.post("/api/calendar/rotate", headers=headers)
+    r = client.get("/api/calendar/demo-ics-token")
+    assert r.status_code == 404
+
+
+def test_new_token_200_after_rotate(client, auth_headers):
+    headers = auth_headers("demo", "demo")
+    rotate_resp = client.post("/api/calendar/rotate", headers=headers)
+    new_url = rotate_resp.json()["url"]
+    new_token = new_url.split("/api/calendar/")[-1]
+    r = client.get(f"/api/calendar/{new_token}")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/calendar")
+
+
+def test_rotate_unauthenticated(client):
+    r = client.post("/api/calendar/rotate")
+    assert r.status_code == 401
+
+
 def test_calendar_feed_freshly_registered_user(client, auth_headers):
     h = auth_headers("caluser", "pw")
     r = client.get("/api/calendar-url", headers=h)
