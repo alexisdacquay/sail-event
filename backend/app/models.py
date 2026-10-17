@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class EventStatus(str, Enum):
@@ -25,7 +25,7 @@ class Criteria(BaseModel):
 class SaveCriteriaRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    text: str
+    text: str = Field(max_length=2000)
 
 
 class Thresholds(BaseModel):
@@ -64,13 +64,27 @@ class Event(BaseModel):
 
 
 class RegisterRequest(BaseModel):
-    username: str
-    password: str
+    username: str = Field(max_length=150)
+    password: str = Field(max_length=72)
+
+    @field_validator("password")
+    @classmethod
+    def _password_byte_limit(cls, v: str) -> str:
+        if len(v.encode("utf-8")) > 72:
+            raise ValueError("password must be at most 72 bytes when UTF-8 encoded")
+        return v
 
 
 class LoginRequest(BaseModel):
-    username: str
-    password: str
+    username: str = Field(max_length=150)
+    password: str = Field(max_length=72)
+
+    @field_validator("password")
+    @classmethod
+    def _password_byte_limit(cls, v: str) -> str:
+        if len(v.encode("utf-8")) > 72:
+            raise ValueError("password must be at most 72 bytes when UTF-8 encoded")
+        return v
 
 
 class AuthResponse(BaseModel):

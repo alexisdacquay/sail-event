@@ -1,8 +1,11 @@
-"""Auth endpoints: register, login."""
+"""Auth endpoints: register, login, with in-memory login rate limiting."""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+import math
+import time
+
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -12,6 +15,12 @@ from ..models import RegisterRequest, LoginRequest
 from .. import orm
 
 router = APIRouter()
+
+# In-memory login rate limiter: (username, ip) → [failure timestamps]
+_login_failures: dict[tuple[str, str], list[float]] = {}
+_RATE_WINDOW = 900  # 15 minutes
+_RATE_MAX = 10
+_now = time.monotonic  # seam for deterministic tests
 
 
 @router.post("/api/auth/register", operation_id="register", status_code=201)
@@ -59,6 +68,7 @@ async def register(
 @router.post("/api/auth/login", operation_id="login")
 async def login(
     body: LoginRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ) -> JSONResponse:
     if not body.username or not body.username.strip():
@@ -72,19 +82,37 @@ async def login(
             content={"detail": "password must not be empty"},
         )
 
+    ip = request.client.host if request.client else ""
+    key = (body.username, ip)
+    now = _now()
+
+    # Prune expired entries and check rate limit
+    failures = [t for t in _login_failures.get(key, []) if t > now - _RATE_WINDOW]
+    _login_failures[key] = failures
+    if len(failures) >= _RATE_MAX:
+        retry_after = max(math.ceil(failures[0] + _RATE_WINDOW - now), 1)
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Too many failed login attempts. Try again later."},
+            headers={"Retry-After": str(retry_after)},
+        )
+
     user = db.query(orm.User).filter(orm.User.username == body.username).first()
     if user is None:
+        failures.append(now)
         return JSONResponse(
             status_code=401,
             content={"detail": "Invalid username or password"},
         )
 
     if not verify_password(body.password, user.password_hash):
+        failures.append(now)
         return JSONResponse(
             status_code=401,
             content={"detail": "Invalid username or password"},
         )
 
+    _login_failures.pop(key, None)
     token = create_token(user.id)
     return JSONResponse(
         content={"token": token, "username": user.username},

@@ -103,6 +103,15 @@ def _db_session():
     app.dependency_overrides.clear()
 
 
+@pytest.fixture(autouse=True)
+def _clear_rate_limiter():
+    """Reset login rate limiter between tests."""
+    from app.routers.auth import _login_failures
+    _login_failures.clear()
+    yield
+    _login_failures.clear()
+
+
 @pytest.fixture()
 def client() -> TestClient:
     return TestClient(app)

@@ -52,6 +52,14 @@ def test_save_criteria_empty_text_is_accepted(client, auth_headers):
     assert r.status_code == 200
 
 
+def test_save_criteria_text_too_long_returns_400(client, auth_headers):
+    h = auth_headers("demo", "demo")
+    long_text = "a" * 2001
+    r = client.put("/api/criteria", json={"text": long_text}, headers=h)
+    assert r.status_code == 400
+    assert long_text not in r.text
+
+
 def test_save_criteria_upserts_existing(client, auth_headers, _db_session):
     from app.orm import Criteria, User
 

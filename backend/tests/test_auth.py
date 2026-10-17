@@ -77,6 +77,53 @@ def test_register_whitespace_only_password_returns_400(client):
     assert r.status_code == 400
 
 
+# ---------- register: input length limits ----------
+
+def test_register_username_too_long_returns_400(client):
+    long_name = "a" * 151
+    r = client.post("/api/auth/register", json={"username": long_name, "password": "pw"})
+    assert r.status_code == 400
+    assert long_name not in r.text
+
+
+def test_register_password_too_long_returns_400(client):
+    long_pw = "a" * 73
+    r = client.post("/api/auth/register", json={"username": "u1", "password": long_pw})
+    assert r.status_code == 400
+    assert long_pw not in r.text
+
+
+def test_register_multibyte_password_too_long_returns_400(client):
+    # 40 × 'é' = 40 chars but 80 UTF-8 bytes, exceeding bcrypt's 72-byte limit
+    long_pw = "é" * 40
+    r = client.post("/api/auth/register", json={"username": "u2", "password": long_pw})
+    assert r.status_code == 400
+    assert long_pw not in r.text
+
+
+# ---------- login: input length limits ----------
+
+def test_login_username_too_long_returns_400(client):
+    long_name = "a" * 151
+    r = client.post("/api/auth/login", json={"username": long_name, "password": "pw"})
+    assert r.status_code == 400
+    assert long_name not in r.text
+
+
+def test_login_password_too_long_returns_400(client):
+    long_pw = "a" * 73
+    r = client.post("/api/auth/login", json={"username": "demo", "password": long_pw})
+    assert r.status_code == 400
+    assert long_pw not in r.text
+
+
+def test_login_multibyte_password_too_long_returns_400(client):
+    long_pw = "é" * 40
+    r = client.post("/api/auth/login", json={"username": "demo", "password": long_pw})
+    assert r.status_code == 400
+    assert long_pw not in r.text
+
+
 # ---------- login ----------
 
 def test_login_demo_user(client):
@@ -311,3 +358,43 @@ def test_compute_jwt_secret_random_in_dev(monkeypatch):
     secret = _compute_jwt_secret()
     assert isinstance(secret, str) and len(secret) > 0
     assert secret != "sail-event-dev-secret-do-not-use-in-prod"
+
+
+# ---------- login rate limiting ----------
+
+def test_login_rate_limit_after_10_failures(client):
+    for _ in range(10):
+        r = client.post("/api/auth/login", json={"username": "demo", "password": "wrong"})
+        assert r.status_code == 401
+
+    r = client.post("/api/auth/login", json={"username": "demo", "password": "wrong"})
+    assert r.status_code == 429
+    assert "Retry-After" in r.headers
+    assert r.json()["detail"] == "Too many failed login attempts. Try again later."
+
+
+def test_login_rate_limit_reset_on_success(client, monkeypatch):
+    import time as time_mod
+    from app.routers import auth as auth_mod
+
+    base = time_mod.monotonic()
+    monkeypatch.setattr(auth_mod, "_now", lambda: base)
+
+    # 10 failures to trigger rate limit
+    for _ in range(10):
+        r = client.post("/api/auth/login", json={"username": "demo", "password": "wrong"})
+        assert r.status_code == 401
+
+    r = client.post("/api/auth/login", json={"username": "demo", "password": "wrong"})
+    assert r.status_code == 429
+
+    # Advance past the 15-minute window
+    monkeypatch.setattr(auth_mod, "_now", lambda: base + 901)
+
+    # Correct password succeeds and resets the counter
+    r = client.post("/api/auth/login", json={"username": "demo", "password": "demo"})
+    assert r.status_code == 200
+
+    # Counter is reset — next failure is 401, not 429
+    r = client.post("/api/auth/login", json={"username": "demo", "password": "wrong"})
+    assert r.status_code == 401

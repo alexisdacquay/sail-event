@@ -54,6 +54,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
 
   /api/criteria:
     get:
@@ -389,8 +391,10 @@ components:
       properties:
         username:
           type: string
+          maxLength: 150
         password:
           type: string
+          maxLength: 72
 
     LoginRequest:
       type: object
@@ -400,8 +404,10 @@ components:
       properties:
         username:
           type: string
+          maxLength: 150
         password:
           type: string
+          maxLength: 72
 
     SaveCriteriaRequest:
       type: object
@@ -410,6 +416,7 @@ components:
       properties:
         text:
           type: string
+          maxLength: 2000
 
     DecisionRequest:
       type: object
@@ -459,6 +466,17 @@ components:
             $ref: '#/components/schemas/Error'
     Conflict:
       description: Conflict (duplicate username)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: Too many failed login attempts
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds until the rate-limit window expires
       content:
         application/json:
           schema:
