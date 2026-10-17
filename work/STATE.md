@@ -110,7 +110,16 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   note: host port 8000 is the user's order-tracker stack (HW4); our runs use 8010.
 - issue #15 S7 Postgres + compose: DONE. eng c64207d+d34dda2 → QA FAIL (healthcheck curl missing;
   engineer had claimed --wait ok) → fix 7dec86d → I verified healthy → closed. psycopg 3.3.6.
-- next: issue #16 S7 integration tests against compose + Playwright e2e
+- issue #16 S7 integration + e2e: PM GROOMING IN FLIGHT at pause 2026-10-16 (writes GitHub only).
+
+## PAUSE #2 2026-10-16 — RESUME PROCEDURE
+1. tree should be clean at or after 1df4de4; `git status --short`, `git log --oneline -3`.
+2. `gh issue view 16` — if the body has the four sections (Goal / Acceptance criteria / Out of
+   scope / Constraints) the PM finished: review it, then launch the engineer on #16 (compose stack
+   on HOST_PORT=8010; 8000 is the user's order-tracker stack). If not, re-run the PM on #16.
+3. then QA #16 → close → S7 complete → STOP and ask the user before #17 (AWS account,
+   credentials, region, budget).
+4. docker: `docker ps -a | grep sail` should be empty; `docker info` may need `orb start`.
 
 ## (kept) PAUSE PROCEDURE 2026-10-16
 1. `git -C /Users/ad/code/ProjectOne status --short` and `git log --oneline -5`.
