@@ -1,0 +1,22 @@
+{
+  "_synthetic": true,
+  "_note": "Built from the documented anthropic.types.Message shape; not a real API recording.",
+  "id": "msg_synth_001",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-haiku-5-5",
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"score\": 82, \"reason\": \"Strong sailing regatta match with competitive racing and coastal setting.\"}"
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 450,
+    "output_tokens": 35,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  }
+}

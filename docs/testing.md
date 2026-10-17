@@ -84,6 +84,14 @@ SEARCH_PROVIDER=tavily TAVILY_API_KEY=... uv run python -m app.adapters.search_t
 
 CI stays fixture-only; `make test` never hits the network.
 
+To smoke-test the Claude scorer adapter against the live API (not run in CI):
+
+```
+SCORER=claude ANTHROPIC_API_KEY=... uv run python -m app.adapters.scorer_claude "<criteria>"
+```
+
+Scores one hard-coded fixture event, prints score and reason. CI stays fixture-only.
+
 ## Adapter-stub approach
 
 `FixtureSearchProvider` returns canned events from `fixtures.json`.
