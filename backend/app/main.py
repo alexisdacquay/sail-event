@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import logging
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -16,8 +18,32 @@ from .auth import hash_password
 from .db import get_db
 from . import orm
 from .routers import auth, calendar, criteria, events, health, search, thresholds
+from . import telemetry
 
 _STATIC_DIR = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+
+
+class _JsonFormatter(logging.Formatter):
+    """Single-line JSON log records with OTel trace context."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        return json.dumps({
+            "timestamp": self.formatTime(record),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "trace_id": getattr(record, "otelTraceID", ""),
+            "span_id": getattr(record, "otelSpanID", ""),
+        })
+
+
+def _configure_logging() -> None:
+    handler = logging.StreamHandler()
+    handler.setFormatter(_JsonFormatter())
+    root = logging.getLogger()
+    root.handlers.clear()
+    root.addHandler(handler)
+    root.setLevel(os.environ.get("LOG_LEVEL", "INFO").upper())
 
 
 def _seed_demo() -> None:
@@ -43,6 +69,8 @@ def _seed_demo() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    _configure_logging()
+    telemetry.init(app=app)
     if os.environ.get("SEED_DEMO") == "1":
         _seed_demo()
     yield
