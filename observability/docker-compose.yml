@@ -10,6 +10,8 @@ services:
     networks:
       - default
       - sail-observability
+    # health_check extension listens on :13133 but the distroless image
+    # has no HTTP client; config-validate is the best available probe
     healthcheck:
       test: ["CMD", "/otelcol-contrib", "validate", "--config", "/etc/otelcol-contrib/config.yaml"]
       interval: 10s
@@ -37,6 +39,8 @@ services:
     ports:
       - "${LOKI_PORT:-3100}:3100"
     command: -config.file=/etc/loki/local-config.yaml
+    # /ready endpoint exists but the distroless image has no HTTP client;
+    # verify-config is the best available probe (same limitation as collector)
     healthcheck:
       test: ["CMD", "/usr/bin/loki", "-config.file=/etc/loki/local-config.yaml", "-verify-config"]
       interval: 10s
@@ -63,6 +67,9 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
       GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      RESPONDER_WEBHOOK_URL: "${RESPONDER_WEBHOOK_URL:-http://host.docker.internal:8001/alerts}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./dashboard.json:/var/lib/grafana/dashboards/sail-event.json:ro
