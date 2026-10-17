@@ -4,6 +4,7 @@ from .base import RawEvent, Scorer, SearchProvider
 from .factory import get_scorer, get_search_provider
 from .fake import FakeScorer
 from .fixture import FixtureSearchProvider
+from .search_tavily import TavilySearchProvider
 
 __all__ = [
     "RawEvent",
@@ -11,6 +12,7 @@ __all__ = [
     "Scorer",
     "FixtureSearchProvider",
     "FakeScorer",
+    "TavilySearchProvider",
     "get_search_provider",
     "get_scorer",
 ]

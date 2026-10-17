@@ -12,6 +12,9 @@ def get_search_provider() -> FixtureSearchProvider:
     value = os.environ.get("SEARCH_PROVIDER", "fixture")
     if value == "fixture":
         return FixtureSearchProvider()
+    if value == "tavily":
+        from .search_tavily import TavilySearchProvider
+        return TavilySearchProvider()
     raise ValueError(f"Unknown SEARCH_PROVIDER: {value!r}")
 
 
