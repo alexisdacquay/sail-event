@@ -30,6 +30,9 @@ def _event_dict(e: orm.Event) -> dict:
     }
 
 
+_VALID_STATUSES = {s.value for s in EventStatus}
+
+
 @router.get("/api/events", operation_id="listEvents")
 async def list_events(
     status: Optional[str] = None,
@@ -38,6 +41,11 @@ async def list_events(
 ) -> list[dict]:
     query = db.query(orm.Event).filter(orm.Event.user_id == user.id)
     if status is not None:
+        if status not in _VALID_STATUSES:
+            return JSONResponse(
+                status_code=400,
+                content={"detail": f"Invalid status filter: {status}"},
+            )
         query = query.filter(orm.Event.status == status)
     events = query.all()
     return [_event_dict(e) for e in events]

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Security Finding",
+  "type": "object",
+  "required": ["id", "source", "severity", "title", "description", "file", "disposition", "disposition_detail"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique finding identifier, e.g. semgrep-001 or model-001"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["semgrep", "model-review"]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low", "info"]
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "file": {
+      "type": "string",
+      "description": "Relative path from repo root"
+    },
+    "line": {
+      "type": "integer",
+      "description": "Line number, if applicable"
+    },
+    "disposition": {
+      "type": "string",
+      "enum": ["fixed", "accepted", "deferred"]
+    },
+    "disposition_detail": {
+      "type": "string",
+      "description": "Commit SHA for fixed, reason for accepted, issue number for deferred"
+    }
+  },
+  "additionalProperties": false
+}

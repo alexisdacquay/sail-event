@@ -1,0 +1,202 @@
+[
+  {
+    "id": "model-001",
+    "source": "model-review",
+    "severity": "critical",
+    "title": "Hardcoded JWT fallback secret used when JWT_SECRET is unset",
+    "description": "auth.py defines _DEV_SECRET = \"sail-event-dev-secret-do-not-use-in-prod\" and uses it whenever JWT_SECRET is absent or empty. If the env var is not set in production, the app silently accepts tokens signed with this well-known string, allowing any attacker who reads the source to forge valid JWTs for any user ID.",
+    "file": "backend/app/auth.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-002",
+    "source": "model-review",
+    "severity": "high",
+    "title": "docker-compose JWT_SECRET defaults to weak literal \"dev-jwt-secret\"",
+    "description": "The compose file sets JWT_SECRET: \"${JWT_SECRET:-dev-jwt-secret}\". An operator who runs docker compose up without exporting JWT_SECRET gets a predictable, short secret. Any attacker who knows the compose defaults can forge JWTs without needing the source code.",
+    "file": "docker-compose.yml",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-003",
+    "source": "model-review",
+    "severity": "high",
+    "title": "docker-compose SEARCH_ALL_API_KEY defaults to weak literal \"dev-api-key\"",
+    "description": "SEARCH_ALL_API_KEY: \"${SEARCH_ALL_API_KEY:-dev-api-key}\" means the /api/search/all endpoint is protected by a guessable key whenever the env var is not explicitly set. An attacker can trigger a full-user search run against all registered users, consuming Tavily and Anthropic quota and reading scoring output.",
+    "file": "docker-compose.yml",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-004",
+    "source": "model-review",
+    "severity": "high",
+    "title": "Webhook endpoint /alerts has no authentication",
+    "description": "AlertHandler.do_POST accepts any POST to /alerts with no shared secret, HMAC, or IP allowlist. Any host that can reach port 8001 can fire arbitrary alerts, causing the responder to create incident directories, run collect-evidence.sh, and launch a Claude agent with git-commit access in a worktree.",
+    "file": "incident-response/responder.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-005",
+    "source": "model-review",
+    "severity": "high",
+    "title": "Agent subprocess inherits parent environment including all secrets",
+    "description": "The responder builds agent_env by filtering only three desktop-app keys from os.environ. Any secret present in the responder process environment \u2014 ANTHROPIC_API_KEY, TAVILY_API_KEY, JWT_SECRET, SEARCH_ALL_API_KEY, DATABASE_URL \u2014 is passed verbatim to the Claude Code subprocess. A prompt-injected or misbehaving agent can read those values via Bash(env) or by reading /proc/self/environ.",
+    "file": "incident-response/responder.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-006",
+    "source": "model-review",
+    "severity": "high",
+    "title": "No rate limiting on /api/auth/login \u2014 brute-force possible",
+    "description": "The login endpoint performs a bcrypt comparison per request with no throttle, lockout, or CAPTCHA. An attacker can send an unlimited number of login attempts, making offline-style online brute-force feasible against short or common passwords.",
+    "file": "backend/app/routers/auth.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-007",
+    "source": "model-review",
+    "severity": "medium",
+    "title": "Postgres credentials hardcoded in docker-compose.yml",
+    "description": "POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB are set to literal \"sail\" / \"sail\" / \"sail_event\" with no env-var substitution. The DATABASE_URL passed to the app embeds these credentials. Any party with access to the compose file (e.g., a public repo) knows the database password.",
+    "file": "docker-compose.yml",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-008",
+    "source": "model-review",
+    "severity": "medium",
+    "title": "alertname label used in filesystem path without sanitization \u2014 path traversal",
+    "description": "incident_id = f\"{ts}-{alertname}\" where alertname comes from attacker-controlled webhook JSON. This value is appended directly to INCIDENTS_DIR via Path division and passed as an argument to collect-evidence.sh. An alertname containing \"../\" sequences or shell-special characters can cause directory traversal or argument injection in the shell script invocation.",
+    "file": "incident-response/responder.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-009",
+    "source": "model-review",
+    "severity": "medium",
+    "title": "Evidence content injected into Claude agent prompt without sanitization \u2014 prompt injection",
+    "description": "The Claude agent prompt is assembled with task_template.replace(\"{evidence}\", evidence) where evidence is read from a file written by collect-evidence.sh. If an attacker controls what ends up in that file (e.g., via the alertname path or by poisoning monitored log files), they can inject arbitrary instructions into the agent prompt, directing the agent to take unintended actions within its allowed tool set.",
+    "file": "incident-response/responder.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-010",
+    "source": "model-review",
+    "severity": "medium",
+    "title": "Agent allowedTools includes broad Bash(cat *) permitting arbitrary file reads",
+    "description": "The --allowedTools list passed to the Claude agent includes \"Bash(cat *)\" which matches any cat invocation. Inside the worktree the agent can read any file it can reach, including a .env file if one exists there, private keys in ~/.ssh accessible from the shell, or any file readable by the OS user running the responder.",
+    "file": "incident-response/responder.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-011",
+    "source": "model-review",
+    "severity": "medium",
+    "title": "autonomy-policy.yaml is documentation only and not enforced programmatically",
+    "description": "The yaml lists forbidden actions (push, modify Dockerfile, call external APIs, touch .env) but responder.py does not parse or enforce it. The actual enforcement is the --allowedTools list in the subprocess call, which does not match the yaml. For example, the yaml forbids \"call external APIs\" but the agent can use Bash(curl *) is not blocked because only specific Bash patterns are listed.",
+    "file": "incident-response/autonomy-policy.yaml",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-012",
+    "source": "model-review",
+    "severity": "medium",
+    "title": "Search result content from external web pages injected into LLM scorer prompt \u2014 prompt injection",
+    "description": "ClaudeScorer.score() builds the prompt with _PROMPT_TEMPLATE.format(title=..., description=...) where title and description come directly from Tavily search results. A malicious web page indexed by Tavily can embed adversarial instructions in its title or content, causing the scorer to return manipulated scores or attempt to exfiltrate data via its reasoning.",
+    "file": "backend/app/adapters/scorer_claude.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-013",
+    "source": "model-review",
+    "severity": "medium",
+    "title": "Demo user seeded with weak credentials (demo / demo) when SEED_DEMO=1",
+    "description": "_seed_demo() creates a user with username=\"demo\" and password=\"demo\" if SEED_DEMO=1. The compose default sets SEED_DEMO to 1. Any attacker can log in as the demo user, access its calendar token, trigger search runs against its criteria, and potentially enumerate other data.",
+    "file": "backend/app/main.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-014",
+    "source": "model-review",
+    "severity": "medium",
+    "title": "No length limits on user-controlled input fields",
+    "description": "RegisterRequest.username, RegisterRequest.password, SaveCriteriaRequest.text, and Event fields have no max_length constraints in the Pydantic models. Very long strings pass validation and are written to the database or forwarded to the LLM scorer, enabling resource exhaustion and potentially large token spend on the Anthropic API.",
+    "file": "backend/app/models.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-015",
+    "source": "model-review",
+    "severity": "medium",
+    "title": "CI workflow has no explicit permissions block \u2014 default token may have write access",
+    "description": "ci.yml has no top-level or job-level permissions: key. For private repositories, GitHub defaults to read-write for most scopes, meaning a compromised third-party action or a pull-request workflow could use the GITHUB_TOKEN to push commits, approve PRs, or modify releases.",
+    "file": ".github/workflows/ci.yml",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-016",
+    "source": "model-review",
+    "severity": "low",
+    "title": "ICS token has no revocation or rotation mechanism",
+    "description": "The ics_token UUID4 is generated once at user creation and never rotated. If the calendar URL is leaked (e.g., shared by mistake, scraped from a calendar client's sync log), the user has no way to invalidate the old token and generate a new one without account deletion.",
+    "file": "backend/app/routers/calendar.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-017",
+    "source": "model-review",
+    "severity": "low",
+    "title": "CORS middleware allows all methods and all headers",
+    "description": "allow_methods=[\"*\"] and allow_headers=[\"*\"] are passed to CORSMiddleware. This is overly permissive; for a REST API with known endpoints, only the required HTTP methods and headers should be listed. Excess methods such as TRACE or custom headers have no legitimate use and should be excluded.",
+    "file": "backend/app/main.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-018",
+    "source": "model-review",
+    "severity": "low",
+    "title": "Pipeline exception message stored verbatim in run.error column",
+    "description": "error_msg = str(exc) captures the full exception string including any internal path names, SQL fragments, or external API error bodies, and writes it to orm.Run.error. If run records are ever exposed via an API endpoint, internal implementation details are disclosed to authenticated users.",
+    "file": "backend/app/services/pipeline.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-019",
+    "source": "model-review",
+    "severity": "info",
+    "title": "DATABASE_URL defaults to a local SQLite file",
+    "description": "db.py defaults DATABASE_URL to \"sqlite:///./sail_event.db\" when the env var is unset. If the app is started without a DATABASE_URL (e.g., during development without the compose stack), it silently creates an unencrypted SQLite file in the working directory containing user credentials and event data.",
+    "file": "backend/app/db.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  },
+  {
+    "id": "model-020",
+    "source": "model-review",
+    "severity": "info",
+    "title": "/api/events status filter accepts arbitrary strings instead of enum values",
+    "description": "The status query parameter in list_events is typed as Optional[str] and passed directly to the ORM filter without validation against EventStatus values. While SQLAlchemy parameterizes the query preventing SQL injection, an invalid status silently returns an empty list rather than a 400 error, which could mask client-side bugs.",
+    "file": "backend/app/routers/events.py",
+    "disposition": "deferred",
+    "disposition_detail": ""
+  }
+]
