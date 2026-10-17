@@ -18,6 +18,8 @@ Definition of done:
 - Every acceptance criterion in the issue is implemented
 - Tests are written for the new behaviour, and the whole suite passes
 - The work is committed
+- When the work goes through a pull request, every CI job is green before
+  it merges; a red job is never "unrelated" until its cause is found
 - The issue is still open, with a comment saying what you did
 
 If an acceptance criterion is wrong, impossible, or contradicts

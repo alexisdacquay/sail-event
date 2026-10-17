@@ -138,7 +138,9 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - issue #20 S13 Claude scorer: DONE. eng 0a01baa+81c5e65 (anthropic 1.15.0) → broke a test and
   called it pre-existing (I disproved it in a worktree) → fix 678cd4c → QA PASS 21/21 → closed.
   S13 COMPLETE. keys needed for live use: TAVILY_API_KEY, ANTHROPIC_API_KEY (user, later).
-- issue #22 S10 hourly schedule (GitHub Actions, target-agnostic): groomed, engineer running.
+- issue #22 S10 hourly schedule: DONE. PR #31 643d990 (merged on red integration job: regression
+  from #24's external network; fixed PR #32 668f5f3, main green) → QA PASS 13/13 → closed.
+  rule added to engineer role: merge only on all-green CI.
 - issue #27 S12 audit + reports: groomed, queued last.
 
 ## PAUSE #2 2026-10-16 — RESUME PROCEDURE
