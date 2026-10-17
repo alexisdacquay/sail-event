@@ -1,0 +1,7 @@
+{
+  "verdict": "fix",
+  "summary": "FakeScorer.score() had a deliberate raise RuntimeError injected as first line (commit 7318f2f), causing every search run to fail with outcome=error.",
+  "files_changed": ["backend/app/adapters/fake.py"],
+  "tests_run": ["cd backend && uv run pytest tests/ -q"],
+  "commit": "dae24e9"
+}

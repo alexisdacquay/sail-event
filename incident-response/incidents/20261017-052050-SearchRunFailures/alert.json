@@ -1,0 +1,47 @@
+{
+  "status": "firing",
+  "labels": {
+    "alertname": "SearchRunFailures",
+    "deployment_environment": "dev",
+    "environment": "{{ $labels.deployment_environment | default \"dev\" }}",
+    "exported_instance": "b96ccd19-b88b-4790-8279-4bf2a1853ba4",
+    "exported_job": "sail-event-backend",
+    "grafana_folder": "Sail-event Alerts",
+    "instance": "otel-collector:8889",
+    "job": "otel-collector",
+    "otel_scope_name": "sail-event.pipeline",
+    "outcome": "error",
+    "owner": "alexisdacquay",
+    "service": "sail-event-backend",
+    "service_instance_id": "b96ccd19-b88b-4790-8279-4bf2a1853ba4",
+    "service_name": "sail-event-backend",
+    "service_version": "dev",
+    "severity": "critical",
+    "telemetry_sdk_language": "python",
+    "telemetry_sdk_name": "opentelemetry",
+    "telemetry_sdk_version": "1.45.1",
+    "trigger": "manual",
+    "version": "{{ $labels.service_version | default \"dev\" }}"
+  },
+  "annotations": {
+    "dashboard_url": "http://localhost:3001/d/sail-event-overview",
+    "description": "Observed 23 failed run(s) in a 10-minute window",
+    "runbook": "TODO",
+    "summary": "Two or more search runs failed in the last 10 minutes"
+  },
+  "startsAt": "2026-10-17T05:20:20Z",
+  "endsAt": "0001-01-01T00:00:00Z",
+  "generatorURL": "http://localhost:3000/alerting/grafana/search-run-failures/view?orgId=1",
+  "fingerprint": "64393aecf06dbc4e",
+  "silenceURL": "http://localhost:3000/alerting/silence/new?alertmanager=grafana&matcher=__alert_rule_uid__%3Dsearch-run-failures&matcher=deployment_environment%3Ddev&matcher=environment%3D%7B%7B+%24labels.deployment_environment+%7C+default+%22dev%22+%7D%7D&matcher=exported_instance%3Db96ccd19-b88b-4790-8279-4bf2a1853ba4&matcher=exported_job%3Dsail-event-backend&matcher=instance%3Dotel-collector%3A8889&matcher=job%3Dotel-collector&matcher=otel_scope_name%3Dsail-event.pipeline&matcher=outcome%3Derror&matcher=owner%3Dalexisdacquay&matcher=service%3Dsail-event-backend&matcher=service_instance_id%3Db96ccd19-b88b-4790-8279-4bf2a1853ba4&matcher=service_name%3Dsail-event-backend&matcher=service_version%3Ddev&matcher=severity%3Dcritical&matcher=telemetry_sdk_language%3Dpython&matcher=telemetry_sdk_name%3Dopentelemetry&matcher=telemetry_sdk_version%3D1.45.1&matcher=trigger%3Dmanual&matcher=version%3D%7B%7B+%24labels.service_version+%7C+default+%22dev%22+%7D%7D&orgId=1",
+  "dashboardURL": "",
+  "panelURL": "",
+  "ruleUID": "search-run-failures",
+  "values": {
+    "A": 22.564102564102562,
+    "B": 22.564102564102562,
+    "C": 1
+  },
+  "valueString": "[ var='A' labels={deployment_environment=dev, exported_instance=b96ccd19-b88b-4790-8279-4bf2a1853ba4, exported_job=sail-event-backend, instance=otel-collector:8889, job=otel-collector, otel_scope_name=sail-event.pipeline, outcome=error, service_instance_id=b96ccd19-b88b-4790-8279-4bf2a1853ba4, service_name=sail-event-backend, service_version=dev, telemetry_sdk_language=python, telemetry_sdk_name=opentelemetry, telemetry_sdk_version=1.45.1, trigger=manual} type='query' value=22.564102564102562 ], [ var='B' labels={deployment_environment=dev, exported_instance=b96ccd19-b88b-4790-8279-4bf2a1853ba4, exported_job=sail-event-backend, instance=otel-collector:8889, job=otel-collector, otel_scope_name=sail-event.pipeline, outcome=error, service_instance_id=b96ccd19-b88b-4790-8279-4bf2a1853ba4, service_name=sail-event-backend, service_version=dev, telemetry_sdk_language=python, telemetry_sdk_name=opentelemetry, telemetry_sdk_version=1.45.1, trigger=manual} type='reduce' value=22.564102564102562 ], [ var='C' labels={deployment_environment=dev, exported_instance=b96ccd19-b88b-4790-8279-4bf2a1853ba4, exported_job=sail-event-backend, instance=otel-collector:8889, job=otel-collector, otel_scope_name=sail-event.pipeline, outcome=error, service_instance_id=b96ccd19-b88b-4790-8279-4bf2a1853ba4, service_name=sail-event-backend, service_version=dev, telemetry_sdk_language=python, telemetry_sdk_name=opentelemetry, telemetry_sdk_version=1.45.1, trigger=manual} type='threshold' value=1 ]",
+  "orgId": 1
+}

@@ -1,0 +1,12 @@
+Permission allow rule (../../.claude/settings.json): Write(//Users/ad/.claude/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(//Users/ad/.claude/**) instead (Edit rules cover all file-editing tools).
+Permission allow rule (../../.claude/settings.json): Write(//private/tmp/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(//private/tmp/**) instead (Edit rules cover all file-editing tools).
+Permission allow rule (../../.claude/settings.json): Write(//tmp/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(//tmp/**) instead (Edit rules cover all file-editing tools).
+Permission allow rule (../../.claude/settings.json): Write(//Users/ad/Downloads/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(//Users/ad/Downloads/**) instead (Edit rules cover all file-editing tools).
+Permission deny rule (../../.claude/settings.json): Write(/Users/ad/Library/CloudStorage/*) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/ad/Library/CloudStorage/*) instead (Edit rules cover all file-editing tools).
+**Verdict: fix**
+
+- **Root cause**: commit `7318f2f` ("test: inject scorer fault") added `raise RuntimeError("injected: scorer fault")` as the first line of `FakeScorer.score()` in `backend/app/adapters/fake.py`. Every search run hit this immediately, producing `outcome=error` across the board.
+- **Fix**: removed that one line. 131 tests pass, 0 errors.
+- **Commit**: `dae24e9`
+
+Skipped: frontend tests (vitest not installed in this env). No risk — the backend is the only path that touches the scorer.
