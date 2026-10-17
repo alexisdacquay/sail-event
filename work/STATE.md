@@ -117,7 +117,10 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - 2026-10-17 AWS DECISIONS (user: "Do what is best"): IAM user `sail-event-deploy` with AdminAccess,
   CLI profile `sail-event`; region eu-west-3; dev = 1x t4g.small; TLS via Caddy on an sslip.io
   name over an Elastic IP; teardown documented. Rotate/delete the IAM user after S10.
-  BLOCKED on the user: create the IAM user + access keys, run `aws configure --profile sail-event`.
+  2026-10-17 user could not get through AWS sign-in; AWS deferred. Render proposed as the easy
+  alternative (user to decide later). UNATTENDED RUN 2-3h without a cloud target, order:
+  #18 CI-only → #23 → #24 → #25 → #26 → #19 → #20 → #22 (GH Actions schedule) → #27.
+  #17, #21 blocked on AWS; #18 CD half and #22's target URL filled in once a target exists.
 
 ## PAUSE #2 2026-10-16 — RESUME PROCEDURE
 1. tree should be clean at or after 1df4de4; `git status --short`, `git log --oneline -3`.
