@@ -54,6 +54,8 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: e2e/package-lock.json
+      - run: npm ci
+        working-directory: e2e
       - run: docker compose up --build -d --wait
       - run: npx playwright install --with-deps chromium
         working-directory: e2e
