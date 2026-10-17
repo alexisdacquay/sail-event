@@ -17,6 +17,8 @@ dependencies = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["integration: tests that hit the live compose stack over HTTP"]
+addopts = "-m 'not integration'"
 
 [dependency-groups]
 dev = [
