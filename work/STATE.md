@@ -126,7 +126,10 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - issue #24 S11 observability stack: groomed (I fixed image tags to the 2026 versions already
   on this machine; added OTLP-logs fallback if the docker log bind mount fails on OrbStack).
   DONE: eng b85bd8c+56d3e48 (OTLP logs path used; filelog kept for Linux) → QA PASS 12/12 live → closed.
-- issue #25 S12 alerts: groomed, engineer running (+ readiness healthchecks for collector/Loki).
+- issue #25 S12 alerts: DONE. eng d7f0eea+d06f549 → QA PASS 18/18 live (fire + resolve + webhooks)
+  → closed. fact: Loki & collector images have no shell/wget (I tested); healthchecks stay validation-only.
+  Grafana 13 stores {{ $labels }} literally in provisioned labels; real labels come from the query.
+- issue #26 S12 responder: groomed (claude -p sonnet, worktree, budget $1, human merges), engineer running.
 
 ## PAUSE #2 2026-10-16 — RESUME PROCEDURE
 1. tree should be clean at or after 1df4de4; `git status --short`, `git log --oneline -3`.
