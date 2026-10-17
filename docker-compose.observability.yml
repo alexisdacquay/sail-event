@@ -1,0 +1,13 @@
+services:
+  app:
+    networks:
+      - default
+      - sail-observability
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+      APP_ENV: "${APP_ENV:-dev}"
+      APP_VERSION: "${APP_VERSION:-dev}"
+
+networks:
+  sail-observability:
+    external: true

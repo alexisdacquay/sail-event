@@ -63,7 +63,7 @@ observability-down:
 
 up-all: observability-network
 	docker compose -f observability/docker-compose.yml up -d --wait
-	OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318 HOST_PORT=$(HOST_PORT) docker compose up --build -d --wait
+	HOST_PORT=$(HOST_PORT) docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build -d --wait
 
 responder:
 	python3 incident-response/responder.py
