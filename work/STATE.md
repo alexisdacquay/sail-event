@@ -3,13 +3,14 @@
 ## Goal
 Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 
-## Status
-- [x] git init, work file created (2026-10-15)
-- [x] fetch project instructions + rubric
-- [x] read course modules 01-05
-- [x] record understanding (work/UNDERSTANDING.md)
-- [x] propose ideas (work/IDEAS.md)
-- [ ] user picks idea (OPEN ASK since 2026-10-15)
+## Status (2026-10-17, resume point)
+- MVP complete: issues 1-27, 29 closed; 21 closed (dev/prod on Render, promote.yml). CI green.
+- Live: prod https://sail-event.onrender.com (promoted by hand), dev https://sail-event-dev.onrender.com (follows main). Details: work/DEPLOY-render.md.
+- Hourly search: GitHub Actions hourly-search.yml → prod, fixture adapters (no API keys set).
+- README rewritten for peer review (f55ed3b, b3ed32d). Rubric: all 12 criteria covered, CI/CD at 3/3.
+- Open: #28 optional agent pack (0 pts); #33-#36 post-MVP security hardening.
+- Tidy-up 2026-10-17: local stacks stopped; old prod DB user has 0 connections (verified by SQL), bin click is the user's; e2e/shots untracked temp folder, user deletes.
+- Render MCP connector authorised; gh CLI works; Claude in Chrome not connected, built-in browser used.
 
 ## Decisions
 - 2026-10-15 plugins installed at project scope (user: "yes deploy the 5 skills"):
@@ -145,7 +146,10 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   (Semgrep 2 false positives; model review 20: 2 fixed, 7 accepted, 11 deferred → #33-#36) →
   QA FAIL (no SHAs, no status test) → fix b34dde4 → QA PASS → closed.
 
-## UNATTENDED RUN COMPLETE 2026-10-17
+## RENDER DEPLOY DONE 2026-10-17 (after the unattended run)
+- AWS dropped (IAM cost); Render: prod + dev services, two Postgres, promote.yml, hourly cron via GH Actions; #17 #29 #21 closed. See work/DEPLOY-render.md.
+
+## UNATTENDED RUN COMPLETE 2026-10-17 (historical)
 - closed: 1-16, 18-20, 22-27 (25 of 28 + #29-#36 created). tests: 164 backend, 22 frontend,
   7 integration, 2 e2e. CI green on main.
 - rubric coverage without a cloud target: criteria 1-7 full; 9 CI only (1/3); 10, 11, 12 covered
