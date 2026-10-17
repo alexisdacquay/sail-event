@@ -69,11 +69,15 @@ def _handle_alert(alert: dict) -> None:
     # Launch claude agent in the worktree
     _log(f"launching agent for {incident_id}")
     agent_log = incident_dir / "agent.log"
+    # Clear env vars that force desktop-app auth path; the CLI falls back to
+    # its key helper, which works in headless subprocesses.
+    agent_env = {k: v for k, v in os.environ.items()
+                 if k not in ("CLAUDE_CODE_ENTRYPOINT", "CLAUDE_AGENT_SDK_VERSION",
+                              "__CFBundleIdentifier")}
     try:
         with open(agent_log, "w") as log_fh:
             subprocess.run(
                 [
-                    "timeout", "300",
                     CLAUDE_BIN, "-p",
                     "--model", "sonnet",
                     "--allowedTools",
@@ -86,9 +90,10 @@ def _handle_alert(alert: dict) -> None:
                     prompt,
                 ],
                 cwd=str(worktree_path),
+                env=agent_env,
                 stdout=log_fh,
                 stderr=subprocess.STDOUT,
-                timeout=330,  # outer safety net
+                timeout=300,
             )
     except subprocess.TimeoutExpired:
         _log(f"agent timed out for {incident_id}")
@@ -105,7 +110,7 @@ def _handle_alert(alert: dict) -> None:
     # Clean up worktree but leave the branch
     _log(f"removing worktree for {incident_id}")
     subprocess.run(
-        ["git", "worktree", "remove", str(worktree_path)],
+        ["git", "worktree", "remove", "--force", str(worktree_path)],
         cwd=str(REPO_ROOT),
     )
 
