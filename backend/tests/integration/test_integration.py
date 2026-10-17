@@ -5,6 +5,7 @@ Every test is marked @pytest.mark.integration and excluded from `make test`.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import uuid
 from pathlib import Path
@@ -235,6 +236,10 @@ def test_ics_feed(http: httpx.Client):
 # ---------- data survives restart ----------
 
 
+@pytest.mark.skipif(
+    "SAIL_BASE_URL" in os.environ,
+    reason="compose managed externally; cannot restart app",
+)
 def test_data_survives_restart(http: httpx.Client, base_url: str):
     """Data persists across docker compose restart app."""
     user, pw = _unique(), "pass"
