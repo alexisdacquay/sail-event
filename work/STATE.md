@@ -112,7 +112,8 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   engineer had claimed --wait ok) → fix 7dec86d → I verified healthy → closed. psycopg 3.3.6.
 - issue #16 S7 integration + e2e: PM DONE (groomed on GitHub). Correction to pass to the engineer:
   pin @playwright/test to the latest 1.64.x (QA verified 1.64.1 on npm 2026-10-16), not 1.52 as
-  the issue text says. RESUMED 2026-10-16: engineer launched with that correction.
+  RESUMED 2026-10-16: eng 88d22a5..9535483 (7 integration, 2 e2e, playwright 1.64.1) → QA PASS → closed.
+  S7 COMPLETE (issues 14-16). STOPPED before #17: AWS decisions needed from the user.
 
 ## PAUSE #2 2026-10-16 — RESUME PROCEDURE
 1. tree should be clean at or after 1df4de4; `git status --short`, `git log --oneline -3`.
