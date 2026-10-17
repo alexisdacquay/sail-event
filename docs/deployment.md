@@ -1,13 +1,13 @@
 # Deployment
 
-The app runs on Render: one Web Service built from the root `Dockerfile`, one managed Postgres. Region Frankfurt.
+The app runs on Render, region Frankfurt, two environments built from the same root `Dockerfile`:
 
-| Piece | Where | Notes |
-|---|---|---|
-| App | Render Web Service `sail-event` | Docker runtime, branch `main`, auto-deploy on every commit |
-| URL | https://sail-event.onrender.com | TLS by Render |
-| Database | Render Postgres `sail-event-db` | Postgres 18, point-in-time recovery on |
-| Hourly search | GitHub Actions `hourly-search.yml` | see `docs/release-process.md`, Scheduled search |
+| Environment | Web Service | URL | Database | Deploys when |
+|---|---|---|---|---|
+| dev | `sail-event-dev` (starter) | https://sail-event-dev.onrender.com | `sail-event-dev-db` (basic) | every push to `main` |
+| prod | `sail-event` (starter) | https://sail-event.onrender.com | `sail-event-db` (basic, PITR on) | the promote workflow, by hand; auto-deploy off |
+
+Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `docs/release-process.md`). Dev seeds the `demo` / `demo` user (`SEED_DEMO=1`); prod does not.
 
 ## Environment variables (set in Render → sail-event → Environment)
 
@@ -25,7 +25,7 @@ Secrets live only in Render and GitHub secrets, never in the repo.
 
 ## Health
 
-`GET /api/health` returns `{"status":"ok"}`. Set it as the health check path in Render → sail-event → Settings so a failed deploy never takes traffic.
+`GET /api/health` returns `{"status":"ok","commit":"<git sha>"}`; the commit comes from Render's `RENDER_GIT_COMMIT` and is what the promote workflow checks. Set `/api/health` as the health check path in each service's Settings so a failed deploy never takes traffic.
 
 ## Access
 

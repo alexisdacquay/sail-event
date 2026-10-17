@@ -18,15 +18,17 @@ Trunk-based development. All work lands on `main` via pull request.
 
 ## CD to dev on merge
 
-Render builds the root `Dockerfile` and deploys on every push to `main` (auto-deploy, trigger: commit). See `docs/deployment.md`.
+Render service `sail-event-dev` builds the root `Dockerfile` and deploys on every push to `main` (auto-deploy, trigger: commit). See `docs/deployment.md`.
 
 ## Manual promotion to prod
 
-Not implemented: one Render environment serves as both dev and prod (#21).
+`.github/workflows/promote.yml`, run by hand from the Actions tab (or `gh workflow run promote.yml -f sha=<full sha>`). It calls the prod service's deploy hook with `ref=<sha>`, then polls `GET /api/health` until prod reports that commit (`commit` field, from Render's `RENDER_GIT_COMMIT`) with status ok, or fails after 10 minutes. Prod (`sail-event`) has auto-deploy off; nothing reaches it except this workflow.
+
+Setup (one-time): secret `RENDER_PROD_DEPLOY_HOOK` = the Deploy Hook URL from Render → sail-event → Settings; variable `SAIL_BASE_URL` = the prod URL.
 
 ## Rollback
 
-Render dashboard → sail-event → Deploys → previous deploy → Rollback.
+Run the promote workflow with the previous commit's SHA.
 
 ## Scheduled search
 

@@ -25,7 +25,20 @@ SEARCH_ALL_API_KEY  Render-generated; same value in GitHub Actions secret
 - [x] Render MCP connector authorised 2026-10-17 (read service, set env vars)
 - [x] no CloudFormation/EventBridge files existed in the repo; only doc rows to fix
 
+## Dev/prod split (issue #21, started 2026-10-17)
+| Render object | id | notes |
+|---|---|---|
+| Postgres `sail-event-dev-db` | dpg-db9viomq1p3s739okpm0-a | basic_256mb, 1 GB, Frankfurt, Postgres 18 |
+| Web Service `sail-event-dev` | srv-db9viuijnfac73dpph20 | starter, auto-deploy on main, env APP_ENV=dev PORT=8000 SEED_DEMO=1 JWT_SECRET SEARCH_ALL_API_KEY; URL https://sail-event-dev.onrender.com |
+- first dev deploy dep-db9vivijnfac73dppjhg failed: no DATABASE_URL → SQLite "unable to open database file"; needs the dev internal DB URL pasted (user)
+- prod = existing `sail-event`: auto-deploy must be switched off (user), deploy hook URL → GitHub secret RENDER_PROD_DEPLOY_HOOK (user)
+- promote.yml written: hook + `ref=<sha>`, polls /api/health `commit` field (new, from RENDER_GIT_COMMIT) until it equals the sha
+- working tree: health.py, test_health.py, openapi.yaml, promote.yml, docs — commit on word
+
 ## Not done yet
+- [ ] dev: paste DATABASE_URL (Render → sail-event-dev-db → Connect → Internal URL, prefix postgresql+psycopg://) — user
+- [ ] prod: Settings → Auto-Deploy off; Deploy Hook → `gh secret set RENDER_PROD_DEPLOY_HOOK` — user
+- [ ] run promote.yml once as proof, then close #21
 - [ ] delete old DB user `sail_event_db_user` (Credential Rotation, bin icon) once it shows 0 open connections — user
 - [ ] health check path on the web service is empty in Render Settings; set to `/api/health` — user
 - [ ] SEARCH_PROVIDER=tavily + TAVILY_API_KEY; SCORER=claude + ANTHROPIC_API_KEY — keys are the user's

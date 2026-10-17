@@ -1,0 +1,56 @@
+name: Promote to prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Full commit SHA to deploy to prod (default is the commit this workflow runs from)
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: promote-prod
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Trigger the prod deploy
+        env:
+          HOOK: ${{ secrets.RENDER_PROD_DEPLOY_HOOK }}
+          SHA: ${{ inputs.sha || github.sha }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::RENDER_PROD_DEPLOY_HOOK secret is not set"
+            exit 1
+          fi
+          if ! echo "$SHA" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::sha must be a full 40-character commit SHA, got '$SHA'"
+            exit 1
+          fi
+          echo "Promoting $SHA"
+          curl -fsS -X POST "$HOOK&ref=$SHA" -o /dev/null
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+        id: trigger
+
+      - name: Wait until prod runs that commit and is healthy
+        env:
+          SAIL_BASE_URL: ${{ vars.SAIL_BASE_URL }}
+          SHA: ${{ steps.trigger.outputs.sha }}
+        run: |
+          for i in $(seq 1 60); do
+            LIVE=$(curl -s "$SAIL_BASE_URL/api/health" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('commit','') if d.get('status')=='ok' else '')" 2>/dev/null || true)
+            if [ "$LIVE" = "$SHA" ]; then
+              echo "prod is healthy on $SHA"
+              exit 0
+            fi
+            echo "attempt $i: live commit is '${LIVE:-none}', waiting"
+            sleep 10
+          done
+          echo "::error::prod did not report $SHA healthy within 10 minutes"
+          exit 1

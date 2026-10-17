@@ -220,6 +220,9 @@ paths:
                 properties:
                   status:
                     type: string
+                  commit:
+                    type: string
+                    description: Git commit running, empty outside Render
 
   /api/search/all:
     post:
