@@ -124,7 +124,9 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - issue #18 S9 CI: DONE. PR #30 merged a719004, CI green on PR and main → QA PASS → closed.
 - issue #23 S11 OTel instrumentation: DONE. eng 3817a63+b2e6154 → QA PASS 22/22 live → closed.
 - issue #24 S11 observability stack: groomed (I fixed image tags to the 2026 versions already
-  on this machine; added OTLP-logs fallback if the docker log bind mount fails on OrbStack), engineer running.
+  on this machine; added OTLP-logs fallback if the docker log bind mount fails on OrbStack).
+  DONE: eng b85bd8c+56d3e48 (OTLP logs path used; filelog kept for Linux) → QA PASS 12/12 live → closed.
+- issue #25 S12 alerts: groomed, engineer running (+ readiness healthchecks for collector/Loki).
 
 ## PAUSE #2 2026-10-16 — RESUME PROCEDURE
 1. tree should be clean at or after 1df4de4; `git status --short`, `git log --oneline -3`.
