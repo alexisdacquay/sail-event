@@ -1,6 +1,6 @@
 # Observability
 
-`make observability-up` starts the stack (collector, Prometheus, Loki, Tempo, Grafana).
+`make up-all` starts both the app (with `docker-compose.observability.yml` overlay) and the observability stack; `make observability-up` starts the stack alone (collector, Prometheus, Loki, Tempo, Grafana).
 `make observability-down` tears it down.
 
 Grafana is at `http://localhost:3001` (or `$GRAFANA_PORT`).
