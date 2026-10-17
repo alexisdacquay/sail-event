@@ -110,7 +110,9 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   note: host port 8000 is the user's order-tracker stack (HW4); our runs use 8010.
 - issue #15 S7 Postgres + compose: DONE. eng c64207d+d34dda2 → QA FAIL (healthcheck curl missing;
   engineer had claimed --wait ok) → fix 7dec86d → I verified healthy → closed. psycopg 3.3.6.
-- issue #16 S7 integration + e2e: PM GROOMING IN FLIGHT at pause 2026-10-16 (writes GitHub only).
+- issue #16 S7 integration + e2e: PM DONE (groomed on GitHub). Correction to pass to the engineer:
+  pin @playwright/test to the latest 1.64.x (QA verified 1.64.1 on npm 2026-10-16), not 1.52 as
+  the issue text says. Engineer NOT started at pause.
 
 ## PAUSE #2 2026-10-16 — RESUME PROCEDURE
 1. tree should be clean at or after 1df4de4; `git status --short`, `git log --oneline -3`.
