@@ -25,7 +25,7 @@ References:
 ### 3. Model and configuration used, action proposed
 
 - **Agent model**: Sonnet (`--model sonnet`)
-- **Allowed tools**: `Read`, `Edit`, `Bash(make test)`, `Bash(cat *)`, `Bash(grep *)`, `Bash(find *)`, `Bash(ls *)`, `Bash(head *)`, `Bash(tail *)`, `Bash(git log *)`, `Bash(git diff *)`, `Bash(git status)`, `Bash(git add *)`, `Bash(git commit *)`, `Bash(git checkout -b *)`
+- **Allowed tools**: `Read`, `Edit`, `Bash(make test)`, `Bash(grep *)`, `Bash(find *)`, `Bash(ls *)`, `Bash(head *)`, `Bash(tail *)`, `Bash(git log *)`, `Bash(git diff *)`, `Bash(git status)`, `Bash(git add *)`, `Bash(git commit *)`, `Bash(git checkout -b *)` — `Bash(cat *)` removed; the agent uses `Read` for file access
 - **Budget**: `--max-budget-usd 1`
 - **Action proposed**: remove the injected `raise RuntimeError("injected: scorer fault")` from `FakeScorer.score()` in `backend/app/adapters/fake.py`
 
@@ -59,7 +59,8 @@ References:
 
 - **Criteria and event text** are sent to the scorer model (Claude, via the Anthropic API) for relevance scoring. The scorer prompt contains: event title, date_time, place, description, and the user's criteria text. No usernames, tokens, or keys are included.
 - **No user credentials or secrets** are sent to any model. The scorer prompt template (`backend/app/adapters/prompts/scorer_v1.md`) includes only five data fields. The validation error handler (`main.py`) strips raw input from error responses.
-- **The responder agent** receives evidence (read-only telemetry data) and source code only. It does not receive user data, API keys, or tokens. It inherits `ANTHROPIC_API_KEY` from the host environment for its own API calls.
+- **The responder agent** receives evidence (read-only telemetry data, fenced with delimiters to mitigate prompt injection) and source code only. It does not receive user data, API keys, or tokens. Its subprocess environment is an allowlist (`PATH`, `HOME`, and optionally `ANTHROPIC_API_KEY`); no other host variables are passed.
+- **Webhook authentication**: the responder requires `RESPONDER_WEBHOOK_SECRET` (Bearer token, constant-time comparison). Requests without the correct header are rejected with HTTP 401.
 - **No production user data** is used for model training. The Anthropic API does not train on API inputs.
 - **Keys and secrets** live in environment variables and GitHub Secrets only. `.env` is git-ignored; `.env.example` has placeholder values. Compose uses env-var substitution with dev defaults.
 - **The responder's prompt** comes from a versioned repo file (`incident-response/responder-task.md`), not from user input. Evidence is injected from read-only telemetry queries.

@@ -68,6 +68,7 @@ services:
       GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
       GF_AUTH_DISABLE_LOGIN_FORM: "true"
       RESPONDER_WEBHOOK_URL: "${RESPONDER_WEBHOOK_URL:-http://host.docker.internal:8001/alerts}"
+      RESPONDER_WEBHOOK_SECRET: "${RESPONDER_WEBHOOK_SECRET:-}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

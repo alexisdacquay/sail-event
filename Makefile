@@ -19,6 +19,7 @@ run:
 test:
 	cd backend && uv run pytest
 	cd frontend && npm test
+	python3 incident-response/test_responder.py
 
 docker-build:
 	docker build -t sail-event:local .
@@ -56,14 +57,17 @@ observability-network:
 	docker network create sail-observability || true
 
 observability-up: observability-network
+	# Requires: export RESPONDER_WEBHOOK_SECRET=<value>
 	docker compose -f observability/docker-compose.yml up -d --wait
 
 observability-down:
 	docker compose -f observability/docker-compose.yml down -v
 
 up-all: observability-network
+	# Requires: export RESPONDER_WEBHOOK_SECRET=<value>
 	docker compose -f observability/docker-compose.yml up -d --wait
 	HOST_PORT=$(HOST_PORT) docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build -d --wait
 
 responder:
+	# Requires: export RESPONDER_WEBHOOK_SECRET=<value>
 	python3 incident-response/responder.py

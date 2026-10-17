@@ -28,6 +28,36 @@ trap cleanup EXIT
 
 echo "=== test-incident.sh ==="
 
+# Step 0: verify responder auth (requires RESPONDER_WEBHOOK_SECRET)
+echo "--- verifying responder auth ---"
+if [ -z "${RESPONDER_WEBHOOK_SECRET:-}" ]; then
+    echo "FAIL: RESPONDER_WEBHOOK_SECRET must be set"
+    exit 1
+fi
+
+SMOKE_PAYLOAD='{"alerts":[{"status":"resolved","labels":{"alertname":"smoke"}}]}'
+
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+    "http://localhost:$RESPONDER_PORT/alerts" \
+    -H "Content-Type: application/json" \
+    -d "$SMOKE_PAYLOAD")
+if [ "$HTTP_CODE" != "401" ]; then
+    echo "FAIL: expected 401 without auth header, got $HTTP_CODE"
+    exit 1
+fi
+echo "  no-auth -> 401 OK"
+
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+    "http://localhost:$RESPONDER_PORT/alerts" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $RESPONDER_WEBHOOK_SECRET" \
+    -d "$SMOKE_PAYLOAD")
+if [ "$HTTP_CODE" != "202" ]; then
+    echo "FAIL: expected 202 with auth header, got $HTTP_CODE"
+    exit 1
+fi
+echo "  auth -> 202 OK"
+
 # Step 1: inject fault on a temporary branch
 echo "--- injecting fault ---"
 cd "$REPO_ROOT"

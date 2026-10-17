@@ -16,3 +16,5 @@ contactPoints:
         settings:
           url: $RESPONDER_WEBHOOK_URL
           httpMethod: POST
+          authorization_scheme: Bearer
+          authorization_credentials: $RESPONDER_WEBHOOK_SECRET
