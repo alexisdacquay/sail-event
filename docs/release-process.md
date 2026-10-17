@@ -18,15 +18,15 @@ Trunk-based development. All work lands on `main` via pull request.
 
 ## CD to dev on merge
 
-On merge to `main`, build the container image and deploy to the dev environment. Not yet automated — lands with #29 and #17.
+Render builds the root `Dockerfile` and deploys on every push to `main` (auto-deploy, trigger: commit). Render checks `/api/health` before switching traffic. See `docs/deployment.md`.
 
 ## Manual promotion to prod
 
-Tag the image and deploy to production via manual workflow dispatch. Not yet automated — lands with #21.
+Not implemented: one Render environment serves as both dev and prod (#21).
 
 ## Rollback
 
-Redeploy the previous image tag.
+Render dashboard → sail-event → Deploys → previous deploy → Rollback.
 
 ## Scheduled search
 
@@ -36,7 +36,7 @@ Redeploy the previous image tag.
 
 ```bash
 # Point the workflow at your deployment
-gh variable set SAIL_BASE_URL --body "https://your-host.example.com"
+gh variable set SAIL_BASE_URL --body "https://sail-event.onrender.com"
 
 # Set the shared API key (must match SEARCH_ALL_API_KEY on the server)
 gh secret set SEARCH_ALL_API_KEY

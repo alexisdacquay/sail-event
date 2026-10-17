@@ -16,8 +16,8 @@
 | Tests (backend) | pytest | 9.1 |
 | Tests (e2e) | Playwright | 1.64 |
 | CI/CD | GitHub Actions | — |
-| Deploy | AWS CloudFormation (EC2 + Caddy) | — |
-| Scheduler | AWS EventBridge → POST /api/search/all | — |
+| Deploy | Render Web Service (Docker, auto-deploy on push to main) + Render Postgres | — |
+| Scheduler | GitHub Actions cron → POST /api/search/all | — |
 | Contract | openapi.yaml (written from frontend at S4; backend implements it; CI checks match) | — |
 | Container | Docker; docker-compose for app + Postgres | — |
 | Telemetry | OTel → Prometheus + Loki + Tempo + Grafana | — |
@@ -54,7 +54,7 @@
 
 ## Request flow — one hourly run
 1. Manual: signed-in user triggers `POST /api/search` (their own criteria only)
-2. Hourly: EventBridge calls `POST /api/search/all` with a shared-secret header; server iterates every user with criteria, one Run per user
+2. Hourly: GitHub Actions calls `POST /api/search/all` with a shared-secret header; server iterates every user with criteria, one Run per user
 3. For each user: derive search queries from criteria text
 4. `SearchProvider.search(queries)` returns candidate events
 5. Dedup: `INSERT ... ON CONFLICT(user_id, link) DO NOTHING`; keep only new rows
@@ -66,12 +66,12 @@
 ## Environments
 | Aspect | Dev | Prod |
 |---|---|---|
-| DB | SQLite (local) / Postgres (compose) | Postgres on EC2 |
-| URL | localhost / dev EC2 | prod EC2 public URL |
-| Secrets | .env file | AWS SSM / env vars on EC2 |
+| DB | SQLite (local) / Postgres (compose) | Render Postgres |
+| URL | localhost | https://sail-event.onrender.com |
+| Secrets | .env file | Render env vars |
 | Adapters | fixture + fake scorer | real (env var toggles) |
-| Scheduler | manual / compose | EventBridge hourly |
-| Reverse proxy | none | Caddy (TLS) |
+| Scheduler | manual / compose | GitHub Actions hourly |
+| Reverse proxy | none | Render (TLS) |
 
 ## Known limitations
 - Dedup is by (user_id, link); the same event under two URLs appears twice
