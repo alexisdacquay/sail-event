@@ -41,7 +41,7 @@ class TestExtractDate:
         assert _extract_date("Opens Jan 3, 2026") == "Jan 3, 2026"
 
     def test_no_date(self):
-        assert _extract_date("No dates here at all") == "unknown"
+        assert _extract_date("No dates here at all") is None
 
 
 # ---------- mapping correctness ----------
@@ -61,6 +61,18 @@ class TestMapping:
         assert first.description.startswith("The Round the Island Race")
         assert first.date_time == "2026-06-20"
         assert first.place == "unknown"
+
+    @patch("urllib.request.urlopen")
+    def test_date_from_title_when_content_has_none(self, mock_urlopen, monkeypatch):
+        """Sydney to Hobart has 'Dec 26, 2026' only in the title."""
+        monkeypatch.setenv("TAVILY_API_KEY", "test-key")
+        mock_urlopen.return_value = _fake_urlopen()
+        provider = TavilySearchProvider()
+        events = provider.search(["q"])
+
+        syd = [e for e in events if "Sydney" in e.title]
+        assert len(syd) == 1
+        assert syd[0].date_time == "Dec 26, 2026"
 
     @patch("urllib.request.urlopen")
     def test_unknown_date_when_none_in_content(self, mock_urlopen, monkeypatch):

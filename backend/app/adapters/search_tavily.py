@@ -25,13 +25,13 @@ _SHORT_DATE = re.compile(
 )
 
 
-def _extract_date(text: str) -> str:
-    """Best-effort date from text; 'unknown' otherwise."""
+def _extract_date(text: str) -> str | None:
+    """Best-effort date from text; None on no match."""
     for pattern in (_ISO_DATE, _TEXTUAL_DATE, _SHORT_DATE):
         m = pattern.search(text)
         if m:
             return m.group()
-    return "unknown"
+    return None
 
 
 class TavilySearchProvider:
@@ -63,11 +63,11 @@ class TavilySearchProvider:
 
                 content = item.get("content", "")
                 title = item.get("title", "")
-                date_text = _extract_date(content) or _extract_date(title)
+                date_text = _extract_date(content) or _extract_date(title) or "unknown"
 
                 results.append(RawEvent(
                     title=title,
-                    date_time=date_text if date_text else "unknown",
+                    date_time=date_text,
                     place="unknown",
                     link=url,
                     description=content,
