@@ -20,9 +20,17 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `SEARCH_ALL_API_KEY` | random; the same value is the GitHub Actions secret `SEARCH_ALL_API_KEY` |
 | `SEARCH_PROVIDER`, `TAVILY_API_KEY` | `tavily` + key for real web search; unset = fixtures |
 | `SCORER`, `ANTHROPIC_API_KEY` | `claude` + key for real scoring; unset = fake scorer |
+| `LLM_PROVIDER` | `openai_compatible` for real scoring; `fake` (default outside prod) |
+| `LLM_BASE_URL` | `https://api.deepseek.com` (required when `LLM_PROVIDER=openai_compatible`) |
+| `LLM_MODEL` | `deepseek-flash` |
+| `LLM_API_KEY` | DeepSeek API key (required when `LLM_PROVIDER=openai_compatible`) |
+| `LLM_JSON_MODE` | `json_object` (DeepSeek) or `json_schema` |
+| `FAKE_NOW` | ISO-8601 instant; set in dev/CI/compose (`2026-10-18T12:00:00+02:00`), unset in prod |
 | `MAX_SCHEDULED_USERS` | `50` — max users per scheduled search |
 | `REGISTER_RATE_LIMIT_PER_HOUR` | `5` — successful registrations per IP per hour |
 | `REGISTRATION_CODE` | optional — invite code for registration; unset = open |
+
+Dev environment (`sail-event-dev`): `APP_ENV=dev`, `FAKE_NOW=2026-10-18T12:00:00+02:00`, `SEED_DEMO=1`.
 
 Secrets live only in Render and GitHub secrets, never in the repo.
 

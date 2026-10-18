@@ -197,18 +197,9 @@ class TestMissingKey:
 
 
 class TestFactory:
-    @patch("app.adapters.scorer_claude.anthropic.Anthropic")
-    def test_factory_returns_claude(self, mock_cls, monkeypatch):
+    def test_factory_rejects_scorer_env(self, monkeypatch):
+        """SCORER env var is replaced by LLM_PROVIDER."""
         monkeypatch.setenv("SCORER", "claude")
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
-        mock_cls.return_value = MagicMock()
         from app.adapters import get_scorer
-        scorer = get_scorer()
-        assert isinstance(scorer, ClaudeScorer)
-
-    def test_factory_missing_key_raises(self, monkeypatch):
-        monkeypatch.setenv("SCORER", "claude")
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-        from app.adapters import get_scorer
-        with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
+        with pytest.raises(ValueError, match="SCORER is replaced by LLM_PROVIDER"):
             get_scorer()

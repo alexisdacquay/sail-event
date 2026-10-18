@@ -89,7 +89,7 @@ class TestFactories:
 
     def test_explicit_env_returns_expected_classes(self, monkeypatch):
         monkeypatch.setenv("SEARCH_PROVIDER", "fixture")
-        monkeypatch.setenv("SCORER", "fake")
+        monkeypatch.delenv("SCORER", raising=False)
         assert isinstance(get_search_provider(), FixtureSearchProvider)
         assert isinstance(get_scorer(), FakeScorer)
 
@@ -98,7 +98,7 @@ class TestFactories:
         with pytest.raises(ValueError, match="unknown"):
             get_search_provider()
 
-    def test_get_scorer_raises_on_unknown(self, monkeypatch):
-        monkeypatch.setenv("SCORER", "unknown")
-        with pytest.raises(ValueError, match="unknown"):
+    def test_get_scorer_raises_when_scorer_set(self, monkeypatch):
+        monkeypatch.setenv("SCORER", "anything")
+        with pytest.raises(ValueError, match="SCORER is replaced by LLM_PROVIDER"):
             get_scorer()
