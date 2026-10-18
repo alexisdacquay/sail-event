@@ -97,6 +97,7 @@ The live deployment is <https://sail-event.onrender.com>. Register your own acco
 | Container | One image: Node build stage, then Python serving API and built frontend | `Dockerfile`, `docker-compose.yml` |
 | Telemetry | OpenTelemetry SDK, collector, Prometheus, Loki, Tempo, Grafana | `observability/` |
 | On-call | Alert webhook, evidence collector, headless Claude Code responder | `incident-response/` |
+| QA subagent | Claude Code subagent that checks finished work against the issue | [`.claude/agents/qa-engineer.md`](.claude/agents/qa-engineer.md) |
 
 More detail: [architecture](_docs/architecture.md), [deployment](docs/deployment.md), [release process](docs/release-process.md).
 

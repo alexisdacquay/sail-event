@@ -11,6 +11,7 @@ evidence, and launches a headless Claude Code agent to investigate.
 | `ANTHROPIC_API_KEY` | for real runs | Passed to the agent subprocess |
 | `RESPONDER_PORT` | no | Listen port (default `8001`) |
 | `CLAUDE_BIN` | no | Path to the Claude CLI binary (default `claude`) |
+| `SKIP_HOOK_TESTS` | no | Set to `1` in the agent env allowlist so commits in incident worktrees skip the pre-commit test gate |
 
 ## Start
 

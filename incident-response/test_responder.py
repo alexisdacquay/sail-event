@@ -66,6 +66,8 @@ class TestBuildAgentEnv(unittest.TestCase):
             self.assertIn("PATH", env)
             self.assertIn("HOME", env)
             self.assertIn("ANTHROPIC_API_KEY", env)
+            self.assertIn("SKIP_HOOK_TESTS", env)
+            self.assertEqual(env["SKIP_HOOK_TESTS"], "1")
             self.assertNotIn("DATABASE_URL", env)
             self.assertNotIn("AWS_SECRET_ACCESS_KEY", env)
         finally:
@@ -78,7 +80,7 @@ class TestBuildAgentEnv(unittest.TestCase):
             os.environ.pop("ANTHROPIC_API_KEY", None)
             env = responder.build_agent_env()
             self.assertNotIn("ANTHROPIC_API_KEY", env)
-            self.assertEqual(len(env), 2)  # PATH + HOME only
+            self.assertEqual(len(env), 3)  # PATH + HOME + SKIP_HOOK_TESTS
         finally:
             os.environ.clear()
             os.environ.update(old)

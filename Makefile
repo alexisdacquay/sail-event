@@ -1,4 +1,4 @@
-.PHONY: run run-frontend run-backend test test-integration test-e2e docker-build docker-run compose-up compose-down observability-network observability-up observability-down up-all responder
+.PHONY: run run-frontend run-backend test test-integration test-e2e docker-build docker-run compose-up compose-down observability-network observability-up observability-down up-all responder hooks
 
 HOST_PORT ?= 8000
 
@@ -71,3 +71,7 @@ up-all: observability-network
 responder:
 	# Requires: export RESPONDER_WEBHOOK_SECRET=<value>
 	python3 incident-response/responder.py
+
+hooks:
+	ln -sf ../../scripts/pre-commit .git/hooks/pre-commit
+	chmod +x scripts/pre-commit

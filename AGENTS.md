@@ -17,6 +17,11 @@ These targets exist once task 1 (project scaffold) and later Makefile tasks land
 - `make test-e2e` - bring up compose, run Playwright, tear down
 - `make compose-up` - app + Postgres via docker-compose
 
+Setup
+
+- Run `make hooks` after cloning to install the pre-commit hook. Agent worktrees share `.git/hooks` from the main clone, so the hook applies there too.
+- The QA subagent is defined at `.claude/agents/qa-engineer.md`
+
 Rules
 
 - Python dependencies: uv. Frontend dependencies: npm

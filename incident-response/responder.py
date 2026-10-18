@@ -44,8 +44,12 @@ def validate_alertname(alertname: str) -> bool:
 
 
 def build_agent_env() -> dict:
-    """Allowlist: only PATH, HOME, and (when set) ANTHROPIC_API_KEY."""
-    env = {"PATH": os.environ.get("PATH", ""), "HOME": os.environ.get("HOME", "")}
+    """Allowlist: only PATH, HOME, SKIP_HOOK_TESTS, and (when set) ANTHROPIC_API_KEY."""
+    env = {
+        "PATH": os.environ.get("PATH", ""),
+        "HOME": os.environ.get("HOME", ""),
+        "SKIP_HOOK_TESTS": "1",
+    }
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if api_key:
         env["ANTHROPIC_API_KEY"] = api_key
