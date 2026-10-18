@@ -78,3 +78,18 @@ def get_language_model() -> LanguageModel:
         return OpenAICompatibleModel()  # type: ignore[return-value]
 
     raise ValueError(f"Unknown LLM_PROVIDER: {value!r}")
+
+
+class _NoOpGuardrail:
+    """GUARDRAIL=none — always allows, no network."""
+
+    def check(self, text: str) -> None:
+        """No-op: always passes."""
+
+
+def get_guardrail() -> _NoOpGuardrail:
+    value = os.environ.get("GUARDRAIL", "none")
+    if value == "none":
+        return _NoOpGuardrail()
+    # Real guardrails wired in issue H
+    raise ValueError(f"Unknown GUARDRAIL: {value!r}")

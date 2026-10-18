@@ -1,0 +1,144 @@
+{
+  "description": "Golden set B — 22 labelled candidates for C1 (jazz in Berlin, 19-21 Oct 2026), now = 2026-10-18 12:00 Europe/Berlin",
+  "criteria": {
+    "text": "jazz in Berlin (Germany) next week (19-21st October 2026)",
+    "user_tz": "Europe/Berlin",
+    "facets": {
+      "place": {"city": "Berlin", "country": "DE", "region": null, "radius_km": null, "online": false},
+      "date": {"start": "2026-10-19", "end": "2026-10-21", "relative": "next_week", "relative_n": null},
+      "topics": ["jazz"],
+      "topics_local": ["Jazz", "Jazzkonzert"],
+      "formats": [],
+      "budget": {"max_amount": null, "currency": null, "free_only": false},
+      "language": "de",
+      "input_language": "en",
+      "other_constraints": []
+    }
+  },
+  "entries": [
+    {
+      "id": "E1",
+      "label": "fit",
+      "expected": "judged",
+      "expected_band": [90, 100],
+      "note": "few-shot example, excluded from CI judge check"
+    },
+    {
+      "id": "E2",
+      "label": "fit",
+      "expected": "judged",
+      "expected_band": [85, 100],
+      "note": "CI judge row"
+    },
+    {
+      "id": "E3",
+      "label": "fit",
+      "expected": "judged",
+      "expected_band": [90, 100],
+      "note": "CI judge row"
+    },
+    {
+      "id": "E4",
+      "label": "fit, format differs",
+      "expected": "judged",
+      "expected_band": [70, 89],
+      "note": "few-shot example, excluded from CI judge check"
+    },
+    {
+      "id": "E5",
+      "label": "wrong city",
+      "expected": "filtered_place"
+    },
+    {
+      "id": "E6",
+      "label": "wrong city, same country",
+      "expected": "filtered_place"
+    },
+    {
+      "id": "E7",
+      "label": "wrong city, name confusion",
+      "expected": "filtered_place"
+    },
+    {
+      "id": "E8",
+      "label": "wrong date",
+      "expected": "filtered_date"
+    },
+    {
+      "id": "E9",
+      "label": "wrong date, inside next_week but outside absolute window",
+      "expected": "filtered_date"
+    },
+    {
+      "id": "E10",
+      "label": "wrong date, one day past the end",
+      "expected": "filtered_date"
+    },
+    {
+      "id": "E11",
+      "label": "incomplete (missing start_tz)",
+      "expected": "filtered_incomplete"
+    },
+    {
+      "id": "E12",
+      "label": "past",
+      "expected": "filtered_past"
+    },
+    {
+      "id": "E13",
+      "label": "past, yesterday",
+      "expected": "filtered_past"
+    },
+    {
+      "id": "E14",
+      "label": "not an event",
+      "expected": "filtered_non_event"
+    },
+    {
+      "id": "E15",
+      "label": "not an event",
+      "expected": "filtered_non_event"
+    },
+    {
+      "id": "E16",
+      "label": "not an event",
+      "expected": "filtered_non_event"
+    },
+    {
+      "id": "E17",
+      "label": "not an event",
+      "expected": "filtered_non_event"
+    },
+    {
+      "id": "E18",
+      "label": "duplicate by link",
+      "expected": "filtered_duplicate"
+    },
+    {
+      "id": "E19",
+      "label": "duplicate by title+date",
+      "expected": "filtered_duplicate"
+    },
+    {
+      "id": "E20",
+      "label": "off-topic",
+      "expected": "judged",
+      "expected_band": [10, 39],
+      "note": "few-shot example, excluded from CI judge check"
+    },
+    {
+      "id": "E21",
+      "label": "off-topic",
+      "expected": "judged",
+      "expected_band": [10, 39],
+      "note": "CI judge row"
+    },
+    {
+      "id": "E22",
+      "label": "over budget",
+      "expected": "judged",
+      "expected_band": [0, 30],
+      "note": "CI judge row (for C2 criteria with budget)"
+    }
+  ]
+}
