@@ -5,31 +5,6 @@ from __future__ import annotations
 import os
 from typing import Protocol
 
-from .fake import FakeScorer
-from .fixture import FixtureSearchProvider
-
-
-def get_search_provider() -> FixtureSearchProvider:
-    value = os.environ.get("SEARCH_PROVIDER", "fixture")
-    if value == "fixture":
-        return FixtureSearchProvider()
-    if value == "tavily":
-        from .search_tavily import TavilySearchProvider
-        return TavilySearchProvider()
-    raise ValueError(f"Unknown SEARCH_PROVIDER: {value!r}")
-
-
-def get_scorer() -> FakeScorer:
-    if os.environ.get("SCORER"):
-        raise ValueError("SCORER is replaced by LLM_PROVIDER")
-    value = os.environ.get("SCORER", "fake")
-    if value == "fake":
-        return FakeScorer()
-    if value == "claude":
-        from .scorer_claude import ClaudeScorer
-        return ClaudeScorer()
-    raise ValueError(f"Unknown SCORER: {value!r}")
-
 
 class LanguageModel(Protocol):
     """Common interface for LLM adapters."""
@@ -48,6 +23,7 @@ class LanguageModel(Protocol):
 
 class _DeferredProdGuard:
     """Wraps an LLM adapter that refuses at first use in prod, not at import."""
+    _refused: bool = True
 
     def __init__(self, provider: str) -> None:
         self._provider = provider
@@ -58,6 +34,53 @@ class _DeferredProdGuard:
             f"adapters refused in prod: LLM_PROVIDER={self._provider!r} "
             "is not allowed when APP_ENV=prod"
         )
+
+
+class _DeferredProdSearchGuard:
+    """Raises at first use in prod when SEARCH_PROVIDER is fixture."""
+
+    name: str = "fixture"
+    _refused: bool = True
+
+    def search(self, *args, **kwargs):
+        raise RuntimeError(
+            "adapters refused in prod: set SEARCH_PROVIDER and LLM_PROVIDER"
+        )
+
+
+# --- old-style factories (kept for backward compat until old code deleted) ---
+
+
+def get_search_provider():
+    if os.environ.get("SCORER"):
+        raise ValueError("SCORER is replaced by LLM_PROVIDER")
+
+    value = os.environ.get("SEARCH_PROVIDER", "fixture")
+    is_prod = os.environ.get("APP_ENV") == "prod"
+
+    if value == "fixture":
+        if is_prod:
+            return _DeferredProdSearchGuard()
+        from .fixture_v2 import FixtureProviderV2
+        return FixtureProviderV2()
+
+    if value == "tavily":
+        from .search_tavily_v2 import TavilyProviderV2
+        return TavilyProviderV2()
+
+    if value == "brave":
+        from .search_brave import BraveProvider
+        return BraveProvider()
+
+    raise ValueError(f"Unknown SEARCH_PROVIDER: {value!r}")
+
+
+def get_scorer():
+    if os.environ.get("SCORER"):
+        raise ValueError("SCORER is replaced by LLM_PROVIDER")
+    # Legacy: only fake scorer remains until deletion
+    from .fake import FakeScorer
+    return FakeScorer()
 
 
 def get_language_model() -> LanguageModel:

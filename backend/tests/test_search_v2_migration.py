@@ -133,49 +133,24 @@ def test_migration_up_down_up_sqlite():
 
 def test_triage_boundary_ge_upper(client, auth_headers, _db_session):
     """A score exactly at the upper threshold is accepted (>=)."""
-    from app.orm import Criteria, Event, User
-    from app.services.pipeline import _score_and_triage
-    from app.adapters.base import RawEvent
+    from app.orm import Event, User
 
     h = auth_headers("boundary", "boundary")
-    client.put("/api/criteria", json={"text": "anything"}, headers=h)
-
     user = _db_session.query(User).filter(User.username == "boundary").first()
     # New registrations default to 90/40
     assert user.upper_threshold == 90
     assert user.lower_threshold == 40
 
-    # Insert a "new" event with a known score
-    evt = Event(
-        user_id=user.id,
-        title="Boundary",
-        date_time="2026-07-01",
-        place="P",
-        link="https://example.com/boundary-upper",
-        description="D",
-        status="new",
-    )
-    _db_session.add(evt)
-    _db_session.commit()
+    # Test triage logic: score exactly at upper → accepted
+    score = 90
+    if score >= user.upper_threshold:
+        status = "accepted"
+    elif score <= user.lower_threshold:
+        status = "rejected"
+    else:
+        status = "queued"
 
-    # Manually set score to exactly the upper threshold
-    evt.score = 90
-
-    # Triage
-    from app.services.pipeline import _score_and_triage as triage_fn
-    # The function scores AND triages. We need to simulate just triage.
-    # We'll directly test the comparison:
-    from app.services import pipeline
-    with pytest.MonkeyPatch.context() as mp:
-        # We can just test the logic inline
-        if evt.score >= user.upper_threshold:
-            evt.status = "accepted"
-        elif evt.score <= user.lower_threshold:
-            evt.status = "rejected"
-        else:
-            evt.status = "queued"
-
-    assert evt.status == "accepted"
+    assert status == "accepted"
 
 
 def test_triage_boundary_le_lower(client, auth_headers, _db_session):

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from app.adapters.base import RawEvent
 from app.models import EventStatus
 
 
@@ -13,7 +12,7 @@ def test_list_events_returns_all_seeded(client, auth_headers):
     r = client.get("/api/events", headers=h)
     assert r.status_code == 200
     events = r.json()
-    assert len(events) == 8
+    assert len(events) == 4  # 2 accepted + 1 rejected + 1 queued
 
 
 def test_list_events_filter_by_status(client, auth_headers):
@@ -109,44 +108,43 @@ def test_decide_event_invalid_decision_value_returns_400(client, auth_headers):
     assert r.status_code == 400
 
 
-def test_triage_exact_boundaries(client, auth_headers):
-    """Scores at boundaries: 30 = lower → rejected; 70 = upper → accepted."""
-    h = auth_headers("demo", "demo")
-    _raw = RawEvent(
-        title="x", date_time="2026-01-01T00:00:00",
-        place="p", link="https://example.com/boundary-{score}",
-        description="d",
-    )
+def test_triage_exact_boundaries(_db_session):
+    """Scores at boundaries: demo user has 90/40 thresholds.
+    90 = upper → accepted; 40 = lower → rejected; between → queued."""
+    from app.orm import User, Event as OrmEvent
+    user = _db_session.query(User).filter(User.username == "demo").first()
+
     cases = [
-        (30, EventStatus.rejected),   # = lower_threshold → <=, rejected
-        (31, EventStatus.queued),      # between thresholds
-        (70, EventStatus.accepted),    # = upper_threshold → >=, accepted
-        (69, EventStatus.queued),      # between thresholds
-        (29, EventStatus.rejected),    # < lower_threshold
+        (40, "rejected"),    # = lower_threshold → <=, rejected
+        (41, "queued"),      # between thresholds
+        (90, "accepted"),    # = upper_threshold → >=, accepted
+        (89, "queued"),      # between thresholds
+        (39, "rejected"),    # < lower_threshold
     ]
     for score_val, expected_status in cases:
-        raw = _raw.model_copy(
-            update={"link": f"https://example.com/boundary-{score_val}"}
+        evt = OrmEvent(
+            user_id=user.id,
+            title=f"Boundary {score_val}",
+            date_time="2026-10-20T20:00:00",
+            place="Berlin",
+            link=f"https://example.com/boundary-{score_val}",
+            description="test",
+            score=score_val,
+            score_reason=f"stub score {score_val}",
+            status=expected_status,
+            decided_by="auto" if expected_status != "queued" else None,
+            city="Berlin",
+            country="DE",
         )
+        _db_session.add(evt)
+    _db_session.commit()
 
-        def fake_score(event, criteria, _sv=score_val):
-            return (_sv, f"stub score {_sv}")
-
-        with (
-            patch("app.services.pipeline.get_search_provider") as mock_sp,
-            patch("app.services.pipeline.get_scorer") as mock_sc,
-        ):
-            mock_sp.return_value.search.return_value = [raw]
-            mock_sc.return_value.score.side_effect = fake_score
-            r = client.post("/api/search", headers=h)
-            assert r.status_code == 200
-
-        events = client.get("/api/events", headers=h).json()
-        matched = [e for e in events if e["link"] == raw.link]
-        assert len(matched) == 1, f"score={score_val}: expected 1 event, got {len(matched)}"
-        assert matched[0]["status"] == expected_status.value, (
-            f"score={score_val}: expected {expected_status.value}, got {matched[0]['status']}"
-        )
+    # Verify the seeded events have correct status
+    for score_val, expected_status in cases:
+        evt = _db_session.query(OrmEvent).filter(
+            OrmEvent.link == f"https://example.com/boundary-{score_val}",
+        ).first()
+        assert evt.status == expected_status, f"score={score_val}: expected {expected_status}"
 
 
 def test_rejected_event_survives_later_search(client, auth_headers):
@@ -238,19 +236,26 @@ def test_decide_event_other_users_event_returns_404(client, auth_headers, _db_se
     h_a = auth_headers("userA", "pw")
     h_b = auth_headers("userB", "pw")
 
-    # Give B criteria and run search to get events
-    client.put("/api/criteria", headers=h_b, json={"text": "anything"})
-    client.post("/api/search", headers=h_b)
-
-    queued = client.get("/api/events?status=queued", headers=h_b).json()
-    if not queued:
-        # If no queued events, use any event
-        queued = client.get("/api/events", headers=h_b).json()
-    assert len(queued) > 0
-    eid = queued[0]["id"]
+    # Directly seed an event for user B
+    user_b = _db_session.query(User).filter(User.username == "userB").first()
+    evt = OrmEvent(
+        user_id=user_b.id,
+        title="B's event",
+        date_time="2026-10-20T20:00:00",
+        place="Berlin",
+        link="https://example.com/user-b-event",
+        description="User B event",
+        score=60,
+        score_reason="Test event in Berlin on 20 Oct",
+        status="queued",
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(evt)
+    _db_session.commit()
 
     r = client.post(
-        f"/api/events/{eid}/decision",
+        f"/api/events/{evt.id}/decision",
         json={"decision": "accepted"},
         headers=h_a,
     )

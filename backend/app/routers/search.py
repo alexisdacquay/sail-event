@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 
 from fastapi import APIRouter, Depends, Header
@@ -16,19 +17,26 @@ from ..services.pipeline import run_pipeline
 router = APIRouter()
 
 
+def _run_response(run: orm.Run) -> dict:
+    """Build the SearchResult response dict from a Run row."""
+    stage_counts = json.loads(run.stage_counts) if run.stage_counts else None
+    return {
+        "runId": run.id,
+        "eventsFound": run.events_found,
+        "eventsNew": run.events_new,
+        "stageCounts": stage_counts,
+        "stoppedAtStage": run.stopped_at_stage,
+        "error": run.error,
+    }
+
+
 @router.post("/api/search", operation_id="runSearch")
 def run_search(
     user: orm.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     run = run_pipeline(user, db, trigger="manual")
-    if run.error:
-        return JSONResponse(status_code=500, content={"detail": run.error})
-    return {
-        "runId": run.id,
-        "eventsFound": run.events_found,
-        "eventsNew": run.events_new,
-    }
+    return _run_response(run)
 
 
 @router.post("/api/search/all", operation_id="searchAll")

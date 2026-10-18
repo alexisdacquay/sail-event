@@ -463,6 +463,11 @@ components:
             - string
             - 'null'
           description: The page the event was extracted from
+        band:
+          type:
+            - string
+            - 'null'
+          description: Human-readable score band (fits, mostly fits, open question, off topic, not a fit)
         score:
           type: number
         scoreReason:

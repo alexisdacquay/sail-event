@@ -80,7 +80,9 @@ class TestFactories:
     def test_get_search_provider_default(self, monkeypatch):
         monkeypatch.delenv("SEARCH_PROVIDER", raising=False)
         provider = get_search_provider()
-        assert isinstance(provider, FixtureSearchProvider)
+        # v2 factory returns FixtureProviderV2
+        from app.adapters.fixture_v2 import FixtureProviderV2
+        assert isinstance(provider, FixtureProviderV2)
 
     def test_get_scorer_default(self, monkeypatch):
         monkeypatch.delenv("SCORER", raising=False)
@@ -90,7 +92,8 @@ class TestFactories:
     def test_explicit_env_returns_expected_classes(self, monkeypatch):
         monkeypatch.setenv("SEARCH_PROVIDER", "fixture")
         monkeypatch.delenv("SCORER", raising=False)
-        assert isinstance(get_search_provider(), FixtureSearchProvider)
+        from app.adapters.fixture_v2 import FixtureProviderV2
+        assert isinstance(get_search_provider(), FixtureProviderV2)
         assert isinstance(get_scorer(), FakeScorer)
 
     def test_get_search_provider_raises_on_unknown(self, monkeypatch):

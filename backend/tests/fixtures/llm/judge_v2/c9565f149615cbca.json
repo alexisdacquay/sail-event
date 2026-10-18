@@ -1,0 +1,19 @@
+{
+  "response": {
+    "score": 94,
+    "reason": "Jazz trio at A-Trane in Berlin on Tue 20 Oct, 18 EUR: fits your dates and topic",
+    "fit": {
+      "place": "yes",
+      "date": "yes",
+      "topic": "yes",
+      "budget": "unknown"
+    },
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 1500,
+    "completion_tokens": 100
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "fake:recorded"
+}

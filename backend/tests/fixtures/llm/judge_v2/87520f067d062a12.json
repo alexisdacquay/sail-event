@@ -1,0 +1,19 @@
+{
+  "response": {
+    "score": 15,
+    "reason": "Outdoor photography meetup in Berlin on 20 Oct: right place and dates, not jazz",
+    "fit": {
+      "place": "yes",
+      "date": "yes",
+      "topic": "no",
+      "budget": "unknown"
+    },
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 1500,
+    "completion_tokens": 100
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "fake:recorded"
+}

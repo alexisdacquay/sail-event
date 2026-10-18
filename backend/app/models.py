@@ -70,6 +70,7 @@ class Event(BaseModel):
     price_amount: float | None = Field(default=None, alias="priceAmount")
     price_currency: str | None = Field(default=None, alias="priceCurrency")
     source_url: str | None = Field(default=None, alias="sourceUrl")
+    band: str | None = Field(default=None)
     score: int
     score_reason: str = Field(alias="scoreReason")
     status: EventStatus

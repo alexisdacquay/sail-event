@@ -167,7 +167,9 @@ class TestFactory:
         from app.adapters import get_search_provider
 
         provider = get_search_provider()
-        assert isinstance(provider, TavilySearchProvider)
+        # Factory now returns TavilyProviderV2
+        from app.adapters.search_tavily_v2 import TavilyProviderV2
+        assert isinstance(provider, TavilyProviderV2)
 
     def test_factory_missing_key_raises(self, monkeypatch):
         monkeypatch.setenv("SEARCH_PROVIDER", "tavily")

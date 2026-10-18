@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..deps import get_current_user
 from ..models import DecisionRequest, EventStatus
+from ..services.judge import band_word
 from .. import orm
 
 router = APIRouter()
@@ -31,6 +32,7 @@ def _event_dict(e: orm.Event) -> dict:
         "priceAmount": e.price_amount,
         "priceCurrency": e.price_currency,
         "sourceUrl": e.source_url,
+        "band": band_word(e.score) if e.score is not None else None,
         "score": e.score,
         "scoreReason": e.score_reason,
         "status": e.status,
