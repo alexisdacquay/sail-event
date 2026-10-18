@@ -10,7 +10,10 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - README rewritten for peer review (f55ed3b, b3ed32d). Rubric: all 12 criteria covered, CI/CD at 3/3.
 - Hardening #33 #35 #36 #34 closed 2026-10-17 via the loop (d2d38b9, d2b33ac, 8ec23c0, 4cee1d6), CI green, promoted to prod (run 39081329740); prod and dev both on 4cee1d6. Tests: 180 backend, 25 frontend, 19 responder, 7 integration, 2 e2e.
 - 2026-10-18 (overnight run): #28 reduced (QA subagent + pre-commit hook, `make hooks`), robustness #37 #38 #39 closed via the loop; CI red for 3 pushes (restart test vs GitHub runner reset) fixed in 93ad48f; promoted to prod run 39095094746; prod and dev on 93ad48f. Tests: 194 backend, 26 frontend, 19 responder, 7 integration (restart test now runs), 2 e2e. README gotchas from walkthrough 1 fixed (11f2828). Roadmap: work/ROADMAP.md. Robustness plan: work/ROBUSTNESS.md.
-- Open issues: none. Second walkthrough in progress.
+- Second walkthrough 23/24 → fixes pushed (7b9bccc). 
+- UX redesign (roadmap P1) 2026-10-18: spec _docs/ux-spec.md, design _docs/ux-design.md, review _docs/ux-design-review.md (Fable); issues #40-#44 on branch ux-redesign, each QA PASS; PR #45 merged (5cbb5b9); polish #46 PR #47 merged (58ccdd9); README screenshots retaken (24e22b0). Dev shows the new UI; PROD STILL ON 93ad48f, owner promotes.
+- Icon proposals _docs/icon-proposals/ (recommended b-sail-mark.svg). Theme (P2) design in progress on Fable → _docs/theme-design.md.
+- Local stacks running: app 8010 (demo/demo, new UI), Grafana 3001, Prometheus 9090.
 - Machine rule: `rm`, `sed -i`, `cd ... &&` are denied by a permission rule and stall; use git clean, Edit/Write, absolute paths. Put it in every agent brief.
 - Responder now needs RESPONDER_WEBHOOK_SECRET exported before `make responder` / `make observability-up` (incident-response/README.md).
 - Tidy-up 2026-10-17: local stacks stopped; old prod DB user has 0 connections (verified by SQL), bin click is the user's; e2e/shots untracked temp folder, user deletes.
