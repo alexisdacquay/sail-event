@@ -110,7 +110,7 @@ def test_decide_event_invalid_decision_value_returns_400(client, auth_headers):
 
 
 def test_triage_exact_boundaries(client, auth_headers):
-    """Scores 30 and 70 -> queued; 71 -> accepted; 29 -> rejected."""
+    """Scores at boundaries: 30 = lower → rejected; 70 = upper → accepted."""
     h = auth_headers("demo", "demo")
     _raw = RawEvent(
         title="x", date_time="2026-01-01T00:00:00",
@@ -118,10 +118,11 @@ def test_triage_exact_boundaries(client, auth_headers):
         description="d",
     )
     cases = [
-        (30, EventStatus.queued),
-        (70, EventStatus.queued),
-        (71, EventStatus.accepted),
-        (29, EventStatus.rejected),
+        (30, EventStatus.rejected),   # = lower_threshold → <=, rejected
+        (31, EventStatus.queued),      # between thresholds
+        (70, EventStatus.accepted),    # = upper_threshold → >=, accepted
+        (69, EventStatus.queued),      # between thresholds
+        (29, EventStatus.rejected),    # < lower_threshold
     ]
     for score_val, expected_status in cases:
         raw = _raw.model_copy(

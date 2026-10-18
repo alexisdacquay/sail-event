@@ -55,12 +55,15 @@ def _seed_demo() -> None:
             user = orm.User(
                 username="demo",
                 password_hash=hash_password("demo"),
-                upper_threshold=70,
-                lower_threshold=30,
+                upper_threshold=90,
+                lower_threshold=40,
             )
             db.add(user)
             db.flush()
-            c = orm.Criteria(user_id=user.id, text="")
+            c = orm.Criteria(
+                user_id=user.id,
+                text="jazz in Berlin (Germany) next week (19-21st October 2026)",
+            )
             db.add(c)
             db.commit()
     finally:

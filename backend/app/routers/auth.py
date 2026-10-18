@@ -83,8 +83,8 @@ def register(
     user = orm.User(
         username=body.username,
         password_hash=hash_password(body.password),
-        upper_threshold=70,
-        lower_threshold=30,
+        upper_threshold=90,
+        lower_threshold=40,
     )
     db.add(user)
     db.flush()

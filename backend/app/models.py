@@ -20,12 +20,14 @@ class Criteria(BaseModel):
 
     text: str
     updated_at: str = Field(default="", alias="updatedAt")
+    time_zone: str | None = Field(default=None, alias="timeZone")
 
 
 class SaveCriteriaRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     text: str = Field(max_length=2000)
+    time_zone: str | None = Field(default=None, alias="timeZone")
 
 
 class Thresholds(BaseModel):
@@ -41,6 +43,9 @@ class SearchResult(BaseModel):
     run_id: str = Field(alias="runId")
     events_found: int = Field(alias="eventsFound")
     events_new: int = Field(alias="eventsNew")
+    stage_counts: dict | None = Field(default=None, alias="stageCounts")
+    stopped_at_stage: str | None = Field(default=None, alias="stoppedAtStage")
+    error: str | None = Field(default=None)
 
 
 class DecisionRequest(BaseModel):
@@ -58,6 +63,13 @@ class Event(BaseModel):
     place: str
     link: str
     description: str
+    start_tz: str | None = Field(default=None, alias="startTz")
+    end_time: str | None = Field(default=None, alias="endTime")
+    city: str = Field(default="")
+    country: str = Field(default="ZZ")
+    price_amount: float | None = Field(default=None, alias="priceAmount")
+    price_currency: str | None = Field(default=None, alias="priceCurrency")
+    source_url: str | None = Field(default=None, alias="sourceUrl")
     score: int
     score_reason: str = Field(alias="scoreReason")
     status: EventStatus

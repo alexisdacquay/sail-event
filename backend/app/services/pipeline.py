@@ -182,14 +182,14 @@ def _score_and_triage(
             evt.score = score_val
             evt.score_reason = reason
             model_id = getattr(scorer, "model_id", None)
-            evt.scorer_model = model_id if isinstance(model_id, str) else None
+            evt.judge_model = model_id if isinstance(model_id, str) else None
 
     with tracer.start_as_current_span("triage"):
         for evt in events:
-            if evt.score > user.upper_threshold:
+            if evt.score >= user.upper_threshold:
                 evt.status = "accepted"
                 evt.decided_by = "auto"
-            elif evt.score < user.lower_threshold:
+            elif evt.score <= user.lower_threshold:
                 evt.status = "rejected"
                 evt.decided_by = "auto"
             else:

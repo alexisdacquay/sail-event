@@ -353,6 +353,11 @@ components:
           type: string
         updatedAt:
           type: string
+        timeZone:
+          type:
+            - string
+            - 'null'
+          description: IANA time zone of the user
 
     Thresholds:
       type: object
@@ -378,6 +383,21 @@ components:
           type: integer
         eventsNew:
           type: integer
+        stageCounts:
+          type:
+            - object
+            - 'null'
+          description: Per-stage item counts from the run
+        stoppedAtStage:
+          type:
+            - string
+            - 'null'
+          description: Stage where the run stopped early, if applicable
+        error:
+          type:
+            - string
+            - 'null'
+          description: Run-level error message
 
     EventStatus:
       type: string
@@ -412,6 +432,37 @@ components:
           type: string
         description:
           type: string
+        startTz:
+          type:
+            - string
+            - 'null'
+          description: IANA time zone of the event start
+        endTime:
+          type:
+            - string
+            - 'null'
+          description: End date-time in the same format as dateTime
+        city:
+          type: string
+          description: City from extraction
+        country:
+          type: string
+          description: ISO-3166-1 alpha-2 country code
+        priceAmount:
+          type:
+            - number
+            - 'null'
+          description: Ticket price; null = unknown, 0 = free
+        priceCurrency:
+          type:
+            - string
+            - 'null'
+          description: ISO-4217 currency code
+        sourceUrl:
+          type:
+            - string
+            - 'null'
+          description: The page the event was extracted from
         score:
           type: number
         scoreReason:
@@ -464,6 +515,9 @@ components:
         text:
           type: string
           maxLength: 2000
+        timeZone:
+          type: string
+          description: IANA time zone from the browser
 
     DecisionRequest:
       type: object
