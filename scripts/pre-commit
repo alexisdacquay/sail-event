@@ -8,52 +8,52 @@ set -e
 # Patterns that must never appear in staged content (except .env.example).
 # A value is "real" when it is non-empty, not "change-me", and not "sail:sail@".
 check_secrets() {
-    # All staged files except .env.example
-    FILES=$(git diff --cached --name-only --diff-filter=d | grep -v '^\.env\.example$') || true
-    [ -z "$FILES" ] && return 0
-
-    STAGED=$(git diff --cached -U0 -- $FILES)
-    [ -z "$STAGED" ] && return 0
-
     FAIL=0
 
     # Build patterns via concatenation so this script doesn't match itself.
     SK="sk-ant""-"
     TV="tvly""-"
     PK="BEGIN PRIVATE"" KEY"
-
-    # Bare key prefixes anywhere (these never belong in source)
-    for pat in "$SK" "$TV" "$PK"; do
-        HITS=$(echo "$STAGED" | grep -n "^+" | grep -F "$pat" || true)
-        if [ -n "$HITS" ]; then
-            echo "ERROR: secret pattern '$pat' found in staged changes:"
-            echo "$HITS" | head -5
-            FAIL=1
-        fi
-    done
-
-    # API key assignments with a real value
-    for key in ANTHROPIC_API_KEY TAVILY_API_KEY; do
-        HITS=$(echo "$STAGED" | grep -n "^+" | grep -E "${key}=.+" | grep -v -E "${key}=(change-me|$)" || true)
-        if [ -n "$HITS" ]; then
-            echo "ERROR: $key with a real value found in staged changes:"
-            echo "$HITS" | head -5
-            FAIL=1
-        fi
-    done
-
-    # Postgres connection string with a real password
-    # Allow empty password, "change-me", or "sail" (dev placeholder)
     PG="postgre""sql"
-    HITS=$(echo "$STAGED" | grep -n "^+" \
-        | grep -E "${PG}(\+psycopg)?://[^:]*:[^@]+@" \
-        | grep -v -E "${PG}(\+psycopg)?://[^:]*:(change-me|sail)@" \
-        || true)
-    if [ -n "$HITS" ]; then
-        echo "ERROR: postgres connection string with real password in staged changes:"
-        echo "$HITS" | head -5
-        FAIL=1
-    fi
+
+    for file in $(git diff --cached --name-only --diff-filter=ACM); do
+        case "$file" in .env.example) continue ;; esac
+
+        ADDED=$(git diff --cached -U0 -- "$file" | grep '^+' | grep -v '^+++' || true)
+        [ -z "$ADDED" ] && continue
+
+        # Bare key prefixes anywhere (these never belong in source)
+        for pat in "$SK" "$TV" "$PK"; do
+            HITS=$(echo "$ADDED" | grep -F "$pat" || true)
+            if [ -n "$HITS" ]; then
+                echo "ERROR: secret pattern '$pat' found in $file:"
+                echo "$HITS" | head -5
+                FAIL=1
+            fi
+        done
+
+        # API key assignments with a real value
+        for key in ANTHROPIC_API_KEY TAVILY_API_KEY; do
+            HITS=$(echo "$ADDED" | grep -E "${key}=.+" | grep -v -E "${key}=(change-me|$)" || true)
+            if [ -n "$HITS" ]; then
+                echo "ERROR: $key with a real value found in $file:"
+                echo "$HITS" | head -5
+                FAIL=1
+            fi
+        done
+
+        # Postgres connection string with a real password
+        # Allow empty password, "change-me", or "sail" (dev placeholder)
+        HITS=$(echo "$ADDED" \
+            | grep -E "${PG}(\+psycopg)?://[^:]*:[^@]+@" \
+            | grep -v -E "${PG}(\+psycopg)?://[^:]*:(change-me|sail)@" \
+            || true)
+        if [ -n "$HITS" ]; then
+            echo "ERROR: postgres connection string with real password in $file:"
+            echo "$HITS" | head -5
+            FAIL=1
+        fi
+    done
 
     return $FAIL
 }
