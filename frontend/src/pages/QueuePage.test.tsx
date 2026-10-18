@@ -113,6 +113,12 @@ describe('QueuePage', () => {
     vi.restoreAllMocks()
   })
 
+  it('renders To review heading', async () => {
+    render(<QueuePage />)
+    await screen.findByText('Jazz in the Park')
+    expect(screen.getByRole('heading', { name: 'To review' })).toBeInTheDocument()
+  })
+
   it('shows empty state when no queued events', async () => {
     // Decide both queued events so the queue is empty
     await mock.decideEvent('evt-2', 'accepted')

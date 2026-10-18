@@ -61,6 +61,7 @@ class Event(BaseModel):
     score: int
     score_reason: str = Field(alias="scoreReason")
     status: EventStatus
+    decided_by: str | None = Field(default=None, alias="decidedBy")
 
 
 class RegisterRequest(BaseModel):

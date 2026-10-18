@@ -15,20 +15,20 @@ describe('EventsPage', () => {
 
     await screen.findByText('React London Meetup')
 
-    // accepted
+    // accepted (auto)
     expect(screen.getByText('React London Meetup')).toBeInTheDocument()
-    expect(screen.getByText('On your calendar')).toBeInTheDocument()
+    expect(screen.getByText('Auto-accepted')).toBeInTheDocument()
     // queued
     expect(screen.getByText('Jazz in the Park')).toBeInTheDocument()
     expect(screen.getByText('AWS re:Invent Watch Party')).toBeInTheDocument()
     expect(
-      screen.getAllByText('Waiting for you').length,
+      screen.getAllByText('To review').length,
     ).toBeGreaterThanOrEqual(1)
-    // rejected
+    // rejected (auto)
     expect(
       screen.getByText('Pottery Workshop for Beginners'),
     ).toBeInTheDocument()
-    expect(screen.getByText('Rejected')).toBeInTheDocument()
+    expect(screen.getByText('Auto-rejected')).toBeInTheDocument()
 
     // new events must be filtered out
     expect(
@@ -46,7 +46,7 @@ describe('EventsPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('Remove from calendar flips badge to Rejected', async () => {
+  it('Remove from calendar flips badge to Rejected by you', async () => {
     render(<EventsPage />)
 
     await screen.findByText('React London Meetup')
@@ -59,7 +59,7 @@ describe('EventsPage', () => {
 
     const acceptedCard = screen.getByTestId('event-card-evt-1')
     await waitFor(() => {
-      expect(acceptedCard).toHaveTextContent('Rejected')
+      expect(acceptedCard).toHaveTextContent('Rejected by you')
     })
     expect(
       screen.queryByRole('button', { name: 'Remove from calendar' }),

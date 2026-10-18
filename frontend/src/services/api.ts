@@ -20,6 +20,7 @@ export type Event = {
   score: number
   scoreReason: string
   status: EventStatus
+  decidedBy: 'auto' | 'user' | null
 }
 
 const useHttp = import.meta.env.VITE_API_URL !== undefined

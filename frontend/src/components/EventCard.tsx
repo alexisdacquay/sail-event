@@ -10,10 +10,14 @@ import { Button } from '@/components/ui/button'
 import { ConfirmAction } from '@/components/ConfirmAction'
 import type { Event } from '@/services/api'
 
-const badgeText: Record<string, string> = {
-  accepted: 'On your calendar',
-  rejected: 'Rejected',
-  queued: 'Waiting for you',
+function badgeText(event: Event): string {
+  if (event.status === 'accepted') {
+    return event.decidedBy === 'user' ? 'Accepted by you' : 'Auto-accepted'
+  }
+  if (event.status === 'rejected') {
+    return event.decidedBy === 'user' ? 'Rejected by you' : 'Auto-rejected'
+  }
+  return 'To review'
 }
 
 const badgeVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
@@ -22,12 +26,14 @@ const badgeVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
   queued: 'secondary',
 }
 
+const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+
 function formatDateTime(iso: string): string {
   const date = new Date(iso)
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',
     timeStyle: 'short',
-  }).format(date)
+  }).format(date) + ` (${browserTz})`
 }
 
 type EventCardProps = {
@@ -58,8 +64,7 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
   const fields = (
     <>
       <p>
-        <span className="font-medium text-muted-foreground">Match: </span>
-        <span className="font-semibold tabular-nums">{event.score} / 100</span>
+        <span className="font-semibold tabular-nums">Score {event.score}%</span>
       </p>
       <p>
         <span className="font-medium text-muted-foreground">When: </span>
@@ -89,8 +94,7 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
     return (
       <Card data-testid={`event-card-${event.id}`} className={leaving ? 'animate-out fade-out-0 slide-out-to-right-2 fill-mode-forwards duration-200' : undefined}>
         <CardHeader>
-          <p className="text-base leading-relaxed">
-            <span className="font-semibold text-accent-foreground">Why: </span>
+          <p className="text-sm leading-relaxed text-muted-foreground">
             {event.scoreReason}
           </p>
           <CardTitle>{event.title}</CardTitle>
@@ -132,16 +136,13 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
       <CardHeader>
         <div className="flex flex-wrap-reverse items-start justify-between gap-2">
           <CardTitle>{event.title}</CardTitle>
-          {badgeText[event.status] && (
-            <Badge variant={badgeVariant[event.status]}>
-              {badgeText[event.status]}
-            </Badge>
-          )}
+          <Badge variant={badgeVariant[event.status]}>
+            {badgeText(event)}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-1.5 text-sm">
-        <p>
-          <span className="font-semibold text-accent-foreground">Why: </span>
+        <p className="text-muted-foreground">
           {event.scoreReason}
         </p>
         {fields}

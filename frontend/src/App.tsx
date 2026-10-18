@@ -8,12 +8,13 @@ import { QueuePage } from '@/pages/QueuePage'
 import { Button } from '@/components/ui/button'
 import { SailMark } from '@/components/SailMark'
 import { listEvents } from '@/services/api'
+import type { Event } from '@/services/api'
 
 type Page = 'login' | 'register' | 'main' | 'events' | 'queue'
 
 const tabs: { page: Page; label: string }[] = [
   { page: 'main', label: 'Home' },
-  { page: 'queue', label: 'Queue' },
+  { page: 'queue', label: 'To review' },
   { page: 'events', label: 'All events' },
 ]
 
@@ -21,11 +22,17 @@ function AuthenticatedLayout() {
   const { auth, logout } = useAuth()
   const [page, setPage] = useState<Page>('main')
   const [queueCount, setQueueCount] = useState(0)
+  const [queuedEvents, setQueuedEvents] = useState<Event[]>([])
 
   const refreshQueueCount = useCallback(async () => {
     const queued = await listEvents('queued')
+    queued.sort(
+      (a, b) =>
+        new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime(),
+    )
     const count = queued.length
     setQueueCount(count)
+    setQueuedEvents(queued)
     return count
   }, [])
 
@@ -67,8 +74,14 @@ function AuthenticatedLayout() {
           </Button>
         </div>
       </header>
-      <main className="flex-1 p-4 sm:p-8 max-w-2xl mx-auto w-full">
-        {page === 'main' && <MainPage onSearchComplete={refreshQueueCount} />}
+      <main className={`flex-1 p-4 sm:p-8 mx-auto w-full ${page === 'main' ? 'max-w-5xl' : 'max-w-2xl'}`}>
+        {page === 'main' && (
+          <MainPage
+            onSearchComplete={refreshQueueCount}
+            queuedEvents={queuedEvents}
+            onNavigateQueue={() => handleTabClick('queue')}
+          />
+        )}
         {page === 'events' && <EventsPage />}
         {page === 'queue' && (
           <QueuePage onQueueChange={refreshQueueCount} />

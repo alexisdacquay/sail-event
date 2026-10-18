@@ -2,13 +2,24 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { MainPage } from './MainPage'
+import type { Event } from '@/services/api'
 
-function renderMainPage(onSearchComplete = async () => 0) {
+const emptyQueue: Event[] = []
+
+function renderMainPage(
+  onSearchComplete = async () => 0,
+  queuedEvents: Event[] = emptyQueue,
+  onNavigateQueue = () => {},
+) {
   localStorage.setItem('sail-event-token', 'test-token')
   localStorage.setItem('sail-event-username', 'demo')
   return render(
     <AuthProvider>
-      <MainPage onSearchComplete={onSearchComplete} />
+      <MainPage
+        onSearchComplete={onSearchComplete}
+        queuedEvents={queuedEvents}
+        onNavigateQueue={onNavigateQueue}
+      />
     </AuthProvider>,
   )
 }
@@ -110,6 +121,13 @@ describe('MainPage scoring card', () => {
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Save scoring' })).toBeDisabled()
   })
+
+  it('explainer shows live threshold numbers', async () => {
+    renderMainPage()
+    await screen.findByRole('spinbutton', { name: 'Auto-reject below' })
+    expect(screen.getByText('Below 30: rejected.')).toBeInTheDocument()
+    expect(screen.getByText('Above 70: accepted.')).toBeInTheDocument()
+  })
 })
 
 describe('MainPage search card', () => {
@@ -125,7 +143,7 @@ describe('MainPage search card', () => {
     ).toBeInTheDocument()
   })
 
-  it('calls onSearchComplete and shows queue count', async () => {
+  it('calls onSearchComplete and shows review button', async () => {
     const onSearchComplete = vi.fn().mockResolvedValue(5)
     renderMainPage(onSearchComplete)
     await screen.findByLabelText("What I'm looking for")
@@ -133,7 +151,37 @@ describe('MainPage search card', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
     const result = await screen.findByTestId('search-result')
     expect(result).toHaveTextContent('Found 12 events, 4 new.')
-    expect(result).toHaveTextContent('5 waiting for you in the Queue.')
+    expect(screen.getByRole('button', { name: /Review 5 events/ })).toBeInTheDocument()
     expect(onSearchComplete).toHaveBeenCalled()
+  })
+})
+
+describe('MainPage right column', () => {
+  it('shows To review sidebar when queued events exist', async () => {
+    const queued: Event[] = [
+      {
+        id: 'q1',
+        title: 'Queued Event 1',
+        dateTime: '2026-07-15T20:00:00Z',
+        place: 'London',
+        link: 'https://example.com/q1',
+        description: '',
+        score: 55,
+        scoreReason: 'moderate',
+        status: 'queued',
+        decidedBy: null,
+      },
+    ]
+    renderMainPage(async () => 1, queued)
+    await screen.findByTestId('criteria-card')
+    expect(screen.getByTestId('review-sidebar')).toBeInTheDocument()
+    expect(screen.getByText('Queued Event 1')).toBeInTheDocument()
+    expect(screen.getByText('Score 55%')).toBeInTheDocument()
+  })
+
+  it('hides sidebar when no queued events', async () => {
+    renderMainPage()
+    await screen.findByTestId('criteria-card')
+    expect(screen.queryByTestId('review-sidebar')).not.toBeInTheDocument()
   })
 })

@@ -12,4 +12,4 @@ class FakeScorer:
     def score(self, event: RawEvent, criteria: str) -> tuple[int, str]:
         digest = hashlib.md5(event.title.encode()).digest()
         value = struct.unpack_from("<I", digest)[0] % 101
-        return (value, f"md5(title) first-4-bytes mod 101 = {value}")
+        return (value, "Sample reason from the fixture scorer.")

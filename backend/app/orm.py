@@ -74,6 +74,7 @@ class Event(Base):
     score_reason: Mapped[str | None] = mapped_column(String, nullable=True)
     scorer_model: Mapped[str | None] = mapped_column(String, nullable=True)
     status: Mapped[str] = mapped_column(String(8), nullable=False)
+    decided_by: Mapped[str | None] = mapped_column(String(4), nullable=True)
     run_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("runs.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
 

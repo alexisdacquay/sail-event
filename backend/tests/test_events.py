@@ -274,3 +274,34 @@ def test_user_isolation_events(client, auth_headers):
     # Alice trying to decide demo's event -> 404
     r = client.post(f"/api/events/{eid}/decision", json={"decision": "accepted"}, headers=h_a)
     assert r.status_code == 404
+
+
+def test_decided_by_auto_on_triage(client, auth_headers):
+    """Pipeline triage sets decidedBy='auto' for accepted and rejected events."""
+    h = auth_headers("demo", "demo")
+    events = client.get("/api/events", headers=h).json()
+    for e in events:
+        if e["status"] in ("accepted", "rejected"):
+            assert e["decidedBy"] == "auto", f"event {e['id']} status={e['status']} decidedBy={e['decidedBy']}"
+        elif e["status"] == "queued":
+            assert e["decidedBy"] is None
+
+
+def test_decided_by_user_on_decision(client, auth_headers):
+    """User decision sets decidedBy='user'."""
+    h = auth_headers("demo", "demo")
+    queued = client.get("/api/events?status=queued", headers=h).json()
+    eid = queued[0]["id"]
+    r = client.post(f"/api/events/{eid}/decision", json={"decision": "accepted"}, headers=h)
+    assert r.status_code == 200
+    assert r.json()["decidedBy"] == "user"
+
+
+def test_decided_by_user_on_reject(client, auth_headers):
+    """User rejection sets decidedBy='user'."""
+    h = auth_headers("demo", "demo")
+    queued = client.get("/api/events?status=queued", headers=h).json()
+    eid = queued[0]["id"]
+    r = client.post(f"/api/events/{eid}/decision", json={"decision": "rejected"}, headers=h)
+    assert r.status_code == 200
+    assert r.json()["decidedBy"] == "user"

@@ -66,6 +66,14 @@ jobs:
         working-directory: e2e
       - run: make test-integration
       - run: make test-e2e
+      - name: Show Playwright failure context
+        if: failure()
+        run: |
+          for f in e2e/test-results/*/error-context.md; do
+            [ -f "$f" ] || continue
+            echo "===== $f"; cat "$f"
+          done
+          docker compose logs --tail 80 app
       - name: Tear down
         if: always()
         run: docker compose down -v

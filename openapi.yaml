@@ -418,6 +418,15 @@ components:
           type: string
         status:
           $ref: '#/components/schemas/EventStatus'
+        decidedBy:
+          type:
+            - string
+            - 'null'
+          enum:
+            - auto
+            - user
+            - null
+          description: Who triaged this event — auto (pipeline) or user (manual decision). Null for queued events.
 
     RegisterRequest:
       type: object

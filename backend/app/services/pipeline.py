@@ -188,7 +188,9 @@ def _score_and_triage(
         for evt in events:
             if evt.score > user.upper_threshold:
                 evt.status = "accepted"
+                evt.decided_by = "auto"
             elif evt.score < user.lower_threshold:
                 evt.status = "rejected"
+                evt.decided_by = "auto"
             else:
                 evt.status = "queued"
