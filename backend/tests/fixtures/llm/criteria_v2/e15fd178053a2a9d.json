@@ -1,0 +1,39 @@
+{
+  "response": {
+    "place": null,
+    "date": {
+      "start": null,
+      "end": null,
+      "relative": null,
+      "relative_n": null
+    },
+    "topics": [
+      "jazz"
+    ],
+    "topics_local": [],
+    "formats": [],
+    "budget": {
+      "max_amount": null,
+      "currency": null,
+      "free_only": false
+    },
+    "language": null,
+    "input_language": "en",
+    "other_constraints": []
+  },
+  "usage": {
+    "prompt_tokens": 1528,
+    "completion_tokens": 196,
+    "total_tokens": 1724,
+    "prompt_tokens_details": {
+      "cached_tokens": 896
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 117
+    },
+    "prompt_cache_hit_tokens": 896,
+    "prompt_cache_miss_tokens": 632
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "deepseek-flash"
+}

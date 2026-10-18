@@ -1,0 +1,53 @@
+{
+  "response": {
+    "place": {
+      "city": "Tokyo",
+      "country": "JP",
+      "region": null,
+      "radius_km": null,
+      "online": false
+    },
+    "date": {
+      "start": "2026-10-20",
+      "end": "2026-10-22",
+      "relative": null,
+      "relative_n": null
+    },
+    "topics": [
+      "tech"
+    ],
+    "topics_local": [
+      "\u30c6\u30c3\u30af",
+      "\u6280\u8853",
+      "IT"
+    ],
+    "formats": [
+      "meetup"
+    ],
+    "budget": {
+      "max_amount": null,
+      "currency": null,
+      "free_only": false
+    },
+    "language": "ja",
+    "input_language": "en",
+    "other_constraints": [
+      "Japanese language acceptable"
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 1553,
+    "completion_tokens": 124,
+    "total_tokens": 1677,
+    "prompt_tokens_details": {
+      "cached_tokens": 896
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_cache_hit_tokens": 896,
+    "prompt_cache_miss_tokens": 657
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "deepseek-flash"
+}

@@ -1,0 +1,52 @@
+{
+  "response": {
+    "place": {
+      "city": "Munich",
+      "country": "DE",
+      "region": null,
+      "radius_km": null,
+      "online": false
+    },
+    "date": {
+      "start": null,
+      "end": null,
+      "relative": "next_n_days",
+      "relative_n": 10
+    },
+    "topics": [
+      "beer"
+    ],
+    "topics_local": [
+      "Bier",
+      "Bierfest"
+    ],
+    "formats": [
+      "festival"
+    ],
+    "budget": {
+      "max_amount": 30,
+      "currency": "EUR",
+      "free_only": false
+    },
+    "language": "de",
+    "input_language": "en",
+    "other_constraints": [
+      "ticket price between 20 and 30 EUR (minimum price 20 EUR)"
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 1551,
+    "completion_tokens": 289,
+    "total_tokens": 1840,
+    "prompt_tokens_details": {
+      "cached_tokens": 896
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 134
+    },
+    "prompt_cache_hit_tokens": 896,
+    "prompt_cache_miss_tokens": 655
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "deepseek-flash"
+}

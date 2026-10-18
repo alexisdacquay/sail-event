@@ -1,0 +1,47 @@
+{
+  "response": {
+    "place": {
+      "city": null,
+      "country": null,
+      "region": null,
+      "radius_km": null,
+      "online": true
+    },
+    "date": {
+      "start": null,
+      "end": null,
+      "relative": "next_month",
+      "relative_n": null
+    },
+    "topics": [
+      "Rust"
+    ],
+    "topics_local": [],
+    "formats": [
+      "webinar"
+    ],
+    "budget": {
+      "max_amount": null,
+      "currency": null,
+      "free_only": true
+    },
+    "language": null,
+    "input_language": "en",
+    "other_constraints": []
+  },
+  "usage": {
+    "prompt_tokens": 1536,
+    "completion_tokens": 104,
+    "total_tokens": 1640,
+    "prompt_tokens_details": {
+      "cached_tokens": 896
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_cache_hit_tokens": 896,
+    "prompt_cache_miss_tokens": 640
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "deepseek-flash"
+}
