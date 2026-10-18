@@ -12,8 +12,10 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - 2026-10-18 (overnight run): #28 reduced (QA subagent + pre-commit hook, `make hooks`), robustness #37 #38 #39 closed via the loop; CI red for 3 pushes (restart test vs GitHub runner reset) fixed in 93ad48f; promoted to prod run 39095094746; prod and dev on 93ad48f. Tests: 194 backend, 26 frontend, 19 responder, 7 integration (restart test now runs), 2 e2e. README gotchas from walkthrough 1 fixed (11f2828). Roadmap: work/ROADMAP.md. Robustness plan: work/ROBUSTNESS.md.
 - Second walkthrough 23/24 → fixes pushed (7b9bccc). 
 - UX redesign (roadmap P1) 2026-10-18: spec _docs/ux-spec.md, design _docs/ux-design.md, review _docs/ux-design-review.md (Fable); issues #40-#44 on branch ux-redesign, each QA PASS; PR #45 merged (5cbb5b9); polish #46 PR #47 merged (58ccdd9); README screenshots retaken (24e22b0). Dev shows the new UI; PROD STILL ON 93ad48f, owner promotes.
-- Icon proposals _docs/icon-proposals/ (recommended b-sail-mark.svg). Theme (P2) design in progress on Fable → _docs/theme-design.md.
-- Local stacks running: app 8010 (demo/demo, new UI), Grafana 3001, Prometheus 9090.
+- Theme (P2) 2026-10-18: _docs/theme-design.md + review; issues #48-#50 on branch theme, QA PASS each; PR #51 merged (be1c25c). README screenshots on the new theme. Dev auto-deploys be1c25c. PROD STILL 93ad48f: owner promotes (`gh workflow run promote.yml -f sha=<full sha of main>`).
+- Icon: b-sail-mark.svg is the favicon and header mark. Roadmap status in work/ROADMAP.md.
+- Overnight incidents: two CI-only test timing flakes fixed (e2e scoring save race, App.test Search-now enable); one agent stall on the app's dev-server launcher (now banned in briefs; use Bash background `npm run dev`).
+- Local stacks running: app 8010 (demo/demo, rebuilt on be1c25c), Grafana 3001, Prometheus 9090. Stop: `make observability-down` and `HOST_PORT=8010 make compose-down`.
 - Machine rule: `rm`, `sed -i`, `cd ... &&` are denied by a permission rule and stall; use git clean, Edit/Write, absolute paths. Put it in every agent brief.
 - Responder now needs RESPONDER_WEBHOOK_SECRET exported before `make responder` / `make observability-up` (incident-response/README.md).
 - Tidy-up 2026-10-17: local stacks stopped; old prod DB user has 0 connections (verified by SQL), bin click is the user's; e2e/shots untracked temp folder, user deletes.

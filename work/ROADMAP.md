@@ -8,3 +8,13 @@
 | Q | Admin / telemetry page | "Should we propose an admin page with telemetry, etc? Maybe not on the user site/app, on its own? (Graphana, etc?). But maybe you already have that?" | Already exists as Grafana (operator-only, separate stack, `make up-all`, port 3001): dashboard, alerts, logs, traces. Not inside the user app: operators and users are different audiences, and the app stays small. Possible later: a read-only `/admin/status` page (runs, errors, users count) behind an admin token, only if Grafana proves too heavy for the operator. Default: no. | — |
 
 Not before P1: anything that adds fields named after env vars or columns.
+
+## Status 2026-10-18 (overnight run)
+| Prio | Done | Where |
+|---|---|---|
+| P1 | Spec → design → review → issues #40-#44 + polish #46, all QA PASS, PRs #45 #47 merged | `_docs/ux-spec.md`, `_docs/ux-design.md`, `_docs/ux-design-review.md` |
+| P2 | Design → review → issues #48-#50, all QA PASS, PR #51 merged; light + dark (OS), Bricolage Grotesque headings, sail mark, motion | `_docs/theme-design.md`, `_docs/theme-design-review.md` |
+| P3 | Three SVG proposals; b-sail-mark chosen, now the favicon and header mark | `_docs/icon-proposals/` |
+| Q | Answered: Grafana is the operator view; no admin page | — |
+- Live on dev (auto-deploy). Prod stays on 93ad48f until the owner runs the promote workflow with the merge commit.
+- Open design calls recorded for the owner: light-mode primaries are navy (teal fails text contrast); dark mode follows the OS, no toggle; one Google Fonts request per page load (Geist fallback).
