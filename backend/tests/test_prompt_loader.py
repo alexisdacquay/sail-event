@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from app.adapters.prompts.loader import load_prompt
+from app.adapters.prompts.loader import load_prompt, validate_response
 
 _PROMPTS_DIR = Path(__file__).parent.parent / "app" / "adapters" / "prompts"
 
@@ -68,3 +68,45 @@ class TestPromptConventions:
             assert "```json" in content or '"type"' in content, (
                 f"{path.name} must contain its schema inline"
             )
+
+
+_GUARD_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "blocked": {"type": "boolean"},
+        "reason": {"type": "string", "enum": ["injection", "harmful", "off_topic", "ok"]},
+    },
+    "required": ["blocked", "reason"],
+    "additionalProperties": False,
+}
+
+
+class TestValidateResponse:
+    """validate_response raises RuntimeError('<prompt_name>: schema violation: ...')."""
+
+    def test_valid_passes(self):
+        validate_response("guard", {"blocked": False, "reason": "ok"}, _GUARD_SCHEMA)
+
+    def test_missing_required_field(self):
+        with pytest.raises(RuntimeError, match=r"guard: schema violation: missing required field 'reason'"):
+            validate_response("guard", {"blocked": True}, _GUARD_SCHEMA)
+
+    def test_wrong_type(self):
+        with pytest.raises(RuntimeError, match=r"guard: schema violation: field 'blocked' expected boolean"):
+            validate_response("guard", {"blocked": "yes", "reason": "ok"}, _GUARD_SCHEMA)
+
+    def test_enum_violation(self):
+        with pytest.raises(RuntimeError, match=r"guard: schema violation: field 'reason'.*not in"):
+            validate_response("guard", {"blocked": False, "reason": "bad_value"}, _GUARD_SCHEMA)
+
+    def test_additional_properties(self):
+        with pytest.raises(RuntimeError, match=r"guard: schema violation: unexpected fields"):
+            validate_response("guard", {"blocked": False, "reason": "ok", "extra": 1}, _GUARD_SCHEMA)
+
+    def test_not_an_object(self):
+        with pytest.raises(RuntimeError, match=r"guard: schema violation: expected object"):
+            validate_response("guard", [1, 2, 3], _GUARD_SCHEMA)  # type: ignore[arg-type]
+
+    def test_permissive_schema_passes_anything(self):
+        """A schema with no required/properties validates any dict."""
+        validate_response("test", {"anything": "goes"}, {"type": "object"})

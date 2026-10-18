@@ -6,7 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from .prompts.loader import load_prompt
+from .prompts.loader import load_prompt, validate_response
 
 _FIXTURES_DIR = Path(__file__).resolve().parent.parent.parent / "tests" / "fixtures" / "llm"
 
@@ -49,4 +49,6 @@ class FakeLanguageModel:
             tokens_in=usage_raw.get("prompt_tokens", 0),
             tokens_out=usage_raw.get("completion_tokens", 0),
         )
+        effective_schema = schema if schema is not None else _schema
+        validate_response(prompt_name, response, effective_schema)
         return response, usage

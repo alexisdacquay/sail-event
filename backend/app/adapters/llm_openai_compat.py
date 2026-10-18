@@ -11,9 +11,7 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Any
 
-from pydantic import ValidationError
-
-from .prompts.loader import load_prompt
+from .prompts.loader import load_prompt, validate_response
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +54,9 @@ class OpenAICompatibleModel:
 
         body = self._build_body(prompt_name, rendered, effective_schema)
         data = self._call_api(body, prompt_name=prompt_name)
-        return data, self._parse_usage(data)
+        usage = self._parse_usage(data)
+        validate_response(prompt_name, data, effective_schema)
+        return data, usage
 
     def _build_body(self, prompt_name: str, rendered: str, schema: dict) -> dict[str, Any]:
         max_tokens = MAX_TOKENS.get(prompt_name, _DEFAULT_MAX_TOKENS)
@@ -108,7 +108,12 @@ class OpenAICompatibleModel:
                         continue
                     raise RuntimeError(f"{prompt_name}: empty content after retry")
 
-                parsed = json.loads(content)
+                try:
+                    parsed = json.loads(content)
+                except json.JSONDecodeError as exc:
+                    raise RuntimeError(
+                        f"{prompt_name}: schema violation: malformed JSON"
+                    ) from exc
                 # Attach raw response data for usage extraction
                 parsed["_raw_response"] = data
                 return parsed

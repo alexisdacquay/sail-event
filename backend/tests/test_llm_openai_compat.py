@@ -265,6 +265,67 @@ class TestRetry429:
                 )
 
 
+class TestSchemaValidation:
+    """Every response validated against the prompt's JSON schema (design §3)."""
+
+    # Use the real guard_v1.schema.json: {blocked: bool, reason: enum} required, no additionalProperties
+
+    def test_malformed_json_raises_with_prompt_name(self):
+        model = _make_model()
+
+        def fake_urlopen(req, timeout=None):
+            return _make_response("chat_completions_malformed_json.json")
+
+        with patch("app.adapters.llm_openai_compat.urllib.request.urlopen", fake_urlopen):
+            with pytest.raises(RuntimeError, match="guard: schema violation: malformed JSON"):
+                model.complete_json(
+                    prompt_name="guard",
+                    prompt_version="v1",
+                    variables={"text": "test"},
+                )
+
+    def test_missing_required_field_raises_with_field_name(self):
+        model = _make_model()
+
+        def fake_urlopen(req, timeout=None):
+            return _make_response("chat_completions_missing_field.json")
+
+        with patch("app.adapters.llm_openai_compat.urllib.request.urlopen", fake_urlopen):
+            with pytest.raises(RuntimeError, match=r"guard: schema violation: missing required field 'reason'"):
+                model.complete_json(
+                    prompt_name="guard",
+                    prompt_version="v1",
+                    variables={"text": "test"},
+                )
+
+    def test_valid_response_passes(self):
+        """A response matching the schema passes without error."""
+        model = _make_model()
+
+        # Build a response with valid guard output
+        data = json.loads((FIXTURES / "chat_completions_ok.json").read_text())
+        data["choices"][0]["message"]["content"] = json.dumps(
+            {"blocked": False, "reason": "ok"}
+        )
+        raw = json.dumps(data).encode()
+
+        def fake_urlopen(req, timeout=None):
+            resp = MagicMock()
+            resp.read.return_value = raw
+            resp.__enter__ = lambda s: s
+            resp.__exit__ = lambda s, *a: None
+            return resp
+
+        with patch("app.adapters.llm_openai_compat.urllib.request.urlopen", fake_urlopen):
+            result, usage = model.complete_json(
+                prompt_name="guard",
+                prompt_version="v1",
+                variables={"text": "test"},
+            )
+
+        assert result == {"blocked": False, "reason": "ok"}
+
+
 class TestUsage:
     """Usage parsing from the DeepSeek response."""
 
