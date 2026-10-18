@@ -49,10 +49,13 @@ def _seed(db: Session) -> None:
 
         if score_val > user.upper_threshold:
             status = "accepted"
+            decided_by = "auto"
         elif score_val < user.lower_threshold:
             status = "rejected"
+            decided_by = "auto"
         else:
             status = "queued"
+            decided_by = None
 
         evt = Event(
             user_id=user.id,
@@ -64,6 +67,7 @@ def _seed(db: Session) -> None:
             score=score_val,
             score_reason=reason,
             status=status,
+            decided_by=decided_by,
         )
         db.add(evt)
 

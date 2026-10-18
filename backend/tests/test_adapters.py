@@ -70,8 +70,7 @@ class TestFakeScorer:
             score, reason = scorer.score(event, "test criteria")
             assert isinstance(score, int)
             assert 0 <= score <= 100
-            assert isinstance(reason, str)
-            assert reason != ""
+            assert reason == "Sample reason from the fixture scorer."
 
 
 # ---------- Factory functions ----------

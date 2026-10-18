@@ -27,6 +27,7 @@ def _event_dict(e: orm.Event) -> dict:
         "score": e.score,
         "scoreReason": e.score_reason,
         "status": e.status,
+        "decidedBy": e.decided_by,
     }
 
 
@@ -72,6 +73,7 @@ def decide_event(
         )
 
     event.status = body.decision
+    event.decided_by = "user"
     db.commit()
 
     return JSONResponse(content=_event_dict(event))

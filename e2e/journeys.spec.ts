@@ -52,12 +52,12 @@ test.describe("Journey 1: full user flow", () => {
     await page.getByRole("button", { name: "Search now" }).click();
     await expect(page.getByText(/Found \d+ events, \d+ new\./)).toBeVisible({ timeout: 15_000 });
 
-    // Assert Queue badge with count is visible in the header before clicking
-    await expect(page.getByRole("button", { name: /Queue \(\d+\)/ })).toBeVisible();
+    // Assert To review badge with count is visible in the header before clicking
+    await expect(page.getByRole("button", { name: /To review \(\d+\)/ })).toBeVisible();
 
-    // Go to Queue
-    await page.getByRole("button", { name: /Queue/ }).click();
-    await expect(page.getByRole("heading", { name: "Queue" })).toBeVisible();
+    // Go to To review
+    await page.getByRole("button", { name: /To review/ }).click();
+    await expect(page.getByRole("heading", { name: "To review" })).toBeVisible();
 
     // Accept first event, reject second
     const acceptButtons = page.getByRole("button", { name: "Accept" });
@@ -74,19 +74,16 @@ test.describe("Journey 1: full user flow", () => {
     await page.getByRole("button", { name: "All events" }).click();
     await expect(page.getByRole("heading", { name: "All events" })).toBeVisible();
 
-    // Verify statuses are shown
-    await expect(page.getByText("On your calendar").first()).toBeVisible();
-    await expect(page.getByText("Rejected").first()).toBeVisible();
+    // Verify statuses are shown with provenance
+    await expect(page.getByText("Accepted by you").first()).toBeVisible();
+    await expect(page.getByText("Rejected by you").first()).toBeVisible();
 
     // Remove from calendar: find the accepted card's button, click it, confirm
     await page.getByRole("button", { name: "Remove from calendar" }).first().click();
     await page.getByRole("button", { name: "Remove", exact: true }).click();
 
-    // After removal the card's badge should flip to Rejected
-    // The previously accepted card should no longer show "On your calendar"
-    // (if there was only one accepted queue event, there are zero left)
-    // but at minimum the badge on that card is now Rejected
-    await expect(page.getByText("Rejected").first()).toBeVisible();
+    // After removal the card's badge should flip to Rejected by you
+    await expect(page.getByText("Rejected by you").first()).toBeVisible();
   });
 });
 
@@ -116,7 +113,7 @@ test.describe("Journey 2: user isolation", () => {
 
     // Confirm user 1 has events
     await page1.getByRole("button", { name: "All events" }).click();
-    await expect(page1.getByText(/Match: \d+ \/ 100/).first()).toBeVisible();
+    await expect(page1.getByText(/Score \d+%/).first()).toBeVisible();
     await ctx1.close();
 
     // --- User 2: register, go straight to events ---

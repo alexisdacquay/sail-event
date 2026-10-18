@@ -13,6 +13,7 @@ const event: Event = {
   score: 85,
   scoreReason: 'Strong match: test event.',
   status: 'queued',
+  decidedBy: null,
 }
 
 describe('EventCard', () => {
@@ -22,41 +23,53 @@ describe('EventCard', () => {
     expect(screen.getByText('Test Conference 2026')).toBeInTheDocument()
     expect(screen.getByText('QEII Centre, London')).toBeInTheDocument()
     expect(screen.getByText('https://example.com/conf')).toBeInTheDocument()
-    expect(screen.getByText(/85 \/ 100/)).toBeInTheDocument()
+    expect(screen.getByText(/Score 85%/)).toBeInTheDocument()
     expect(screen.getByText(/Strong match: test event\./)).toBeInTheDocument()
     expect(screen.getByTestId('event-datetime')).toBeInTheDocument()
   })
 
-  it('queue variant renders Why before the title in DOM order', () => {
+  it('queue variant renders reason before the title in DOM order', () => {
     const { container } = render(
       <EventCard event={event} variant="queue" />,
     )
     const header = container.querySelector('[data-slot="card-header"]')!
     const texts = header.textContent!
-    const whyPos = texts.indexOf('Why:')
+    const reasonPos = texts.indexOf('Strong match')
     const titlePos = texts.indexOf('Test Conference 2026')
-    expect(whyPos).toBeLessThan(titlePos)
+    expect(reasonPos).toBeLessThan(titlePos)
   })
 
-  it('all variant shows Waiting for you badge for queued', () => {
+  it('all variant shows To review badge for queued', () => {
     render(<EventCard event={event} variant="all" />)
-    expect(screen.getByText('Waiting for you')).toBeInTheDocument()
+    expect(screen.getByText('To review')).toBeInTheDocument()
   })
 
-  it('all variant shows On your calendar badge for accepted', () => {
-    const accepted = { ...event, status: 'accepted' as const }
+  it('all variant shows Auto-accepted badge for auto-accepted', () => {
+    const accepted = { ...event, status: 'accepted' as const, decidedBy: 'auto' as const }
     render(<EventCard event={accepted} variant="all" />)
-    expect(screen.getByText('On your calendar')).toBeInTheDocument()
+    expect(screen.getByText('Auto-accepted')).toBeInTheDocument()
   })
 
-  it('all variant shows Rejected badge', () => {
-    const rejected = { ...event, status: 'rejected' as const }
+  it('all variant shows Accepted by you badge for user-accepted', () => {
+    const accepted = { ...event, status: 'accepted' as const, decidedBy: 'user' as const }
+    render(<EventCard event={accepted} variant="all" />)
+    expect(screen.getByText('Accepted by you')).toBeInTheDocument()
+  })
+
+  it('all variant shows Auto-rejected badge for auto-rejected', () => {
+    const rejected = { ...event, status: 'rejected' as const, decidedBy: 'auto' as const }
     render(<EventCard event={rejected} variant="all" />)
-    expect(screen.getByText('Rejected')).toBeInTheDocument()
+    expect(screen.getByText('Auto-rejected')).toBeInTheDocument()
+  })
+
+  it('all variant shows Rejected by you badge for user-rejected', () => {
+    const rejected = { ...event, status: 'rejected' as const, decidedBy: 'user' as const }
+    render(<EventCard event={rejected} variant="all" />)
+    expect(screen.getByText('Rejected by you')).toBeInTheDocument()
   })
 
   it('all variant shows Remove from calendar for accepted events', () => {
-    const accepted = { ...event, status: 'accepted' as const }
+    const accepted = { ...event, status: 'accepted' as const, decidedBy: 'auto' as const }
     const onDecide = vi.fn()
     render(<EventCard event={accepted} variant="all" onDecide={onDecide} />)
     expect(
@@ -73,7 +86,7 @@ describe('EventCard', () => {
   })
 
   it('Remove from calendar shows confirm prompt', () => {
-    const accepted = { ...event, status: 'accepted' as const }
+    const accepted = { ...event, status: 'accepted' as const, decidedBy: 'auto' as const }
     const onDecide = vi.fn()
     render(<EventCard event={accepted} variant="all" onDecide={onDecide} />)
 
@@ -109,5 +122,17 @@ describe('EventCard', () => {
       expect(screen.getByRole('button', { name: 'Accepting…' })).toBeDisabled()
       expect(screen.getByRole('button', { name: 'Reject' })).toBeDisabled()
     })
+  })
+
+  it('queue variant does not show Why: label', () => {
+    render(<EventCard event={event} variant="queue" />)
+    expect(screen.queryByText('Why:')).not.toBeInTheDocument()
+  })
+
+  it('datetime includes timezone', () => {
+    render(<EventCard event={event} variant="queue" />)
+    const dt = screen.getByTestId('event-datetime')
+    // Should contain a parenthesized timezone like (America/New_York)
+    expect(dt.textContent).toMatch(/\(.+\/.+\)/)
   })
 })

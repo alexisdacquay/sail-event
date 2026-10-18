@@ -20,12 +20,15 @@ import {
   getCalendarUrl,
   rotateCalendarUrl,
 } from '@/services/api'
+import type { Event } from '@/services/api'
 
 type MainPageProps = {
   onSearchComplete: () => Promise<number>
+  queuedEvents: Event[]
+  onNavigateQueue: () => void
 }
 
-export function MainPage({ onSearchComplete }: MainPageProps) {
+export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: MainPageProps) {
   const [criteriaText, setCriteriaText] = useState('')
   const [criteriaSaved, setCriteriaSaved] = useState(false)
   const [criteriaError, setCriteriaError] = useState('')
@@ -38,8 +41,9 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
   const [scoringSaving, setScoringSaving] = useState(false)
 
   const [searching, setSearching] = useState(false)
-  const [searchResultText, setSearchResultText] = useState('')
+  const [searchResult, setSearchResult] = useState<{ found: number; new_: number; queued: number } | null>(null)
   const [searchIsError, setSearchIsError] = useState(false)
+  const [searchErrorText, setSearchErrorText] = useState('')
 
   const [calendarUrl, setCalendarUrl] = useState('')
   const [copied, setCopied] = useState(false)
@@ -98,8 +102,9 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
 
   async function handleSearch() {
     setSearching(true)
-    setSearchResultText('')
+    setSearchResult(null)
     setSearchIsError(false)
+    setSearchErrorText('')
 
     // Save criteria draft first (decision 11)
     setCriteriaSaved(false)
@@ -119,16 +124,12 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
       const queueCount = await onSearchComplete()
 
       if (result.eventsFound === 0) {
-        setSearchResultText('Found no events. Try broader criteria.')
+        setSearchErrorText('Found no events. Try broader criteria.')
       } else {
-        let msg = `Found ${result.eventsFound} events, ${result.eventsNew} new.`
-        if (queueCount > 0) {
-          msg += ` ${queueCount} waiting for you in the Queue.`
-        }
-        setSearchResultText(msg)
+        setSearchResult({ found: result.eventsFound, new_: result.eventsNew, queued: queueCount })
       }
     } catch {
-      setSearchResultText('Search failed. Try again.')
+      setSearchErrorText('Search failed. Try again.')
       setSearchIsError(true)
     } finally {
       setSearching(false)
@@ -145,8 +146,8 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
     }
   }
 
-  return (
-    <div className="flex flex-col gap-4 sm:gap-6">
+  const cards = (
+    <div className="flex flex-col gap-4 sm:gap-6 max-w-2xl">
       {/* Criteria card */}
       <Card data-testid="criteria-card">
         <CardHeader>
@@ -183,8 +184,10 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
         <CardHeader>
           <CardTitle as="h2">How scoring works</CardTitle>
           <CardDescription>
-            Every event gets a match score from 0 to 100 against what you wrote
-            above. Events in between wait for you in the Queue tab.
+            <p>Score 0 to 100.</p>
+            <p>Below {lower}: rejected.</p>
+            <p>Above {upper}: accepted.</p>
+            <p>In between: you review.</p>
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -232,13 +235,28 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
           >
             {searching ? 'Searching…' : 'Search now'}
           </Button>
-          {searchResultText && (
+          {searchResult && (
+            <div data-testid="search-result" role="status" className="text-sm animate-in fade-in-0 slide-in-from-top-1 duration-200">
+              <p>Found {searchResult.found} events, {searchResult.new_} new.</p>
+              {searchResult.queued > 0 && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="mt-2"
+                  onClick={onNavigateQueue}
+                >
+                  Review {searchResult.queued} events →
+                </Button>
+              )}
+            </div>
+          )}
+          {searchErrorText && (
             <p
               data-testid="search-result"
               role="status"
-              className={searchIsError ? 'text-sm text-destructive' : 'text-sm animate-in fade-in-0 slide-in-from-top-1 duration-200'}
+              className={searchIsError ? 'text-sm text-destructive' : 'text-sm'}
             >
-              {searchResultText}
+              {searchErrorText}
             </p>
           )}
         </CardContent>
@@ -282,6 +300,36 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
           </CardContent>
         </Card>
       )}
+    </div>
+  )
+
+  const sidebar = queuedEvents.length > 0 ? (
+    <aside data-testid="review-sidebar" className="flex flex-col gap-3">
+      <h3 className="font-heading text-lg font-semibold tracking-tight">To review</h3>
+      <div className="flex flex-col gap-2">
+        {queuedEvents.slice(0, 5).map((evt) => (
+          <button
+            key={evt.id}
+            className="text-left rounded-lg border bg-card p-3 hover:bg-accent/50 transition-colors"
+            onClick={onNavigateQueue}
+          >
+            <p className="text-sm font-medium leading-snug">{evt.title}</p>
+            <p className="text-xs font-semibold tabular-nums text-muted-foreground mt-0.5">Score {evt.score}%</p>
+          </button>
+        ))}
+      </div>
+      {queuedEvents.length > 5 && (
+        <Button variant="ghost" size="sm" onClick={onNavigateQueue}>
+          See all {queuedEvents.length} →
+        </Button>
+      )}
+    </aside>
+  ) : null
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 lg:gap-8 items-start">
+      {cards}
+      {sidebar}
     </div>
   )
 }

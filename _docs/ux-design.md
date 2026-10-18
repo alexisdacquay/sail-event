@@ -545,19 +545,19 @@ Every string the UI shows. Terminology from the spec is taken as given.
 | Where | String |
 |---|---|
 | Page `<title>` (index.html) | `Sail Event` |
-| Header | `Sail Event` · `Home` · `Queue` · `Queue (N)` · `All events` · `Sign out` |
+| Header | `Sail Event` · `Home` · `To review` · `To review (N)` · `All events` · `Sign out` |
 | Sign in | `Sign in` (heading, button) · `Username` · `Password` · `Signing in…` · `No account? Create one` |
 | Sign in errors | `Wrong username or password.` · `Too many attempts. Try again later.` · `Couldn't sign in. Try again.` |
 | Create account | `Create account` (heading, button) · `Username` · `Password` · `Invitation code` · `Creating…` · `Already have an account? Sign in` |
 | Create account errors | `Couldn't create your account. That username may already be taken.` · `That invitation code isn't valid.` · `Too many attempts. Try again later.` · `Couldn't create your account. Try again.` |
 | Criteria card | `What I'm looking for` · placeholder `e.g. jazz or folk concerts near Paris on weekends, under 40 EUR` · `Save` · `Saved.` · `Couldn't save. Try again.` |
-| Scoring card | `How scoring works` · `Every event gets a match score from 0 to 100 against what you wrote above. Events in between wait for you in the Queue tab.` · `0` · `100` · `Auto-reject below` · `Auto-accept above` · `Rejected` · `You decide` · `On your calendar` · `Score cut-offs` (sr-only legend) · `{n} out of 100` (aria-valuetext) · `The auto-accept line must be higher than the auto-reject line.` · `Save` · `Saved.` · `Couldn't save. Try again.` |
-| Search card | `Search now` (heading, button) · `The app also searches automatically every hour.` · `Write what you're looking for, then press Search now.` · `Searching…` · `Found {found} events, {new} new.` · ` {queued} waiting for you in the Queue.` (appended when queued > 0) · `Found no events. Try broader criteria.` · `Search failed. Try again.` |
+| Scoring card | `How scoring works` · `Score 0 to 100.` · `Below {lower}: rejected.` · `Above {upper}: accepted.` · `In between: you review.` · `0` · `100` · `Auto-reject below` · `Auto-accept above` · `Rejected` · `You decide` · `On your calendar` · `Score cut-offs` (sr-only legend) · `{n} out of 100` (aria-valuetext) · `The auto-accept line must be higher than the auto-reject line.` · `Save` · `Saved.` · `Couldn't save. Try again.` |
+| Search card | `Search now` (heading, button) · `The app also searches automatically every hour.` · `Write what you're looking for, then press Search now.` · `Searching…` · `Found {found} events, {new} new.` · `Review {queued} events →` (button, when queued > 0) · `Found no events. Try broader criteria.` · `Search failed. Try again.` |
 | Calendar card | `Your calendar feed` · `Paste this link into your calendar app. Accepted events will appear there.` · `Calendar feed URL` (aria-label) · `Copy` · `Copied` · `Reset link` · `This will break any existing subscription. Reset?` · `Reset` · `Cancel` · `Couldn't reset the link. Try again.` |
-| Queue page | `Queue` · `Loading…` · `Nothing to decide right now.` · `Events that clearly match go straight to your calendar. Events that clearly don't are rejected. When the app isn't sure, they appear here.` · `Couldn't load your queue. Try again.` · `Try again` |
+| Queue page | `To review` · `Loading…` · `Nothing to decide right now.` · `Events that clearly match go straight to your calendar. Events that clearly don't are rejected. When the app isn't sure, they appear here.` · `Couldn't load your queue. Try again.` · `Try again` |
 | All events page | `All events` · `Loading…` · `No events yet.` · `Write what you're looking for on the Home tab, then press Search now.` · `Couldn't load your events. Try again.` · `Try again` |
-| Event card | `Why:` · `Match: {score} / 100` · `When:` · `Where:` · `Link:` · `Accept` · `Accepting…` · `Reject` · `Rejecting…` · `Remove from calendar` · `Remove this event from your calendar?` · `Remove` · `Removing…` · `Cancel` · `Couldn't save your decision. Try again.` · `Couldn't remove it. Try again.` |
-| Badges | `On your calendar` · `Rejected` · `Waiting for you` |
+| Event card | `Score {score}%` · `When:` · `Where:` · `Link:` · `Accept` · `Accepting…` · `Reject` · `Rejecting…` · `Remove from calendar` · `Remove this event from your calendar?` · `Remove` · `Removing…` · `Cancel` · `Couldn't save your decision. Try again.` · `Couldn't remove it. Try again.` |
+| Badges | `Auto-accepted` · `Accepted by you` · `Auto-rejected` · `Rejected by you` · `To review` |
 
 Pluralisation: `Found 1 events, 1 new.` is acceptable for the MVP; do not add a pluraliser.
 

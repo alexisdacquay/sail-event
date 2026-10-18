@@ -156,13 +156,13 @@ describe('Thresholds', () => {
 })
 
 describe('Search', () => {
-  it('displays result with event counts and queue count', async () => {
+  it('displays result with event counts and review button', async () => {
     await loginAsTestUser()
     fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
     const result = await screen.findByTestId('search-result')
     expect(result).toHaveTextContent('Found 12 events, 4 new.')
-    // Mock has 2 queued events
-    expect(result).toHaveTextContent('2 waiting for you in the Queue.')
+    // Mock has 2 queued events — review button should appear
+    expect(screen.getByRole('button', { name: /Review 2 events/ })).toBeInTheDocument()
   })
 
   it('saves criteria before searching (criteria Saved. appears)', async () => {
@@ -193,15 +193,15 @@ describe('Tab bar and queue count', () => {
     const nav = screen.getByRole('navigation', { name: 'Main navigation' })
     expect(nav).toHaveTextContent('Home')
     expect(nav).toHaveTextContent('All events')
-    expect(nav).toHaveTextContent('Queue')
+    expect(nav).toHaveTextContent('To review')
 
     // Queue count equals mock's queued events (2)
     await waitFor(() => {
       expect(nav).toHaveTextContent('(2)')
     })
 
-    // Navigate to Queue tab
-    fireEvent.click(screen.getByRole('button', { name: /Queue/ }))
+    // Navigate to To review tab
+    fireEvent.click(screen.getByRole('button', { name: /To review/ }))
 
     // Wait for queued events to render
     await screen.findByText('Jazz in the Park')

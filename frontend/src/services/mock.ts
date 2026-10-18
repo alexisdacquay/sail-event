@@ -19,6 +19,7 @@ const INITIAL_EVENTS: Event[] = [
     score: 82,
     scoreReason: 'Strong match: tech meetup, aligns with frontend interest.',
     status: 'accepted',
+    decidedBy: 'auto',
   },
   {
     id: 'evt-2',
@@ -30,6 +31,7 @@ const INITIAL_EVENTS: Event[] = [
     score: 45,
     scoreReason: 'Moderate match: entertainment, but not a tech or professional event.',
     status: 'queued',
+    decidedBy: null,
   },
   {
     id: 'evt-3',
@@ -41,6 +43,7 @@ const INITIAL_EVENTS: Event[] = [
     score: 75,
     scoreReason: 'Good match: cloud computing event, professional networking.',
     status: 'queued',
+    decidedBy: null,
   },
   {
     id: 'evt-4',
@@ -52,6 +55,7 @@ const INITIAL_EVENTS: Event[] = [
     score: 12,
     scoreReason: 'Low relevance: arts and crafts, no professional or tech angle.',
     status: 'rejected',
+    decidedBy: 'auto',
   },
   {
     id: 'evt-5',
@@ -63,6 +67,7 @@ const INITIAL_EVENTS: Event[] = [
     score: 91,
     scoreReason: 'Excellent match: core technology conference.',
     status: 'new',
+    decidedBy: null,
   },
 ]
 
@@ -140,6 +145,7 @@ export async function decideEvent(
   const event = mockEvents.find((e) => e.id === id)
   if (!event) throw new Error(`Event not found: ${id}`)
   event.status = decision
+  event.decidedBy = 'user'
   return { ...event }
 }
 

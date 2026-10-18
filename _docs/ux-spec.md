@@ -108,7 +108,7 @@ The home screen shows a visual of this scale: a horizontal bar from 0 to 100, wi
 
 - **Purpose:** decide borderline events the app couldn't sort automatically
 - **Reached by:** the "Queue" tab, with a count badge when > 0
-- **Tab label:** `Queue` (with count: `Queue (5)`)
+- **Tab label:** `To review` (with count: `To review (5)`)
 - **First thing the user sees:** the first event card in the queue
 
 #### Event card (queue variant)
@@ -156,7 +156,7 @@ The home screen shows a visual of this scale: a horizontal bar from 0 to 100, wi
 ### 3f. Navigation bar
 
 - Left: app name `Sail Event`
-- Tabs: `Home`, `Queue (N)`, `All events`
+- Tabs: `Home`, `To review (N)`, `All events`
 - Right: username, `Sign out` button
 
 
@@ -182,13 +182,15 @@ Ends with the user's first decision. No tutorial overlay, no wizard — the plac
 | Upper Threshold | Auto-accept above | Says what the number does |
 | Save Criteria | Save | Obvious from context |
 | Save Thresholds | Save | Obvious from context |
-| Score: 76 | Match: 76 / 100 | Shows the scale; "match" is what it measures |
-| Reason: ... | Why: ... | Shorter, natural |
+| Score: 76 | Score 76% | Compact; percentage is intuitive |
+| Reason: ... | (body text, no label) | The reason sentence stands on its own |
 | Dashboard (tab) | Home | Standard; "dashboard" is enterprise software |
 | Events (tab) | All events | Distinguishes from the queue |
-| queued (badge) | Waiting for you | Tells the user what to do |
-| accepted (badge) | On your calendar | Tells the user where the event went |
-| rejected (badge) | Rejected | Already clear |
+| queued (badge) | To review | Matches the tab name |
+| accepted (badge, auto) | Auto-accepted | Says who decided |
+| accepted (badge, user) | Accepted by you | Says who decided |
+| rejected (badge, auto) | Auto-rejected | Says who decided |
+| rejected (badge, user) | Rejected by you | Says who decided |
 | new (badge) | (not shown) | Internal pre-scoring state; the user never needs to see it |
 | Login | Sign in | More common in consumer products |
 | Register | Create account | Action-oriented |
