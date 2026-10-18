@@ -13,7 +13,7 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 
 | Key | Value |
 |---|---|
-| `DATABASE_URL` | Render internal database URL with the prefix changed to `postgresql+psycopg://` |
+| `DATABASE_URL` | Render internal database URL with the prefix changed to `postgresql+psycopg://`. Required when `APP_ENV=prod` |
 | `APP_ENV` | `prod` |
 | `PORT` | `8000` |
 | `JWT_SECRET` | random |

@@ -41,6 +41,14 @@ To run against an already-running stack (skips compose lifecycle):
 SAIL_BASE_URL=http://localhost:8010 make test-integration
 ```
 
+When `SAIL_BASE_URL` is set, `test_data_survives_restart` is skipped by
+default because the caller may not own the compose stack. Set
+`SAIL_COMPOSE_MANAGED=1` to signal that container restarts are safe:
+
+```
+SAIL_BASE_URL=http://localhost:8010 SAIL_COMPOSE_MANAGED=1 make test-integration
+```
+
 ## End-to-end tests (Playwright)
 
 Live in `e2e/` at the repo root with their own `package.json`.

@@ -237,7 +237,7 @@ def test_ics_feed(http: httpx.Client):
 
 
 @pytest.mark.skipif(
-    "SAIL_BASE_URL" in os.environ,
+    "SAIL_BASE_URL" in os.environ and os.environ.get("SAIL_COMPOSE_MANAGED") != "1",
     reason="compose managed externally; cannot restart app",
 )
 def test_data_survives_restart(http: httpx.Client, base_url: str):

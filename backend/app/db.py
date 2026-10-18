@@ -3,13 +3,31 @@
 from __future__ import annotations
 
 import os
+import sys
 from collections.abc import Generator
 
 from sqlalchemy import event
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./sail_event.db")
+
+def _resolve_database_url() -> str:
+    """Resolve database URL from environment.
+
+    Called once at import time; result cached in ``DATABASE_URL``.
+    """
+    url = os.environ.get("DATABASE_URL", "").strip()
+    if url:
+        return url
+    if os.environ.get("APP_ENV", "").strip().lower() == "prod":
+        sys.exit(
+            "FATAL: DATABASE_URL environment variable is missing or empty"
+            " (APP_ENV=prod)"
+        )
+    return "sqlite:///./sail_event.db"
+
+
+DATABASE_URL: str = _resolve_database_url()
 
 engine = create_engine(DATABASE_URL)
 

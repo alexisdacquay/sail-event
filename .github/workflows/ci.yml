@@ -49,6 +49,7 @@ jobs:
     env:
       HOST_PORT: "8000"
       SAIL_BASE_URL: http://localhost:8000
+      SAIL_COMPOSE_MANAGED: "1"
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
