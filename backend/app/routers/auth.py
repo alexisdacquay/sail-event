@@ -24,7 +24,7 @@ _now = time.monotonic  # seam for deterministic tests
 
 
 @router.post("/api/auth/register", operation_id="register", status_code=201)
-async def register(
+def register(
     body: RegisterRequest,
     db: Session = Depends(get_db),
 ) -> JSONResponse:
@@ -66,7 +66,7 @@ async def register(
 
 
 @router.post("/api/auth/login", operation_id="login")
-async def login(
+def login(
     body: LoginRequest,
     request: Request,
     db: Session = Depends(get_db),

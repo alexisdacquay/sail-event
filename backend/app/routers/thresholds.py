@@ -15,14 +15,14 @@ router = APIRouter()
 
 
 @router.get("/api/thresholds", operation_id="getThresholds")
-async def get_thresholds(
+def get_thresholds(
     user: orm.User = Depends(get_current_user),
 ) -> dict:
     return {"lowerThreshold": user.lower_threshold, "upperThreshold": user.upper_threshold}
 
 
 @router.put("/api/thresholds", operation_id="saveThresholds")
-async def save_thresholds(
+def save_thresholds(
     body: Thresholds,
     user: orm.User = Depends(get_current_user),
     db: Session = Depends(get_db),

@@ -55,7 +55,7 @@ def _build_calendar(user: orm.User, events: list[orm.Event]) -> bytes:
 
 
 @router.get("/api/calendar/{ics_token}", operation_id="getCalendarFeed")
-async def get_calendar_feed(
+def get_calendar_feed(
     ics_token: str,
     db: Session = Depends(get_db),
 ) -> Response:
@@ -79,7 +79,7 @@ def _build_feed_url(request: Request, user: orm.User) -> str:
 
 
 @router.get("/api/calendar-url", operation_id="getCalendarUrl")
-async def get_calendar_url(
+def get_calendar_url(
     request: Request,
     user: orm.User = Depends(get_current_user),
 ) -> JSONResponse:
@@ -87,7 +87,7 @@ async def get_calendar_url(
 
 
 @router.post("/api/calendar/rotate", operation_id="rotateCalendarUrl")
-async def rotate_calendar_url(
+def rotate_calendar_url(
     request: Request,
     user: orm.User = Depends(get_current_user),
     db: Session = Depends(get_db),

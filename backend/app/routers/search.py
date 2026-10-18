@@ -17,7 +17,7 @@ router = APIRouter()
 
 
 @router.post("/api/search", operation_id="runSearch")
-async def run_search(
+def run_search(
     user: orm.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -32,7 +32,7 @@ async def run_search(
 
 
 @router.post("/api/search/all", operation_id="searchAll")
-async def search_all(
+def search_all(
     x_api_key: str | None = Header(None, alias="X-API-Key"),
     db: Session = Depends(get_db),
 ) -> JSONResponse:

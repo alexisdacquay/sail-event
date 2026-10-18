@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.get("/api/criteria", operation_id="getCriteria")
-async def get_criteria(
+def get_criteria(
     user: orm.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict:
@@ -25,7 +25,7 @@ async def get_criteria(
 
 
 @router.put("/api/criteria", operation_id="saveCriteria")
-async def save_criteria(
+def save_criteria(
     body: SaveCriteriaRequest,
     user: orm.User = Depends(get_current_user),
     db: Session = Depends(get_db),

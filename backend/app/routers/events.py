@@ -34,7 +34,7 @@ _VALID_STATUSES = {s.value for s in EventStatus}
 
 
 @router.get("/api/events", operation_id="listEvents")
-async def list_events(
+def list_events(
     status: Optional[str] = None,
     user: orm.User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -52,7 +52,7 @@ async def list_events(
 
 
 @router.post("/api/events/{id}/decision", operation_id="decideEvent")
-async def decide_event(
+def decide_event(
     id: str,
     body: DecisionRequest,
     user: orm.User = Depends(get_current_user),
