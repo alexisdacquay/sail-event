@@ -103,8 +103,8 @@ describe('Criteria', () => {
 describe('Thresholds', () => {
   it('initial values equal mock canned thresholds', async () => {
     await loginAsTestUser()
-    const lowerInput = screen.getByLabelText('Auto-reject below')
-    const upperInput = screen.getByLabelText('Auto-accept above')
+    const lowerInput = screen.getByRole('spinbutton', { name: 'Auto-reject below' })
+    const upperInput = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
     await waitFor(() => {
       expect(lowerInput).toHaveValue(30)
       expect(upperInput).toHaveValue(70)
@@ -114,8 +114,8 @@ describe('Thresholds', () => {
   it('equal thresholds shows error and saveThresholds is not called', async () => {
     const spy = vi.spyOn(mock, 'saveThresholds')
     await loginAsTestUser()
-    const lowerInput = screen.getByLabelText('Auto-reject below')
-    const upperInput = screen.getByLabelText('Auto-accept above')
+    const lowerInput = screen.getByRole('spinbutton', { name: 'Auto-reject below' })
+    const upperInput = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
     fireEvent.change(lowerInput, { target: { value: '50' } })
     fireEvent.change(upperInput, { target: { value: '50' } })
     expect(
@@ -130,8 +130,8 @@ describe('Thresholds', () => {
 
   it('rejects lower >= upper with inline error', async () => {
     await loginAsTestUser()
-    const lowerInput = screen.getByLabelText('Auto-reject below')
-    const upperInput = screen.getByLabelText('Auto-accept above')
+    const lowerInput = screen.getByRole('spinbutton', { name: 'Auto-reject below' })
+    const upperInput = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
     fireEvent.change(lowerInput, { target: { value: '80' } })
     fireEvent.change(upperInput, { target: { value: '50' } })
     expect(
@@ -143,8 +143,8 @@ describe('Thresholds', () => {
 
   it('save round-trips threshold values', async () => {
     await loginAsTestUser()
-    const lowerInput = screen.getByLabelText('Auto-reject below')
-    const upperInput = screen.getByLabelText('Auto-accept above')
+    const lowerInput = screen.getByRole('spinbutton', { name: 'Auto-reject below' })
+    const upperInput = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
     fireEvent.change(lowerInput, { target: { value: '20' } })
     fireEvent.change(upperInput, { target: { value: '90' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save scoring' }))

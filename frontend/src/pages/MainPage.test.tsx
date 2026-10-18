@@ -99,8 +99,8 @@ describe('MainPage criteria card', () => {
 describe('MainPage scoring card', () => {
   it('shows validation error live when lower >= upper', async () => {
     renderMainPage()
-    const lower = await screen.findByLabelText('Auto-reject below')
-    const upper = screen.getByLabelText('Auto-accept above')
+    const lower = await screen.findByRole('spinbutton', { name: 'Auto-reject below' })
+    const upper = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
     fireEvent.change(lower, { target: { value: '80' } })
     fireEvent.change(upper, { target: { value: '50' } })
     expect(

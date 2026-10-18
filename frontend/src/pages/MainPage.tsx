@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { ScoreScale } from '@/components/ScoreScale'
 import {
   Card,
   CardContent,
@@ -44,7 +44,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
   const [calendarUrl, setCalendarUrl] = useState('')
   const [copied, setCopied] = useState(false)
 
-  const thresholdInvalid = lower >= upper
+  const thresholdInvalid = !(lower >= 0 && lower < upper && upper <= 100)
 
   useEffect(() => {
     getCriteria().then((c) => setCriteriaText(c.text))
@@ -188,31 +188,11 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <div className="flex gap-4">
-            <div className="flex flex-col gap-2 flex-1">
-              <Label htmlFor="auto-reject">Auto-reject below</Label>
-              <Input
-                id="auto-reject"
-                type="number"
-                value={lower}
-                onChange={(e) => setLower(Number(e.target.value))}
-              />
-            </div>
-            <div className="flex flex-col gap-2 flex-1">
-              <Label htmlFor="auto-accept">Auto-accept above</Label>
-              <Input
-                id="auto-accept"
-                type="number"
-                value={upper}
-                onChange={(e) => setUpper(Number(e.target.value))}
-              />
-            </div>
-          </div>
-          {thresholdInvalid && (
-            <p role="alert" className="text-sm text-destructive">
-              The auto-accept line must be higher than the auto-reject line.
-            </p>
-          )}
+          <ScoreScale
+            lower={lower}
+            upper={upper}
+            onChange={(l, u) => { setLower(l); setUpper(u) }}
+          />
           <div className="flex items-center gap-2">
             <Button
               aria-label="Save scoring"

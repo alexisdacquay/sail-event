@@ -39,27 +39,25 @@ function AuthenticatedLayout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b px-8 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <h1 className="text-lg sm:text-xl font-bold whitespace-nowrap">Sail Event</h1>
-          <nav className="flex gap-1" aria-label="Main navigation">
-            {tabs.map((tab) => (
-              <Button
-                key={tab.page}
-                variant={page === tab.page ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => handleTabClick(tab.page)}
-                aria-current={page === tab.page ? 'page' : undefined}
-              >
-                {tab.label}
-                {tab.page === 'queue' && queueCount > 0 && (
-                  <span className="ml-1 text-xs" data-testid="queue-count">({queueCount})</span>
-                )}
-              </Button>
-            ))}
-          </nav>
-        </div>
-        <div className="flex items-center gap-4">
+      <header className="border-b px-4 sm:px-8 py-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+        <h1 className="text-lg sm:text-xl font-bold whitespace-nowrap">Sail Event</h1>
+        <nav className="flex gap-1 order-last w-full sm:order-none sm:w-auto" aria-label="Main navigation">
+          {tabs.map((tab) => (
+            <Button
+              key={tab.page}
+              variant={page === tab.page ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => handleTabClick(tab.page)}
+              aria-current={page === tab.page ? 'page' : undefined}
+            >
+              {tab.label}
+              {tab.page === 'queue' && queueCount > 0 && (
+                <span className="ml-1 text-xs" data-testid="queue-count">({queueCount})</span>
+              )}
+            </Button>
+          ))}
+        </nav>
+        <div className="flex items-center gap-4 ml-auto">
           <span className="hidden sm:inline text-sm text-muted-foreground">
             {auth?.username}
           </span>
