@@ -150,7 +150,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
       {/* Criteria card */}
       <Card data-testid="criteria-card">
         <CardHeader>
-          <CardTitle>What I&apos;m looking for</CardTitle>
+          <CardTitle as="h2">What I&apos;m looking for</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <Textarea
@@ -181,7 +181,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
       {/* Scoring card */}
       <Card data-testid="scoring-card">
         <CardHeader>
-          <CardTitle>How scoring works</CardTitle>
+          <CardTitle as="h2">How scoring works</CardTitle>
           <CardDescription>
             Every event gets a match score from 0 to 100 against what you wrote
             above. Events in between wait for you in the Queue tab.
@@ -214,7 +214,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
       {/* Search card */}
       <Card data-testid="search-card">
         <CardHeader>
-          <CardTitle>Search now</CardTitle>
+          <CardTitle as="h2">Search now</CardTitle>
           <CardDescription>
             The app also searches automatically every hour.
           </CardDescription>
@@ -247,7 +247,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
       {calendarUrl && (
         <Card data-testid="calendar-card">
           <CardHeader>
-            <CardTitle>Your calendar feed</CardTitle>
+            <CardTitle as="h2">Your calendar feed</CardTitle>
             <CardDescription>
               Paste this link into your calendar app. Accepted events will appear
               there.
@@ -260,7 +260,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
                 value={calendarUrl}
                 data-testid="calendar-url"
                 aria-label="Calendar feed URL"
-                className="flex-1 min-w-0"
+                className="flex-1 min-w-0 font-mono text-xs"
               />
               <Button onClick={handleCopyCalendarUrl} data-testid="copy-calendar-url">
                 {copied ? 'Copied' : 'Copy'}

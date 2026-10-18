@@ -87,7 +87,10 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
     return (
       <Card data-testid={`event-card-${event.id}`}>
         <CardHeader>
-          <p className="text-sm font-medium">Why: {event.scoreReason}</p>
+          <p className="text-base">
+            <span className="font-bold">Why: </span>
+            {event.scoreReason}
+          </p>
           <CardTitle>{event.title}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2 text-sm">

@@ -31,7 +31,15 @@ test.describe("Journey 1: full user flow", () => {
     for (let i = 0; i < 5; i++) {
       await slider.press("ArrowLeft");
     }
+    // the key presses must have reached the shared state before saving
+    await expect(
+      page.getByRole("spinbutton", { name: "Auto-accept above" })
+    ).toHaveValue("65");
+    const saved = page.waitForResponse(
+      (r) => r.url().includes("/api/thresholds") && r.request().method() === "PUT"
+    );
     await page.getByRole("button", { name: "Save scoring" }).click();
+    expect((await saved).ok()).toBeTruthy();
 
     // Reload and verify the value persisted
     await page.reload();

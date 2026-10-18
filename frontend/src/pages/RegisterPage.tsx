@@ -64,7 +64,7 @@ export function RegisterPage({
       <p className="text-2xl font-bold text-center mb-6">Sail Event</p>
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Create account</CardTitle>
+          <CardTitle as="h2">Create account</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
