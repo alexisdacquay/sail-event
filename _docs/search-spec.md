@@ -116,13 +116,15 @@ From one search result to zero or more events.
 |---|---|
 | title | the event's own name, not the page title when they differ |
 | start | local date-time; date alone allowed; missing date → not an event |
-| time zone | from the page; else the country's zone when the country has one; else unknown |
+| time zone | IANA zone derived from the city (the model does the lookup); required |
 | end | optional |
-| place | venue, city, country (ISO-2); city or country missing → the place filter treats it as unknown |
+| place | city and country (ISO-2) required; venue and street optional, never required |
 | link | the page URL, or the deeper event URL when the page is a listing |
 | price | amount + currency when printed; "free" recorded as free; else unknown |
 | description | one line, ≤ 200 characters, from the page |
 | confidence | 0–1; below 0.5 the event is dropped and counted |
+
+- Owner rule (2026-10-18): every stored event has a title, a description, a start date-time with its time zone, a city and a country. An extracted event missing any of these is dropped and counted (`filtered_incomplete`), never stored. Language of the event is not tracked.
 
 - A page with many events (venue programme, listing): up to 10 events whose dates fall in the window; the rest ignored.
 - A page with none (article, listicle, venue homepage, radio stream): no event, counted as non-event.
