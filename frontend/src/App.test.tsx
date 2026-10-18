@@ -16,60 +16,62 @@ async function loginAsTestUser() {
   fireEvent.change(screen.getByLabelText('Password'), {
     target: { value: 'pass123' },
   })
-  fireEvent.click(screen.getByRole('button', { name: 'Login' }))
-  await screen.findByText('Search Criteria')
+  fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+  await screen.findByText("What I'm looking for")
 }
 
 describe('Auth', () => {
   it('shows login screen for unauthenticated visitor', () => {
     render(<App />)
-    expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
     expect(screen.getByLabelText('Username')).toBeInTheDocument()
   })
 
   it('navigates from login to register', () => {
     render(<App />)
-    fireEvent.click(screen.getByText('Register'))
+    fireEvent.click(screen.getByText('Create one'))
     expect(screen.getByLabelText('Username')).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: 'Register' }),
+      screen.getByRole('button', { name: 'Create account' }),
     ).toBeInTheDocument()
   })
 
   it('register flow shows main page on success', async () => {
     render(<App />)
-    fireEvent.click(screen.getByText('Register'))
+    fireEvent.click(screen.getByText('Create one'))
     fireEvent.change(screen.getByLabelText('Username'), {
       target: { value: 'newuser' },
     })
     fireEvent.change(screen.getByLabelText('Password'), {
       target: { value: 'pass' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Register' }))
-    await screen.findByText('Search Criteria')
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
+    await screen.findByText("What I'm looking for")
   })
 
   it('login flow shows main page on success', async () => {
     await loginAsTestUser()
-    expect(screen.getByText('Search Criteria')).toBeInTheDocument()
+    expect(screen.getByText("What I'm looking for")).toBeInTheDocument()
   })
 
   it('logout returns to login screen', async () => {
     await loginAsTestUser()
-    fireEvent.click(screen.getByRole('button', { name: 'Logout' }))
-    expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Sign out' }))
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
   })
 
   it('unauthenticated render shows no criteria editor', () => {
     render(<App />)
-    expect(screen.queryByLabelText('Criteria')).not.toBeInTheDocument()
+    expect(
+      screen.queryByLabelText("What I'm looking for"),
+    ).not.toBeInTheDocument()
   })
 })
 
 describe('Criteria', () => {
   it('initial value equals mock canned criteria text', async () => {
     await loginAsTestUser()
-    const textarea = screen.getByLabelText('Criteria')
+    const textarea = screen.getByLabelText("What I'm looking for")
     await waitFor(() => {
       expect(textarea).toHaveValue(
         'sailing regattas in the Mediterranean, July 2026',
@@ -79,13 +81,21 @@ describe('Criteria', () => {
 
   it('save round-trips criteria text', async () => {
     await loginAsTestUser()
-    const textarea = screen.getByLabelText('Criteria')
+    const textarea = screen.getByLabelText("What I'm looking for")
     fireEvent.change(textarea, {
       target: { value: 'Atlantic tall ship races' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Save Criteria' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save criteria' }))
     await waitFor(() => {
       expect(textarea).toHaveValue('Atlantic tall ship races')
+    })
+  })
+
+  it('shows Saved. after successful save', async () => {
+    await loginAsTestUser()
+    fireEvent.click(screen.getByRole('button', { name: 'Save criteria' }))
+    await waitFor(() => {
+      expect(screen.getByText('Saved.')).toBeInTheDocument()
     })
   })
 })
@@ -93,8 +103,8 @@ describe('Criteria', () => {
 describe('Thresholds', () => {
   it('initial values equal mock canned thresholds', async () => {
     await loginAsTestUser()
-    const lowerInput = screen.getByLabelText('Lower Threshold')
-    const upperInput = screen.getByLabelText('Upper Threshold')
+    const lowerInput = screen.getByRole('spinbutton', { name: 'Auto-reject below' })
+    const upperInput = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
     await waitFor(() => {
       expect(lowerInput).toHaveValue(30)
       expect(upperInput).toHaveValue(70)
@@ -104,37 +114,40 @@ describe('Thresholds', () => {
   it('equal thresholds shows error and saveThresholds is not called', async () => {
     const spy = vi.spyOn(mock, 'saveThresholds')
     await loginAsTestUser()
-    const lowerInput = screen.getByLabelText('Lower Threshold')
-    const upperInput = screen.getByLabelText('Upper Threshold')
+    const lowerInput = screen.getByRole('spinbutton', { name: 'Auto-reject below' })
+    const upperInput = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
     fireEvent.change(lowerInput, { target: { value: '50' } })
     fireEvent.change(upperInput, { target: { value: '50' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Save Thresholds' }))
     expect(
-      screen.getByText('Lower threshold must be less than upper threshold'),
+      screen.getByText(
+        'The auto-accept line must be higher than the auto-reject line.',
+      ),
     ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save scoring' })).toBeDisabled()
     expect(spy).not.toHaveBeenCalled()
     spy.mockRestore()
   })
 
   it('rejects lower >= upper with inline error', async () => {
     await loginAsTestUser()
-    const lowerInput = screen.getByLabelText('Lower Threshold')
-    const upperInput = screen.getByLabelText('Upper Threshold')
+    const lowerInput = screen.getByRole('spinbutton', { name: 'Auto-reject below' })
+    const upperInput = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
     fireEvent.change(lowerInput, { target: { value: '80' } })
     fireEvent.change(upperInput, { target: { value: '50' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Save Thresholds' }))
     expect(
-      screen.getByText('Lower threshold must be less than upper threshold'),
+      screen.getByText(
+        'The auto-accept line must be higher than the auto-reject line.',
+      ),
     ).toBeInTheDocument()
   })
 
   it('save round-trips threshold values', async () => {
     await loginAsTestUser()
-    const lowerInput = screen.getByLabelText('Lower Threshold')
-    const upperInput = screen.getByLabelText('Upper Threshold')
+    const lowerInput = screen.getByRole('spinbutton', { name: 'Auto-reject below' })
+    const upperInput = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
     fireEvent.change(lowerInput, { target: { value: '20' } })
     fireEvent.change(upperInput, { target: { value: '90' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Save Thresholds' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save scoring' }))
     await waitFor(() => {
       expect(lowerInput).toHaveValue(20)
       expect(upperInput).toHaveValue(90)
@@ -143,12 +156,33 @@ describe('Thresholds', () => {
 })
 
 describe('Search', () => {
-  it('displays confirmation with event counts', async () => {
+  it('displays result with event counts and queue count', async () => {
     await loginAsTestUser()
     fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
     const result = await screen.findByTestId('search-result')
-    expect(result).toHaveTextContent('12 events found')
-    expect(result).toHaveTextContent('4 new')
+    expect(result).toHaveTextContent('Found 12 events, 4 new.')
+    // Mock has 2 queued events
+    expect(result).toHaveTextContent('2 waiting for you in the Queue.')
+  })
+
+  it('saves criteria before searching (criteria Saved. appears)', async () => {
+    await loginAsTestUser()
+    fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
+    await waitFor(() => {
+      expect(screen.getByText('Saved.')).toBeInTheDocument()
+    })
+  })
+
+  it('disables Search now when criteria is empty', async () => {
+    await loginAsTestUser()
+    const textarea = screen.getByLabelText("What I'm looking for")
+    fireEvent.change(textarea, { target: { value: '' } })
+    expect(screen.getByRole('button', { name: 'Search now' })).toBeDisabled()
+    expect(
+      screen.getByText(
+        "Write what you're looking for, then press Search now.",
+      ),
+    ).toBeInTheDocument()
   })
 })
 
@@ -156,10 +190,9 @@ describe('Tab bar and queue count', () => {
   it('shows tabs with queue count and decrements on accept', async () => {
     await loginAsTestUser()
 
-    // Tab bar shows all three tabs
     const nav = screen.getByRole('navigation', { name: 'Main navigation' })
-    expect(nav).toHaveTextContent('Dashboard')
-    expect(nav).toHaveTextContent('Events')
+    expect(nav).toHaveTextContent('Home')
+    expect(nav).toHaveTextContent('All events')
     expect(nav).toHaveTextContent('Queue')
 
     // Queue count equals mock's queued events (2)
@@ -186,6 +219,20 @@ describe('Tab bar and queue count', () => {
     // Queue count decrements to 1
     await waitFor(() => {
       expect(nav).toHaveTextContent('(1)')
+    })
+  })
+
+  it('refreshes queue count after search without tab click', async () => {
+    await loginAsTestUser()
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' })
+
+    // Run a search - this calls refreshQueueCount via onSearchComplete
+    fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
+    await screen.findByTestId('search-result')
+
+    // Queue count should be fresh (2 queued in mock)
+    await waitFor(() => {
+      expect(nav).toHaveTextContent('(2)')
     })
   })
 })

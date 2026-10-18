@@ -11,9 +11,9 @@ import { listEvents } from '@/services/api'
 type Page = 'login' | 'register' | 'main' | 'events' | 'queue'
 
 const tabs: { page: Page; label: string }[] = [
-  { page: 'main', label: 'Dashboard' },
-  { page: 'events', label: 'Events' },
+  { page: 'main', label: 'Home' },
   { page: 'queue', label: 'Queue' },
+  { page: 'events', label: 'All events' },
 ]
 
 function AuthenticatedLayout() {
@@ -23,7 +23,9 @@ function AuthenticatedLayout() {
 
   const refreshQueueCount = useCallback(async () => {
     const queued = await listEvents('queued')
-    setQueueCount(queued.length)
+    const count = queued.length
+    setQueueCount(count)
+    return count
   }, [])
 
   useEffect(() => {
@@ -37,36 +39,35 @@ function AuthenticatedLayout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b px-8 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <h1 className="text-xl font-bold">Sail Event</h1>
-          <nav className="flex gap-1" aria-label="Main navigation">
-            {tabs.map((tab) => (
-              <Button
-                key={tab.page}
-                variant={page === tab.page ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => handleTabClick(tab.page)}
-              >
-                {tab.label}
-                {tab.page === 'queue' && queueCount > 0 && (
-                  <span className="ml-1 text-xs">({queueCount})</span>
-                )}
-              </Button>
-            ))}
-          </nav>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">
+      <header className="border-b px-4 sm:px-8 py-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+        <h1 className="text-lg sm:text-xl font-bold whitespace-nowrap">Sail Event</h1>
+        <nav className="flex gap-1 order-last w-full sm:order-none sm:w-auto" aria-label="Main navigation">
+          {tabs.map((tab) => (
+            <Button
+              key={tab.page}
+              variant={page === tab.page ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => handleTabClick(tab.page)}
+              aria-current={page === tab.page ? 'page' : undefined}
+            >
+              {tab.label}
+              {tab.page === 'queue' && queueCount > 0 && (
+                <span className="ml-1 text-xs" data-testid="queue-count">({queueCount})</span>
+              )}
+            </Button>
+          ))}
+        </nav>
+        <div className="flex items-center gap-4 ml-auto">
+          <span className="hidden sm:inline text-sm text-muted-foreground">
             {auth?.username}
           </span>
           <Button variant="outline" size="sm" onClick={logout}>
-            Logout
+            Sign out
           </Button>
         </div>
       </header>
       <main className="flex-1 p-8 max-w-2xl mx-auto w-full">
-        {page === 'main' && <MainPage embedded />}
+        {page === 'main' && <MainPage onSearchComplete={refreshQueueCount} />}
         {page === 'events' && <EventsPage />}
         {page === 'queue' && (
           <QueuePage onQueueChange={refreshQueueCount} />

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Card,
   CardContent,
@@ -6,10 +7,16 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { ConfirmAction } from '@/components/ConfirmAction'
 import type { Event } from '@/services/api'
 
-const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  new: 'outline',
+const badgeText: Record<string, string> = {
+  accepted: 'On your calendar',
+  rejected: 'Rejected',
+  queued: 'Waiting for you',
+}
+
+const badgeVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
   accepted: 'default',
   rejected: 'destructive',
   queued: 'secondary',
@@ -25,63 +32,124 @@ function formatDateTime(iso: string): string {
 
 type EventCardProps = {
   event: Event
-  onAccept?: (id: string) => void
-  onReject?: (id: string) => void
+  variant: 'queue' | 'all'
+  onDecide?: (id: string, decision: 'accepted' | 'rejected') => Promise<void>
 }
 
-export function EventCard({ event, onAccept, onReject }: EventCardProps) {
-  return (
-    <Card data-testid={`event-card-${event.id}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between gap-2">
-          <span>{event.title}</span>
-          <Badge variant={statusVariant[event.status]}>{event.status}</Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-2 text-sm">
-        <p>
-          <span className="font-medium">Date: </span>
-          <span data-testid="event-datetime">{formatDateTime(event.dateTime)}</span>
-        </p>
-        <p>
-          <span className="font-medium">Place: </span>
-          {event.place}
-        </p>
-        <p>
-          <span className="font-medium">Link: </span>
-          <a
-            href={event.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline text-primary"
-          >
-            {event.link}
-          </a>
-        </p>
-        <p>
-          <span className="font-medium">Score: </span>
-          {event.score}
-        </p>
-        <p>
-          <span className="font-medium">Reason: </span>
-          {event.scoreReason}
-        </p>
-        {(onAccept || onReject) && (
-          <div className="flex gap-2 pt-2">
-            {onAccept && (
-              <Button size="sm" onClick={() => onAccept(event.id)}>
-                Accept
+export function EventCard({ event, variant, onDecide }: EventCardProps) {
+  const [deciding, setDeciding] = useState<'accepted' | 'rejected' | null>(
+    null,
+  )
+  const [error, setError] = useState('')
+
+  async function handleDecide(decision: 'accepted' | 'rejected') {
+    setDeciding(decision)
+    setError('')
+    try {
+      await onDecide?.(event.id, decision)
+    } catch {
+      setError("Couldn't save your decision. Try again.")
+      setDeciding(null)
+    }
+  }
+
+  const fields = (
+    <>
+      <p>
+        <span className="font-medium">Match: </span>
+        {event.score} / 100
+      </p>
+      <p>
+        <span className="font-medium">When: </span>
+        <span data-testid="event-datetime">
+          {formatDateTime(event.dateTime)}
+        </span>
+      </p>
+      <p>
+        <span className="font-medium">Where: </span>
+        {event.place}
+      </p>
+      <p>
+        <span className="font-medium">Link: </span>
+        <a
+          href={event.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline break-all"
+        >
+          {event.link}
+        </a>
+      </p>
+    </>
+  )
+
+  if (variant === 'queue') {
+    return (
+      <Card data-testid={`event-card-${event.id}`}>
+        <CardHeader>
+          <p className="text-sm font-medium">Why: {event.scoreReason}</p>
+          <CardTitle>{event.title}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2 text-sm">
+          {fields}
+          {onDecide && (
+            <div className="flex gap-2 pt-2">
+              <Button
+                size="sm"
+                disabled={deciding !== null}
+                onClick={() => handleDecide('accepted')}
+              >
+                {deciding === 'accepted' ? 'Accepting…' : 'Accept'}
               </Button>
-            )}
-            {onReject && (
               <Button
                 size="sm"
                 variant="destructive"
-                onClick={() => onReject(event.id)}
+                disabled={deciding !== null}
+                onClick={() => handleDecide('rejected')}
               >
-                Reject
+                {deciding === 'rejected' ? 'Rejecting…' : 'Reject'}
               </Button>
-            )}
+            </div>
+          )}
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // all variant
+  return (
+    <Card data-testid={`event-card-${event.id}`}>
+      <CardHeader>
+        <div className="flex flex-wrap-reverse items-start justify-between gap-2">
+          <CardTitle>{event.title}</CardTitle>
+          {badgeText[event.status] && (
+            <Badge variant={badgeVariant[event.status]}>
+              {badgeText[event.status]}
+            </Badge>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2 text-sm">
+        <p>
+          <span className="font-medium">Why: </span>
+          {event.scoreReason}
+        </p>
+        {fields}
+        {event.status === 'accepted' && onDecide && (
+          <div className="pt-2">
+            <ConfirmAction
+              label="Remove from calendar"
+              prompt="Remove this event from your calendar?"
+              confirmLabel="Remove"
+              confirmingLabel="Removing…"
+              errorText="Couldn't remove it. Try again."
+              onConfirm={() => onDecide(event.id, 'rejected')}
+            />
           </div>
         )}
       </CardContent>

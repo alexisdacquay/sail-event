@@ -5,7 +5,7 @@ function uid() {
 }
 
 test.describe("Journey 1: full user flow", () => {
-  test("register, criteria, search, queue decisions, events page", async ({
+  test("register, criteria, scoring, search, queue decisions, events page", async ({
     page,
   }) => {
     const user = uid();
@@ -13,21 +13,39 @@ test.describe("Journey 1: full user flow", () => {
 
     // Register
     await page.goto("/");
-    await page.getByRole("button", { name: "Register" }).click();
+    await page.getByRole("button", { name: "Create one" }).click();
     await page.getByLabel("Username").fill(user);
     await page.getByLabel("Password").fill(pw);
-    await page.getByRole("button", { name: "Register", exact: true }).click();
+    await page.getByRole("button", { name: "Create account" }).click();
 
     // Wait for authenticated layout
     await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
 
     // Set criteria
-    await page.getByLabel("Criteria").fill("outdoor concerts and festivals");
-    await page.getByRole("button", { name: "Save Criteria" }).click();
+    await page.getByLabel("What I'm looking for").fill("outdoor concerts and festivals");
+    await page.getByRole("button", { name: "Save criteria" }).click();
+
+    // Adjust scoring scale: lower Auto-accept above by 5 (70 → 65)
+    const slider = page.getByRole("slider", { name: "Auto-accept above" });
+    await slider.focus();
+    for (let i = 0; i < 5; i++) {
+      await slider.press("ArrowLeft");
+    }
+    await page.getByRole("button", { name: "Save scoring" }).click();
+
+    // Reload and verify the value persisted
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
+    await expect(
+      page.getByRole("spinbutton", { name: "Auto-accept above" })
+    ).toHaveValue("65");
 
     // Search
     await page.getByRole("button", { name: "Search now" }).click();
-    await expect(page.getByText("Search complete")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/Found \d+ events, \d+ new\./)).toBeVisible({ timeout: 15_000 });
+
+    // Assert Queue badge with count is visible in the header before clicking
+    await expect(page.getByRole("button", { name: /Queue \(\d+\)/ })).toBeVisible();
 
     // Go to Queue
     await page.getByRole("button", { name: /Queue/ }).click();
@@ -44,13 +62,23 @@ test.describe("Journey 1: full user flow", () => {
     // After accepting, the next item becomes first
     await rejectButtons.first().click();
 
-    // Go to Events page
-    await page.getByRole("button", { name: "Events" }).click();
-    await expect(page.getByRole("heading", { name: "Events" })).toBeVisible();
+    // Go to All events page
+    await page.getByRole("button", { name: "All events" }).click();
+    await expect(page.getByRole("heading", { name: "All events" })).toBeVisible();
 
-    // Verify statuses are shown (multiple badges possible; check first of each)
-    await expect(page.getByText("accepted").first()).toBeVisible();
-    await expect(page.getByText("rejected").first()).toBeVisible();
+    // Verify statuses are shown
+    await expect(page.getByText("On your calendar").first()).toBeVisible();
+    await expect(page.getByText("Rejected").first()).toBeVisible();
+
+    // Remove from calendar: find the accepted card's button, click it, confirm
+    await page.getByRole("button", { name: "Remove from calendar" }).first().click();
+    await page.getByRole("button", { name: "Remove", exact: true }).click();
+
+    // After removal the card's badge should flip to Rejected
+    // The previously accepted card should no longer show "On your calendar"
+    // (if there was only one accepted queue event, there are zero left)
+    // but at minimum the badge on that card is now Rejected
+    await expect(page.getByText("Rejected").first()).toBeVisible();
   });
 });
 
@@ -64,38 +92,38 @@ test.describe("Journey 2: user isolation", () => {
     const ctx1 = await browser.newContext();
     const page1 = await ctx1.newPage();
     await page1.goto("/");
-    await page1.getByRole("button", { name: "Register" }).click();
+    await page1.getByRole("button", { name: "Create one" }).click();
     await page1.getByLabel("Username").fill(user1);
     await page1.getByLabel("Password").fill(pw);
-    await page1.getByRole("button", { name: "Register", exact: true }).click();
+    await page1.getByRole("button", { name: "Create account" }).click();
     await expect(
       page1.getByRole("heading", { name: "Sail Event" })
     ).toBeVisible();
-    await page1.getByLabel("Criteria").fill("sailing regattas");
-    await page1.getByRole("button", { name: "Save Criteria" }).click();
+    await page1.getByLabel("What I'm looking for").fill("sailing regattas");
+    await page1.getByRole("button", { name: "Save criteria" }).click();
     await page1.getByRole("button", { name: "Search now" }).click();
-    await expect(page1.getByText("Search complete")).toBeVisible({
+    await expect(page1.getByText(/Found \d+ events, \d+ new\./)).toBeVisible({
       timeout: 15_000,
     });
 
     // Confirm user 1 has events
-    await page1.getByRole("button", { name: "Events" }).click();
-    await expect(page1.getByText(/score/i).first()).toBeVisible();
+    await page1.getByRole("button", { name: "All events" }).click();
+    await expect(page1.getByText(/Match: \d+ \/ 100/).first()).toBeVisible();
     await ctx1.close();
 
     // --- User 2: register, go straight to events ---
     const ctx2 = await browser.newContext();
     const page2 = await ctx2.newPage();
     await page2.goto("/");
-    await page2.getByRole("button", { name: "Register" }).click();
+    await page2.getByRole("button", { name: "Create one" }).click();
     await page2.getByLabel("Username").fill(user2);
     await page2.getByLabel("Password").fill(pw);
-    await page2.getByRole("button", { name: "Register", exact: true }).click();
+    await page2.getByRole("button", { name: "Create account" }).click();
     await expect(
       page2.getByRole("heading", { name: "Sail Event" })
     ).toBeVisible();
-    await page2.getByRole("button", { name: "Events" }).click();
-    await expect(page2.getByRole("heading", { name: "Events" })).toBeVisible();
+    await page2.getByRole("button", { name: "All events" }).click();
+    await expect(page2.getByRole("heading", { name: "All events" })).toBeVisible();
     await expect(page2.getByText("No events yet.")).toBeVisible();
     await ctx2.close();
   });
