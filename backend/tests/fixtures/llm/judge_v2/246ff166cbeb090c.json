@@ -1,0 +1,20 @@
+{
+  "response": {
+    "score": 30,
+    "reason": "Vienna Philharmonic at Musikverein in Vienna on 5 Nov, 120 EUR: fits your dates, city and classical topic, but over your 30 EUR budget",
+    "fit": {
+      "place": "yes",
+      "date": "yes",
+      "topic": "yes",
+      "budget": "no"
+    },
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 1548,
+    "completion_tokens": 208
+  },
+  "recorded_at": "2026-10-18T21:44:22.474806+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

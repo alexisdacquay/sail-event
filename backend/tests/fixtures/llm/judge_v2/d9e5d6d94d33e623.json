@@ -1,0 +1,20 @@
+{
+  "response": {
+    "score": 12,
+    "reason": "Techno night at Berghain in Berlin on 20 Oct: right place and dates, not jazz",
+    "fit": {
+      "place": "yes",
+      "date": "yes",
+      "topic": "no",
+      "budget": "unknown"
+    },
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 1543,
+    "completion_tokens": 98
+  },
+  "recorded_at": "2026-10-18T21:44:19.115178+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}
