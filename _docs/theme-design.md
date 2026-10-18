@@ -25,6 +25,7 @@ Facts this design relies on (checked in code):
 - Light mode is a pale cool paper with white cards; dark mode is deep navy, not grey.
 - One display face for the wordmark, page titles and card titles; Geist for everything else. Numbers are tabular.
 - Colour means one thing each: teal = accepted / good, coral = rejected, sand = undecided. Nothing else is coloured.
+- The "tech" note in light mode is carried by the teal: the sail in the mark, the active tab (`bg-accent text-accent-foreground`), the `Why:` label, the focus ring and the calendar zone. Primary buttons stay navy in light mode because teal at 0.62 L gives only 3.4:1 under white text (fails 4.5:1) and teal with dark text reads weak; in dark mode the primary buttons are teal.
 
 
 ## 2. Colour
@@ -55,7 +56,7 @@ Contrast = WCAG 2.x ratio, computed from the oklch values (sRGB, D65). Hex is th
 | `--zone-rejected` | `oklch(0.88 0.07 25)` | `#FFC6C0` | scale zone 0 → lower | fill; text label beside it |
 | `--zone-decide` | `oklch(0.93 0.02 80)` | `#EFE7D9` | scale zone lower → upper | fill; hatched with `foreground/10` |
 | `--zone-calendar` | `oklch(0.62 0.13 215)` | `#0098B7` | scale zone upper → 100, sail in the mark | 3.4:1 on card |
-| `--radius` | `0.75rem` | | 12 px base; cards use `rounded-2xl` | |
+| `--radius` | `0.75rem` | | 12 px base; `rounded-lg` = 12 px, `rounded-xl` = 16.8 px (`--radius-xl: calc(var(--radius) * 1.4)` in `index.css`); cards use `rounded-xl` | |
 
 Thumb on the scale (light): body `--card`, border `--foreground`. Border vs zone-rejected 11.6:1, vs zone-decide 14.1:1, vs zone-calendar 5.1:1.
 
@@ -106,7 +107,7 @@ No toggle. The OS setting decides.
 
 | Role | Stack | Source |
 |---|---|---|
-| Display (`--font-heading`) | `'Bricolage Grotesque', 'Geist Variable', system-ui, sans-serif` | one `<link>` in `index.html`: `https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&display=swap`, with the two `preconnect` links Google prescribes. Fallback is the installed Geist, so an offline load still renders the same layout |
+| Display (`--font-heading`) | `'Bricolage Grotesque', 'Geist Variable', system-ui, sans-serif` | one `<link>` in `index.html`: `https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&display=swap`, with the two `preconnect` links Google prescribes. Fallback is the installed Geist: an offline load renders headings in Geist; the two faces share no metrics, so a `swap` repaints headings with a width change, which nothing depends on |
 | Body (`--font-sans`) | `'Geist Variable', system-ui, sans-serif` | installed (`@fontsource-variable/geist`), unchanged |
 | Mono | `ui-monospace, 'SF Mono', Menlo, monospace` | calendar URL only (`font-mono` already on the input) |
 
@@ -140,7 +141,7 @@ No toggle. The OS setting decides.
 | Main padding | `p-8` | `p-4` (App currently `p-8` everywhere; becomes `p-4 sm:p-8`) |
 | Header | `h-14` (56 px), `sticky top-0 z-10`, `bg-card/80 backdrop-blur border-b`, `px-8` | two rows (existing `flex-wrap`): row 1 name + Sign out, row 2 tabs; `px-4`; ≈ 96 px total |
 | Card padding (`--card-spacing`) | 20 px (`--spacing(5)`) | 16 px (`--spacing(4)`, current) |
-| Card radius | `rounded-2xl` (16 px) | same |
+| Card radius | `rounded-xl` (16.8 px with `--radius: 0.75rem`) | same |
 | Gap between cards | `gap-6` (24 px, current) | `gap-4` (16 px) |
 | Gap inside a card (header → content) | `gap-4` (current) | same |
 | Field stack (label → input) | `gap-2` (current) | same |
@@ -164,7 +165,7 @@ Breakpoint: only `sm` (640 px). Nothing else changes with width.
 | `SailMark` | — | new `frontend/src/components/SailMark.tsx`: inline SVG of `_docs/icon-proposals/b-sail-mark.svg` (`viewBox 0 0 256 256`, three paths). Sail `className="fill-zone-calendar"`; mast and hull `stroke="currentColor"` so they follow `text-foreground` in both themes. Props: `className`, `aria-hidden` default true |
 | Favicon | Vite default | `frontend/public/favicon.svg` = `b-sail-mark.svg` verbatim plus one `<style>@media (prefers-color-scheme: dark){.ink{stroke:#E9F0F5}}</style>` with `class="ink"` on mast and hull, so the navy strokes read on dark tab bars |
 | Bar | `border-b px-4 sm:px-8 py-3` | `sticky top-0 z-10 h-auto sm:h-14 border-b bg-card/80 backdrop-blur px-4 sm:px-8` |
-| Tabs | `Button size=sm`, active `default`, others `ghost` | unchanged variants (they pick up the new tokens: active = navy pill light / teal pill dark). `gap-1` stays |
+| Tabs | `Button size=sm`, active `default`, others `ghost` | active becomes `secondary` (one word in `App.tsx`: `variant={page === tab.page ? 'secondary' : 'ghost'}`), restyled as `bg-accent text-accent-foreground` (light 7.4:1, dark 8.8:1); inactive `ghost` unchanged; `aria-current` unchanged. `gap-1` stays |
 | Queue count | `text-xs` in the active/ghost button | unchanged markup; `tabular-nums` |
 | Username | `text-sm text-muted-foreground` | unchanged |
 | Sign out | `outline sm` | unchanged variant |
@@ -176,7 +177,7 @@ Breakpoint: only `sm` (640 px). Nothing else changes with width.
 | base | `rounded-lg … transition-all … focus-visible:ring-3 ring-ring/50` | `rounded-lg transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:border-ring`; keep `active:translate-y-px` |
 | `default` (Accept, Save, Search now, Sign in) | `bg-primary text-primary-foreground hover:bg-primary/80` | `bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs` |
 | `outline` (Sign out, Remove from calendar, Cancel, Try again) | `border-border bg-background hover:bg-muted …` | `border-border bg-card hover:bg-muted dark:bg-card dark:border-input dark:hover:bg-muted` |
-| `secondary` | tint of secondary | unchanged (unused today) |
+| `secondary` (active tab) | tint of secondary, unused today | `bg-accent text-accent-foreground hover:bg-accent/80 aria-expanded:bg-accent` |
 | `ghost` (inactive tabs) | `hover:bg-muted` | unchanged |
 | `destructive` (Reject, Reset, Remove) | `bg-destructive/10 text-destructive hover:bg-destructive/20` | destructive-ghost: `bg-transparent text-destructive hover:bg-destructive/10 focus-visible:ring-destructive/30 dark:hover:bg-destructive/15`; same variant name, so no call site changes |
 | sizes | `default h-8`, `sm h-7` | `default h-9 px-3.5`, `sm h-8 px-3`; `xs`, `lg`, `icon*` unchanged |
@@ -186,7 +187,7 @@ Breakpoint: only `sm` (640 px). Nothing else changes with width.
 
 | Part | Current | New |
 |---|---|---|
-| Surface | `rounded-xl bg-card ring-1 ring-foreground/10` | `rounded-2xl bg-card border border-border shadow-xs` (dark: `shadow-none`) |
+| Surface | `rounded-xl bg-card ring-1 ring-foreground/10` | `rounded-xl bg-card border border-border shadow-xs` (dark: `shadow-none`); the radius class stays, the base `--radius` grows from 10 px to 12 px so `rounded-xl` goes from 14 px to 16.8 px |
 | Spacing | `[--card-spacing:--spacing(4)]` | `[--card-spacing:--spacing(4)] sm:[--card-spacing:--spacing(5)]` |
 | Title | `font-heading text-base font-medium` | `font-heading text-lg font-semibold tracking-tight leading-snug` |
 | Description | `text-sm text-muted-foreground` | unchanged, `leading-relaxed` |
@@ -240,6 +241,7 @@ Roles, names, `aria-valuetext`, fieldset and legend: unchanged.
 | Part | Current | New |
 |---|---|---|
 | `Why:` label (queue, first line) | `font-bold` | `font-semibold text-accent-foreground`; literal text `Why:` kept |
+| `Why:` label (all variant, `EventCard.tsx:141`) | `font-medium` | same `font-semibold text-accent-foreground` |
 | Why sentence | `text-base` | `text-base leading-relaxed` |
 | Title | `CardTitle` | `CardTitle` (now display 18 px 600) |
 | Field labels `Match:` `When:` `Where:` `Link:` | `font-medium` | `font-medium text-muted-foreground` |
@@ -254,7 +256,7 @@ Roles, names, `aria-valuetext`, fieldset and legend: unchanged.
 
 | Part | Current | New |
 |---|---|---|
-| Container | two bare `<p>` | `<div class="rounded-2xl border border-dashed border-border bg-muted/40 px-6 py-10 text-center">` wrapping the same two `<p>` |
+| Container | two bare `<p>` | `<div class="rounded-xl border border-dashed border-border bg-muted/40 px-6 py-10 text-center">` wrapping the same two `<p>` |
 | First line | `font-medium` | `font-heading text-lg font-semibold` |
 | Second line | `text-sm text-muted-foreground` | same, `max-w-sm mx-auto mt-2 leading-relaxed` |
 | Loading `Loading…` | `text-muted-foreground` | unchanged |
@@ -288,7 +290,7 @@ Copy unchanged: `Nothing to decide right now.` / `No events yet.` and their seco
 | Button, badge, input hover / colour change | `transition-colors` (replaces `transition-all`) | 150 ms, `ease-out` |
 | Slider thumb hover ring | `transition-shadow` | 150 ms |
 | `Saved.`, `Copied`, search result line appear | `animate-in fade-in-0` (+ `slide-in-from-top-1` for the result line) | 200 ms; no exit animation, the 2 s timer unmounts |
-| Queue card after Accept / Reject succeeds | `animate-out fade-out-0 slide-out-to-right-2 fill-mode-forwards` on the card, then unmount | 200 ms. `EventCard` sets a `leaving` flag when `onDecide` resolves; `QueuePage.handleDecide` removes the event from state 200 ms after `decideEvent` resolves (`setTimeout`). Tests already `waitFor` removal |
+| Queue card after Accept / Reject succeeds | `animate-out fade-out-0 slide-out-to-right-2 fill-mode-forwards` on the card, then unmount | 200 ms. Ordering: `QueuePage.handleDecide` awaits `decideEvent`, calls `onQueueChange`, starts a fire-and-forget `setTimeout(remove, 200)` and returns at once; `EventCard` sets its `leaving` flag when `onDecide` resolves, so the exit classes apply while the card is still mounted; the timer unmounts it. `handleDecide` must not await the timer. Tests already `waitFor` removal |
 | All events: badge flips to `Rejected` | none (text swap) | — |
 | Tab switch, page load, card mount | none | — |
 | `prefers-reduced-motion: reduce` | `@layer base { @media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; } } }` in `index.css` | the 200 ms removal delay stays (imperceptible, no motion) |
@@ -305,7 +307,7 @@ Nothing else moves. No parallax, no skeletons, no spinners.
 - [ ] Hit sizes: buttons ≥ 32 px tall (`sm`) / 36 px (`default`); slider thumbs 28 px; inputs 36 px; number inputs 96 px wide
 - [ ] Reduced motion honoured globally (§6); no content depends on an animation finishing
 - [ ] Dark mode follows the OS; `color-scheme` set so native controls match
-- [ ] Display font loads with `display=swap` and a metric-compatible fallback (Geist); no layout depends on the web font being present
+- [ ] Display font loads with `display=swap` and a fallback (Geist); no layout depends on the web font being present
 - [ ] `SailMark` is `aria-hidden`; the h1 accessible name is still `Sail Event`
 - [ ] Zoom to 200 %: single column, no horizontal scroll (phone layout already handles 320–640 px)
 
@@ -316,14 +318,13 @@ Three issues, in order. Each is one engineer session. Label: `theme`. Every exis
 
 ### Issue T1 — Tokens, fonts, favicon and mark, dark mode
 
-Goal: the app renders in the new palette and type in both themes with no component edited yet.
+Goal: tokens, fonts, favicon and the mark component exist and the app renders in the new palette in both themes; no component or page is edited yet (the mark is wired into the pages in T2).
 
 - [ ] `index.css`: light `:root` and `@media (prefers-color-scheme: dark) { :root }` blocks carry exactly the values in §2; `.dark` block and `@custom-variant dark` line removed; `color-scheme` set in both blocks; `--chart-*` and `--sidebar-*` tokens and their `@theme` lines removed
 - [ ] `@theme inline` exposes `--color-zone-rejected`, `--color-zone-decide`, `--color-zone-calendar`; `bg-zone-calendar` compiles (used by T2)
 - [ ] `--font-heading` is `'Bricolage Grotesque', 'Geist Variable', system-ui, sans-serif`; `index.html` has the single Google Fonts `<link>` (weights 600, 700, `display=swap`) plus the two `preconnect` links; with the network blocked the page renders in Geist with no error
 - [ ] `index.html` carries the two `theme-color` meta tags; `frontend/public/favicon.svg` is `b-sail-mark.svg` with the dark-scheme `<style>` rule; the Vite default favicon is gone
-- [ ] `frontend/src/components/SailMark.tsx` exists, renders the three paths with `fill-zone-calendar` sail and `currentColor` mast and hull, `aria-hidden="true"` by default; `App.tsx` h1 shows it before the text; `App.test.tsx` and e2e `getByRole("heading", { name: "Sail Event" })` pass unchanged
-- [ ] Sign in and Create account show the mark (40 px) above the app name; app name and page h2s use `font-heading`
+- [ ] `frontend/src/components/SailMark.tsx` exists, renders the three paths with `fill-zone-calendar` sail and `currentColor` mast and hull, `aria-hidden="true"` by default; the three paths carry no `fill` / `stroke` colour attributes (colour comes from classes only); not yet imported anywhere
 - [ ] Reduced-motion rule from §6 present in `index.css`
 - [ ] With the OS in dark mode the page background is `#08101A`-ish navy, primary buttons are teal with dark text, and no element keeps a light-theme colour (manual check of the four screens); `npm test` and `make test` green
 
@@ -331,21 +332,24 @@ Goal: the app renders in the new palette and type in both themes with no compone
 
 Goal: every component matches §5; the scale uses the zone tokens.
 
-- [ ] `button.tsx`: sizes `default h-9`, `sm h-8`; `transition-colors`; `destructive` is the ghost treatment (transparent at rest, tint on hover); `outline` uses `bg-card`; focus ring `ring-ring/40`
-- [ ] `card.tsx`: `rounded-2xl border border-border shadow-xs`, `--card-spacing` 16 px phone / 20 px desktop, title `text-lg font-semibold tracking-tight`
+- [ ] `button.tsx`: sizes `default h-9`, `sm h-8`; `transition-colors`; `destructive` is the ghost treatment (transparent at rest, tint on hover); `outline` uses `bg-card`; `secondary` is `bg-accent text-accent-foreground hover:bg-accent/80`; focus ring `ring-ring/40`
+- [ ] `card.tsx`: `rounded-xl border border-border shadow-xs`, `--card-spacing` 16 px phone / 20 px desktop, title `text-lg font-semibold tracking-tight`
 - [ ] `badge.tsx`: `h-6 rounded-full px-2.5 tracking-wide`; `default` = `bg-accent text-accent-foreground`, `secondary` = `bg-muted text-foreground border-border`, `destructive` dark = `dark:bg-transparent dark:border-destructive/40`; `EventCard` badge map untouched; `getByText('On your calendar' | 'Rejected' | 'Waiting for you')` pass
 - [ ] `input.tsx` / `textarea.tsx`: `h-9`, `bg-card`, focus `ring-ring/30`; textarea `min-h-24 leading-relaxed`
 - [ ] `ScoreScale.tsx`: zone fills `bg-zone-*`, thumbs `size-7 bg-card border-foreground` with hover and focus rings, thumb values `font-semibold tabular-nums text-foreground`, legend dots and swatches in zone colours; `ScoreScale.test.tsx` green with no selector change
 - [ ] `EventCard.tsx`: `Why:` span `font-semibold text-accent-foreground`, field labels muted, score wrapped as one span `font-semibold tabular-nums` containing `{score} / 100`, link classes per §5; `EventCard.test.tsx` green (`/85 \/ 100/` and `Why:` still match)
-- [ ] `App.tsx`: header `sticky top-0 bg-card/80 backdrop-blur sm:h-14`; main `p-4 sm:p-8`; `MainPage` card gap `gap-4 sm:gap-6`; `Saved.` spans `font-medium text-accent-foreground`
-- [ ] Text links on Sign in / Create account carry the focus classes; `npm test`, `make test`, `make test-e2e` green
+- [ ] `App.tsx`: h1 shows `<SailMark class="size-6" />` before the text `Sail Event` and uses `font-heading`; active tab variant is `secondary` (`variant={page === tab.page ? 'secondary' : 'ghost'}`), `aria-current` unchanged; header `sticky top-0 bg-card/80 backdrop-blur sm:h-14`; main `p-4 sm:p-8`; `App.test.tsx` and e2e `getByRole("heading", { name: "Sail Event" })` pass unchanged
+- [ ] `LoginPage.tsx` / `RegisterPage.tsx`: the mark (40 px) above the app name; app name `font-heading text-[28px] font-bold tracking-tight`; text links `Create one` / `Sign in` carry the focus classes
+- [ ] `QueuePage.tsx` / `EventsPage.tsx` h2s `font-heading text-2xl font-bold tracking-tight`
+- [ ] `MainPage.tsx`: card gap `gap-4 sm:gap-6`; `Saved.` spans `font-medium text-accent-foreground`
+- [ ] `npm test`, `make test`, `make test-e2e` green
 
 ### Issue T3 — Motion and empty states
 
 Goal: the few transitions in §6 and the empty-state panel in §5.
 
-- [ ] `QueuePage.tsx` and `EventsPage.tsx` empty states wrapped in the dashed `rounded-2xl` panel; first line `font-heading text-lg font-semibold`; copy unchanged; `QueuePage.test.tsx` / `EventsPage.test.tsx` green
-- [ ] `EventCard` queue variant: when `onDecide` resolves the card gets `animate-out fade-out-0 slide-out-to-right-2 fill-mode-forwards duration-200`; `QueuePage.handleDecide` removes the card from state 200 ms after `decideEvent` resolves; queue count still refreshes; `QueuePage.test.tsx` `waitFor` assertions green; e2e Journey 1 green
+- [ ] `QueuePage.tsx` and `EventsPage.tsx` empty states wrapped in the dashed `rounded-xl` panel; first line `font-heading text-lg font-semibold`; copy unchanged; `QueuePage.test.tsx` / `EventsPage.test.tsx` green
+- [ ] `EventCard` queue variant: when `onDecide` resolves the card sets `leaving` and gets `animate-out fade-out-0 slide-out-to-right-2 fill-mode-forwards duration-200`; `QueuePage.handleDecide` awaits `decideEvent`, calls `onQueueChange`, starts a fire-and-forget `setTimeout` (200 ms) that removes the card from state, and returns at once — it never awaits the timer, so `onDecide` resolves while the card is still mounted; `QueuePage.test.tsx` `waitFor` assertions green; e2e Journey 1 green
 - [ ] `Saved.` and the search result line carry `animate-in fade-in-0 duration-200` (result line also `slide-in-from-top-1`); `role=status` kept
 - [ ] `Search now` button has `aria-busy="true"` while `searching`
 - [ ] With `prefers-reduced-motion: reduce` emulated in devtools, accepting a queue card shows no slide and the card disappears within 250 ms
@@ -361,11 +365,25 @@ Goal: the few transitions in §6 and the empty-state panel in §5.
 | 3 | Zone colours are three new tokens, not reuse of `destructive` / `muted` / `primary` | Three more variables to maintain; the P1 risk table expected token reuse |
 | 4 | Thumb border is `--foreground`, not `--primary` | In dark mode primary and the calendar zone are both teal; the thumb body (card colour) carries the 3:1, not the border |
 | 5 | `destructive` button variant becomes a ghost (transparent at rest) instead of a new variant name | Reset / Remove confirm buttons lose their tint at rest; they sit next to a prompt sentence, so context carries them |
-| 6 | Active tab keeps the `default` (solid) variant | A solid pill is the most template-like element left; a soft tint would read lighter but needs an `App.tsx` variant change |
+| 6 | Active tab is the `secondary` variant restyled as `bg-accent text-accent-foreground` (teal tint); primary actions stay navy in light mode (reversed after review F5) | The active tab and the `On your calendar` badge now share the same tint; a tab and a status reading alike is a small ambiguity, accepted because they never sit side by side |
 | 7 | Badges stay icon-free; `lucide-react` stays unused | Three statuses without icons rely on wording plus tint; wording is already distinct |
 | 8 | No spinner on `Searching…` / `Accepting…`; label swap plus `aria-busy` | A long search (real provider) shows only a disabled button with an ellipsis |
 | 9 | Card removal delay implemented in `QueuePage` with a 200 ms `setTimeout`, not an animation-end listener | A test that asserts removal synchronously after `await` would fail; the existing ones use `waitFor` |
-| 10 | `--radius` 10 px → 12 px, cards `rounded-2xl` | Larger radii on small `sm` buttons look soft; `sm` keeps its capped radius from shadcn |
+| 10 | `--radius` 10 px → 12 px; cards and the empty-state panel use `rounded-xl` (16.8 px, not `rounded-2xl` = 21.6 px under this file's `--radius-2xl: calc(var(--radius) * 1.8)`) | Larger radii on small `sm` buttons look soft; `sm` keeps its capped radius from shadcn |
 | 11 | Empty state is a dashed panel, no illustration | Dashed borders can read as a drop target; the copy says otherwise |
 | 12 | Unused `--chart-*` / `--sidebar-*` tokens deleted | Future shadcn `add` of sidebar or chart would need them back; one `npx shadcn add` regenerates them |
 | 13 | `README` screenshots re-captured in T3, light mode only | Dark mode has no screenshot in the README |
+| 14 | `--input` edge stays at 1.5:1 light / 1.6:1 dark (review F7 accepted as P1 carry-over, current shadcn default ≈ 1.2:1) | On a `bg-card` input inside a `bg-card` card the border is the only boundary cue; the label and the focus ring carry the field |
+
+### Review applied (`_docs/theme-design-review.md`)
+
+| Finding | What changed |
+|---|---|
+| F1 | `rounded-2xl` → `rounded-xl` (16.8 px) in §2 `--radius` row, §4, §5 Cards, §5 Empty states, T2 and T3 bullets; decision 10 states the 21.6 px trap |
+| F2 | "metric-compatible" deleted from §7; §3 Faces says the faces share no metrics and `swap` repaints headings |
+| F3 | §6 row 4 and T3 bullet 2 state the ordering: `handleDecide` awaits `decideEvent`, calls `onQueueChange`, starts a fire-and-forget `setTimeout`, returns; never awaits the timer |
+| F4 | T1 goal reworded; h1 mark, sign-in mark and h2 `font-heading` bullets moved to T2 (`App.tsx`, `LoginPage` / `RegisterPage`, `QueuePage` / `EventsPage` bullets); T1 creates `SailMark.tsx` unimported |
+| F5 | decision 6 reversed: active tab `secondary` = `bg-accent text-accent-foreground` (§5 Header, §5 Buttons, T2); §1 names what carries the "tech" note in light mode; primary buttons stay navy in light (teal fails 4.5:1 under white text), teal in dark |
+| F6 | §5 Event card: all-variant `Why:` row added |
+| F7 | not raised; decision 14 records the carry-over |
+| F8 | T1 `SailMark` criterion: no `fill` / `stroke` colour attributes on the paths |
