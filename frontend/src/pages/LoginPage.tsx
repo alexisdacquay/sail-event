@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/card'
 import { login } from '@/services/api'
 import { useAuth } from '@/contexts/AuthContext'
+import { SailMark } from '@/components/SailMark'
 
 export function LoginPage({
   onNavigateRegister,
@@ -45,7 +46,8 @@ export function LoginPage({
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center">
-      <p className="text-2xl font-bold text-center mb-6">Sail Event</p>
+      <SailMark className="size-10 mb-3" aria-hidden="true" />
+      <p className="font-heading text-[28px] font-bold tracking-tight text-center mb-6">Sail Event</p>
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle as="h2">Sign in</CardTitle>
@@ -85,7 +87,7 @@ export function LoginPage({
               No account?{' '}
               <button
                 type="button"
-                className="underline"
+                className="underline rounded-sm focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
                 onClick={onNavigateRegister}
               >
                 Create one

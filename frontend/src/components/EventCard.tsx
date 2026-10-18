@@ -40,6 +40,7 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
   const [deciding, setDeciding] = useState<'accepted' | 'rejected' | null>(
     null,
   )
+  const [leaving, setLeaving] = useState(false)
   const [error, setError] = useState('')
 
   async function handleDecide(decision: 'accepted' | 'rejected') {
@@ -47,6 +48,7 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
     setError('')
     try {
       await onDecide?.(event.id, decision)
+      if (variant === 'queue') setLeaving(true)
     } catch {
       setError("Couldn't save your decision. Try again.")
       setDeciding(null)
@@ -56,26 +58,26 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
   const fields = (
     <>
       <p>
-        <span className="font-medium">Match: </span>
-        {event.score} / 100
+        <span className="font-medium text-muted-foreground">Match: </span>
+        <span className="font-semibold tabular-nums">{event.score} / 100</span>
       </p>
       <p>
-        <span className="font-medium">When: </span>
+        <span className="font-medium text-muted-foreground">When: </span>
         <span data-testid="event-datetime">
           {formatDateTime(event.dateTime)}
         </span>
       </p>
       <p>
-        <span className="font-medium">Where: </span>
+        <span className="font-medium text-muted-foreground">Where: </span>
         {event.place}
       </p>
       <p>
-        <span className="font-medium">Link: </span>
+        <span className="font-medium text-muted-foreground">Link: </span>
         <a
           href={event.link}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline break-all"
+          className="underline break-all text-primary decoration-primary/40 underline-offset-2 hover:decoration-primary"
         >
           {event.link}
         </a>
@@ -85,18 +87,18 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
 
   if (variant === 'queue') {
     return (
-      <Card data-testid={`event-card-${event.id}`}>
+      <Card data-testid={`event-card-${event.id}`} className={leaving ? 'animate-out fade-out-0 slide-out-to-right-2 fill-mode-forwards duration-200' : undefined}>
         <CardHeader>
-          <p className="text-base">
-            <span className="font-bold">Why: </span>
+          <p className="text-base leading-relaxed">
+            <span className="font-semibold text-accent-foreground">Why: </span>
             {event.scoreReason}
           </p>
           <CardTitle>{event.title}</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-2 text-sm">
+        <CardContent className="flex flex-col gap-1.5 text-sm">
           {fields}
           {onDecide && (
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2 pt-3">
               <Button
                 size="sm"
                 disabled={deciding !== null}
@@ -137,9 +139,9 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
           )}
         </div>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2 text-sm">
+      <CardContent className="flex flex-col gap-1.5 text-sm">
         <p>
-          <span className="font-medium">Why: </span>
+          <span className="font-semibold text-accent-foreground">Why: </span>
           {event.scoreReason}
         </p>
         {fields}

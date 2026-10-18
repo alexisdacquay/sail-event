@@ -146,7 +146,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {/* Criteria card */}
       <Card data-testid="criteria-card">
         <CardHeader>
@@ -169,7 +169,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
               Save
             </Button>
             {criteriaSaved && (
-              <span role="status" className="text-sm">Saved.</span>
+              <span role="status" className="text-sm font-medium text-accent-foreground animate-in fade-in-0 duration-200">Saved.</span>
             )}
             {criteriaError && (
               <span className="text-sm text-destructive">{criteriaError}</span>
@@ -202,7 +202,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
               Save
             </Button>
             {scoringSaved && (
-              <span role="status" className="text-sm">Saved.</span>
+              <span role="status" className="text-sm font-medium text-accent-foreground animate-in fade-in-0 duration-200">Saved.</span>
             )}
             {scoringError && (
               <span className="text-sm text-destructive">{scoringError}</span>
@@ -227,6 +227,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
           )}
           <Button
             disabled={!criteriaText.trim() || searching}
+            aria-busy={searching ? true : undefined}
             onClick={handleSearch}
           >
             {searching ? 'Searching…' : 'Search now'}
@@ -235,7 +236,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
             <p
               data-testid="search-result"
               role="status"
-              className={searchIsError ? 'text-sm text-destructive' : 'text-sm'}
+              className={searchIsError ? 'text-sm text-destructive' : 'text-sm animate-in fade-in-0 slide-in-from-top-1 duration-200'}
             >
               {searchResultText}
             </p>
@@ -260,7 +261,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
                 value={calendarUrl}
                 data-testid="calendar-url"
                 aria-label="Calendar feed URL"
-                className="flex-1 min-w-0 font-mono text-xs"
+                className="flex-1 min-w-0 font-mono text-xs bg-muted/50"
               />
               <Button onClick={handleCopyCalendarUrl} data-testid="copy-calendar-url">
                 {copied ? 'Copied' : 'Copy'}

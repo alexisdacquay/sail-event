@@ -42,7 +42,7 @@ export function EventsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-bold">All events</h2>
+      <h2 className="font-heading text-2xl font-bold tracking-tight">All events</h2>
       {loading && (
         <p className="text-muted-foreground">Loading…</p>
       )}
@@ -57,13 +57,13 @@ export function EventsPage() {
         </>
       )}
       {!loading && !fetchError && events.length === 0 && (
-        <>
-          <p className="font-medium">No events yet.</p>
-          <p className="text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border bg-muted/40 px-6 py-10 text-center">
+          <p className="font-heading text-lg font-semibold">No events yet.</p>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-2 leading-relaxed">
             Write what you&apos;re looking for on the Home tab, then press
             Search now.
           </p>
-        </>
+        </div>
       )}
       {!loading &&
         !fetchError &&

@@ -34,7 +34,7 @@ export function ScoreScale({ lower, upper, onChange }: ScoreScaleProps) {
       <legend className="sr-only">Score cut-offs</legend>
 
       {/* Scale ends */}
-      <div className="flex justify-between text-xs text-muted-foreground">
+      <div className="flex justify-between text-xs font-medium tabular-nums text-muted-foreground">
         <span>0</span>
         <span>100</span>
       </div>
@@ -48,16 +48,16 @@ export function ScoreScale({ lower, upper, onChange }: ScoreScaleProps) {
         value={[l, u]}
         onValueChange={(values) => onChange(values[0], values[1])}
       >
-        <Slider.Control className="relative flex items-center h-6 touch-none">
-          <Slider.Track className="relative h-3 w-full rounded-full overflow-hidden">
+        <Slider.Control className="relative flex items-center h-7 touch-none">
+          <Slider.Track className="relative h-3 w-full rounded-full overflow-hidden ring-1 ring-foreground/10">
             {/* Rejected zone */}
             <div
-              className="absolute inset-y-0 left-0 bg-destructive/20 rounded-l-full"
+              className="absolute inset-y-0 left-0 bg-zone-rejected rounded-l-full"
               style={{ width: `${l}%` }}
             />
             {/* You decide zone */}
             <div
-              className="absolute inset-y-0 bg-muted"
+              className="absolute inset-y-0 bg-zone-decide"
               style={{ left: `${l}%`, width: `${u - l}%` }}
             >
               <div
@@ -70,19 +70,19 @@ export function ScoreScale({ lower, upper, onChange }: ScoreScaleProps) {
             </div>
             {/* On your calendar zone */}
             <div
-              className="absolute inset-y-0 right-0 bg-primary rounded-r-full"
+              className="absolute inset-y-0 right-0 bg-zone-calendar rounded-r-full"
               style={{ width: `${100 - u}%` }}
             />
           </Slider.Track>
           <Slider.Thumb
             index={0}
-            className="absolute size-6 rounded-full bg-background border-2 border-primary shadow -translate-x-1/2 focus-within:ring-3 focus-within:ring-ring/50"
+            className="absolute size-7 rounded-full bg-card border-2 border-foreground shadow-md -translate-x-1/2 hover:ring-4 hover:ring-ring/20 focus-within:ring-4 focus-within:ring-ring/40 transition-shadow duration-150"
             getAriaLabel={() => 'Auto-reject below'}
             getAriaValueText={(_formatted, value) => `${value} out of 100`}
           />
           <Slider.Thumb
             index={1}
-            className="absolute size-6 rounded-full bg-background border-2 border-primary shadow -translate-x-1/2 focus-within:ring-3 focus-within:ring-ring/50"
+            className="absolute size-7 rounded-full bg-card border-2 border-foreground shadow-md -translate-x-1/2 hover:ring-4 hover:ring-ring/20 focus-within:ring-4 focus-within:ring-ring/40 transition-shadow duration-150"
             getAriaLabel={() => 'Auto-accept above'}
             getAriaValueText={(_formatted, value) => `${value} out of 100`}
           />
@@ -90,7 +90,7 @@ export function ScoreScale({ lower, upper, onChange }: ScoreScaleProps) {
       </Slider.Root>
 
       {/* Thumb value labels */}
-      <div className="relative h-4 text-xs text-muted-foreground">
+      <div className="relative h-4 text-xs font-semibold tabular-nums text-foreground">
         <span
           aria-hidden="true"
           className="absolute -translate-x-1/2"
@@ -108,23 +108,26 @@ export function ScoreScale({ lower, upper, onChange }: ScoreScaleProps) {
       </div>
 
       {/* Zone legend — desktop: labels sized to their zone */}
-      <div className="hidden sm:flex text-sm">
+      <div className="hidden sm:flex text-[13px] font-medium">
         <span
           style={{ flexBasis: `${l}%` }}
-          className="text-center truncate"
+          className="flex items-center justify-center gap-1 truncate"
         >
+          <span className="size-2 rounded-full bg-zone-rejected shrink-0" aria-hidden="true" />
           Rejected
         </span>
         <span
           style={{ flexBasis: `${u - l}%` }}
-          className="text-center truncate"
+          className="flex items-center justify-center gap-1 truncate"
         >
+          <span className="size-2 rounded-full bg-zone-decide shrink-0" aria-hidden="true" />
           You decide
         </span>
         <span
           style={{ flexBasis: `${100 - u}%` }}
-          className="text-center truncate"
+          className="flex items-center justify-center gap-1 truncate"
         >
+          <span className="size-2 rounded-full bg-zone-calendar shrink-0" aria-hidden="true" />
           On your calendar
         </span>
       </div>
@@ -132,15 +135,15 @@ export function ScoreScale({ lower, upper, onChange }: ScoreScaleProps) {
       {/* Zone legend — phone: vertical with swatches */}
       <div className="flex sm:hidden flex-col gap-1 text-sm">
         <div className="flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-sm bg-destructive/20 shrink-0" />
+          <span className="inline-block w-3 h-3 rounded-full bg-zone-rejected shrink-0" />
           <span>Rejected</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-sm bg-muted border border-foreground/10 shrink-0" />
+          <span className="inline-block w-3 h-3 rounded-full bg-zone-decide border border-foreground/10 shrink-0" />
           <span>You decide</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-sm bg-primary shrink-0" />
+          <span className="inline-block w-3 h-3 rounded-full bg-zone-calendar shrink-0" />
           <span>On your calendar</span>
         </div>
       </div>
@@ -156,7 +159,7 @@ export function ScoreScale({ lower, upper, onChange }: ScoreScaleProps) {
             min={0}
             max={upper - 1}
             step={1}
-            className="w-20"
+            className="w-24 tabular-nums"
             value={lower}
             onChange={(e) => onChange(Number(e.target.value), upper)}
             onBlur={handleBlurLower}
@@ -171,7 +174,7 @@ export function ScoreScale({ lower, upper, onChange }: ScoreScaleProps) {
             min={lower + 1}
             max={100}
             step={1}
-            className="w-20"
+            className="w-24 tabular-nums"
             value={upper}
             onChange={(e) => onChange(lower, Number(e.target.value))}
             onBlur={handleBlurUpper}

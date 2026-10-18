@@ -39,13 +39,13 @@ export function QueuePage({ onQueueChange }: QueuePageProps) {
     decision: 'accepted' | 'rejected',
   ) {
     await decideEvent(id, decision)
-    setQueuedEvents((prev) => prev.filter((e) => e.id !== id))
     onQueueChange?.()
+    setTimeout(() => setQueuedEvents((prev) => prev.filter((e) => e.id !== id)), 200)
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-bold">Queue</h2>
+      <h2 className="font-heading text-2xl font-bold tracking-tight">Queue</h2>
       {loading && (
         <p className="text-muted-foreground">Loading…</p>
       )}
@@ -60,14 +60,14 @@ export function QueuePage({ onQueueChange }: QueuePageProps) {
         </>
       )}
       {!loading && !fetchError && queuedEvents.length === 0 && (
-        <>
-          <p className="font-medium">Nothing to decide right now.</p>
-          <p className="text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border bg-muted/40 px-6 py-10 text-center">
+          <p className="font-heading text-lg font-semibold">Nothing to decide right now.</p>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-2 leading-relaxed">
             Events that clearly match go straight to your calendar. Events that
             clearly don&apos;t are rejected. When the app isn&apos;t sure, they
             appear here.
           </p>
-        </>
+        </div>
       )}
       {!loading &&
         !fetchError &&
