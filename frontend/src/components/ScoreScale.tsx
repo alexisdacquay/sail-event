@@ -96,14 +96,14 @@ export function ScoreScale({ lower, upper, onChange }: ScoreScaleProps) {
           className="absolute -translate-x-1/2"
           style={{ left: `${l}%` }}
         >
-          ^{l}
+          {l}
         </span>
         <span
           aria-hidden="true"
           className="absolute -translate-x-1/2"
           style={{ left: `${u}%` }}
         >
-          ^{u}
+          {u}
         </span>
       </div>
 
