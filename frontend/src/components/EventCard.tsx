@@ -40,6 +40,7 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
   const [deciding, setDeciding] = useState<'accepted' | 'rejected' | null>(
     null,
   )
+  const [leaving, setLeaving] = useState(false)
   const [error, setError] = useState('')
 
   async function handleDecide(decision: 'accepted' | 'rejected') {
@@ -47,6 +48,7 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
     setError('')
     try {
       await onDecide?.(event.id, decision)
+      if (variant === 'queue') setLeaving(true)
     } catch {
       setError("Couldn't save your decision. Try again.")
       setDeciding(null)
@@ -85,7 +87,7 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
 
   if (variant === 'queue') {
     return (
-      <Card data-testid={`event-card-${event.id}`}>
+      <Card data-testid={`event-card-${event.id}`} className={leaving ? 'animate-out fade-out-0 slide-out-to-right-2 fill-mode-forwards duration-200' : undefined}>
         <CardHeader>
           <p className="text-base leading-relaxed">
             <span className="font-semibold text-accent-foreground">Why: </span>

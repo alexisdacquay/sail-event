@@ -57,13 +57,13 @@ export function EventsPage() {
         </>
       )}
       {!loading && !fetchError && events.length === 0 && (
-        <>
-          <p className="font-medium">No events yet.</p>
-          <p className="text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border bg-muted/40 px-6 py-10 text-center">
+          <p className="font-heading text-lg font-semibold">No events yet.</p>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-2 leading-relaxed">
             Write what you&apos;re looking for on the Home tab, then press
             Search now.
           </p>
-        </>
+        </div>
       )}
       {!loading &&
         !fetchError &&

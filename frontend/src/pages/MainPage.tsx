@@ -169,7 +169,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
               Save
             </Button>
             {criteriaSaved && (
-              <span role="status" className="text-sm font-medium text-accent-foreground">Saved.</span>
+              <span role="status" className="text-sm font-medium text-accent-foreground animate-in fade-in-0 duration-200">Saved.</span>
             )}
             {criteriaError && (
               <span className="text-sm text-destructive">{criteriaError}</span>
@@ -202,7 +202,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
               Save
             </Button>
             {scoringSaved && (
-              <span role="status" className="text-sm font-medium text-accent-foreground">Saved.</span>
+              <span role="status" className="text-sm font-medium text-accent-foreground animate-in fade-in-0 duration-200">Saved.</span>
             )}
             {scoringError && (
               <span className="text-sm text-destructive">{scoringError}</span>
@@ -227,6 +227,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
           )}
           <Button
             disabled={!criteriaText.trim() || searching}
+            aria-busy={searching ? true : undefined}
             onClick={handleSearch}
           >
             {searching ? 'Searching…' : 'Search now'}
@@ -235,7 +236,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
             <p
               data-testid="search-result"
               role="status"
-              className={searchIsError ? 'text-sm text-destructive' : 'text-sm'}
+              className={searchIsError ? 'text-sm text-destructive' : 'text-sm animate-in fade-in-0 slide-in-from-top-1 duration-200'}
             >
               {searchResultText}
             </p>
