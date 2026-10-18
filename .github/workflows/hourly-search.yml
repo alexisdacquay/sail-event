@@ -45,3 +45,5 @@ jobs:
 
           USERS=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin)['usersProcessed'])")
           echo "usersProcessed: $USERS"
+          SKIPPED=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin)['usersSkipped'])")
+          echo "usersSkipped: $SKIPPED"

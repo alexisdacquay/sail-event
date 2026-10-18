@@ -11,6 +11,7 @@
 | `runSearch`       | `runSearch`      | POST   | `/api/search`               |
 | `listEvents`      | `listEvents`     | GET    | `/api/events`               |
 | `decideEvent`     | `decideEvent`    | POST   | `/api/events/{id}/decision` |
+| `getConfig`       | `getConfig`      | GET    | `/api/config`               |
 | —                 | `healthCheck`    | GET    | `/api/health`               |
 | —                 | `searchAll`      | POST   | `/api/search/all`           |
 | `getCalendarUrl`  | `getCalendarUrl` | GET    | `/api/calendar-url`         |

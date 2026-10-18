@@ -105,11 +105,13 @@ def _db_session():
 
 @pytest.fixture(autouse=True)
 def _clear_rate_limiter():
-    """Reset login rate limiter between tests."""
-    from app.routers.auth import _login_failures
+    """Reset rate limiters between tests."""
+    from app.routers.auth import _login_failures, _register_successes
     _login_failures.clear()
+    _register_successes.clear()
     yield
     _login_failures.clear()
+    _register_successes.clear()
 
 
 @pytest.fixture()

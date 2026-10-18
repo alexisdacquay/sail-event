@@ -360,6 +360,113 @@ def test_compute_jwt_secret_random_in_dev(monkeypatch):
     assert secret != "sail-event-dev-secret-do-not-use-in-prod"
 
 
+# ---------- register rate limiting ----------
+
+def test_register_rate_limit_5_pass_6th_blocked(client, monkeypatch):
+    import time as time_mod
+    from app.routers import auth as auth_mod
+
+    base = time_mod.monotonic()
+    monkeypatch.setattr(auth_mod, "_now", lambda: base)
+    monkeypatch.setenv("REGISTER_RATE_LIMIT_PER_HOUR", "5")
+
+    for i in range(5):
+        r = client.post("/api/auth/register", json={"username": f"rl{i}", "password": "pw"})
+        assert r.status_code == 201
+
+    r = client.post("/api/auth/register", json={"username": "rl5", "password": "pw"})
+    assert r.status_code == 429
+    assert "Retry-After" in r.headers
+    assert r.json()["detail"] == "Too many registrations. Try again later."
+
+
+def test_register_rate_limit_409_does_not_consume_slot(client, monkeypatch):
+    import time as time_mod
+    from app.routers import auth as auth_mod
+
+    base = time_mod.monotonic()
+    monkeypatch.setattr(auth_mod, "_now", lambda: base)
+    monkeypatch.setenv("REGISTER_RATE_LIMIT_PER_HOUR", "5")
+
+    # 4 successful registrations
+    for i in range(4):
+        r = client.post("/api/auth/register", json={"username": f"slot{i}", "password": "pw"})
+        assert r.status_code == 201
+
+    # duplicate -> 409, should NOT consume a slot
+    r = client.post("/api/auth/register", json={"username": "slot0", "password": "pw"})
+    assert r.status_code == 409
+
+    # 5th unique -> still allowed
+    r = client.post("/api/auth/register", json={"username": "slot4", "password": "pw"})
+    assert r.status_code == 201
+
+    # 6th -> blocked
+    r = client.post("/api/auth/register", json={"username": "slot5", "password": "pw"})
+    assert r.status_code == 429
+
+
+def test_register_rate_limit_resets_after_window(client, monkeypatch):
+    import time as time_mod
+    from app.routers import auth as auth_mod
+
+    base = time_mod.monotonic()
+    monkeypatch.setattr(auth_mod, "_now", lambda: base)
+    monkeypatch.setenv("REGISTER_RATE_LIMIT_PER_HOUR", "5")
+
+    for i in range(5):
+        r = client.post("/api/auth/register", json={"username": f"win{i}", "password": "pw"})
+        assert r.status_code == 201
+
+    r = client.post("/api/auth/register", json={"username": "win5", "password": "pw"})
+    assert r.status_code == 429
+
+    # Advance past the 1-hour window
+    monkeypatch.setattr(auth_mod, "_now", lambda: base + 3601)
+
+    r = client.post("/api/auth/register", json={"username": "win5", "password": "pw"})
+    assert r.status_code == 201
+
+
+# ---------- registration code gate ----------
+
+def test_registration_code_correct_allows_register(client, monkeypatch):
+    monkeypatch.setenv("REGISTRATION_CODE", "secret-invite")
+    r = client.post(
+        "/api/auth/register",
+        json={"username": "codeu1", "password": "pw", "registrationCode": "secret-invite"},
+    )
+    assert r.status_code == 201
+
+
+def test_registration_code_wrong_returns_403(client, monkeypatch):
+    monkeypatch.setenv("REGISTRATION_CODE", "secret-invite")
+    r = client.post(
+        "/api/auth/register",
+        json={"username": "codeu2", "password": "pw", "registrationCode": "wrong"},
+    )
+    assert r.status_code == 403
+    assert r.json()["detail"] == "Invalid registration code"
+
+
+def test_registration_code_missing_field_returns_403(client, monkeypatch):
+    monkeypatch.setenv("REGISTRATION_CODE", "secret-invite")
+    r = client.post(
+        "/api/auth/register",
+        json={"username": "codeu3", "password": "pw"},
+    )
+    assert r.status_code == 403
+
+
+def test_registration_code_unset_allows_without_field(client, monkeypatch):
+    monkeypatch.delenv("REGISTRATION_CODE", raising=False)
+    r = client.post(
+        "/api/auth/register",
+        json={"username": "codeu4", "password": "pw"},
+    )
+    assert r.status_code == 201
+
+
 # ---------- login rate limiting ----------
 
 def test_login_rate_limit_after_10_failures(client):

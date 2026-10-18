@@ -20,6 +20,9 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `SEARCH_ALL_API_KEY` | random; the same value is the GitHub Actions secret `SEARCH_ALL_API_KEY` |
 | `SEARCH_PROVIDER`, `TAVILY_API_KEY` | `tavily` + key for real web search; unset = fixtures |
 | `SCORER`, `ANTHROPIC_API_KEY` | `claude` + key for real scoring; unset = fake scorer |
+| `MAX_SCHEDULED_USERS` | `50` — max users per scheduled search |
+| `REGISTER_RATE_LIMIT_PER_HOUR` | `5` — successful registrations per IP per hour |
+| `REGISTRATION_CODE` | optional — invite code for registration; unset = open |
 
 Secrets live only in Render and GitHub secrets, never in the repo.
 

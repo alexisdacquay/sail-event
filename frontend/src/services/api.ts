@@ -1,4 +1,5 @@
 export type AuthResponse = { token: string; username: string }
+export type ConfigResponse = { registrationCodeRequired: boolean }
 export type Criteria = { text: string; updatedAt: string }
 export type Thresholds = { lowerThreshold: number; upperThreshold: number }
 export type SearchResult = {
@@ -27,6 +28,7 @@ const mod = useHttp
   ? await import('./http')
   : await import('./mock')
 
+export const getConfig = mod.getConfig
 export const register = mod.register
 export const login = mod.login
 export const getCriteria = mod.getCriteria

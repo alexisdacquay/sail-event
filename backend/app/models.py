@@ -66,6 +66,7 @@ class Event(BaseModel):
 class RegisterRequest(BaseModel):
     username: str = Field(max_length=150)
     password: str = Field(max_length=72)
+    registrationCode: str | None = None
 
     @field_validator("password")
     @classmethod

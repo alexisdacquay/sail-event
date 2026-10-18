@@ -1,5 +1,6 @@
 import type {
   AuthResponse,
+  ConfigResponse,
   Criteria,
   Thresholds,
   SearchResult,
@@ -82,9 +83,14 @@ let mockThresholds: Thresholds = {
   upperThreshold: 70,
 }
 
+export async function getConfig(): Promise<ConfigResponse> {
+  return { registrationCodeRequired: false }
+}
+
 export async function register(
   username: string,
   _password: string,
+  _registrationCode?: string,
 ): Promise<AuthResponse> {
   return { token: 'mock-token-' + username, username }
 }

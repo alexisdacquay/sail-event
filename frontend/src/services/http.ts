@@ -1,5 +1,6 @@
 import type {
   AuthResponse,
+  ConfigResponse,
   Criteria,
   Thresholds,
   SearchResult,
@@ -46,13 +47,20 @@ async function request<T>(
   return res.json() as Promise<T>
 }
 
+export async function getConfig(): Promise<ConfigResponse> {
+  return request<ConfigResponse>('/api/config')
+}
+
 export async function register(
   username: string,
   password: string,
+  registrationCode?: string,
 ): Promise<AuthResponse> {
+  const payload: Record<string, string> = { username, password }
+  if (registrationCode) payload.registrationCode = registrationCode
   return request<AuthResponse>('/api/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify(payload),
   })
 }
 

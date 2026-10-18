@@ -50,12 +50,47 @@ def test_search_all_correct_key(client, monkeypatch):
     monkeypatch.setenv("SEARCH_ALL_API_KEY", "test-secret")
     r = client.post("/api/search/all", headers={"X-API-Key": "test-secret"})
     assert r.status_code == 200
-    assert r.json() == {"usersProcessed": 1}
+    assert r.json() == {"usersProcessed": 1, "usersSkipped": 0}
 
 
 def test_run_search_no_auth_returns_401(client):
     r = client.post("/api/search")
     assert r.status_code == 401
+
+
+def test_search_all_max_scheduled_users(client, auth_headers, _db_session, monkeypatch):
+    monkeypatch.setenv("SEARCH_ALL_API_KEY", "k")
+    monkeypatch.setenv("MAX_SCHEDULED_USERS", "2")
+
+    # Register 2 more users with criteria (demo already has criteria from seed)
+    auth_headers("msu_a", "pw")
+    auth_headers("msu_b", "pw")
+
+    # Update criteria so we can control updated_at ordering
+    from app.orm import Criteria, User
+    from datetime import datetime, UTC
+
+    for i, name in enumerate(["demo", "msu_a", "msu_b"]):
+        user = _db_session.query(User).filter(User.username == name).first()
+        crit = _db_session.query(Criteria).filter(Criteria.user_id == user.id).first()
+        # Most recent last: demo oldest, msu_b newest
+        crit.updated_at = datetime(2026, 1, 1 + i, tzinfo=UTC)
+    _db_session.commit()
+
+    r = client.post("/api/search/all", headers={"X-API-Key": "k"})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["usersProcessed"] == 2
+    assert body["usersSkipped"] == 1
+
+
+def test_search_all_cap_gte_total_no_skip(client, monkeypatch):
+    monkeypatch.setenv("SEARCH_ALL_API_KEY", "k")
+    monkeypatch.setenv("MAX_SCHEDULED_USERS", "100")
+
+    r = client.post("/api/search/all", headers={"X-API-Key": "k"})
+    assert r.status_code == 200
+    assert r.json()["usersSkipped"] == 0
 
 
 def test_search_all_skips_user_without_criteria(client, auth_headers, _db_session, monkeypatch):

@@ -29,8 +29,12 @@ paths:
                 $ref: '#/components/schemas/AuthResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
 
   /api/auth/login:
     post:
@@ -241,11 +245,27 @@ paths:
                 type: object
                 required:
                   - usersProcessed
+                  - usersSkipped
                 properties:
                   usersProcessed:
                     type: integer
+                  usersSkipped:
+                    type: integer
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  /api/config:
+    get:
+      operationId: getConfig
+      summary: Public configuration flags
+      security: []
+      responses:
+        '200':
+          description: Configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
 
   /api/calendar-url:
     get:
@@ -411,6 +431,8 @@ components:
         password:
           type: string
           maxLength: 72
+        registrationCode:
+          type: string
 
     LoginRequest:
       type: object
@@ -453,6 +475,14 @@ components:
         url:
           type: string
 
+    ConfigResponse:
+      type: object
+      required:
+        - registrationCodeRequired
+      properties:
+        registrationCodeRequired:
+          type: boolean
+
     Error:
       type: object
       required:
@@ -476,6 +506,12 @@ components:
             $ref: '#/components/schemas/Error'
     NotFound:
       description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Forbidden
       content:
         application/json:
           schema:

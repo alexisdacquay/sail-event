@@ -1,8 +1,10 @@
-"""Auth endpoints: register, login, with in-memory login rate limiting."""
+"""Auth endpoints: register, login, with in-memory rate limiting."""
 
 from __future__ import annotations
 
+import hmac
 import math
+import os
 import time
 
 from fastapi import APIRouter, Depends, Request
@@ -20,14 +22,45 @@ router = APIRouter()
 _login_failures: dict[tuple[str, str], list[float]] = {}
 _RATE_WINDOW = 900  # 15 minutes
 _RATE_MAX = 10
+
+# In-memory register rate limiter: ip → [success timestamps]
+_register_successes: dict[str, list[float]] = {}
+_REGISTER_WINDOW = 3600  # 1 hour
+
 _now = time.monotonic  # seam for deterministic tests
 
 
 @router.post("/api/auth/register", operation_id="register", status_code=201)
 def register(
     body: RegisterRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ) -> JSONResponse:
+    # 1. Rate-limit check (cheapest rejection)
+    ip = request.client.host if request.client else ""
+    now = _now()
+    max_reg = int(os.environ.get("REGISTER_RATE_LIMIT_PER_HOUR", "5"))
+    successes = [t for t in _register_successes.get(ip, []) if t > now - _REGISTER_WINDOW]
+    _register_successes[ip] = successes
+    if len(successes) >= max_reg:
+        retry_after = max(math.ceil(successes[0] + _REGISTER_WINDOW - now), 1)
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Too many registrations. Try again later."},
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    # 2. Registration-code check
+    reg_code = os.environ.get("REGISTRATION_CODE", "")
+    if reg_code:
+        submitted = body.registrationCode or ""
+        if not hmac.compare_digest(reg_code, submitted):
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Invalid registration code"},
+            )
+
+    # 3. Input validation
     if not body.username or not body.username.strip():
         return JSONResponse(
             status_code=400,
@@ -39,6 +72,7 @@ def register(
             content={"detail": "password must not be empty"},
         )
 
+    # 4. DB queries
     existing = db.query(orm.User).filter(orm.User.username == body.username).first()
     if existing is not None:
         return JSONResponse(
@@ -58,6 +92,8 @@ def register(
     db.add(criteria)
     db.commit()
 
+    # 5. Success — record for rate limiting
+    successes.append(now)
     token = create_token(user.id)
     return JSONResponse(
         status_code=201,

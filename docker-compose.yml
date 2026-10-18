@@ -24,6 +24,7 @@ services:
       SEARCH_ALL_API_KEY: "${SEARCH_ALL_API_KEY:-dev-api-key}"
       SEED_DEMO: "${SEED_DEMO:-1}"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      REGISTER_RATE_LIMIT_PER_HOUR: "${REGISTER_RATE_LIMIT_PER_HOUR:-5}"
     ports:
       - "${HOST_PORT:-8000}:8000"
     healthcheck:

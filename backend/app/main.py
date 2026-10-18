@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from .auth import hash_password
 from .db import get_db
 from . import orm
-from .routers import auth, calendar, criteria, events, health, search, thresholds
+from .routers import auth, calendar, config, criteria, events, health, search, thresholds
 from . import telemetry
 
 _STATIC_DIR = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
@@ -103,6 +103,7 @@ async def validation_exception_handler(request, exc):
 
 
 app.include_router(auth.router)
+app.include_router(config.router)
 app.include_router(health.router)
 app.include_router(criteria.router)
 app.include_router(thresholds.router)

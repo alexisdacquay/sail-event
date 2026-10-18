@@ -40,15 +40,19 @@ def search_all(
     if not expected or x_api_key != expected:
         return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
 
+    max_users = int(os.environ.get("MAX_SCHEDULED_USERS", "50"))
     users = (
         db.query(orm.User)
         .join(orm.Criteria, orm.User.id == orm.Criteria.user_id)
+        .order_by(orm.Criteria.updated_at.desc())
         .all()
     )
+    attempted = users[:max_users]
     count = 0
-    for user in users:
+    for user in attempted:
         run = run_pipeline(user, db, trigger="scheduled")
         if not run.error:
             count += 1
 
-    return JSONResponse(content={"usersProcessed": count})
+    skipped = len(users) - len(attempted)
+    return JSONResponse(content={"usersProcessed": count, "usersSkipped": skipped})
