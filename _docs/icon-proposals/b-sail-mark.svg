@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Sail: curved triangle, billowing right -->
+  <path d="M96 20 L96 200 L196 200 Q188 108 96 20Z" fill="#00A8CC"/>
+  <!-- Mast -->
+  <line x1="96" y1="14" x2="96" y2="208" stroke="#0F3057" stroke-width="8" stroke-linecap="round"/>
+  <!-- Hull arc -->
+  <path d="M48 218 Q96 250 196 218" stroke="#0F3057" stroke-width="8" fill="none" stroke-linecap="round"/>
+</svg>

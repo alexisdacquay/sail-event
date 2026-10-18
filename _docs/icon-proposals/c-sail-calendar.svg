@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Calendar frame -->
+  <rect x="24" y="36" width="208" height="200" rx="20" fill="#0F3057"/>
+  <!-- White body area -->
+  <rect x="29" y="88" width="198" height="143" rx="16" fill="#FFFFFF"/>
+  <!-- Calendar pins -->
+  <rect x="80" y="18" width="12" height="34" rx="6" fill="#0F3057"/>
+  <rect x="164" y="18" width="12" height="34" rx="6" fill="#0F3057"/>
+  <!-- Day-of-week dots in header -->
+  <circle cx="56" cy="64" r="4" fill="#FFFFFF" opacity="0.45"/>
+  <circle cx="80" cy="64" r="4" fill="#FFFFFF" opacity="0.45"/>
+  <circle cx="104" cy="64" r="4" fill="#FFFFFF" opacity="0.45"/>
+  <circle cx="128" cy="64" r="4" fill="#FFFFFF" opacity="0.45"/>
+  <circle cx="152" cy="64" r="4" fill="#FFFFFF" opacity="0.45"/>
+  <circle cx="176" cy="64" r="4" fill="#FFFFFF" opacity="0.45"/>
+  <circle cx="200" cy="64" r="4" fill="#FFFFFF" opacity="0.45"/>
+  <!-- Sail in date area -->
+  <path d="M104 102 L104 216 L192 216 Q186 156 104 102Z" fill="#00A8CC"/>
+  <!-- Mast accent -->
+  <line x1="104" y1="98" x2="104" y2="220" stroke="#0F3057" stroke-width="4" stroke-linecap="round"/>
+</svg>

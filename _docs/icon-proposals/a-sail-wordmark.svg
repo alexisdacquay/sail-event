@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- SAIL lettering -->
+  <text x="128" y="46" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="44" fill="#0F3057" letter-spacing="10">SAIL</text>
+
+  <!-- Mast -->
+  <line x1="118" y1="58" x2="118" y2="176" stroke="#0F3057" stroke-width="3"/>
+  <!-- Main sail (curved leech) -->
+  <path d="M122 62 L122 170 L184 170 Q178 114 122 62Z" fill="#00A8CC"/>
+  <!-- Jib (forward sail) -->
+  <path d="M114 74 L114 155 L66 155 Q72 114 114 74Z" fill="#00A8CC" opacity="0.7"/>
+  <!-- Hull -->
+  <path d="M60 180 Q128 202 196 180Z" fill="#0F3057"/>
+  <!-- Wave -->
+  <path d="M36 210 Q88 222 128 210 Q168 198 220 210" stroke="#00A8CC" stroke-width="2.5" fill="none"/>
+
+  <!-- EVENT lettering -->
+  <text x="128" y="244" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="36" fill="#0F3057" letter-spacing="5">EVENT</text>
+</svg>
