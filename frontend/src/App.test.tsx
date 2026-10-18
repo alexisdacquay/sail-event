@@ -226,9 +226,12 @@ describe('Tab bar and queue count', () => {
     await loginAsTestUser()
     const nav = screen.getByRole('navigation', { name: 'Main navigation' })
 
-    // Run a search - this calls refreshQueueCount via onSearchComplete
-    fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
-    await screen.findByTestId('search-result')
+    // Run a search - this calls refreshQueueCount via onSearchComplete.
+    // The button stays disabled until the saved criteria have loaded, so wait for it.
+    const searchButton = screen.getByRole('button', { name: 'Search now' })
+    await waitFor(() => expect(searchButton).toBeEnabled())
+    fireEvent.click(searchButton)
+    await screen.findByTestId('search-result', {}, { timeout: 5000 })
 
     // Queue count should be fresh (2 queued in mock)
     await waitFor(() => {
