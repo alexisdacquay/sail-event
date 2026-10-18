@@ -9,6 +9,8 @@ type ConfirmActionProps = {
   errorText?: string
   onConfirm: () => Promise<void>
   testId?: string
+  /** When set, the confirm container gets this testid, confirm button gets `${confirmTestId}-yes`, cancel gets `${confirmTestId}-cancel` */
+  confirmTestId?: string
 }
 
 export function ConfirmAction({
@@ -19,6 +21,7 @@ export function ConfirmAction({
   errorText = 'Something went wrong. Try again.',
   onConfirm,
   testId,
+  confirmTestId,
 }: ConfirmActionProps) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -42,6 +45,7 @@ export function ConfirmAction({
     setError('')
     try {
       await onConfirm()
+      setOpen(false)
     } catch {
       setError(errorText)
     } finally {
@@ -50,13 +54,14 @@ export function ConfirmAction({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2" data-testid={confirmTestId}>
       <span className="text-sm">{prompt}</span>
       <Button
         size="sm"
         variant="destructive"
         disabled={busy}
         onClick={handleConfirm}
+        data-testid={confirmTestId ? `${confirmTestId}-yes` : undefined}
       >
         {busy ? (confirmingLabel ?? confirmLabel) : confirmLabel}
       </Button>
@@ -68,6 +73,7 @@ export function ConfirmAction({
           setOpen(false)
           setError('')
         }}
+        data-testid={confirmTestId ? `${confirmTestId}-cancel` : undefined}
       >
         Cancel
       </Button>

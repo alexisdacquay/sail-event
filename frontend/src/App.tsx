@@ -23,7 +23,9 @@ function AuthenticatedLayout() {
 
   const refreshQueueCount = useCallback(async () => {
     const queued = await listEvents('queued')
-    setQueueCount(queued.length)
+    const count = queued.length
+    setQueueCount(count)
+    return count
   }, [])
 
   useEffect(() => {
@@ -39,7 +41,7 @@ function AuthenticatedLayout() {
     <div className="min-h-screen flex flex-col">
       <header className="border-b px-8 py-3 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <h1 className="text-xl font-bold">Sail Event</h1>
+          <h1 className="text-lg sm:text-xl font-bold whitespace-nowrap">Sail Event</h1>
           <nav className="flex gap-1" aria-label="Main navigation">
             {tabs.map((tab) => (
               <Button
@@ -67,7 +69,7 @@ function AuthenticatedLayout() {
         </div>
       </header>
       <main className="flex-1 p-8 max-w-2xl mx-auto w-full">
-        {page === 'main' && <MainPage embedded />}
+        {page === 'main' && <MainPage onSearchComplete={refreshQueueCount} />}
         {page === 'events' && <EventsPage />}
         {page === 'queue' && (
           <QueuePage onQueueChange={refreshQueueCount} />
