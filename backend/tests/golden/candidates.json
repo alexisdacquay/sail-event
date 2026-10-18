@@ -1,15 +1,35 @@
 {
-  "description": "Golden set B — 22 labelled candidates for C1 (jazz in Berlin, 19-21 Oct 2026), now = 2026-10-18 12:00 Europe/Berlin",
+  "description": "Golden set B \u2014 22 labelled candidates for C1 (jazz in Berlin, 19-21 Oct 2026), now = 2026-10-18 12:00 Europe/Berlin",
   "criteria": {
     "text": "jazz in Berlin (Germany) next week (19-21st October 2026)",
     "user_tz": "Europe/Berlin",
     "facets": {
-      "place": {"city": "Berlin", "country": "DE", "region": null, "radius_km": null, "online": false},
-      "date": {"start": "2026-10-19", "end": "2026-10-21", "relative": "next_week", "relative_n": null},
-      "topics": ["jazz"],
-      "topics_local": ["Jazz", "Jazzkonzert"],
+      "place": {
+        "city": "Berlin",
+        "country": "DE",
+        "region": null,
+        "radius_km": null,
+        "online": false
+      },
+      "date": {
+        "start": "2026-10-19",
+        "end": "2026-10-21",
+        "relative": "next_week",
+        "relative_n": null
+      },
+      "topics": [
+        "jazz"
+      ],
+      "topics_local": [
+        "Jazz",
+        "Jazzkonzert"
+      ],
       "formats": [],
-      "budget": {"max_amount": null, "currency": null, "free_only": false},
+      "budget": {
+        "max_amount": null,
+        "currency": null,
+        "free_only": false
+      },
       "language": "de",
       "input_language": "en",
       "other_constraints": []
@@ -20,28 +40,40 @@
       "id": "E1",
       "label": "fit",
       "expected": "judged",
-      "expected_band": [90, 100],
+      "expected_band": [
+        90,
+        100
+      ],
       "note": "few-shot example, excluded from CI judge check"
     },
     {
       "id": "E2",
       "label": "fit",
       "expected": "judged",
-      "expected_band": [85, 100],
+      "expected_band": [
+        85,
+        100
+      ],
       "note": "CI judge row"
     },
     {
       "id": "E3",
       "label": "fit",
       "expected": "judged",
-      "expected_band": [90, 100],
+      "expected_band": [
+        90,
+        100
+      ],
       "note": "CI judge row"
     },
     {
       "id": "E4",
       "label": "fit, format differs",
       "expected": "judged",
-      "expected_band": [70, 89],
+      "expected_band": [
+        70,
+        89
+      ],
       "note": "few-shot example, excluded from CI judge check"
     },
     {
@@ -76,8 +108,9 @@
     },
     {
       "id": "E11",
-      "label": "incomplete (missing start_tz)",
-      "expected": "filtered_incomplete"
+      "label": "wrong city and date",
+      "expected": "filtered_date",
+      "note": "extracted with tz from city; caught by date filter first (Dec outside Oct 19-21 window)"
     },
     {
       "id": "E12",
@@ -111,33 +144,44 @@
     },
     {
       "id": "E18",
-      "label": "duplicate by link",
-      "expected": "filtered_duplicate"
+      "label": "duplicate by link (utm_source variant of E1)",
+      "expected": "filtered_duplicate",
+      "note": "model deduplicates during extraction; if extracted, code filters catch it by canonical URL"
     },
     {
       "id": "E19",
-      "label": "duplicate by title+date",
-      "expected": "filtered_duplicate"
+      "label": "duplicate by title+date (near-match of E1)",
+      "expected": "filtered_duplicate",
+      "note": "model deduplicates during extraction; if extracted, code filters catch it by title overlap"
     },
     {
       "id": "E20",
       "label": "off-topic",
       "expected": "judged",
-      "expected_band": [10, 39],
+      "expected_band": [
+        10,
+        39
+      ],
       "note": "few-shot example, excluded from CI judge check"
     },
     {
       "id": "E21",
       "label": "off-topic",
       "expected": "judged",
-      "expected_band": [10, 39],
+      "expected_band": [
+        10,
+        39
+      ],
       "note": "CI judge row"
     },
     {
       "id": "E22",
       "label": "over budget",
       "expected": "judged",
-      "expected_band": [0, 30],
+      "expected_band": [
+        0,
+        30
+      ],
       "note": "CI judge row (for C2 criteria with budget)"
     }
   ]
