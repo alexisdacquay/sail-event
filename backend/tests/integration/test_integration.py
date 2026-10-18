@@ -275,7 +275,7 @@ def test_data_survives_restart(http: httpx.Client, base_url: str):
             r = http.get("/api/health")
             if r.status_code == 200:
                 break
-        except (httpx.ConnectError, httpx.RemoteProtocolError):
+        except httpx.TransportError:  # refused, reset, or timed out while the app restarts
             pass
         time.sleep(1)
     else:
