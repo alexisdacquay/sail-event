@@ -71,8 +71,9 @@ T=$(curl -s -X POST $B/api/auth/login -H 'Content-Type: application/json' -d '{"
 curl -s -X PUT $B/api/criteria -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"text":"jazz or folk concerts near Paris on weekends"}'
 curl -s -X POST $B/api/search -H "Authorization: Bearer $T"
 curl -s "$B/api/events?status=queued" -H "Authorization: Bearer $T"          # the queue
-curl -s -X POST $B/api/events/1/decision -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"decision":"accepted"}'
-curl -s $B/api/calendar/url -H "Authorization: Bearer $T"                    # your ICS feed URL
+ID=$(curl -s "$B/api/events?status=queued" -H "Authorization: Bearer $T" | python3 -c 'import sys,json;print(json.load(sys.stdin)[0]["id"])')
+curl -s -X POST $B/api/events/$ID/decision -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"decision":"accepted"}'
+curl -s $B/api/calendar-url -H "Authorization: Bearer $T"                    # your ICS feed URL
 ```
 
 Full contract: [`openapi.yaml`](openapi.yaml), summarised in [docs/api.md](docs/api.md).
@@ -144,7 +145,7 @@ QA caught real defects before they shipped: an invalid decision crashing with 50
 ## Tests
 
 ```bash
-make test              # backend unit + frontend unit + responder unit, one exit code
+make test              # backend unit + frontend unit + responder unit, one exit code (installs frontend deps on first run)
 make test-integration  # starts compose, runs the API against real Postgres, tears down
 make test-e2e          # starts compose, runs Playwright journeys in Chromium, tears down
 ```

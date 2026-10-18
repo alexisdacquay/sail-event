@@ -18,6 +18,7 @@ run:
 
 test:
 	cd backend && uv run pytest
+	test -d frontend/node_modules || npm ci --prefix frontend
 	cd frontend && npm test
 	python3 incident-response/test_responder.py
 
