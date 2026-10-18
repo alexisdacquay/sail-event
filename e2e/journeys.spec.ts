@@ -24,6 +24,7 @@ test.describe("Journey 1: full user flow", () => {
     // Set criteria
     await page.getByLabel("What I'm looking for").fill("outdoor concerts and festivals");
     await page.getByRole("button", { name: "Save criteria" }).click();
+    await expect(page.getByText("Saved.")).toBeVisible();
 
     // Adjust scoring scale: lower Auto-accept above by 5 (70 → 65)
     const slider = page.getByRole("slider", { name: "Auto-accept above" });

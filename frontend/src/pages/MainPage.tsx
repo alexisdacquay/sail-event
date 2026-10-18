@@ -51,7 +51,8 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
   const thresholdInvalid = !(lower >= 0 && lower < upper && upper <= 100)
 
   useEffect(() => {
-    getCriteria().then((c) => setCriteriaText(c.text))
+    // Do not overwrite text the user has already typed if the fetch resolves late (slow network).
+    getCriteria().then((c) => setCriteriaText((current) => (current === '' ? c.text : current)))
     getThresholds().then((t) => {
       setLower(t.lowerThreshold)
       setUpper(t.upperThreshold)
