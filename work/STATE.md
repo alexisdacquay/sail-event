@@ -8,7 +8,9 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 - Live: prod https://sail-event.onrender.com (promoted by hand), dev https://sail-event-dev.onrender.com (follows main). Details: work/DEPLOY-render.md.
 - Hourly search: GitHub Actions hourly-search.yml → prod, fixture adapters (no API keys set).
 - README rewritten for peer review (f55ed3b, b3ed32d). Rubric: all 12 criteria covered, CI/CD at 3/3.
-- Open: #28 optional agent pack (0 pts); #33-#36 post-MVP security hardening.
+- Hardening #33 #35 #36 #34 closed 2026-10-17 via the loop (d2d38b9, d2b33ac, 8ec23c0, 4cee1d6), CI green, promoted to prod (run 39081329740); prod and dev both on 4cee1d6. Tests: 180 backend, 25 frontend, 19 responder, 7 integration, 2 e2e.
+- Open: #28 optional agent pack (0 pts) only.
+- Responder now needs RESPONDER_WEBHOOK_SECRET exported before `make responder` / `make observability-up` (incident-response/README.md).
 - Tidy-up 2026-10-17: local stacks stopped; old prod DB user has 0 connections (verified by SQL), bin click is the user's; e2e/shots untracked temp folder, user deletes.
 - Render MCP connector authorised; gh CLI works; Claude in Chrome not connected, built-in browser used.
 
