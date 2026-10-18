@@ -1,29 +1,81 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { EventsPage } from './EventsPage'
+import * as mock from '@/services/mock'
+import * as api from '@/services/api'
 
 describe('EventsPage', () => {
-  it('shows events of all statuses', async () => {
+  beforeEach(() => {
+    mock._resetMockEvents()
+    vi.restoreAllMocks()
+  })
+
+  it('shows events except new, with correct badges', async () => {
     render(<EventsPage />)
 
-    // Wait for the mock data to load — check for at least one event title
     await screen.findByText('React London Meetup')
 
     // accepted
     expect(screen.getByText('React London Meetup')).toBeInTheDocument()
+    expect(screen.getByText('On your calendar')).toBeInTheDocument()
     // queued
     expect(screen.getByText('Jazz in the Park')).toBeInTheDocument()
     expect(screen.getByText('AWS re:Invent Watch Party')).toBeInTheDocument()
+    expect(
+      screen.getAllByText('Waiting for you').length,
+    ).toBeGreaterThanOrEqual(1)
     // rejected
-    expect(screen.getByText('Pottery Workshop for Beginners')).toBeInTheDocument()
-    // new
-    expect(screen.getByText('TypeScript Conference 2026')).toBeInTheDocument()
+    expect(
+      screen.getByText('Pottery Workshop for Beginners'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Rejected')).toBeInTheDocument()
 
-    // Verify all four status badges are present
-    expect(screen.getByText('accepted')).toBeInTheDocument()
-    expect(screen.getByText('rejected')).toBeInTheDocument()
-    expect(screen.getByText('new')).toBeInTheDocument()
-    // "queued" appears on multiple cards
-    expect(screen.getAllByText('queued').length).toBeGreaterThanOrEqual(1)
+    // new events must be filtered out
+    expect(
+      screen.queryByText('TypeScript Conference 2026'),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows Remove from calendar on accepted events', async () => {
+    render(<EventsPage />)
+
+    await screen.findByText('React London Meetup')
+
+    expect(
+      screen.getByRole('button', { name: 'Remove from calendar' }),
+    ).toBeInTheDocument()
+  })
+
+  it('Remove from calendar flips badge to Rejected', async () => {
+    render(<EventsPage />)
+
+    await screen.findByText('React London Meetup')
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Remove from calendar' }),
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }))
+
+    const acceptedCard = screen.getByTestId('event-card-evt-1')
+    await waitFor(() => {
+      expect(acceptedCard).toHaveTextContent('Rejected')
+    })
+    expect(
+      screen.queryByRole('button', { name: 'Remove from calendar' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows empty state when no events', async () => {
+    vi.spyOn(api, 'listEvents').mockResolvedValue([])
+
+    render(<EventsPage />)
+
+    await screen.findByText('No events yet.')
+    expect(
+      screen.getByText(
+        /Write what you're looking for on the Home tab/,
+      ),
+    ).toBeInTheDocument()
   })
 })
