@@ -20,7 +20,7 @@ The UI must teach this in one screen, without jargon:
 - Every event the app finds gets a **match score from 0 to 100** against your criteria.
 - You set two lines on that scale:
   - **Auto-accept above ___** — events scoring above this go straight to your calendar.
-  - **Auto-reject below ___** — events scoring below this are hidden and never come back.
+  - **Auto-reject below ___** — events scoring below this are rejected and never come back.
   - **In between** — the app puts them in your queue and you decide.
 - The score comes with a one-line reason explaining why the event scored the way it did.
 
@@ -38,7 +38,7 @@ The home screen shows a visual of this scale: a horizontal bar from 0 to 100, wi
   - Field: `Username`
   - Field: `Password`
   - Button (primary): `Sign in`
-  - Text link: `No account? Register`
+  - Text link: `No account? Create one`
 - **Error state:** `Wrong username or password.` below the password field
 - **Rate limit error:** `Too many attempts. Try again in a minute.`
 - **Primary action:** Sign in
@@ -73,7 +73,7 @@ The home screen shows a visual of this scale: a horizontal bar from 0 to 100, wi
 #### How scoring works (card)
 
 - Heading: `How scoring works`
-- Explanatory line: `Every event gets a match score from 0 to 100 against what you wrote above.`
+- Explanatory line: `Every event gets a match score from 0 to 100 against what you wrote above. Events in between wait for you in the Queue tab.`
 - Visual: horizontal bar, 0 on the left, 100 on the right, two draggable markers (or two number inputs below the bar)
   - Left marker label: `Auto-reject below`
   - Right marker label: `Auto-accept above`
@@ -102,7 +102,7 @@ The home screen shows a visual of this scale: a horizontal bar from 0 to 100, wi
 - The criteria card is open with the placeholder text.
 - The scoring card shows the default markers (30 and 70).
 - The search card says: `Write what you're looking for, then press Search now.`
-- The calendar card is hidden (no URL yet).
+- The calendar card is shown as always (the feed URL exists from the first visit; it is simply empty until events are accepted).
 
 ### 3d. Queue
 
@@ -123,7 +123,7 @@ The home screen shows a visual of this scale: a horizontal bar from 0 to 100, wi
 #### Empty state
 
 - Text: `Nothing to decide right now.`
-- Subtext: `Events that clearly match go straight to your calendar. Events that clearly don't are hidden. When the app isn't sure, they appear here.`
+- Subtext: `Events that clearly match go straight to your calendar. Events that clearly don't are rejected. When the app isn't sure, they appear here.`
 
 - **Primary action:** Accept or Reject the next event
 
@@ -166,9 +166,8 @@ The home screen shows a visual of this scale: a horizontal bar from 0 to 100, wi
 |---|---|
 | 1 | User creates an account on the Register screen |
 | 2 | Home screen appears with an empty criteria card showing the placeholder example |
-| 3 | User writes their criteria and presses Save |
-| 4 | User presses Search now; the result line shows how many events were found |
-| 5 | User opens the Queue tab and accepts or rejects their first event |
+| 3 | User writes their criteria and presses Search now (the draft is saved first); the result line shows how many events were found and how many wait in the Queue |
+| 4 | User opens the Queue tab and accepts or rejects their first event |
 
 Ends with the user's first decision. No tutorial overlay, no wizard — the placeholder text and the "How scoring works" card teach the model.
 
@@ -247,5 +246,5 @@ A person who has never seen the app before clicks through and can check each lin
 These are **not** current API endpoints. They would need to be added if the redesign uses them.
 
 - **Event counts by status** — `GET /api/events/counts` → `{queued: 5, accepted: 12, rejected: 8}`. Currently the UI fetches all queued events and counts them in memory. A counts endpoint would let the home screen show a summary without loading every event. Nice-to-have; the current approach works.
-- **Last search result** — `GET /api/search/last` → `{ranAt: "...", eventsFound: 9, eventsNew: 8}`. Currently the search result message disappears when the user changes tabs. A last-run endpoint would let the home screen show "Last searched 2 hours ago, found 9 events" persistently. Nice-to-have.
+- **Last search result** — `GET /api/search/last` → `{ranAt: "...", eventsFound: 9, eventsNew: 8}`. Currently the search result message disappears when the user changes tabs, and the hourly run (a GitHub Actions cron) leaves no trace in the UI. A last-run endpoint would let the home screen show "Last searched 2 hours ago, found 9 events" persistently. **First post-P1 API item** (promoted from nice-to-have by the design review).
 - **Remove accepted event from calendar** — the All events screen adds a "Remove from calendar" action. The API already supports this: `POST /api/events/{id}/decision` with `{"decision": "rejected"}` changes an accepted event's status and removes it from the feed. **No new endpoint needed.**

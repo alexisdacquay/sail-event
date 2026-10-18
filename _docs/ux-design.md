@@ -12,7 +12,8 @@ Facts about the current build this design relies on (checked in code):
 | Sign-in 429 window is 15 minutes; register 429 is per hour | `backend/app/routers/auth.py:23,42` |
 | Duplicate username → 409; bad invitation code → 403 | `backend/app/routers/auth.py:56-77` |
 | `GET /api/calendar-url` always returns a URL (token created with the user) | `MainPage.tsx:46` renders the card whenever `url` is truthy |
-| `http.ts` throws `Error(detail)` with no HTTP status | `frontend/src/services/http.ts:42-45` |
+| `http.ts` throws `Error(detail)` with no HTTP status, and on every 401 it clears the token and calls `window.location.reload()` before throwing — so a wrong password (401 from `auth.py:61`) reloads the page instead of showing an error | `frontend/src/services/http.ts:35-45` |
+| `new` events persist until the next run re-scores them (not seconds): a failed scoring leaves them `new` | `backend/app/services/pipeline.py:77-84` |
 | Installed and unused: `@base-ui/react/slider` (range, `minStepsBetweenValues`, per-thumb `getAriaLabel`, nested `<input type="range">`) | `frontend/node_modules/@base-ui/react/slider` |
 | shadcn primitives present: badge, button, card, input, label, textarea. No dialog, tabs, slider, toast wrappers | `frontend/src/components/ui/` |
 | Tailwind v4, CSS-only config (`index.css`), neutral palette, `.dark` variant defined | `frontend/src/index.css` |
@@ -43,7 +44,7 @@ Facts about the current build this design relies on (checked in code):
 | Tab | Job (spec §1) | Cards / lists |
 |---|---|---|
 | Home (default after sign-in) | Set up what I like · Get it on my calendar | What I'm looking for · How scoring works · Search now · Your calendar feed |
-| Queue | See what was found and decide | queue event cards, newest-dated last (see §9) |
+| Queue | See what was found and decide | queue event cards, sorted soonest first (see §3d) |
 | All events | Review everything | read-only event cards with status badge; `new` events filtered out |
 
 ### First-run flow (spec §4)
@@ -51,10 +52,9 @@ Facts about the current build this design relies on (checked in code):
 | Step | Screen | What the user sees |
 |---|---|---|
 | 1 | Create account | centred card, `Create account` button |
-| 2 | Home | criteria textarea empty with placeholder; scale at 30 / 70; search card shows hint line, `Search now` disabled; calendar card present (URL exists) |
-| 3 | Home | types criteria, presses `Save` → `Saved.`; `Search now` becomes enabled |
-| 4 | Home | presses `Search now` → `Searching…` → `Found 9 events, 8 new.`; `Queue (N)` count appears in the header |
-| 5 | Queue | first card: Why line, title, match, Accept / Reject |
+| 2 | Home | criteria textarea empty with placeholder; scale at 30 / 70; search card shows hint line, `Search now` disabled while the textarea is empty; calendar card present (URL exists) |
+| 3 | Home | types criteria, presses `Search now` → the draft is saved first (`Saved.` on the criteria card), then `Searching…` → `Found 9 events, 8 new. 3 waiting for you in the Queue.`; `Queue (3)` appears in the header |
+| 4 | Queue | first card: Why line, title, match, Accept / Reject |
 
 
 ## 3. Screens
@@ -77,7 +77,7 @@ Desktop:
             | (                                ) |                  
             | Wrong username or password.        |  <- error, hidden
             | [          Sign in               ] |                  
-            |        No account? Register        |                  
+            |       No account? Create one       |                  
             +------------------------------------+                  
 ```
 
@@ -94,7 +94,7 @@ Phone (≈40 cols):
 | | (                              ) | |
 | | Wrong username or password.      | |
 | | [          Sign in             ] | |
-| |      No account? Register        | |
+| |     No account? Create one       | |
 | +----------------------------------+ |
 +--------------------------------------+
 ```
@@ -107,7 +107,7 @@ Phone (≈40 cols):
 | Password | `Password` | `Label` + `Input type=password` (`autoComplete=current-password`) | — | — | — |
 | Error line | see Error | `<p class="text-sm text-destructive" role="alert">` under password | hidden until a failed submit; cleared on next submit | — | 401 → `Wrong username or password.` · 429 → `Too many attempts. Try again later.` · anything else → `Couldn't sign in. Try again.` |
 | Submit | `Sign in` | `Button type=submit` | `disabled` + label `Signing in…` while the request is in flight | — | — |
-| Switch link | `No account? Register` | `<button type=button class="underline">` on `Register` | navigates to Create account | — | — |
+| Switch link | `No account? Create one` | `<button type=button class="underline">` on `Create one` | navigates to Create account | — | — |
 
 ### 3b. Create account
 
@@ -182,7 +182,8 @@ Desktop:
             +------------------------------------------------------+
             | How scoring works                                    |
             | Every event gets a match score from 0 to 100 against |
-            | what you wrote above.                                |
+            | what you wrote above. Events in between wait for you |
+            | in the Queue tab.                                    |
             |                                                      |
             | 0                                               100  |
             | [#######|-----------------------|###############]    |
@@ -198,7 +199,8 @@ Desktop:
             | Search now                                           |
             | The app also searches automatically every hour.      |
             | [ Search now ]                                       |
-            | Found 9 events, 8 new.                               |
+            | Found 9 events, 8 new. 3 waiting for you in the      |
+            | Queue.                                               |
             +------------------------------------------------------+
             +------------------------------------------------------+
             | Your calendar feed                                   |
@@ -228,7 +230,8 @@ Phone:
 | | How scoring works                | |
 | | Every event gets a match score   | |
 | | from 0 to 100 against what you   | |
-| | wrote above.                     | |
+| | wrote above. Events in between   | |
+| | wait for you in the Queue tab.   | |
 | | 0                            100 | |
 | | [####|-------------|###########] | |
 | |      ^30           ^70           | |
@@ -244,7 +247,8 @@ Phone:
 | | The app also searches            | |
 | | automatically every hour.        | |
 | | [ Search now ]                   | |
-| | Found 9 events, 8 new.           | |
+| | Found 9 events, 8 new. 3 waiting | |
+| | for you in the Queue.            | |
 | +----------------------------------+ |
 | +----------------------------------+ |
 | | Your calendar feed               | |
@@ -270,7 +274,7 @@ Card: How scoring works (`data-testid="scoring-card"`) — see §4 for the scale
 | Element | Copy | Component | State / behaviour | Empty | Error |
 |---|---|---|---|---|---|
 | Heading | `How scoring works` | `CardTitle` | — | — | — |
-| Explainer | `Every event gets a match score from 0 to 100 against what you wrote above.` | `CardDescription` | — | — | — |
+| Explainer | `Every event gets a match score from 0 to 100 against what you wrote above. Events in between wait for you in the Queue tab.` | `CardDescription` | — | — | — |
 | Scale | see §4 | `ScoreScale` (new) | value = saved thresholds on load; defaults 30 / 70 come from the API for a new user | — | — |
 | Save | `Save` (`aria-label="Save scoring"`) | `Button` | `disabled` while in flight or while the scale is invalid; `Saved.` for 2 s on success | — | 400 → `The auto-accept line must be higher than the auto-reject line.` · else → `Couldn't save. Try again.` |
 
@@ -280,9 +284,9 @@ Card: Search now (`data-testid="search-card"`)
 |---|---|---|---|---|---|
 | Heading | `Search now` | `CardTitle` | — | — | — |
 | Explainer | `The app also searches automatically every hour.` | `CardDescription` | — | — | — |
-| Hint | `Write what you're looking for, then press Search now.` | `<p class="text-sm text-muted-foreground">` | shown only while the saved criteria text is empty | this is the empty state | — |
-| Button | `Search now` | `Button` | `disabled` while saved criteria are empty or a search is in flight; label `Searching…` in flight | — | — |
-| Result | `Found 9 events, 8 new.` | `<p data-testid="search-result" role="status">` | shown after a completed search; replaced on the next search; lost on tab change (no last-run endpoint) | — | `Search failed. Try again.` (500 from the run) |
+| Hint | `Write what you're looking for, then press Search now.` | `<p class="text-sm text-muted-foreground">` | shown only while the criteria textarea is empty | this is the empty state | — |
+| Button | `Search now` | `Button` | `disabled` while the criteria textarea is empty or a search is in flight; on click: `await saveCriteria(text)` (the criteria card shows `Saved.`), then `runSearch()`, then `onSearchComplete()`; label `Searching…` in flight | — | criteria save failure → `Couldn't save. Try again.` on the criteria card, search not run |
+| Result | `Found 9 events, 8 new. 3 waiting for you in the Queue.` — the second sentence uses the refreshed queue count returned by `onSearchComplete()` and is omitted when it is 0; when `eventsFound === 0`: `Found no events. Try broader criteria.` | `<p data-testid="search-result" role="status">` | shown after a completed search; replaced on the next search; lost on tab change (no last-run endpoint) | — | `Search failed. Try again.` (500 from the run) |
 
 Card: Your calendar feed (`data-testid="calendar-card"`)
 
@@ -345,8 +349,8 @@ Phone:
 |---|---|---|---|---|---|
 | Page heading | `Queue` | `<h2>` | — | — | — |
 | Loading | `Loading…` | `<p class="text-muted-foreground">` | while the first fetch is pending; prevents the empty state flashing | — | `Couldn't load your queue. Try again.` + `[Try again]` (outline) |
-| Cards | see §5 | `EventCard variant="queue"` | removed from the list on a successful decision; header count refreshed via `onQueueChange` | — | per card, see §5 |
-| Empty state | `Nothing to decide right now.` / `Events that clearly match go straight to your calendar. Events that clearly don't are hidden. When the app isn't sure, they appear here.` | `<p class="font-medium">` + `<p class="text-sm text-muted-foreground">` | shown when the fetch returned zero queued events | — | — |
+| Cards | see §5 | `EventCard variant="queue"` | sorted by `dateTime` ascending (soonest first, same as All events); removed from the list on a successful decision; header count refreshed via `onQueueChange` | — | per card, see §5 |
+| Empty state | `Nothing to decide right now.` / `Events that clearly match go straight to your calendar. Events that clearly don't are rejected. When the app isn't sure, they appear here.` | `<p class="font-medium">` + `<p class="text-sm text-muted-foreground">` | shown when the fetch returned zero queued events | — | — |
 
 ### 3e. All events
 
@@ -412,7 +416,7 @@ Phone:
 | Element | Copy | Component | State / behaviour |
 |---|---|---|---|
 | App name | `Sail Event` | `<h1 class="text-xl font-bold">` | static |
-| Tabs | `Home` · `Queue` + ` (N)` · `All events` | `Button size=sm`, `variant` = `default` when active else `ghost`; `aria-current="page"` on the active one; inside `<nav aria-label="Main navigation">` | count span `data-testid="queue-count"` rendered only when N > 0; count refreshed on every tab click and after every decision |
+| Tabs | `Home` · `Queue` + ` (N)` · `All events` | `Button size=sm`, `variant` = `default` when active else `ghost`; `aria-current="page"` on the active one; inside `<nav aria-label="Main navigation">` | count span `data-testid="queue-count"` rendered only when N > 0; count refreshed on every tab click, after every decision and after a completed search (`refreshQueueCount` returns the new count so Home can print it) |
 | Username | the username | `<span class="hidden sm:inline text-sm text-muted-foreground">` | hidden under 640 px |
 | Sign out | `Sign out` | `Button variant=outline size=sm` | clears auth, returns to Sign in |
 
@@ -542,15 +546,15 @@ Every string the UI shows. Terminology from the spec is taken as given.
 |---|---|
 | Page `<title>` (index.html) | `Sail Event` |
 | Header | `Sail Event` · `Home` · `Queue` · `Queue (N)` · `All events` · `Sign out` |
-| Sign in | `Sign in` (heading, button) · `Username` · `Password` · `Signing in…` · `No account? Register` |
+| Sign in | `Sign in` (heading, button) · `Username` · `Password` · `Signing in…` · `No account? Create one` |
 | Sign in errors | `Wrong username or password.` · `Too many attempts. Try again later.` · `Couldn't sign in. Try again.` |
 | Create account | `Create account` (heading, button) · `Username` · `Password` · `Invitation code` · `Creating…` · `Already have an account? Sign in` |
 | Create account errors | `Couldn't create your account. That username may already be taken.` · `That invitation code isn't valid.` · `Too many attempts. Try again later.` · `Couldn't create your account. Try again.` |
 | Criteria card | `What I'm looking for` · placeholder `e.g. jazz or folk concerts near Paris on weekends, under 40 EUR` · `Save` · `Saved.` · `Couldn't save. Try again.` |
-| Scoring card | `How scoring works` · `Every event gets a match score from 0 to 100 against what you wrote above.` · `0` · `100` · `Auto-reject below` · `Auto-accept above` · `Rejected` · `You decide` · `On your calendar` · `Score cut-offs` (sr-only legend) · `{n} out of 100` (aria-valuetext) · `The auto-accept line must be higher than the auto-reject line.` · `Save` · `Saved.` · `Couldn't save. Try again.` |
-| Search card | `Search now` (heading, button) · `The app also searches automatically every hour.` · `Write what you're looking for, then press Search now.` · `Searching…` · `Found {found} events, {new} new.` · `Search failed. Try again.` |
+| Scoring card | `How scoring works` · `Every event gets a match score from 0 to 100 against what you wrote above. Events in between wait for you in the Queue tab.` · `0` · `100` · `Auto-reject below` · `Auto-accept above` · `Rejected` · `You decide` · `On your calendar` · `Score cut-offs` (sr-only legend) · `{n} out of 100` (aria-valuetext) · `The auto-accept line must be higher than the auto-reject line.` · `Save` · `Saved.` · `Couldn't save. Try again.` |
+| Search card | `Search now` (heading, button) · `The app also searches automatically every hour.` · `Write what you're looking for, then press Search now.` · `Searching…` · `Found {found} events, {new} new.` · ` {queued} waiting for you in the Queue.` (appended when queued > 0) · `Found no events. Try broader criteria.` · `Search failed. Try again.` |
 | Calendar card | `Your calendar feed` · `Paste this link into your calendar app. Accepted events will appear there.` · `Calendar feed URL` (aria-label) · `Copy` · `Copied` · `Reset link` · `This will break any existing subscription. Reset?` · `Reset` · `Cancel` · `Couldn't reset the link. Try again.` |
-| Queue page | `Queue` · `Loading…` · `Nothing to decide right now.` · `Events that clearly match go straight to your calendar. Events that clearly don't are hidden. When the app isn't sure, they appear here.` · `Couldn't load your queue. Try again.` · `Try again` |
+| Queue page | `Queue` · `Loading…` · `Nothing to decide right now.` · `Events that clearly match go straight to your calendar. Events that clearly don't are rejected. When the app isn't sure, they appear here.` · `Couldn't load your queue. Try again.` · `Try again` |
 | All events page | `All events` · `Loading…` · `No events yet.` · `Write what you're looking for on the Home tab, then press Search now.` · `Couldn't load your events. Try again.` · `Try again` |
 | Event card | `Why:` · `Match: {score} / 100` · `When:` · `Where:` · `Link:` · `Accept` · `Accepting…` · `Reject` · `Rejecting…` · `Remove from calendar` · `Remove this event from your calendar?` · `Remove` · `Removing…` · `Cancel` · `Couldn't save your decision. Try again.` · `Couldn't remove it. Try again.` |
 | Badges | `On your calendar` · `Rejected` · `Waiting for you` |
@@ -574,11 +578,11 @@ New dependencies: none. New shadcn wrappers: none.
 | File | Change |
 |---|---|
 | `frontend/index.html` | `<title>Sail Event</title>` |
-| `frontend/src/services/http.ts` | attach `status` to the thrown error: `const err = new Error(detail) as Error & { status: number }; err.status = res.status; throw err` — one line, lets pages pick 401/403/409/429 copy. `mock.ts` unchanged (it never fails) |
-| `frontend/src/App.tsx` | tab labels, `Sign out`, responsive header, `aria-current`, username hidden on phone |
+| `frontend/src/services/http.ts` | (1) the 401 token-clear + `window.location.reload()` runs only when a token is present: `if (res.status === 401 && token())` — a wrong password on Sign in must reach the page as an error; (2) attach `status` to the thrown error: `const err = new Error(detail) as Error & { status: number }; err.status = res.status; throw err` — one line, lets pages pick 401/403/409/429 copy. `mock.ts` unchanged (it never fails) |
+| `frontend/src/App.tsx` | tab labels, `Sign out`, responsive header, `aria-current`, username hidden on phone; `refreshQueueCount` returns the count and is passed to `MainPage` as `onSearchComplete` |
 | `frontend/src/pages/LoginPage.tsx` | copy, status-based error copy, in-flight state, autocomplete attributes |
 | `frontend/src/pages/RegisterPage.tsx` | copy, status-based error copy, in-flight state |
-| `frontend/src/pages/MainPage.tsx` | four cards per §3c, `ScoreScale`, `ConfirmAction`, `Saved.` pattern, search hint and disabled rule; delete the dead `!embedded` header branch and the `embedded` prop (App always passes it) |
+| `frontend/src/pages/MainPage.tsx` | four cards per §3c, `ScoreScale`, `ConfirmAction`, `Saved.` pattern, `Search now` saves the draft then searches, prop `onSearchComplete: () => Promise<number>`; delete the dead `!embedded` header branch and the `embedded` prop (App always passes it) |
 | `frontend/src/pages/QueuePage.tsx` | loading / error / empty states, `onDecide` wiring |
 | `frontend/src/pages/EventsPage.tsx` | heading, filter out `new`, sort by `dateTime`, loading / error / empty states, remove-from-calendar wiring |
 | `frontend/src/components/EventCard.tsx` | §5 |
@@ -606,7 +610,8 @@ Five issues, in dependency order. Each is one engineer session. Labels: `mvp`.
 Goal: every string outside Home and the event lists matches the spec, and HTTP errors carry their status so pages can choose copy.
 
 - [ ] `index.html` title is `Sail Event`
-- [ ] Sign in screen: heading and button `Sign in`, link `No account? Register`, app name above the card; 401 shows `Wrong username or password.`, 429 shows `Too many attempts. Try again later.`
+- [ ] `http.ts`: the 401 token-clear and `window.location.reload()` run only when a token is present in storage (`if (res.status === 401 && token())`); a unit test with no token in `localStorage` and a mocked 401 asserts the error is thrown and `location.reload` is not called
+- [ ] Sign in screen: heading and button `Sign in`, link `No account? Create one`, app name above the card; 401 shows `Wrong username or password.` (unit test with no token in storage), 429 shows `Too many attempts. Try again later.`
 - [ ] Create account screen: heading and button `Create account`, field `Invitation code` when required, link `Already have an account? Sign in`; 409 shows `Couldn't create your account. That username may already be taken.`, 403 shows `That invitation code isn't valid.`
 - [ ] Submit buttons are disabled and read `Signing in…` / `Creating…` while the request is in flight
 - [ ] `http.ts` errors expose `status`; a unit test asserts `status === 401` on a mocked 401 response
@@ -632,7 +637,8 @@ Goal: Home reads as the spec's four cards (scoring card still with the two numbe
 
 - [ ] Card `What I'm looking for`: textarea `aria-label="What I'm looking for"` with the spec placeholder; `Save` (`aria-label="Save criteria"`) shows `Saved.` for 2 s; failure shows `Couldn't save. Try again.`
 - [ ] Card `How scoring works`: explainer line; inputs labelled `Auto-reject below` and `Auto-accept above`; `Save` (`aria-label="Save scoring"`); validation copy `The auto-accept line must be higher than the auto-reject line.` shown live while `lower >= upper` and Save disabled
-- [ ] Card `Search now`: explainer `The app also searches automatically every hour.`; hint `Write what you're looking for, then press Search now.` and disabled button while saved criteria are empty; `Searching…` in flight; result `Found {n} events, {m} new.` in `data-testid="search-result"`; `Search failed. Try again.` on error
+- [ ] Card `Search now`: explainer `The app also searches automatically every hour.`; hint `Write what you're looking for, then press Search now.` and disabled button only while the criteria textarea is empty; clicking `Search now` first saves the textarea draft (`saveCriteria`, criteria card shows `Saved.`) then runs the search; `Searching…` in flight; result `Found {n} events, {m} new.` in `data-testid="search-result"`, with ` {q} waiting for you in the Queue.` appended when q > 0 and `Found no events. Try broader criteria.` when n is 0; `Search failed. Try again.` on error
+- [ ] `MainPage` takes `onSearchComplete: () => Promise<number>`; `App` passes `refreshQueueCount` (which now returns the queued count); after a search the header `Queue (N)` count is fresh without a tab click (unit test in `App.test.tsx`)
 - [ ] Card `Your calendar feed`: explainer per spec; `Copy` / `Copied`; `Reset link` via `ConfirmAction` with prompt `This will break any existing subscription. Reset?` and buttons `Reset` / `Cancel`; existing `data-testid`s kept
 - [ ] Dead `!embedded` branch and `embedded` prop removed from `MainPage`
 - [ ] Cards carry `data-testid` `criteria-card`, `scoring-card`, `search-card`, `calendar-card`
@@ -648,7 +654,7 @@ Goal: the scoring card shows the 0–100 bar with two draggable cut-offs and thr
 - [ ] Zone labels `Rejected`, `You decide`, `On your calendar` are visible text; under 640 px they render as a vertical legend with swatches
 - [ ] Moving a thumb and pressing Save persists: after reload the thumbs and inputs show the saved values (unit test through the mock; e2e in Issue E)
 - [ ] Component wrapped in `<fieldset>` with sr-only legend `Score cut-offs`; focus order thumb 0 → thumb 1 → inputs → Save
-- [ ] `ScoreScale.test.tsx` covers: initial render at 30/70, keyboard move, crossing via input shows the error, `onChange` payload
+- [ ] `ScoreScale.test.tsx` covers: initial render at 30/70, keyboard move, crossing via input shows the error, `onChange` payload; thumbs are queried with `getByRole('slider', { name })` and number inputs with `getByRole('spinbutton', { name })` (both share the accessible name, so `getByLabelText` would match two elements)
 - [ ] `npm test` green; `make test` green
 
 ### Issue E — Playwright journeys on the new copy
@@ -659,7 +665,7 @@ Selectors that must change (current → new):
 
 | Line | Current | New |
 |---|---|---|
-| 16, 67, 91 | `getByRole("button", { name: "Register" })` (link on Sign in) | unchanged text per spec; keep, but add `exact: true` is NOT needed since the submit on the next screen is now `Create account` |
+| 16, 67, 90 | `getByRole("button", { name: "Register" })` (link on Sign in) | `getByRole("button", { name: "Create one" })` |
 | 19, 70, 93 | `getByRole("button", { name: "Register", exact: true })` | `getByRole("button", { name: "Create account" })` |
 | 22, 72, 95 | `getByRole("heading", { name: "Sail Event" })` | unchanged |
 | 25, 74 | `getByLabel("Criteria")` | `getByLabel("What I'm looking for")` |
@@ -677,7 +683,8 @@ Selectors that must change (current → new):
 | 99 | `getByText("No events yet.")` | unchanged |
 
 - [ ] Journey 1 and Journey 2 updated per the table and green under `make test-e2e`
-- [ ] Journey 1 additionally: focus `getByRole("slider", { name: "Auto-accept above" })`, press `ArrowLeft` ×5, click `Save scoring`, reload, assert `getByLabel("Auto-accept above")` has value 65
+- [ ] Journey 1 additionally: focus `getByRole("slider", { name: "Auto-accept above" })`, press `ArrowLeft` ×5, click `Save scoring`, reload, assert `getByRole("spinbutton", { name: "Auto-accept above" })` has value 65 (never `getByLabel`: the thumb and the number input share the name, strict mode would fail)
+- [ ] Journey 1: after `Search now`, assert the header button `getByRole("button", { name: /Queue \(\d+\)/ })` is visible before any tab click
 - [ ] Journey 1 additionally: after accepting, open All events and assert the accepted card has a `Remove from calendar` button; click it, click `Remove`, assert the card's badge reads `Rejected`
 - [ ] Journey 2: unchanged assertion that the second user sees `No events yet.`
 - [ ] No selector in the file references `Register` as a submit, `Save Criteria`, `Search complete`, `Events` alone, `accepted`, `rejected` or `/score/i`
@@ -695,11 +702,11 @@ Decisions made here, without asking:
 | 4 | Header tabs stay `role=button` (no Tabs primitive) so e2e and unit selectors `getByRole("button", { name: /Queue/ })` survive | Semantically a `tablist` would be more accurate |
 | 5 | Both Home Save buttons show `Save` but carry `aria-label` `Save criteria` / `Save scoring` so tests and screen readers can tell them apart | aria-label overrides the visible text; it still contains the visible word `Save`, so WCAG 2.5.3 holds |
 | 6 | All events sorted by event `dateTime` ascending (soonest first); spec says "most recent, newest first" | The API exposes no `createdAt`, so "newest found" is not computable; soonest-first is what a calendar user needs |
-| 7 | `new` events filtered out client-side on All events | A user who searched and switched tabs before scoring finished sees fewer events than `Found N events` claimed, for a few seconds |
+| 7 | `new` events filtered out client-side on All events | `new` events persist until the next run re-scores them (`pipeline.py:77-84`), so after a failed scoring the user sees fewer events than `Found N events` claimed until the next hourly run; the filter hides that failure |
 | 8 | Sign-in / register 429 copy is `Too many attempts. Try again later.`, not the spec's `Try again in a minute.` | Deviates from the spec; the backend window is 15 minutes (sign-in) and 1 hour (register), so "a minute" would be false |
 | 9 | `http.ts` attaches `status` to its thrown error (one line) | Touches a service file in a UX issue; without it every error is a generic string |
 | 10 | Calendar card always rendered (API always returns a URL); spec's "hidden on first visit" dropped | A first-time user sees a feed link before any event exists; the explainer sentence covers it |
-| 11 | `Search now` disabled while saved criteria are empty; unsaved textarea edits do not block it | A user who typed new criteria but did not press Save searches with the old text |
+| 11 | Reversed after review (S3): `Search now` saves the textarea draft first, then searches; disabled only while the textarea is empty. The hint `Write what you're looking for, then press Search now.` is now literally true | Two requests per click; a criteria save failure stops the search and the error shows on the criteria card, not the search card |
 | 12 | Search result line is not persisted across tabs (no last-run endpoint, spec §9 says nice-to-have) | The user loses `Found 9 events, 8 new.` on the first tab switch |
 | 13 | Queue variant puts `Why` before the title (spec criterion 9) even though the brief's layout order lists title first; all-events variant keeps title first | The two variants differ in order; one component, one `variant` prop |
 | 14 | Field labels `When:` / `Where:` instead of `Date:` / `Place:` | Spec lists "Date, Place" as content, not as labels; the brief says when/where |
@@ -707,6 +714,7 @@ Decisions made here, without asking:
 | 16 | Loading state `Loading…` added to Queue and All events | Flashes for a frame on the mock; without it the empty state flashes instead, which misleads |
 | 17 | No pluraliser (`Found 1 events`) | Reads wrong once in a while |
 | 18 | Dead `!embedded` branch deleted from `MainPage` | Unrelated cleanup inside Issue C; it is on the file already being rewritten |
+| 19 | Queue `Reject`: no confirmation, no undo; the API refuses re-decision of a rejected event (`events.py:68`); accepted because confirm-per-event defeats the daily job | `Remove from calendar` reaches the same end state with a confirmation; the asymmetry is deliberate: that one is a reversal of a prior yes |
 
 Risks:
 
@@ -716,3 +724,21 @@ Risks:
 | `minStepsBetweenValues` keeps thumbs apart by drag, but controlled `value` with crossed numbers from the inputs could log a Base UI warning | The bar always receives the clamped pair (`lowerShown`, `upperShown`) |
 | Spec criterion 7 ("verify by refreshing") depends on `GET /api/thresholds` round-trip, already in place | Covered by the e2e step in Issue E |
 | Visual theme (P2) will restyle zone fills; the three fills use only `--destructive`, `--muted`, `--primary` tokens | Token-only colours, no hard-coded values |
+
+### Review applied (`_docs/ux-design-review.md`)
+
+| Finding | What changed |
+|---|---|
+| B1 | facts table: 401 reload fact added; §7 `http.ts` row: 401 reload guarded by `token()`; Issue A: guard line + unit test with no token |
+| B2 | §3f: count refreshed after a completed search; §3c Result row and wireframes: `Found 9 events, 8 new. 3 waiting for you in the Queue.`; Issue C: `onSearchComplete` / `refreshQueueCount` line; §2 first-run step 3; Issue E: header count assertion |
+| S1 | §3d empty state and §6: "hidden" → "rejected" (spec §2 and §3d edited to match) |
+| S2 | §3c Explainer, wireframes and §6: second sentence `Events in between wait for you in the Queue tab.` (spec §3c edited to match) |
+| S3 | decision 11 reversed: `Search now` saves the draft then searches, disabled only while the textarea is empty; §3c Hint/Button rows, §2 first-run, §7 `MainPage` row, Issue C (spec §4 steps collapsed to match) |
+| S4 | Issue E and Issue D tests: number inputs queried as `spinbutton`, thumbs as `slider` |
+| S5 | §3d Cards row: sorted by `dateTime` ascending; §2 pointer → §3d |
+| S6 | Sign-in link `No account? Create one` in §3a wireframes, §3a table, §6, Issue A, Issue E rows 16 / 67 / 90 (spec §3a edited to match); off-by-one 91 → 90 fixed |
+| N1 | §3c Result row and §6: `Found no events. Try broader criteria.` when `eventsFound === 0` |
+| N2 | decision 19 added (Queue Reject: no confirm, no undo) |
+| N5 | decision 7 counter-fact corrected (`new` persists until the next run) |
+| N6 | spec §9: "Last search result" promoted to first post-P1 API item |
+| N3, N4 | not applied: title-as-link and per-card mini track are layout changes across §5, tests and App state, not one-line edits; left for the owner |
