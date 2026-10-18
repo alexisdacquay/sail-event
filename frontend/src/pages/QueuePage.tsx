@@ -45,7 +45,7 @@ export function QueuePage({ onQueueChange }: QueuePageProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-bold">Queue</h2>
+      <h2 className="font-heading text-2xl font-bold tracking-tight">Queue</h2>
       {loading && (
         <p className="text-muted-foreground">Loading…</p>
       )}

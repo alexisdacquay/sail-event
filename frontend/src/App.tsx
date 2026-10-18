@@ -6,6 +6,7 @@ import { MainPage } from '@/pages/MainPage'
 import { EventsPage } from '@/pages/EventsPage'
 import { QueuePage } from '@/pages/QueuePage'
 import { Button } from '@/components/ui/button'
+import { SailMark } from '@/components/SailMark'
 import { listEvents } from '@/services/api'
 
 type Page = 'login' | 'register' | 'main' | 'events' | 'queue'
@@ -39,20 +40,20 @@ function AuthenticatedLayout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b px-4 sm:px-8 py-3 flex flex-wrap items-center gap-x-6 gap-y-2">
-        <h1 className="text-lg sm:text-xl font-bold whitespace-nowrap">Sail Event</h1>
+      <header className="sticky top-0 z-10 h-auto sm:h-14 border-b bg-card/80 backdrop-blur px-4 sm:px-8 py-3 sm:py-0 flex flex-wrap items-center gap-x-6 gap-y-2">
+        <h1 className="flex items-center gap-2 font-heading text-lg sm:text-xl font-bold tracking-tight whitespace-nowrap"><SailMark className="size-6" aria-hidden="true" />Sail Event</h1>
         <nav className="flex gap-1 order-last w-full sm:order-none sm:w-auto" aria-label="Main navigation">
           {tabs.map((tab) => (
             <Button
               key={tab.page}
-              variant={page === tab.page ? 'default' : 'ghost'}
+              variant={page === tab.page ? 'secondary' : 'ghost'}
               size="sm"
               onClick={() => handleTabClick(tab.page)}
               aria-current={page === tab.page ? 'page' : undefined}
             >
               {tab.label}
               {tab.page === 'queue' && queueCount > 0 && (
-                <span className="ml-1 text-xs" data-testid="queue-count">({queueCount})</span>
+                <span className="ml-1 text-xs tabular-nums" data-testid="queue-count">({queueCount})</span>
               )}
             </Button>
           ))}
@@ -66,7 +67,7 @@ function AuthenticatedLayout() {
           </Button>
         </div>
       </header>
-      <main className="flex-1 p-8 max-w-2xl mx-auto w-full">
+      <main className="flex-1 p-4 sm:p-8 max-w-2xl mx-auto w-full">
         {page === 'main' && <MainPage onSearchComplete={refreshQueueCount} />}
         {page === 'events' && <EventsPage />}
         {page === 'queue' && (
