@@ -43,6 +43,11 @@ Two inputs: a fresh-clone reviewer walkthrough (agent, scratchpad/review-clone) 
 | B5 | Public URL shows canned events (fixture adapters) | real keys on prod (user decision) or a README sentence saying scoring is simulated until keys are set | user |
 | B6 | Observability needs 6 containers; memory | README: note ~2 GB RAM, `make up-all` | S |
 
+## Status 2026-10-18
+- A1 → #37 closed (755ca1e). A3 + W10 → #38 closed (c994654, 93ad48f). A2 + A4 → #39 closed (fff0c24, 937352a). W1–W7 → README 11f2828. All promoted to prod (93ad48f).
+- Still the user's: A5 health check path, A6 DB inbound rule, A7 old DB user, B5 API keys.
+- Second walkthrough running; results appended below when in.
+
 ## C. Order
 1. Walkthrough report → merge into B, re-rank.
 2. File issues for A1, A3, A2, A4 (post-mvp label? no: label `mvp`-adjacent "robustness"), run through the loop, promote.
