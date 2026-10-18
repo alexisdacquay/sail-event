@@ -138,3 +138,6 @@ can appear hours late. The feed URL is a secret: anyone holding it sees the hold
 - self-maintenance: an on-call responder that investigates a failed or empty run
   and proposes a fix for approval (course lesson 4), and the agent extension pack
   around the project (course lesson 5)
+- status 2026-10-17: both delivered. Responder: issues #25, #26, directory
+  `incident-response/`. Extension pack: issue #28, reduced to the QA subagent and
+  the pre-commit hook.

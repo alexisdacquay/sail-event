@@ -59,7 +59,24 @@ Needs Docker. One command starts the app and its Postgres:
 docker compose up --build
 ```
 
-Open <http://localhost:8000>, log in as **demo / demo**, press **Search now**, then open **Queue**. Locally the search provider and the scorer are fixtures, so results are canned and scores are deterministic: no API keys needed.
+Open <http://localhost:8000>, log in as **demo / demo**, press **Search now**, then open **Queue**. Locally the search provider and the scorer are fixtures, so results are canned and scores are deterministic: no API keys needed. Port 8000 already taken? `HOST_PORT=8010 docker compose up --build` and open <http://localhost:8010>.
+
+<details>
+<summary>Same journey with curl (no browser)</summary>
+
+```bash
+B=http://localhost:8000
+curl -s -X POST $B/api/auth/register -H 'Content-Type: application/json' -d '{"username":"me","password":"secret1"}'
+T=$(curl -s -X POST $B/api/auth/login -H 'Content-Type: application/json' -d '{"username":"me","password":"secret1"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
+curl -s -X PUT $B/api/criteria -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"text":"jazz or folk concerts near Paris on weekends"}'
+curl -s -X POST $B/api/search -H "Authorization: Bearer $T"
+curl -s "$B/api/events?status=queued" -H "Authorization: Bearer $T"          # the queue
+curl -s -X POST $B/api/events/1/decision -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"decision":"accepted"}'
+curl -s $B/api/calendar/url -H "Authorization: Bearer $T"                    # your ICS feed URL
+```
+
+Full contract: [`openapi.yaml`](openapi.yaml), summarised in [docs/api.md](docs/api.md).
+</details>
 
 Without Docker (needs Python 3.12 with [uv](https://docs.astral.sh/uv/) and Node 24):
 
@@ -127,15 +144,22 @@ QA caught real defects before they shipped: an invalid decision crashing with 50
 ## Tests
 
 ```bash
-make test              # backend unit + frontend unit, one exit code
+make test              # backend unit + frontend unit + responder unit, one exit code
 make test-integration  # starts compose, runs the API against real Postgres, tears down
 make test-e2e          # starts compose, runs Playwright journeys in Chromium, tears down
 ```
 
+One-time setup before `make test-e2e` (downloads Chromium):
+
+```bash
+cd e2e && npm ci && npx playwright install chromium
+```
+
 | Suite | Count | Tool |
 |---|---|---|
-| Backend unit | 165 | pytest |
-| Frontend unit | 22 | Vitest |
+| Backend unit | 180 | pytest |
+| Frontend unit | 25 | Vitest |
+| On-call responder unit | 19 | unittest |
 | Integration (real Postgres) | 7 | pytest, marker `integration` |
 | End to end (browser) | 2 journeys | Playwright |
 
@@ -156,10 +180,11 @@ How they are organised: [docs/testing.md](docs/testing.md).
 The key journey, a search run, is instrumented end to end: a metric per run with its outcome, a trace per request, and structured logs that carry the trace id. No user content or credentials go to telemetry.
 
 ```bash
-make up-all        # app + Postgres + the whole observability stack
+export RESPONDER_WEBHOOK_SECRET=any-string   # shared by Grafana's webhook and the responder
+make up-all                                  # app + Postgres + the whole observability stack (6 containers, ~2 GB RAM)
 ```
 
-Grafana is at <http://localhost:3001> (no login), dashboard "Sail-event, Search Run Journey":
+Grafana is at <http://localhost:3001> (no login), dashboard "Sail-event, Search Run Journey". Run a search or two first and give it a minute: metrics are exported every 60 seconds, so the panels say "No data" until then.
 
 ![grafana](docs/images/05-grafana.png)
 
@@ -181,9 +206,12 @@ Two alerts fire on user impact, not CPU: **SearchRunFailures** (two or more runs
 It ran for real once. A deliberate fault made every search run fail; the alert fired, the agent read the evidence, found the injected `raise`, fixed it on branch `incident/20261017-052050-SearchRunFailures` and left a verdict. Everything it saw and did is in [`incident-response/incidents/20261017-052050-SearchRunFailures/`](incident-response/incidents/20261017-052050-SearchRunFailures/). Reproduce it with:
 
 ```bash
-make responder                        # terminal 1
-incident-response/test-incident.sh    # terminal 2: injects the fault, fires the alert
+export RESPONDER_WEBHOOK_SECRET=any-string   # same value in both terminals
+make responder                               # terminal 1
+incident-response/test-incident.sh           # terminal 2: injects the fault, fires the alert
 ```
+
+The agent step needs the `claude` CLI signed in on your machine. If you do not have it, the recorded incident above is the full run, end to end.
 
 Policy, prompt and limits: [`incident-response/`](incident-response/). Security audit and the data policy for AI tools: [docs/operations-and-security-report.md](docs/operations-and-security-report.md).
 
