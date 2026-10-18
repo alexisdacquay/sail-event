@@ -22,6 +22,7 @@ export function RegisterPage({
   const [registrationCode, setRegistrationCode] = useState('')
   const [codeRequired, setCodeRequired] = useState(false)
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     getConfig()
@@ -32,6 +33,7 @@ export function RegisterPage({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    setSubmitting(true)
     try {
       const res = await register(
         username,
@@ -39,16 +41,30 @@ export function RegisterPage({
         codeRequired ? registrationCode : undefined,
       )
       setAuth(res)
-    } catch {
-      setError('Registration failed')
+    } catch (err: unknown) {
+      const status = (err as { status?: number }).status
+      if (status === 409) {
+        setError(
+          "Couldn't create your account. That username may already be taken.",
+        )
+      } else if (status === 403) {
+        setError("That invitation code isn't valid.")
+      } else if (status === 429) {
+        setError('Too many attempts. Try again later.')
+      } else {
+        setError("Couldn't create your account. Try again.")
+      }
+    } finally {
+      setSubmitting(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex flex-col items-center justify-center">
+      <p className="text-2xl font-bold text-center mb-6">Sail Event</p>
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Register</CardTitle>
+          <CardTitle>Create account</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -59,6 +75,7 @@ export function RegisterPage({
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+                autoComplete="username"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -69,21 +86,28 @@ export function RegisterPage({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="new-password"
               />
             </div>
             {codeRequired && (
               <div className="flex flex-col gap-2">
-                <Label htmlFor="registrationCode">Registration code</Label>
+                <Label htmlFor="invitationCode">Invitation code</Label>
                 <Input
-                  id="registrationCode"
+                  id="invitationCode"
                   value={registrationCode}
                   onChange={(e) => setRegistrationCode(e.target.value)}
                   required
                 />
               </div>
             )}
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit">Register</Button>
+            {error && (
+              <p className="text-sm text-destructive" role="alert">
+                {error}
+              </p>
+            )}
+            <Button type="submit" disabled={submitting}>
+              {submitting ? 'Creating…' : 'Create account'}
+            </Button>
             <p className="text-sm text-center">
               Already have an account?{' '}
               <button
@@ -91,7 +115,7 @@ export function RegisterPage({
                 className="underline"
                 onClick={onNavigateLogin}
               >
-                Login
+                Sign in
               </button>
             </p>
           </form>

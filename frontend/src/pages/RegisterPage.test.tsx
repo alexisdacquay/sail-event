@@ -22,7 +22,7 @@ describe('RegisterPage', () => {
     )
     await waitFor(() => {
       expect(
-        screen.getByLabelText('Registration code'),
+        screen.getByLabelText('Invitation code'),
       ).toBeInTheDocument()
     })
   })

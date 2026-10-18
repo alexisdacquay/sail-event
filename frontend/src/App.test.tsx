@@ -16,36 +16,36 @@ async function loginAsTestUser() {
   fireEvent.change(screen.getByLabelText('Password'), {
     target: { value: 'pass123' },
   })
-  fireEvent.click(screen.getByRole('button', { name: 'Login' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
   await screen.findByText('Search Criteria')
 }
 
 describe('Auth', () => {
   it('shows login screen for unauthenticated visitor', () => {
     render(<App />)
-    expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
     expect(screen.getByLabelText('Username')).toBeInTheDocument()
   })
 
   it('navigates from login to register', () => {
     render(<App />)
-    fireEvent.click(screen.getByText('Register'))
+    fireEvent.click(screen.getByText('Create one'))
     expect(screen.getByLabelText('Username')).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: 'Register' }),
+      screen.getByRole('button', { name: 'Create account' }),
     ).toBeInTheDocument()
   })
 
   it('register flow shows main page on success', async () => {
     render(<App />)
-    fireEvent.click(screen.getByText('Register'))
+    fireEvent.click(screen.getByText('Create one'))
     fireEvent.change(screen.getByLabelText('Username'), {
       target: { value: 'newuser' },
     })
     fireEvent.change(screen.getByLabelText('Password'), {
       target: { value: 'pass' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Register' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
     await screen.findByText('Search Criteria')
   })
 
@@ -56,8 +56,8 @@ describe('Auth', () => {
 
   it('logout returns to login screen', async () => {
     await loginAsTestUser()
-    fireEvent.click(screen.getByRole('button', { name: 'Logout' }))
-    expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Sign out' }))
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
   })
 
   it('unauthenticated render shows no criteria editor', () => {
@@ -158,8 +158,8 @@ describe('Tab bar and queue count', () => {
 
     // Tab bar shows all three tabs
     const nav = screen.getByRole('navigation', { name: 'Main navigation' })
-    expect(nav).toHaveTextContent('Dashboard')
-    expect(nav).toHaveTextContent('Events')
+    expect(nav).toHaveTextContent('Home')
+    expect(nav).toHaveTextContent('All events')
     expect(nav).toHaveTextContent('Queue')
 
     // Queue count equals mock's queued events (2)

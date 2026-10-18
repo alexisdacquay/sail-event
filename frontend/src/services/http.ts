@@ -32,7 +32,7 @@ async function request<T>(
     },
   })
 
-  if (res.status === 401) {
+  if (res.status === 401 && token()) {
     localStorage.removeItem('sail-event-token')
     localStorage.removeItem('sail-event-username')
     window.location.reload()
@@ -41,7 +41,9 @@ async function request<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: res.statusText }))
-    throw new Error(body.detail ?? res.statusText)
+    const err = new Error(body.detail ?? res.statusText) as Error & { status: number }
+    err.status = res.status
+    throw err
   }
 
   return res.json() as Promise<T>

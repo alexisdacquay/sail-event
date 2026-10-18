@@ -20,23 +20,35 @@ export function LoginPage({
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    setSubmitting(true)
     try {
       const res = await login(username, password)
       setAuth(res)
-    } catch {
-      setError('Login failed')
+    } catch (err: unknown) {
+      const status = (err as { status?: number }).status
+      if (status === 401) {
+        setError('Wrong username or password.')
+      } else if (status === 429) {
+        setError('Too many attempts. Try again later.')
+      } else {
+        setError("Couldn't sign in. Try again.")
+      }
+    } finally {
+      setSubmitting(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex flex-col items-center justify-center">
+      <p className="text-2xl font-bold text-center mb-6">Sail Event</p>
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
+          <CardTitle>Sign in</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -47,6 +59,7 @@ export function LoginPage({
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+                autoComplete="username"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -57,10 +70,17 @@ export function LoginPage({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
               />
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit">Login</Button>
+            {error && (
+              <p className="text-sm text-destructive" role="alert">
+                {error}
+              </p>
+            )}
+            <Button type="submit" disabled={submitting}>
+              {submitting ? 'Signing in…' : 'Sign in'}
+            </Button>
             <p className="text-sm text-center">
               No account?{' '}
               <button
@@ -68,7 +88,7 @@ export function LoginPage({
                 className="underline"
                 onClick={onNavigateRegister}
               >
-                Register
+                Create one
               </button>
             </p>
           </form>

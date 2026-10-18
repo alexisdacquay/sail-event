@@ -11,9 +11,9 @@ import { listEvents } from '@/services/api'
 type Page = 'login' | 'register' | 'main' | 'events' | 'queue'
 
 const tabs: { page: Page; label: string }[] = [
-  { page: 'main', label: 'Dashboard' },
-  { page: 'events', label: 'Events' },
+  { page: 'main', label: 'Home' },
   { page: 'queue', label: 'Queue' },
+  { page: 'events', label: 'All events' },
 ]
 
 function AuthenticatedLayout() {
@@ -47,21 +47,22 @@ function AuthenticatedLayout() {
                 variant={page === tab.page ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => handleTabClick(tab.page)}
+                aria-current={page === tab.page ? 'page' : undefined}
               >
                 {tab.label}
                 {tab.page === 'queue' && queueCount > 0 && (
-                  <span className="ml-1 text-xs">({queueCount})</span>
+                  <span className="ml-1 text-xs" data-testid="queue-count">({queueCount})</span>
                 )}
               </Button>
             ))}
           </nav>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">
+          <span className="hidden sm:inline text-sm text-muted-foreground">
             {auth?.username}
           </span>
           <Button variant="outline" size="sm" onClick={logout}>
-            Logout
+            Sign out
           </Button>
         </div>
       </header>
