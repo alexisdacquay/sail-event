@@ -132,7 +132,7 @@ describe('EventCard', () => {
   it('datetime includes timezone', () => {
     render(<EventCard event={event} variant="queue" />)
     const dt = screen.getByTestId('event-datetime')
-    // Should contain a parenthesized timezone like (America/New_York)
-    expect(dt.textContent).toMatch(/\(.+\/.+\)/)
+    // Should end with the browser's zone in parentheses: (America/New_York) locally, (UTC) on CI
+    expect(dt.textContent).toMatch(/\([A-Za-z_]+(\/[A-Za-z_]+)*\)$/)
   })
 })
