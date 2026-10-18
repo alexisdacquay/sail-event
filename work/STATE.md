@@ -1,5 +1,12 @@
 # ProjectOne — work state (resumable)
 
+## PAUSE 2026-10-18 evening — RESUME PROCEDURE (search v2)
+- Branch `search-v2` (checkout is on it). Issues: A #54, B #55, C #56 closed (QA PASS). D #57 is a WIP commit (providers v2, planner, fixtures, 42 unit tests green) with `make test` and the issue comment still to do; E #58, F1 #59, F2 #60, G #61, H #62, I #63 pending. Tracker: work/FEEDBACK-2026-10-18.md (owner items a-g).
+- Resume: 1) `git status --short` must be empty; 2) a fresh engineer finishes D from the WIP commit per issue 57 (run `make test`, comment, push), then QA D in a detached worktree (`git worktree add --detach <scratch>/wt-qa <sha>`, copy backend/.env.local into it) while the next engineer starts E in the main checkout; 3) continue E → F1 → F2 (pipeline swap + `backend/scripts/smoke_search.py` on C1 with the keys from backend/.env.local) → G → H → I; 4) PR search-v2 → main, CI, merge, promote, then set `SEARCH_PROVIDER=tavily`, `LLM_PROVIDER=openai_compatible`, `GUARDRAIL=lakera` on Render (keys already there) and run the Berlin smoke on dev and prod.
+- Agent brief rules that avoid stalls: never `rm`/`sed -i`/`cd &&`; never the app's dev-server tools; commit with `SKIP_HOOK_TESTS=1` after running `make test`; live calls need `set -a; . backend/.env.local; set +a` and `SSL_CERT_FILE=$(uv run --project backend --directory backend python -m certifi)`; check `git status` every ~15 min for a stalled agent.
+- Local stacks: app 8010 and Grafana 3001 may still be up (`make observability-down`, `HOST_PORT=8010 make compose-down`). Keys only in backend/.env.local (git-ignored) and on Render.
+
+
 ## Goal
 Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
 
