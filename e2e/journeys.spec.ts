@@ -35,11 +35,16 @@ test.describe("Journey 1: full user flow", () => {
     await expect(
       page.getByRole("spinbutton", { name: "Auto-accept above" })
     ).toHaveValue("65");
-    const saved = page.waitForResponse(
-      (r) => r.url().includes("/api/thresholds") && r.request().method() === "PUT"
-    );
-    await page.getByRole("button", { name: "Save scoring" }).click();
-    expect((await saved).ok()).toBeTruthy();
+    const saveScoring = page.getByRole("button", { name: "Save scoring" });
+    await expect(saveScoring).toBeEnabled();
+    const [saved] = await Promise.all([
+      page.waitForResponse(
+        (r) => r.url().includes("/api/thresholds") && r.request().method() === "PUT",
+        { timeout: 15_000 }
+      ),
+      saveScoring.click(),
+    ]);
+    expect(saved.ok()).toBeTruthy();
 
     // Reload and verify the value persisted
     await page.reload();
