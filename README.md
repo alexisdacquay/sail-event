@@ -85,7 +85,7 @@ Without Docker (needs Python 3.12 with [uv](https://docs.astral.sh/uv/) and Node
 make run
 ```
 
-The live deployment is <https://sail-event.onrender.com>. Register your own account there.
+The live deployment is <https://sail-event.onrender.com>. Create your own account there.
 
 ## How it is built
 
