@@ -46,7 +46,7 @@ Two inputs: a fresh-clone reviewer walkthrough (agent, scratchpad/review-clone) 
 ## Status 2026-10-18
 - A1 → #37 closed (755ca1e). A3 + W10 → #38 closed (c994654, 93ad48f). A2 + A4 → #39 closed (fff0c24, 937352a). W1–W7 → README 11f2828. All promoted to prod (93ad48f).
 - Still the user's: A5 health check path, A6 DB inbound rule, A7 old DB user, B5 API keys.
-- Second walkthrough running; results appended below when in.
+- Second walkthrough (fresh clone, 2026-10-18): 23/24; the lost point was `make test` failing on a fresh clone (`vitest: command not found`, frontend deps never installed). Fixed: `make test` runs `npm ci --prefix frontend` when node_modules is missing. Also fixed in the README curl block: calendar path is `/api/calendar-url`, event ids are UUIDs (captured from the queue). Noted, no action: prod registration is open (REGISTRATION_CODE unset, owner's call).
 
 ## C. Order
 1. Walkthrough report → merge into B, re-rank.
