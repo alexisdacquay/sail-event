@@ -158,6 +158,7 @@ describe('Thresholds', () => {
 describe('Search', () => {
   it('displays result with event counts and review button', async () => {
     await loginAsTestUser()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Search now' })).toBeEnabled())
     fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
     const result = await screen.findByTestId('search-result')
     expect(result).toHaveTextContent('Found 12 events, 4 new.')
@@ -167,6 +168,7 @@ describe('Search', () => {
 
   it('saves criteria before searching (criteria Saved. appears)', async () => {
     await loginAsTestUser()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Search now' })).toBeEnabled())
     fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
     await waitFor(() => {
       expect(screen.getByText('Saved.')).toBeInTheDocument()
