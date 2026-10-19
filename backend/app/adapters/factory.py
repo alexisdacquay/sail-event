@@ -48,9 +48,6 @@ class _DeferredProdSearchGuard:
         )
 
 
-# --- old-style factories (kept for backward compat until old code deleted) ---
-
-
 def get_search_provider():
     if os.environ.get("SCORER"):
         raise ValueError("SCORER is replaced by LLM_PROVIDER")
@@ -73,14 +70,6 @@ def get_search_provider():
         return BraveProvider()
 
     raise ValueError(f"Unknown SEARCH_PROVIDER: {value!r}")
-
-
-def get_scorer():
-    if os.environ.get("SCORER"):
-        raise ValueError("SCORER is replaced by LLM_PROVIDER")
-    # Legacy: only fake scorer remains until deletion
-    from .fake import FakeScorer
-    return FakeScorer()
 
 
 def get_language_model() -> LanguageModel:

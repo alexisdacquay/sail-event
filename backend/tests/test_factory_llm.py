@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from app.adapters.factory import get_language_model, get_scorer
+from app.adapters.factory import get_language_model
 
 
 class TestGetLanguageModel:
@@ -74,15 +74,3 @@ class TestProdRefusal:
                 variables={"text": "test"},
                 schema={"type": "object"},
             )
-
-
-class TestScorerGuard:
-    def test_scorer_set_raises_on_get_scorer(self):
-        with patch.dict("os.environ", {"SCORER": "claude"}):
-            with pytest.raises(ValueError, match="SCORER is replaced by LLM_PROVIDER"):
-                get_scorer()
-
-    def test_scorer_unset_still_works(self):
-        with patch.dict("os.environ", {}, clear=True):
-            scorer = get_scorer()
-        assert scorer is not None

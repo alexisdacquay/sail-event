@@ -2,8 +2,6 @@
 
 Country sent as a name (Tavily's requirement); language forwarded for
 local-language queries; raw_content requested; no date regex.
-
-The old search_tavily.py stays until the swap (issue F2).
 """
 
 from __future__ import annotations

@@ -1,7 +1,4 @@
-"""SearchProvider v2 protocol and SearchResult model.
-
-The old SearchProvider / RawEvent in base.py stay until the swap (issue F2).
-"""
+"""SearchProvider v2 protocol and SearchResult model."""
 
 from __future__ import annotations
 
