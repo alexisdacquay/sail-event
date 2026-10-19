@@ -85,30 +85,50 @@ SAIL_BASE_URL=http://localhost:8010 make test-e2e
 ## Real adapters smoke
 
 `backend/scripts/smoke_search.py` runs the full pipeline (criteria parse,
-window, plan, search, extract, filter, judge) against live adapters and
-prints the run report with one line per kept event.
+window, plan, search, extract, filter, judge) against live adapters using a
+throwaway SQLite database (never touches the dev database).
+
+**Single criteria:**
 
 ```
-cd backend
-set -a; . .env.local; set +a
-SSL_CERT_FILE=$(uv run python -m certifi) \
-  uv run python scripts/smoke_search.py \
-    "jazz in Berlin (Germany) next week (19-21st October 2026)"
+set -a; . backend/.env.local; set +a
+SSL_CERT_FILE=$(uv run --project backend --directory backend python -m certifi) \
+  uv run --project backend --directory backend python scripts/smoke_search.py \
+    --criteria "jazz in Berlin (Germany) next week (19-21st October 2026)" \
+    --tz Europe/Berlin
 ```
 
-Options:
-
-- `--repeat N` — run N times, print score spread per event (consistency check)
-- `--record DIR` — save raw provider and model responses under DIR
-
-Environment overrides (defaults to real adapters):
+**Score spread (consistency check):**
 
 ```
-SEARCH_PROVIDER=tavily LLM_PROVIDER=openai_compatible GUARDRAIL=none
+uv run --project backend --directory backend python scripts/smoke_search.py \
+    --criteria "jazz in Berlin" --tz Europe/Berlin --repeat 3
 ```
 
-Keys (`TAVILY_API_KEY`, `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`,
-`LLM_JSON_MODE`) come from `backend/.env.local` (git-ignored).
+**Record model responses as fixtures:**
+
+```
+FAKE_NOW=2026-10-18T12:00:00+02:00 \
+  uv run --project backend --directory backend python scripts/smoke_search.py \
+    --criteria "jazz in Berlin (Germany) next week" --tz Europe/Berlin --record
+```
+
+Writes to `backend/tests/fixtures/llm/` under the same hash the
+`FakeLanguageModel` replays. Set `FAKE_NOW` so hashes match test
+expectations.
+
+**Batch suite (10 texts):**
+
+```
+uv run --project backend --directory backend python scripts/smoke_search.py --batch
+```
+
+Prints a Markdown table: text, status, stage counts, calls, seconds, top 3
+kept events.
+
+**Environment:** keys (`TAVILY_API_KEY`, `LLM_BASE_URL`, `LLM_API_KEY`,
+`LLM_MODEL`, `LLM_JSON_MODE`, `GUARDRAIL`) come from `backend/.env.local`
+(git-ignored). Set `GUARDRAIL=none` until the Lakera adapter is wired.
 
 CI stays fixture-only; `make test` never hits the network.
 
