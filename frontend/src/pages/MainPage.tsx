@@ -20,12 +20,69 @@ import {
   getCalendarUrl,
   rotateCalendarUrl,
 } from '@/services/api'
-import type { Event } from '@/services/api'
+import type { Event, SearchResult } from '@/services/api'
+
+const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
 type MainPageProps = {
   onSearchComplete: () => Promise<number>
   queuedEvents: Event[]
   onNavigateQueue: () => void
+}
+
+/** Build the run-report lines from a SearchResult (spec §8). */
+function buildRunReport(result: SearchResult): string[] {
+  const lines: string[] = []
+  const c = result.stageCounts
+  if (!c) {
+    if (result.eventsFound === 0) {
+      return ['Found no events. Try broader criteria.']
+    }
+    lines.push(`Found ${result.eventsFound} events, ${result.eventsNew} new.`)
+    return lines
+  }
+
+  const queries = c.queries_planned ?? 0
+  const results = c.results_fetched ?? 0
+  const events = c.events_extracted ?? 0
+  const judged = c.events_judged ?? 0
+  const accepted = c.accepted ?? 0
+  const queued = c.queued ?? 0
+  const rejected = c.rejected ?? 0
+
+  const filterKeys = [
+    'filtered_incomplete', 'filtered_past', 'filtered_date',
+    'filtered_place', 'filtered_non_event', 'filtered_duplicate',
+  ] as const
+  const totalFiltered = filterKeys.reduce((sum, k) => sum + (c[k] ?? 0), 0)
+  const passed = Math.max(0, events - totalFiltered)
+
+  lines.push(
+    `${queries} queries → ${results} results → ${events} events → ${passed} passed filters → ${judged} judged → ${accepted} accepted, ${queued} queued, ${rejected} rejected`,
+  )
+
+  const filterLabels: Record<string, string> = {
+    filtered_past: 'past',
+    filtered_date: 'outside date window',
+    filtered_place: 'wrong place',
+    filtered_non_event: 'non-event',
+    filtered_duplicate: 'duplicate',
+    filtered_incomplete: 'incomplete',
+  }
+  const details = filterKeys
+    .filter(k => (c[k] ?? 0) > 0)
+    .map(k => `${c[k]} ${filterLabels[k]}`)
+  if (details.length > 0) {
+    lines.push(`Filtered: ${details.join(', ')}.`)
+  }
+
+  if (result.stoppedAtStage) {
+    lines.push(
+      `Stopped at ${result.stoppedAtStage}${result.error ? `: ${result.error}` : ''}.`,
+    )
+  }
+
+  return lines
 }
 
 export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: MainPageProps) {
@@ -41,18 +98,22 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
   const [scoringSaving, setScoringSaving] = useState(false)
 
   const [searching, setSearching] = useState(false)
-  const [searchResult, setSearchResult] = useState<{ found: number; new_: number; queued: number } | null>(null)
+  const [searchReport, setSearchReport] = useState<{ lines: string[]; queued: number } | null>(null)
   const [searchIsError, setSearchIsError] = useState(false)
   const [searchErrorText, setSearchErrorText] = useState('')
 
   const [calendarUrl, setCalendarUrl] = useState('')
   const [copied, setCopied] = useState(false)
 
+  const [userTimeZone, setUserTimeZone] = useState('UTC')
+
   const thresholdInvalid = !(lower >= 0 && lower < upper && upper <= 100)
 
   useEffect(() => {
-    // Do not overwrite text the user has already typed if the fetch resolves late (slow network).
-    getCriteria().then((c) => setCriteriaText((current) => (current === '' ? c.text : current)))
+    getCriteria().then((c) => {
+      setCriteriaText((current) => (current === '' ? c.text : current))
+      setUserTimeZone(c.timeZone)
+    })
     getThresholds().then((t) => {
       setLower(t.lowerThreshold)
       setUpper(t.upperThreshold)
@@ -70,8 +131,9 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
     setCriteriaSaved(false)
     setCriteriaError('')
     try {
-      const saved = await saveCriteria(criteriaText)
+      const saved = await saveCriteria(criteriaText, browserTz)
       setCriteriaText(saved.text)
+      setUserTimeZone(saved.timeZone)
       showCriteriaSaved()
     } catch {
       setCriteriaError("Couldn't save. Try again.")
@@ -103,7 +165,7 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
 
   async function handleSearch() {
     setSearching(true)
-    setSearchResult(null)
+    setSearchReport(null)
     setSearchIsError(false)
     setSearchErrorText('')
 
@@ -111,8 +173,9 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
     setCriteriaSaved(false)
     setCriteriaError('')
     try {
-      const saved = await saveCriteria(criteriaText)
+      const saved = await saveCriteria(criteriaText, browserTz)
       setCriteriaText(saved.text)
+      setUserTimeZone(saved.timeZone)
       showCriteriaSaved()
     } catch {
       setCriteriaError("Couldn't save. Try again.")
@@ -124,14 +187,20 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
       const result = await runSearch()
       const queueCount = await onSearchComplete()
 
-      if (result.eventsFound === 0) {
+      if (result.eventsFound === 0 && !result.stageCounts) {
         setSearchErrorText('Found no events. Try broader criteria.')
       } else {
-        setSearchResult({ found: result.eventsFound, new_: result.eventsNew, queued: queueCount })
+        setSearchReport({ lines: buildRunReport(result), queued: queueCount })
       }
-    } catch {
-      setSearchErrorText('Search failed. Try again.')
-      setSearchIsError(true)
+    } catch (err: unknown) {
+      const e = err as Error & { status?: number; retryAfter?: number }
+      if (e.status === 429) {
+        const minutes = e.retryAfter ? Math.ceil(e.retryAfter / 60) : 60
+        setSearchErrorText(`Search limit reached, try again in ${minutes} minutes`)
+      } else {
+        setSearchErrorText('Search failed. Try again.')
+        setSearchIsError(true)
+      }
     } finally {
       setSearching(false)
     }
@@ -177,6 +246,11 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
               <span className="text-sm text-destructive">{criteriaError}</span>
             )}
           </div>
+          {userTimeZone === 'UTC' && (
+            <p data-testid="utc-notice" className="text-sm text-muted-foreground">
+              Times shown in UTC until you save your criteria.
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -189,6 +263,7 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
             <p>Below {lower}: rejected.</p>
             <p>Above {upper}: accepted.</p>
             <p>In between: you review.</p>
+            <p className="mt-2 text-xs">Score bands: 90+ fits, 70–89 mostly fits, 40–69 open question, 10–39 off topic. Recommended thresholds: 90 / 40.</p>
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -236,17 +311,19 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
           >
             {searching ? 'Searching…' : 'Search now'}
           </Button>
-          {searchResult && (
+          {searchReport && (
             <div data-testid="search-result" role="status" className="text-sm animate-in fade-in-0 slide-in-from-top-1 duration-200">
-              <p>Found {searchResult.found} events, {searchResult.new_} new.</p>
-              {searchResult.queued > 0 && (
+              {searchReport.lines.map((line, i) => (
+                <p key={i}>{line}</p>
+              ))}
+              {searchReport.queued > 0 && (
                 <Button
                   variant="default"
                   size="sm"
                   className="mt-2"
                   onClick={onNavigateQueue}
                 >
-                  Review {searchResult.queued} events →
+                  Review {searchReport.queued} events →
                 </Button>
               )}
             </div>
