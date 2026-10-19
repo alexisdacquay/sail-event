@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # max_tokens per prompt name
 MAX_TOKENS: dict[str, int] = {
     "criteria": 600,
-    "extract": 4000,
+    "extract": 16000,  # reasoning models spend ~4k tokens thinking before output
     "judge": 300,
     "guard": 100,
 }
