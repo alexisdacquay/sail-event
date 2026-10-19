@@ -45,8 +45,8 @@ def test_full_journey(http: httpx.Client):
     assert r.status_code == 200
     headers = {"Authorization": f"Bearer {r.json()['token']}"}
 
-    # set criteria
-    r = http.put("/api/criteria", json={"text": "outdoor concerts"}, headers=headers)
+    # set criteria (city required; use C1 text so fixture recordings match)
+    r = http.put("/api/criteria", json={"text": "jazz in Berlin (Germany) next week (19-21st October 2026)"}, headers=headers)
     assert r.status_code == 200
 
     # set thresholds
@@ -107,7 +107,7 @@ def test_dedup(http: httpx.Client):
     r = http.post("/api/auth/login", json={"username": user, "password": pw})
     headers = {"Authorization": f"Bearer {r.json()['token']}"}
 
-    http.put("/api/criteria", json={"text": "anything"}, headers=headers)
+    http.put("/api/criteria", json={"text": "jazz in Berlin (Germany) next week (19-21st October 2026)"}, headers=headers)
     http.put(
         "/api/thresholds",
         json={"lowerThreshold": 20, "upperThreshold": 80},
@@ -135,7 +135,7 @@ def test_user_isolation(http: httpx.Client):
     http.post("/api/auth/register", json={"username": ua, "password": pa})
     r = http.post("/api/auth/login", json={"username": ua, "password": pa})
     ha = {"Authorization": f"Bearer {r.json()['token']}"}
-    http.put("/api/criteria", json={"text": "music"}, headers=ha)
+    http.put("/api/criteria", json={"text": "jazz in Berlin (Germany) next week (19-21st October 2026)"}, headers=ha)
     http.put(
         "/api/thresholds",
         json={"lowerThreshold": 20, "upperThreshold": 80},
@@ -155,6 +155,31 @@ def test_user_isolation(http: httpx.Client):
     assert len(r.json()) == 0, "user B sees user A's events"
 
 
+# ---------- no-place criteria stops at plan ----------
+
+
+def test_no_place_criteria_stops(http: httpx.Client):
+    """Criteria without a city stop at the plan stage with a clear error."""
+    user, pw = _unique(), "pass"
+    http.post("/api/auth/register", json={"username": user, "password": pw})
+    r = http.post("/api/auth/login", json={"username": user, "password": pw})
+    headers = {"Authorization": f"Bearer {r.json()['token']}"}
+
+    http.put("/api/criteria", json={"text": "sailing regattas"}, headers=headers)
+    http.put(
+        "/api/thresholds",
+        json={"lowerThreshold": 20, "upperThreshold": 80},
+        headers=headers,
+    )
+
+    r = http.post("/api/search", headers=headers)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["eventsFound"] == 0
+    assert body["stoppedAtStage"] == "search"
+    assert body["error"] == "no place in criteria"
+
+
 # ---------- search/all ----------
 
 
@@ -164,7 +189,7 @@ def test_search_all(http: httpx.Client, api_key: str):
     http.post("/api/auth/register", json={"username": user, "password": pw})
     r = http.post("/api/auth/login", json={"username": user, "password": pw})
     headers = {"Authorization": f"Bearer {r.json()['token']}"}
-    http.put("/api/criteria", json={"text": "festivals"}, headers=headers)
+    http.put("/api/criteria", json={"text": "jazz in Berlin (Germany) next week (19-21st October 2026)"}, headers=headers)
     http.put(
         "/api/thresholds",
         json={"lowerThreshold": 20, "upperThreshold": 80},
@@ -186,7 +211,7 @@ def test_ics_feed(http: httpx.Client):
     r = http.post("/api/auth/login", json={"username": user, "password": pw})
     headers = {"Authorization": f"Bearer {r.json()['token']}"}
 
-    http.put("/api/criteria", json={"text": "art"}, headers=headers)
+    http.put("/api/criteria", json={"text": "jazz in Berlin (Germany) next week (19-21st October 2026)"}, headers=headers)
     http.put(
         "/api/thresholds",
         json={"lowerThreshold": 20, "upperThreshold": 80},
@@ -247,7 +272,7 @@ def test_data_survives_restart(http: httpx.Client, base_url: str):
     r = http.post("/api/auth/login", json={"username": user, "password": pw})
     headers = {"Authorization": f"Bearer {r.json()['token']}"}
 
-    http.put("/api/criteria", json={"text": "sailing"}, headers=headers)
+    http.put("/api/criteria", json={"text": "jazz in Berlin (Germany) next week (19-21st October 2026)"}, headers=headers)
     http.put(
         "/api/thresholds",
         json={"lowerThreshold": 20, "upperThreshold": 80},

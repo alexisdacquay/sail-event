@@ -1,0 +1,39 @@
+{
+  "response": {
+    "place": {
+      "city": null,
+      "country": null,
+      "region": null,
+      "radius_km": null,
+      "online": false
+    },
+    "date": {
+      "start": null,
+      "end": null,
+      "relative": "next_n_days",
+      "relative_n": 30
+    },
+    "topics": [
+      "sailing"
+    ],
+    "topics_local": [],
+    "formats": [
+      "regatta"
+    ],
+    "budget": {
+      "max_amount": null,
+      "currency": null,
+      "free_only": false
+    },
+    "language": "en",
+    "input_language": "en",
+    "other_constraints": []
+  },
+  "usage": {
+    "prompt_tokens": 1500,
+    "completion_tokens": 400,
+    "total_tokens": 1900
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "deepseek-flash"
+}

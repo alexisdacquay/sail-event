@@ -32,6 +32,10 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 
 Dev environment (`sail-event-dev`): `APP_ENV=dev`, `FAKE_NOW=2026-10-18T12:00:00+02:00`, `SEED_DEMO=1`.
 
+`docker-compose.yml` defaults `FAKE_NOW` to `2026-10-18T12:00:00+02:00`
+so `docker compose up` with no env gives the demo a non-empty queue.
+Render dev sets `FAKE_NOW` explicitly; prod never sets it.
+
 Secrets live only in Render and GitHub secrets, never in the repo.
 
 ## Health

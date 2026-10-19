@@ -22,7 +22,7 @@ test.describe("Journey 1: full user flow", () => {
     await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
 
     // Set criteria
-    await page.getByLabel("What I'm looking for").fill("outdoor concerts and festivals");
+    await page.getByLabel("What I'm looking for").fill("jazz in Berlin (Germany) next week (19-21st October 2026)");
     await page.getByRole("button", { name: "Save criteria" }).click();
     await expect(page.getByText("Saved.")).toBeVisible();
 
@@ -110,7 +110,7 @@ test.describe("Journey 2: user isolation", () => {
     await expect(
       page1.getByRole("heading", { name: "Sail Event" })
     ).toBeVisible();
-    await page1.getByLabel("What I'm looking for").fill("sailing regattas");
+    await page1.getByLabel("What I'm looking for").fill("jazz in Berlin (Germany) next week (19-21st October 2026)");
     await page1.getByRole("button", { name: "Save criteria" }).click();
     await page1.getByRole("button", { name: "Search now" }).click();
     await expect(page1.getByText(/Found \d+ events, \d+ new\./)).toBeVisible({

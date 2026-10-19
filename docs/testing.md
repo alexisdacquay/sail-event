@@ -82,29 +82,48 @@ To run against an already-running stack:
 SAIL_BASE_URL=http://localhost:8010 make test-e2e
 ```
 
-## Real adapters
+## Real adapters smoke
 
-To smoke-test the Tavily adapter against the live API (not run in CI):
+`backend/scripts/smoke_search.py` runs the full pipeline (criteria parse,
+window, plan, search, extract, filter, judge) against live adapters and
+prints the run report with one line per kept event.
 
 ```
-SEARCH_PROVIDER=tavily TAVILY_API_KEY=... uv run python -m app.adapters.search_tavily "sailing regattas 2026"
+cd backend
+set -a; . .env.local; set +a
+SSL_CERT_FILE=$(uv run python -m certifi) \
+  uv run python scripts/smoke_search.py \
+    "jazz in Berlin (Germany) next week (19-21st October 2026)"
 ```
+
+Options:
+
+- `--repeat N` — run N times, print score spread per event (consistency check)
+- `--record DIR` — save raw provider and model responses under DIR
+
+Environment overrides (defaults to real adapters):
+
+```
+SEARCH_PROVIDER=tavily LLM_PROVIDER=openai_compatible GUARDRAIL=none
+```
+
+Keys (`TAVILY_API_KEY`, `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`,
+`LLM_JSON_MODE`) come from `backend/.env.local` (git-ignored).
 
 CI stays fixture-only; `make test` never hits the network.
 
-To smoke-test the Claude scorer adapter against the live API (not run in CI):
-
-```
-SCORER=claude ANTHROPIC_API_KEY=... uv run python -m app.adapters.scorer_claude "<criteria>"
-```
-
-Scores one hard-coded fixture event, prints score and reason. CI stays fixture-only.
-
 ## Adapter-stub approach
 
-`FixtureSearchProvider` returns canned events from `fixtures.json`.
-`FakeScorer` produces a deterministic score via `md5(title) mod 101`.
+`FixtureProvider` returns canned events from `fixtures.json`.
+`FakeLanguageModel` replays recorded responses keyed by prompt hash.
 
-These stubs keep tests key-free and offline through S12. Env vars
-`SEARCH_PROVIDER` and `SCORER` toggle real implementations (S13);
+These stubs keep tests key-free and offline. Env vars
+`SEARCH_PROVIDER` and `LLM_PROVIDER` toggle real implementations;
 fixture/fake are the default when unset.
+
+## Fixed clock
+
+All tests, CI, compose and the dev service run with
+`FAKE_NOW=2026-10-18T12:00:00+02:00` so that fixture recordings and
+date-dependent filters produce stable results. Production never sets
+`FAKE_NOW`.
