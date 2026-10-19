@@ -43,7 +43,7 @@ jobs:
             exit 1
           fi
 
-          USERS=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin)['usersProcessed'])")
-          echo "usersProcessed: $USERS"
+          QUEUED=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin)['usersQueued'])")
+          echo "usersQueued: $QUEUED"
           SKIPPED=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin)['usersSkipped'])")
           echo "usersSkipped: $SKIPPED"

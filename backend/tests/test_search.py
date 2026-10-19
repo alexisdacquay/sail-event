@@ -48,11 +48,14 @@ def test_search_all_unset_env_returns_401(client, monkeypatch):
     assert r.status_code == 401
 
 
-def test_search_all_correct_key(client, monkeypatch):
+def test_search_all_returns_202_with_users_queued(client, monkeypatch):
     monkeypatch.setenv("SEARCH_ALL_API_KEY", "test-secret")
     r = client.post("/api/search/all", headers={"X-API-Key": "test-secret"})
-    assert r.status_code == 200
-    assert r.json() == {"usersProcessed": 1, "usersSkipped": 0}
+    assert r.status_code == 202
+    body = r.json()
+    assert "usersQueued" in body
+    assert "usersSkipped" in body
+    assert body["usersQueued"] >= 1
 
 
 def test_run_search_no_auth_returns_401(client):
@@ -92,9 +95,9 @@ def test_search_all_max_scheduled_users(client, auth_headers, _db_session, monke
     _db_session.commit()
 
     r = client.post("/api/search/all", headers={"X-API-Key": "k"})
-    assert r.status_code == 200
+    assert r.status_code == 202
     body = r.json()
-    assert body["usersProcessed"] == 2
+    assert body["usersQueued"] == 2
     assert body["usersSkipped"] == 1
 
 
@@ -103,7 +106,7 @@ def test_search_all_cap_gte_total_no_skip(client, monkeypatch):
     monkeypatch.setenv("MAX_SCHEDULED_USERS", "100")
 
     r = client.post("/api/search/all", headers={"X-API-Key": "k"})
-    assert r.status_code == 200
+    assert r.status_code == 202
     assert r.json()["usersSkipped"] == 0
 
 
@@ -112,14 +115,33 @@ def test_search_all_skips_user_without_criteria(client, auth_headers, _db_sessio
 
     # Register user then delete their criteria row
     auth_headers("nocrit", "nocrit")
-    from app.orm import User, Criteria, Run
+    from app.orm import User, Criteria
     user = _db_session.query(User).filter(User.username == "nocrit").first()
     _db_session.query(Criteria).filter(Criteria.user_id == user.id).delete()
     _db_session.commit()
 
     r = client.post("/api/search/all", headers={"X-API-Key": "k"})
-    assert r.status_code == 200
+    assert r.status_code == 202
+    # Only 1 user queued (demo), nocrit skipped by join
+    assert r.json()["usersQueued"] == 1
 
-    # No Run row for the criteria-less user
-    runs = _db_session.query(Run).filter(Run.user_id == user.id).all()
-    assert len(runs) == 0
+
+def test_search_all_skips_user_with_unfinished_run(client, _db_session, monkeypatch):
+    """A user with an unfinished run started < 55 min ago is skipped."""
+    from datetime import datetime, UTC, timedelta
+    from app.orm import Run, User
+
+    monkeypatch.setenv("SEARCH_ALL_API_KEY", "k")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+
+    # Insert an unfinished run started 10 minutes ago
+    recent = datetime.now(UTC) - timedelta(minutes=10)
+    _db_session.add(Run(
+        user_id=user.id, started_at=recent, trigger="scheduled",
+    ))
+    _db_session.commit()
+
+    r = client.post("/api/search/all", headers={"X-API-Key": "k"})
+    assert r.status_code == 202
+    assert r.json()["usersQueued"] == 0
+    assert r.json()["usersSkipped"] == 1
