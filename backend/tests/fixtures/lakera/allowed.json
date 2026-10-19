@@ -1,0 +1,10 @@
+{
+  "description": "Benign criteria text — live-recorded 2026-10-18",
+  "input": "jazz in Berlin (Germany) next week",
+  "status": 200,
+  "response": {
+    "flagged": false,
+    "action": "enforce",
+    "metadata": {}
+  }
+}

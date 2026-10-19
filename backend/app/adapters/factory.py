@@ -95,13 +95,73 @@ def get_language_model() -> LanguageModel:
 class _NoOpGuardrail:
     """GUARDRAIL=none — always allows, no network."""
 
-    def check(self, text: str) -> None:
+    def check(self, text: str, *, target: str = "criteria") -> None:
         """No-op: always passes."""
 
 
-def get_guardrail() -> _NoOpGuardrail:
+class _CompositeGuardrail:
+    """Lakera primary, self-check fallback, metrics on every call.
+
+    Raises ContentFlagged when the text is flagged (criteria → 400; page → skip).
+    Raises GuardUnavailable only when both Lakera and the fallback fail AND
+    GUARD_FALLBACK != self_check (i.e., no fallback configured).
+    Raises RuntimeError when both fail and the caller must fail closed (criteria → 503).
+    """
+
+    def __init__(self, lakera, fallback, *, guard_counter) -> None:
+        self._lakera = lakera
+        self._fallback = fallback  # None when GUARD_FALLBACK != self_check
+        self._counter = guard_counter
+
+    def check(self, text: str, *, target: str = "criteria") -> None:
+        from .guard_lakera import ContentFlagged, GuardUnavailable
+
+        try:
+            self._lakera.check(text)
+            self._counter.add(1, {"guard": "lakera", "target": target, "outcome": "allowed"})
+            return
+        except ContentFlagged:
+            self._counter.add(1, {"guard": "lakera", "target": target, "outcome": "flagged"})
+            raise
+        except GuardUnavailable:
+            self._counter.add(1, {"guard": "lakera", "target": target, "outcome": "error"})
+            if self._fallback is None:
+                raise
+            # Fall through to self-check
+            try:
+                self._fallback.check(text)
+                self._counter.add(1, {"guard": "self_check", "target": target, "outcome": "allowed"})
+                return
+            except ContentFlagged:
+                self._counter.add(1, {"guard": "self_check", "target": target, "outcome": "flagged"})
+                raise
+            except Exception:
+                self._counter.add(1, {"guard": "self_check", "target": target, "outcome": "error"})
+                raise RuntimeError("both guards failed")
+
+
+def get_guardrail():
+    from opentelemetry import metrics as otel_metrics
+
     value = os.environ.get("GUARDRAIL", "none")
     if value == "none":
         return _NoOpGuardrail()
-    # Real guardrails wired in issue H
+
+    if value == "lakera":
+        from .guard_lakera import LakeraGuardrail
+        lakera = LakeraGuardrail()
+
+        fallback = None
+        if os.environ.get("GUARD_FALLBACK") == "self_check":
+            model = get_language_model()
+            from ..services.guardrails.self_check import SelfCheckGuardrail
+            fallback = SelfCheckGuardrail(model)
+
+        meter = otel_metrics.get_meter("sail-event.pipeline")
+        counter = meter.create_counter(
+            "sail_guard_runs_total",
+            description="Guardrail check outcomes",
+        )
+        return _CompositeGuardrail(lakera, fallback, guard_counter=counter)
+
     raise ValueError(f"Unknown GUARDRAIL: {value!r}")

@@ -262,6 +262,9 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                 counts["extract_truncated"] = extract_counts.extract_truncated
                 counts["events_extracted"] = extract_counts.events_extracted
                 counts["extract_errors"] = extract_counts.extract_errors
+                counts["guard_skipped"] = extract_counts.guard_skipped
+                counts["guard_fallback"] = extract_counts.guard_fallback
+                counts["guard_errors"] = extract_counts.guard_errors
                 # Non-event count from extraction
                 counts["filtered_non_event"] = extract_counts.filtered_non_event
 

@@ -29,6 +29,10 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `MAX_SCHEDULED_USERS` | `50` — max users per scheduled search |
 | `REGISTER_RATE_LIMIT_PER_HOUR` | `5` — successful registrations per IP per hour |
 | `REGISTRATION_CODE` | optional — invite code for registration; unset = open |
+| `GUARDRAIL` | `lakera` (prod) or `none` (default, dev/CI); set at issue H promote |
+| `LAKERA_API_KEY` | Lakera Guard API key (required when `GUARDRAIL=lakera`) |
+| `GUARD_FALLBACK` | `self_check` (prod) or `none`; used only when Lakera errors or quota exhausted |
+| `SEARCH_NOW_PER_HOUR` | `6` — "Search now" manual runs per user per rolling hour |
 
 Dev environment (`sail-event-dev`): `APP_ENV=dev`, `FAKE_NOW=2026-10-18T12:00:00+02:00`, `SEED_DEMO=1`.
 
