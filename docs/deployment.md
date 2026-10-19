@@ -29,6 +29,11 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `MAX_SCHEDULED_USERS` | `50` — max users per scheduled search |
 | `REGISTER_RATE_LIMIT_PER_HOUR` | `5` — successful registrations per IP per hour |
 | `REGISTRATION_CODE` | optional — invite code for registration; unset = open |
+| `SEARCH_DAILY_CALLS` | `600` — daily search-call budget across all users |
+| `LLM_DAILY_CALLS` | `5000` — daily LLM-call budget across all users |
+| `LLM_USD_PER_1K_IN` | cost per 1 000 input tokens; set all three price vars to enable `cost_usd` |
+| `LLM_USD_PER_1K_OUT` | cost per 1 000 output tokens |
+| `SEARCH_USD_PER_CALL` | cost per search API call |
 
 Dev environment (`sail-event-dev`): `APP_ENV=dev`, `FAKE_NOW=2026-10-18T12:00:00+02:00`, `SEED_DEMO=1`.
 
