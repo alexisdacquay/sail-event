@@ -13,7 +13,7 @@ from opentelemetry import trace, metrics
 from sqlalchemy.orm import Session
 
 from ..adapters.factory import get_language_model, get_search_provider, get_guardrail
-from ..adapters.search_v2 import remove_known_pages
+from ..adapters.search import remove_known_pages
 from ..services import clock
 from ..services.criteria import needs_parse, parse_criteria, parse_metadata
 from ..services.window import WindowInPast, resolve
@@ -187,7 +187,7 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                         return run
 
             # --- Stage 4: search ---
-            from ..adapters.search_v2 import SearchResult as SResult
+            from ..adapters.search import SearchResult as SResult
             max_results_per_q = int(os.environ.get("MAX_RESULTS_PER_QUERY", "6"))
             all_results: list[SResult] = []
 

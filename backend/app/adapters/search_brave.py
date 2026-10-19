@@ -13,7 +13,7 @@ import urllib.parse
 import urllib.request
 from typing import ClassVar
 
-from .search_v2 import SearchResult
+from .search import SearchResult
 
 
 class BraveProvider:

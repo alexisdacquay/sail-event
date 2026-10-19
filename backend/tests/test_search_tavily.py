@@ -1,5 +1,4 @@
-"""Contract tests for TavilyProviderV2 against the recorded C1 response."""
-
+"""Contract tests for TavilyProvider against the recorded C1 response."""
 from __future__ import annotations
 
 import io
@@ -9,9 +8,9 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from app.adapters.search_tavily_v2 import TavilyProviderV2
+from app.adapters.search_tavily import TavilyProvider
 
-FIXTURE = pathlib.Path(__file__).parent / "fixtures" / "tavily_v2" / "search_c1_query1.json"
+FIXTURE = pathlib.Path(__file__).parent / "fixtures" / "tavily" / "search_c1_query1.json"
 
 
 def _fake_urlopen(fixture_path: pathlib.Path = FIXTURE):
@@ -34,7 +33,7 @@ class TestRequestBody:
         monkeypatch.setenv("TAVILY_API_KEY", "test-key")
         mock_urlopen.return_value = _fake_urlopen()
 
-        provider = TavilyProviderV2()
+        provider = TavilyProvider()
         provider.search(
             "Jazz Berlin Oktober 2026",
             country="DE",
@@ -58,7 +57,7 @@ class TestRequestBody:
         monkeypatch.setenv("TAVILY_API_KEY", "test-key")
         mock_urlopen.return_value = _fake_urlopen()
 
-        provider = TavilyProviderV2()
+        provider = TavilyProvider()
         provider.search(
             "jazz Berlin October 2026",
             country="DE",
@@ -78,7 +77,7 @@ class TestRequestBody:
         monkeypatch.setenv("TAVILY_API_KEY", "test-key")
         mock_urlopen.return_value = _fake_urlopen()
 
-        provider = TavilyProviderV2()
+        provider = TavilyProvider()
         provider.search("test", country="ZZ", max_results=6)
 
         req = mock_urlopen.call_args[0][0]
@@ -95,7 +94,7 @@ class TestMapping:
         monkeypatch.setenv("TAVILY_API_KEY", "test-key")
         mock_urlopen.return_value = _fake_urlopen()
 
-        provider = TavilyProviderV2()
+        provider = TavilyProvider()
         results = provider.search("jazz Berlin October 2026", country="DE", max_results=6)
 
         assert len(results) > 0
@@ -120,7 +119,7 @@ class TestErrors:
         mock_urlopen.side_effect = urllib.error.HTTPError(
             "https://api.tavily.com/search", 401, "Unauthorized", {}, io.BytesIO(b""),
         )
-        provider = TavilyProviderV2()
+        provider = TavilyProvider()
         with pytest.raises(RuntimeError, match="HTTP 401"):
             provider.search("q")
 
@@ -131,7 +130,7 @@ class TestErrors:
         mock_urlopen.side_effect = urllib.error.HTTPError(
             "https://api.tavily.com/search", 429, "Too Many Requests", {}, io.BytesIO(b""),
         )
-        provider = TavilyProviderV2()
+        provider = TavilyProvider()
         with pytest.raises(RuntimeError, match="HTTP 429"):
             provider.search("q")
 
@@ -142,7 +141,7 @@ class TestErrors:
         mock_urlopen.side_effect = urllib.error.HTTPError(
             "https://api.tavily.com/search", 503, "Service Unavailable", {}, io.BytesIO(b""),
         )
-        provider = TavilyProviderV2()
+        provider = TavilyProvider()
         with pytest.raises(RuntimeError, match="HTTP 503"):
             provider.search("q")
 
@@ -151,7 +150,7 @@ class TestErrors:
         import urllib.error
         monkeypatch.setenv("TAVILY_API_KEY", "test-key")
         mock_urlopen.side_effect = urllib.error.URLError("Connection timed out")
-        provider = TavilyProviderV2()
+        provider = TavilyProvider()
         with pytest.raises(RuntimeError, match="Connection timed out"):
             provider.search("q")
 
@@ -163,4 +162,4 @@ class TestMissingKey:
     def test_missing_key_raises(self, monkeypatch):
         monkeypatch.delenv("TAVILY_API_KEY", raising=False)
         with pytest.raises(ValueError, match="TAVILY_API_KEY"):
-            TavilyProviderV2()
+            TavilyProvider()

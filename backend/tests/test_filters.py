@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from app.adapters.search_v2 import canonical_url
+from app.adapters.search import canonical_url
 from app.services.extract import ExtractedEvent
 from app.services.filters import (
     FilterCounts,

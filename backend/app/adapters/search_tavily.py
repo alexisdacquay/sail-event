@@ -1,4 +1,4 @@
-"""Tavily Search API v2 adapter.
+"""Tavily Search API adapter.
 
 Country sent as a name (Tavily's requirement); language forwarded for
 local-language queries; raw_content requested; no date regex.
@@ -12,7 +12,7 @@ import urllib.error
 import urllib.request
 from typing import ClassVar
 
-from .search_v2 import SearchResult
+from .search import SearchResult
 
 # Tavily accepts country *names*, not ISO-2 codes.
 _ISO2_TO_COUNTRY: dict[str, str] = {
@@ -31,7 +31,7 @@ _ISO2_TO_COUNTRY: dict[str, str] = {
 }
 
 
-class TavilyProviderV2:
+class TavilyProvider:
     API_URL: ClassVar[str] = "https://api.tavily.com/search"
     TIMEOUT: ClassVar[int] = 10
 

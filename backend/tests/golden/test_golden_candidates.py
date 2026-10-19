@@ -19,7 +19,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 GOLDEN_PATH = Path(__file__).parent / "candidates.json"
-FIXTURES_PATH = Path(__file__).resolve().parents[2] / "app" / "adapters" / "fixtures_v2.json"
+FIXTURES_PATH = Path(__file__).resolve().parents[2] / "app" / "adapters" / "fixtures.json"
 
 
 def _load_golden():
@@ -34,7 +34,7 @@ def _load_fixtures():
 def extraction_result():
     """Run extraction + filtering on all 22 fixture candidates."""
     from app.adapters.factory import get_language_model, get_guardrail
-    from app.adapters.search_v2 import SearchResult
+    from app.adapters.search import SearchResult
     from app.services import clock
     from app.services.extract import extract_events
     from app.services.filters import filter_events
@@ -184,7 +184,7 @@ def test_e18_filtered_duplicate_link(extraction_result):
     """E18 (same URL with utm_source) is filtered as duplicate by link."""
     kept = extraction_result["kept"]
     # E18's URL after canonicalization matches E1's
-    from app.adapters.search_v2 import canonical_url
+    from app.adapters.search import canonical_url
     e1_url = _fixture_url(extraction_result["fixtures"], "E1")
     e18_url = _fixture_url(extraction_result["fixtures"], "E18")
     assert canonical_url(e1_url) == canonical_url(e18_url), "E1 and E18 should have same canonical URL"

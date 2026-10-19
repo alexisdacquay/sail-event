@@ -1,4 +1,4 @@
-"""SearchProvider v2 protocol and SearchResult model."""
+"""SearchProvider protocol and SearchResult model."""
 
 from __future__ import annotations
 

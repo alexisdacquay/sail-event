@@ -1,10 +1,10 @@
-"""Tests for search_v2: canonical_url and remove_known_pages."""
+"""Tests for adapters.search: canonical_url and remove_known_pages."""
 
 from __future__ import annotations
 
 import pytest
 
-from app.adapters.search_v2 import SearchResult, canonical_url, remove_known_pages
+from app.adapters.search import SearchResult, canonical_url, remove_known_pages
 
 
 # ---------- canonical_url ----------

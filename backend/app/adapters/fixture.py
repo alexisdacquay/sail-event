@@ -1,7 +1,6 @@
-"""Fixture search provider v2 — returns golden set B pages.
+"""Fixture search provider — returns golden set B pages.
 
 Shaped as SearchResult; dates inside the fixed clock's window.
-The old fixture.py stays until the swap (issue F2).
 """
 
 from __future__ import annotations
@@ -9,14 +8,14 @@ from __future__ import annotations
 import importlib.resources
 import json
 
-from .search_v2 import SearchResult
+from .search import SearchResult
 
 
-class FixtureProviderV2:
+class FixtureProvider:
     name: str = "fixture"
 
     def __init__(self) -> None:
-        ref = importlib.resources.files(__package__).joinpath("fixtures_v2.json")
+        ref = importlib.resources.files(__package__).joinpath("fixtures.json")
         raw = json.loads(ref.read_text(encoding="utf-8"))
         self._results: list[SearchResult] = [
             SearchResult(**{k: v for k, v in entry.items() if k != "id"})

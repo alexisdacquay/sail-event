@@ -128,7 +128,7 @@ class TestValidateReason:
 
 
 GOLDEN_PATH = Path(__file__).parent / "golden" / "candidates.json"
-FIXTURES_PATH = Path(__file__).resolve().parents[1] / "app" / "adapters" / "fixtures_v2.json"
+FIXTURES_PATH = Path(__file__).resolve().parents[1] / "app" / "adapters" / "fixtures.json"
 
 # Events that survive C1 extraction+filtering and need judging.
 # E1, E4, E20 are few-shot examples: excluded from assertions.

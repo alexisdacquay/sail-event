@@ -58,12 +58,12 @@ def get_search_provider():
     if value == "fixture":
         if is_prod:
             return _DeferredProdSearchGuard()
-        from .fixture_v2 import FixtureProviderV2
-        return FixtureProviderV2()
+        from .fixture import FixtureProvider
+        return FixtureProvider()
 
     if value == "tavily":
-        from .search_tavily_v2 import TavilyProviderV2
-        return TavilyProviderV2()
+        from .search_tavily import TavilyProvider
+        return TavilyProvider()
 
     if value == "brave":
         from .search_brave import BraveProvider

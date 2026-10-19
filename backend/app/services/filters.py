@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, time, timezone
 from zoneinfo import ZoneInfo
 
-from ..adapters.search_v2 import canonical_url
+from ..adapters.search import canonical_url
 from ..services.extract import ExtractedEvent
 
 # Country → single IANA zone; multi-zone countries (US, AU, BR, RU, CA) → None

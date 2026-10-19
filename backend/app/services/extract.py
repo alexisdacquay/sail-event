@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
-from ..adapters.search_v2 import SearchResult
+from ..adapters.search import SearchResult
 from ..services import clock
 
 logger = logging.getLogger(__name__)

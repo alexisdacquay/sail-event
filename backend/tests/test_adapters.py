@@ -14,8 +14,8 @@ class TestFactories:
     def test_get_search_provider_default(self, monkeypatch):
         monkeypatch.delenv("SEARCH_PROVIDER", raising=False)
         provider = get_search_provider()
-        from app.adapters.fixture_v2 import FixtureProviderV2
-        assert isinstance(provider, FixtureProviderV2)
+        from app.adapters.fixture import FixtureProvider
+        assert isinstance(provider, FixtureProvider)
 
     def test_get_search_provider_raises_on_unknown(self, monkeypatch):
         monkeypatch.setenv("SEARCH_PROVIDER", "unknown")
