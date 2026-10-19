@@ -54,9 +54,9 @@ test.describe("Journey 1: full user flow", () => {
       page.getByRole("spinbutton", { name: "Auto-accept above" })
     ).toHaveValue("65");
 
-    // Search
+    // Search — run report shows pipeline line or fallback "Found N events"
     await page.getByRole("button", { name: "Search now" }).click();
-    await expect(page.getByText(/Found \d+ events, \d+ new\./)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("search-result")).toBeVisible({ timeout: 15_000 });
 
     // Assert To review badge with count is visible in the header before clicking
     await expect(page.getByRole("button", { name: /To review \(\d+\)/ })).toBeVisible();
@@ -113,7 +113,7 @@ test.describe("Journey 2: user isolation", () => {
     await page1.getByLabel("What I'm looking for").fill("jazz in Berlin (Germany) next week (19-21st October 2026)");
     await page1.getByRole("button", { name: "Save criteria" }).click();
     await page1.getByRole("button", { name: "Search now" }).click();
-    await expect(page1.getByText(/Found \d+ events, \d+ new\./)).toBeVisible({
+    await expect(page1.getByTestId("search-result")).toBeVisible({
       timeout: 15_000,
     });
 
