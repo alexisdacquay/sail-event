@@ -1,6 +1,8 @@
 # Search and scoring — design (v2)
 
-How `search-spec.md` is built. Paths are repo-relative. Nothing here is implemented yet; section 12 is the rollout, section 13 the issue order.
+How `search-spec.md` is built. Paths are repo-relative. Section 12 is the rollout, section 13 the issue order.
+
+Revision 2026-10-18 (owner): the query goes to the search engine verbatim, no planner, no place stop (§5); the extractor records no price and the judge has no price or budget rule (spec §5, §7). Passages elsewhere that still mention planned queries, `country`/`language` parameters, price fields or a "no place" stop are superseded by this revision.
 
 Why the deployed result was worthless: prod has no adapter keys, so the old factory selected the fixture list and the `md5(title)` scorer. Everything below assumes real adapters; section 12 says in which order the keys and the code land so that state cannot recur silently.
 
@@ -12,8 +14,8 @@ Why the deployed result was worthless: prod has no adapter keys, so the old fact
 |---|---|---|---|---|---|---|
 | 1 | understand criteria | `criteria.py` | `Criteria.text`, `User.time_zone` | `Facets` (pydantic), stored on `Criteria.facets_json` | 1, only when `text` changed since `parsed_at` | 2 prompts as files, 4 structured output |
 | 2 | resolve window | `window.py` | `Facets.date`, now, user tz | `Window(start_utc, end_utc, tz)` | none | 8 control flow in code |
-| 3 | plan queries | `planner.py` | `Facets`, `Window`, trigger, run ordinal | `list[PlannedQuery(text, country, language, priority)]` | none | 8 |
-| 4 | search | `search.py` | queries, `SearchProvider` | `list[SearchResult]` deduped by canonical URL, known links removed | none | 10 small steps |
+| 3 | (withdrawn 2026-10-18: no query planning, see §5) | — | — | — | — | — |
+| 4 | search | `search.py` | `Criteria.text` verbatim, `SearchProvider` | `list[SearchResult]` deduped by canonical URL, known links removed | none | 10 small steps |
 | 5 | extract | `extract.py` | pass 1: one query's results (title + snippet each), `Window`, target place, today; pass 2: one page's `raw_content` for `listing` or incomplete rows, after the page guard (§11) | `list[ExtractedEvent]`, `page_kind` per result | 1 per query + 1 per listing or incomplete page | 4 |
 | 6 | filter | `filters.py` | `ExtractedEvent`s, `Window`, `Facets.place`, stored events | kept events + `FilterCounts` | none | 8 |
 | 7 | judge | `judge.py` | one event, criteria text, `Facets`, `Window` | `Verdict(score, reason, flags)` → capped score | 1 per event | 4, 12 stateless |
@@ -198,44 +200,11 @@ Prompt content rules (own your prompts: the `.md` is the whole instruction, no t
 
 Code after the judge (`judge.py`): apply the caps table from spec §7 to `score`; `is_event = false` → score 0 and the event is dropped with `filtered_non_event`; `reason` checked for length ≤ 140 and the pattern (contains a date token and a place token, ends without a URL, no markup); a failing reason → `judge_errors`, event stays `new`.
 
-## 5. Query planning rules
+## 5. Query rule (revised 2026-10-18, owner decision)
 
-`planner.py`, pure function `plan(facets, window, *, max_queries, offset) -> list[PlannedQuery]`.
+There is no query planning. The search stage sends `Criteria.text` to the provider verbatim, one call, raw page content requested, no `country`, `language` or freshness parameter. The provider's results are what the extractor gets. The code never rewrites, translates, templates or targets the query, and never stops a run for a missing city or country; the only stop before search is empty criteria text (and `WindowInPast`, §1).
 
-| Order | Template | Condition |
-|---|---|---|
-| 1 | `{topic} {city} {Month} {year}` | per topic (first 2); no topic → `events {city} {Month} {year}` |
-| 2 | `{topic_local} {city} {Month_local} {year}` | language ≠ en, per topic_local (first 2) |
-| 3 | `{topic} {format} {city} {day_phrase}` | `day_phrase` = `19–21 October 2026` for a window ≤ 7 days, else `{Month} {year}`; format = first format or `concert`/`event` |
-| 4 | `{city} {events_word_local} {topic_local} {day_phrase_local}` | language ≠ en; `events_word_local` from a 12-entry table in code (de Veranstaltungen, fr événements, es eventos, pt eventos, it eventi, nl evenementen, ja イベント, …) |
-| 5 | `{topic} {city} tickets {Month} {year}` | always |
-| 6 | `{topic} {city} programme this week` / `program {Month} {year}` | window ≤ 7 days |
-| 7 | `{topic} online {Month} {year}` | `place.online` and no city |
-
-- Queries deduplicated case-insensitively, truncated to `max_queries` in order; `offset` rotates the start index for scheduled runs (`offset = count of the user's scheduled runs mod len(plan)`) so two queries per hour cover the whole plan in three hours.
-- `country` = `place.country` (ISO-2; the Tavily adapter maps it to the country name); `language` = `facets.language` for templates 2 and 4 (sent as Tavily `language`, Brave `search_lang`), `en` otherwise; `freshness_days` = None (not sent).
-- No city and not online → empty plan; the run records `stopped_at_stage = "search"`, `error = "no place in criteria"`.
-- Month names: `calendar.month_name` for English; a 12-entry month table per supported language in code (de, fr, es, pt, it, nl); other languages fall back to English for template 2.
-
-Example, C1 (Berlin jazz, window 19–21 Oct 2026, language de):
-
-1. `jazz Berlin October 2026`
-2. `Jazz Berlin Oktober 2026`
-3. `jazz concert Berlin 19–21 October 2026`
-4. `Berlin Veranstaltungen Jazz 19.–21. Oktober 2026`
-5. `jazz Berlin tickets October 2026`
-6. `jazz Berlin programme this week`
-
-Example, C4 (`something fun in Lisbon this weekend`, run 2026-10-18 → window Sat 24 – Sun 25 Oct 2026, no topics, language pt):
-
-1. `events Lisbon October 2026`
-2. `eventos Lisboa Outubro 2026`
-3. `events Lisbon 24–25 October 2026`
-4. `Lisboa eventos 24–25 outubro 2026`
-5. `events Lisbon tickets October 2026`
-6. `events Lisbon programme this week`
-
-Example, C3 (`something fun this weekend`, no place): empty plan, run stops, report `no place in criteria`.
+Consequences: `planner.py`, `PlannedQuery`, the local-language month and event-word tables, the Tavily country-name map and the `language` parameter are deleted; "queries per run" is 1 (budget maths in §8 scale by that); the facets (§4) serve the window and the judge only. The earlier templated planner (seven templates, six queries, local-language variants, "no place" stop) is withdrawn: it put the code's opinion between the user and the search engine and produced empty runs for country-only or place-less criteria.
 
 ## 6. Relative dates and time zones
 
