@@ -1,5 +1,11 @@
 # ProjectOne — work state (resumable)
 
+## PAUSE 2026-10-20 19:10 (owner: laptop) — RESUME HERE
+- Nothing running: no agents, no worktrees, no compose stack, no cron. main b32980e, tree clean. Prod 36990d7 (= all six PRs), dev follows main. Batch 4 logged (work/SEARCH-BATCHES.md): guard right on both services, only the injection refused.
+- Open issues, ranked for the next session: #73 hourly queue double-run (prod safety), #76 X-Forwarded-For trust (prod safety), #83 Tavily read timeout retry (seen once on prod), #77 Tavily credits/cost, #72 rollback doc + probe (health path already set), #74 page_kind, #75 token cost, #78 low. Candidate UI hint: criteria with no place or date ("jazz" → 11-19 US auto-accepts).
+- Owner's standing asks: parallel engineers in worktrees with QA before merge; status as the ASCII block (recreate the 5-minute cron with the status-update skill when agents run); asks to the owner as instruction sheets; breadth batch after every promote; /rubric-review after README changes.
+- Resume: read this block, `git status --short` empty on main, then start #73 #76 #83 #77 in four worktrees (briefs: issue body + machine rules + `make -C <wt> test` + PR + comment), QA each, merge, promote with promote.yml, run `python3 backend/scripts/remote_batch.py` on dev and prod, append to SEARCH-BATCHES.md.
+
 ## 2026-10-20 18:40 — day's end: main 36990d7 promoting to prod; batch 4 running
 - Merged today after QA: #67 card, #66 silent errors (issue 65), #69 guard split (68), #79 no window stop (70), #80 time zones (71), #82 fallback scope + Lakera 429 retry (81). Prod promoted 842dc31 → b57bbaa → 66490e8 → 50b49f4 → 36990d7 (run 39427391647 started 18:38). Dev follows main.
 - Design reviews (work/DESIGN-REVIEW-2026-10-20.md): guard split accepted with changes (done); latent counter-effects → issues #70-#78; done: 70, 71, health-check path (#72 part), GUARD_FALLBACK set; OPEN: #72 rollback doc + probe, #73 queue double-run, #74 page_kind, #75 token cost, #76 X-Forwarded-For, #77 Tavily credits, #78 low.
