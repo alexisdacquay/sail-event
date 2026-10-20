@@ -82,6 +82,24 @@ To run against an already-running stack:
 SAIL_BASE_URL=http://localhost:8010 make test-e2e
 ```
 
+## Breadth batch against a deployed service
+
+`backend/scripts/remote_batch.py` is the standing search-quality test: twenty
+criteria texts (cities and countries, Spanish and Japanese, vague text, junk,
+a URL, an injection), one fixed throwaway user per text, ten searches in
+parallel through the public API, one Markdown table (status, error, counts
+per stage, seconds, top kept events). Results are logged in
+`work/SEARCH-BATCHES.md` with the ranked problems.
+
+```
+python3 backend/scripts/remote_batch.py https://sail-event-dev.onrender.com d
+python3 backend/scripts/remote_batch.py https://sail-event.onrender.com p
+```
+
+Prod allows 5 registrations per IP per hour, so the first prod run creates
+the users over a few hours; later runs reuse them and the "already known"
+count shows the dedup at work. Dev has the limit raised.
+
 ## Real adapters smoke
 
 `backend/scripts/smoke_search.py` runs the full pipeline (criteria parse,
