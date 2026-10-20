@@ -1,5 +1,11 @@
 # ProjectOne — work state (resumable)
 
+## 2026-10-21 01:50 — examiner fixes merged (PRs 88-91), prod a781bd8, examiner re-run in progress
+- Night session: #73 #76 #77 #83 merged (PRs 84-87, QA each) and promoted; ruthless Fable examiner (work/EXAMINER-2026-10-20.md) scored 17/24 on 0a00973; fixes: PR 88 (curl walkthrough, collector port, search duration note), PR 89 (AGENTS.md, README counts/thresholds/test ports, CI concurrency), PR 90 (alert recipe that fires as written: SEARCH_PROVIDER passthrough, SEARCH_NOW_PER_HOUR, poll-until-firing; trace-id proof curls; dashboard trace panel; literal rule labels; network name override), PR 91 (test-incident.sh on current code, fix.diff for the 2026-10-17 incident, honest second incident 20261020-231500 with verdict "error": headless CLI hit ENOTFOUND from inside this session; responder env allowlist restored), tracker hygiene by gh (labels, QA verdict links, AC boxes). Rubric re-run by three Opus peers earlier: 24/24, 24/24, 23/24.
+- Rejected and corrected on the way: an engineer hand-wrote an incident agent.log; deleted, chain rerun for real. Rule: never ship invented evidence.
+- Examiner re-run (Fable) launched 01:50 on a781bd8; its table decides the next (last) fix batch. Owner: "our score must be 100%"; submission after that.
+- Owner-side: VPN on this Mac blocks api.deepseek.com and, for the headless CLI, api.anthropic.com DNS; run test-incident.sh from a normal terminal with VPN off.
+
 ## PAUSE 2026-10-20 19:10 (owner: laptop) — RESUME HERE
 - Nothing running: no agents, no worktrees, no compose stack, no cron. main b32980e, tree clean. Prod 36990d7 (= all six PRs), dev follows main. Batch 4 logged (work/SEARCH-BATCHES.md): guard right on both services, only the injection refused.
 - Open issues, ranked for the next session: #73 hourly queue double-run (prod safety), #76 X-Forwarded-For trust (prod safety), #83 Tavily read timeout retry (seen once on prod), #77 Tavily credits/cost, #72 rollback doc + probe (health path already set), #74 page_kind, #75 token cost, #78 low. Candidate UI hint: criteria with no place or date ("jazz" → 11-19 US auto-accepts).
