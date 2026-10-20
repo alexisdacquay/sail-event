@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
+from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, BackgroundTasks, Depends, Header
 from fastapi.responses import JSONResponse
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -14,7 +17,12 @@ from ..deps import get_current_user
 from .. import orm
 from ..services.pipeline import run_pipeline
 
+logger = logging.getLogger("sail-event.search")
+
 router = APIRouter()
+
+# §8: 55-minute overlap guard
+_OVERLAP_MINUTES = 55
 
 
 def _run_response(run: orm.Run) -> dict:
@@ -39,8 +47,91 @@ def run_search(
     return _run_response(run)
 
 
+def _select_users(db: Session, max_users: int) -> tuple[list[orm.User], int]:
+    """Select users for the hourly job: skip still-running, order oldest last run.
+
+    Returns (users_to_queue, users_skipped_count).
+    """
+    cutoff = datetime.now(UTC) - timedelta(minutes=_OVERLAP_MINUTES)
+
+    # All users with criteria
+    all_users = (
+        db.query(orm.User)
+        .join(orm.Criteria, orm.User.id == orm.Criteria.user_id)
+        .all()
+    )
+
+    # Users with an unfinished run started < 55 min ago
+    still_running_ids: set[str] = set()
+    for u in all_users:
+        unfinished = (
+            db.query(orm.Run)
+            .filter(
+                orm.Run.user_id == u.id,
+                orm.Run.started_at >= cutoff,
+                orm.Run.finished_at.is_(None),
+            )
+            .first()
+        )
+        if unfinished:
+            still_running_ids.add(u.id)
+
+    eligible = [u for u in all_users if u.id not in still_running_ids]
+    skipped_running = len(still_running_ids)
+
+    # Order by oldest last run (never-run first)
+    _epoch = datetime(1970, 1, 1, tzinfo=UTC)
+
+    def _last_run_key(u: orm.User) -> datetime:
+        last = (
+            db.query(func.max(orm.Run.started_at))
+            .filter(orm.Run.user_id == u.id)
+            .scalar()
+        )
+        if last is None:
+            return _epoch
+        # SQLite returns naive datetimes; treat as UTC
+        if last.tzinfo is None:
+            return last.replace(tzinfo=UTC)
+        return last
+
+    eligible.sort(key=_last_run_key)
+
+    queued = eligible[:max_users]
+    skipped_cap = len(eligible) - len(queued)
+
+    return queued, skipped_running + skipped_cap
+
+
+# Patchable session factory for background tasks (tests swap this)
+_session_factory = None
+
+
+def _get_session_factory():
+    global _session_factory
+    if _session_factory is None:
+        from ..db import SessionLocal
+        _session_factory = SessionLocal
+    return _session_factory
+
+
+def _run_scheduled_user(user_id: str) -> None:
+    """Background task: run the pipeline for one user with a fresh DB session."""
+    factory = _get_session_factory()
+    db = factory()
+    try:
+        user = db.query(orm.User).filter(orm.User.id == user_id).first()
+        if user:
+            run_pipeline(user, db, trigger="scheduled")
+    except Exception:
+        logger.exception("scheduled run failed for user %s", user_id)
+    finally:
+        db.close()
+
+
 @router.post("/api/search/all", operation_id="searchAll")
 def search_all(
+    background_tasks: BackgroundTasks,
     x_api_key: str | None = Header(None, alias="X-API-Key"),
     db: Session = Depends(get_db),
 ) -> JSONResponse:
@@ -49,18 +140,12 @@ def search_all(
         return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
 
     max_users = int(os.environ.get("MAX_SCHEDULED_USERS", "50"))
-    users = (
-        db.query(orm.User)
-        .join(orm.Criteria, orm.User.id == orm.Criteria.user_id)
-        .order_by(orm.Criteria.updated_at.desc())
-        .all()
-    )
-    attempted = users[:max_users]
-    count = 0
-    for user in attempted:
-        run = run_pipeline(user, db, trigger="scheduled")
-        if not run.error:
-            count += 1
+    queued, skipped = _select_users(db, max_users)
 
-    skipped = len(users) - len(attempted)
-    return JSONResponse(content={"usersProcessed": count, "usersSkipped": skipped})
+    for user in queued:
+        background_tasks.add_task(_run_scheduled_user, user.id)
+
+    return JSONResponse(
+        status_code=202,
+        content={"usersQueued": len(queued), "usersSkipped": skipped},
+    )

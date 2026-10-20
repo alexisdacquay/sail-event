@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from ..adapters.factory import get_language_model, get_search_provider, get_guardrail
 from ..adapters.search import remove_known_pages
 from ..services import clock
+from ..services.budget import check_search_budget, check_llm_budget
 from ..services.criteria import needs_parse, parse_criteria, parse_metadata
 from ..services.window import WindowInPast, resolve
 from ..services.extract import extract_events
@@ -25,6 +26,8 @@ from .. import orm
 logger = logging.getLogger("sail-event.pipeline")
 tracer = trace.get_tracer("sail-event.pipeline")
 meter = metrics.get_meter("sail-event.pipeline")
+
+# --- §9 metrics ---
 
 _runs_counter = meter.create_counter(
     "sail_runs_total",
@@ -43,6 +46,40 @@ _run_duration = meter.create_histogram(
     description="Elapsed wall-time of one run_pipeline call",
     unit="s",
 )
+_stage_items = meter.create_counter(
+    "sail_stage_items_total",
+    description="Items per stage with outcome (filter reason or kept)",
+)
+_llm_calls_counter = meter.create_counter(
+    "sail_llm_calls_total",
+    description="LLM calls by prompt and provider",
+)
+_llm_tokens_counter = meter.create_counter(
+    "sail_llm_tokens_total",
+    description="LLM tokens by direction",
+)
+_search_calls_counter = meter.create_counter(
+    "sail_search_calls_total",
+    description="Search calls by provider and outcome",
+)
+_budget_stops_counter = meter.create_counter(
+    "sail_budget_stops_total",
+    description="Budget stop events by type",
+)
+
+
+def _compute_cost(search_calls: int, llm_tokens_in: int, llm_tokens_out: int) -> float | None:
+    """cost_usd from §8: null when any price env var is unset."""
+    raw_in = os.environ.get("LLM_USD_PER_1K_IN")
+    raw_out = os.environ.get("LLM_USD_PER_1K_OUT")
+    raw_search = os.environ.get("SEARCH_USD_PER_CALL")
+    if raw_in is None or raw_out is None or raw_search is None:
+        return None
+    return (
+        llm_tokens_in / 1000 * float(raw_in)
+        + llm_tokens_out / 1000 * float(raw_out)
+        + search_calls * float(raw_search)
+    )
 
 
 def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
@@ -125,7 +162,22 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
             # --- Stage 1: understand criteria ---
             with tracer.start_as_current_span("criteria"):
                 if criteria_row and criteria_text:
+                    # Budget check before criteria LLM call
                     if needs_parse(criteria_text, criteria_row.facets_text_sha, criteria_row.facets_version):
+                        budget_stop = check_llm_budget(db)
+                        if budget_stop:
+                            error_msg = budget_stop
+                            stopped_at_stage = "criteria"
+                            _budget_stops_counter.add(1, {"which": "llm"})
+                            _finalise_run(
+                                run, db, events_found, events_new, error_msg,
+                                counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
+                                stopped_at_stage, error_detail,
+                            )
+                            elapsed = time.monotonic() - t0
+                            _emit_metrics(trigger, error_msg, events_found, events_new, elapsed)
+                            return run
+
                         facets_dict = parse_criteria(criteria_text, user_tz, model)
                         meta = parse_metadata(criteria_text)
                         criteria_row.facets_json = json.dumps(facets_dict)
@@ -133,6 +185,7 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                         criteria_row.facets_text_sha = meta["facets_text_sha"]
                         criteria_row.parsed_at = meta["parsed_at"]
                         llm_calls += 1
+                        _llm_calls_counter.add(1, {"prompt": "criteria", "provider": getattr(model, "model_id", "unknown")})
                         db.flush()
 
                 facets = json.loads(criteria_row.facets_json) if criteria_row and criteria_row.facets_json else {}
@@ -154,9 +207,25 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                     return run
 
             # --- Stage 3: search (verbatim query, no planner) ---
+            # Budget check before search (1 call)
+            budget_stop = check_search_budget(db, 1)
+            if budget_stop:
+                error_msg = budget_stop
+                stopped_at_stage = "search"
+                _budget_stops_counter.add(1, {"which": "search"})
+                _finalise_run(
+                    run, db, events_found, events_new, error_msg,
+                    counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
+                    stopped_at_stage, error_detail,
+                )
+                elapsed = time.monotonic() - t0
+                _emit_metrics(trigger, error_msg, events_found, events_new, elapsed)
+                return run
+
             from ..adapters.search import SearchResult as SResult
             max_results_per_q = int(os.environ.get("MAX_RESULTS_PER_QUERY", "20"))
             all_results: list[SResult] = []
+            provider_name = getattr(provider, "name", "unknown")
 
             with tracer.start_as_current_span("search"):
                 search_errors = 0
@@ -164,19 +233,25 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                 counts["queries_planned"] = 1 if query_text else 0
 
                 if query_text:
-                    try:
-                        results = provider.search(
-                            query_text,
-                            max_results=max_results_per_q,
-                        )
-                        search_calls += 1
-                        all_results.extend(results)
-                    except Exception as exc:
-                        search_errors += 1
-                        search_calls += 1
-                        if not error_detail:
-                            error_detail = f"search: {type(exc).__name__}: {str(exc)[:200]}"
-                        logger.warning("search error for query: %s", type(exc).__name__)
+                    with tracer.start_as_current_span("query", attributes={
+                        "provider": provider_name,
+                    }) as qspan:
+                        try:
+                            results = provider.search(
+                                query_text,
+                                max_results=max_results_per_q,
+                            )
+                            search_calls += 1
+                            _search_calls_counter.add(1, {"provider": provider_name, "outcome": "ok"})
+                            qspan.set_attribute("result_count", len(results))
+                            all_results.extend(results)
+                        except Exception as exc:
+                            search_errors += 1
+                            search_calls += 1
+                            _search_calls_counter.add(1, {"provider": provider_name, "outcome": "error"})
+                            if not error_detail:
+                                error_detail = f"search: {type(exc).__name__}: {str(exc)[:200]}"
+                            logger.warning("search error for query: %s", type(exc).__name__)
 
                 counts["search_errors"] = search_errors
                 counts["results_fetched"] = len(all_results)
@@ -205,6 +280,21 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
 
             # --- Stage 5: extract ---
             with tracer.start_as_current_span("extract"):
+                # Budget check before extract LLM calls
+                budget_stop = check_llm_budget(db)
+                if budget_stop:
+                    error_msg = budget_stop
+                    stopped_at_stage = "extract"
+                    _budget_stops_counter.add(1, {"which": "llm"})
+                    _finalise_run(
+                        run, db, events_found, events_new, error_msg,
+                        counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
+                        stopped_at_stage, error_detail,
+                    )
+                    elapsed = time.monotonic() - t0
+                    _emit_metrics(trigger, error_msg, events_found, events_new, elapsed)
+                    return run
+
                 place = facets.get("place") or {}
                 target_city = place.get("city") or ""
                 target_country = place.get("country") or ""
@@ -224,7 +314,10 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                 # Count LLM calls from extraction: 1 for pass-1 (if results) + pages_content_pass for pass-2
                 if all_results:
                     llm_calls += 1  # pass 1
+                    _llm_calls_counter.add(1, {"prompt": "extract", "provider": getattr(model, "model_id", "unknown")})
                 llm_calls += extract_counts.pages_content_pass  # pass 2 calls
+                if extract_counts.pages_content_pass:
+                    _llm_calls_counter.add(extract_counts.pages_content_pass, {"prompt": "extract", "provider": getattr(model, "model_id", "unknown")})
 
                 counts["pages_content_pass"] = extract_counts.pages_content_pass
                 counts["extract_truncated"] = extract_counts.extract_truncated
@@ -270,6 +363,15 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                 counts["filtered_non_event"] = counts.get("filtered_non_event", 0) + filter_counts.filtered_non_event
                 counts["filtered_duplicate"] = filter_counts.filtered_duplicate
 
+                # §9 stage_items metrics
+                _stage_items.add(filter_counts.filtered_incomplete, {"stage": "filter", "outcome": "incomplete"})
+                _stage_items.add(filter_counts.filtered_past, {"stage": "filter", "outcome": "past"})
+                _stage_items.add(filter_counts.filtered_date, {"stage": "filter", "outcome": "date"})
+                _stage_items.add(filter_counts.filtered_place, {"stage": "filter", "outcome": "place"})
+                _stage_items.add(filter_counts.filtered_non_event, {"stage": "filter", "outcome": "non_event"})
+                _stage_items.add(filter_counts.filtered_duplicate, {"stage": "filter", "outcome": "duplicate"})
+                _stage_items.add(len(kept), {"stage": "filter", "outcome": "kept"})
+
             # --- Phase 1: insert kept events as `new`, commit (crash-recoverable) ---
             cap = int(os.environ.get("MAX_EVENTS_PER_RUN", "50"))
             to_judge = kept[:cap]
@@ -298,6 +400,22 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
 
             # --- Stage 7 + 8: judge and triage ---
             if events_new > 0:
+                # Budget check before judge LLM calls
+                budget_stop = check_llm_budget(db)
+                if budget_stop:
+                    error_msg = budget_stop
+                    stopped_at_stage = "judge"
+                    _budget_stops_counter.add(1, {"which": "llm"})
+                    # events stay `new`, recovered next run
+                    _finalise_run(
+                        run, db, events_found, events_new, error_msg,
+                        counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
+                        stopped_at_stage, error_detail,
+                    )
+                    elapsed = time.monotonic() - t0
+                    _emit_metrics(trigger, error_msg, events_found, events_new, elapsed)
+                    return run
+
                 inserted = db.query(orm.Event).filter(
                     orm.Event.user_id == user.id,
                     orm.Event.status == "new",
@@ -340,11 +458,12 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
             db.rollback()
 
         # --- Stage 9: persist run ---
-        _finalise_run(
-            run, db, events_found, events_new, error_msg,
-            counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
-            stopped_at_stage, error_detail,
-        )
+        with tracer.start_as_current_span("persist"):
+            _finalise_run(
+                run, db, events_found, events_new, error_msg,
+                counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
+                stopped_at_stage, error_detail,
+            )
 
         elapsed = time.monotonic() - t0
         _emit_metrics(trigger, error_msg, events_found, events_new, elapsed)
@@ -399,34 +518,40 @@ def _judge_and_triage(
                 page_kind=evt.page_kind or "single_event",
             )
 
-            result = judge_event(
-                extracted,
-                criteria_text=criteria_text,
-                facets=facets,
-                window_start=window.start_utc,
-                window_end=window.end_utc,
-                user_tz=user_tz,
-                model=model,
-            )
-            llm_calls += 1
+            with tracer.start_as_current_span("event", attributes={
+                "capped": False,
+            }) as espan:
+                result = judge_event(
+                    extracted,
+                    criteria_text=criteria_text,
+                    facets=facets,
+                    window_start=window.start_utc,
+                    window_end=window.end_utc,
+                    user_tz=user_tz,
+                    model=model,
+                )
+                llm_calls += 1
+                _llm_calls_counter.add(1, {"prompt": "judge", "provider": getattr(model, "model_id", "unknown")})
 
-            if isinstance(result, JudgeError):
-                judge_errors += 1
-                # event stays `new`
-                continue
+                if isinstance(result, JudgeError):
+                    judge_errors += 1
+                    # event stays `new`
+                    continue
 
-            if isinstance(result, Verdict):
-                if not result.is_event:
-                    # Drop non-events: mark rejected with score 0
-                    evt.score = 0
-                    evt.score_reason = result.reason or "not an event"
-                    evt.status = "rejected"
-                    evt.decided_by = "auto"
-                else:
-                    evt.score = result.score
-                    evt.score_reason = result.reason
-                evt.judge_model = model.model_id if hasattr(model, "model_id") else None
-                evt.judge_version = "judge_v3"
+                if isinstance(result, Verdict):
+                    espan.set_attribute("score", result.score)
+                    espan.set_attribute("capped", result.capped)
+                    if not result.is_event:
+                        # Drop non-events: mark rejected with score 0
+                        evt.score = 0
+                        evt.score_reason = result.reason or "not an event"
+                        evt.status = "rejected"
+                        evt.decided_by = "auto"
+                    else:
+                        evt.score = result.score
+                        evt.score_reason = result.reason
+                    evt.judge_model = model.model_id if hasattr(model, "model_id") else None
+                    evt.judge_version = "judge_v3"
 
     # Triage
     with tracer.start_as_current_span("triage"):
@@ -472,8 +597,16 @@ def _finalise_run(
     run.llm_calls = llm_calls
     run.llm_tokens_in = llm_tokens_in
     run.llm_tokens_out = llm_tokens_out
+    run.cost_usd = _compute_cost(search_calls, llm_tokens_in, llm_tokens_out)
     run.stopped_at_stage = stopped_at_stage
     run.error_detail = error_detail
+
+    # §9 token metrics
+    if llm_tokens_in:
+        _llm_tokens_counter.add(llm_tokens_in, {"direction": "in"})
+    if llm_tokens_out:
+        _llm_tokens_counter.add(llm_tokens_out, {"direction": "out"})
+
     db.commit()
 
 

@@ -237,20 +237,22 @@ paths:
       security:
         - apiKeyAuth: []
       responses:
-        '200':
-          description: Search completed for all users
+        '202':
+          description: Users queued for background processing
           content:
             application/json:
               schema:
                 type: object
                 required:
-                  - usersProcessed
+                  - usersQueued
                   - usersSkipped
                 properties:
-                  usersProcessed:
+                  usersQueued:
                     type: integer
+                    description: Number of users enqueued for background runs
                   usersSkipped:
                     type: integer
+                    description: Users skipped (still running or over the cap)
         '401':
           $ref: '#/components/responses/Unauthorized'
 

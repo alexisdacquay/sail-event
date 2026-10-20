@@ -59,8 +59,9 @@ class TavilyProvider:
         return results
 
     def _post(self, body: dict) -> dict:
-        import time as _time
+        """POST with one retry on 429/5xx."""
         payload = json.dumps(body).encode()
+        last_exc: Exception | None = None
         for attempt in range(2):
             req = urllib.request.Request(
                 self.API_URL,
@@ -75,10 +76,12 @@ class TavilyProvider:
                 with urllib.request.urlopen(req, timeout=self.TIMEOUT) as resp:
                     return json.loads(resp.read())
             except urllib.error.HTTPError as exc:
-                if exc.code == 429 and attempt == 0:
-                    _time.sleep(3)
+                if exc.code in (429, 500, 502, 503, 504) and attempt == 0:
+                    import time
+                    time.sleep(2)
+                    last_exc = exc
                     continue
                 raise RuntimeError(f"Tavily API error: HTTP {exc.code}") from exc
             except urllib.error.URLError as exc:
                 raise RuntimeError(f"Tavily API error: {exc.reason}") from exc
-        raise RuntimeError("Tavily API: failed after retry")
+        raise RuntimeError(f"Tavily API error after retry: HTTP {getattr(last_exc, 'code', last_exc)}") from last_exc

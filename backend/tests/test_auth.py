@@ -225,7 +225,7 @@ def test_calendar_no_auth_required(client):
 def test_search_all_no_bearer_required(client, monkeypatch):
     monkeypatch.setenv("SEARCH_ALL_API_KEY", "key")
     r = client.post("/api/search/all", headers={"X-API-Key": "key"})
-    assert r.status_code == 200
+    assert r.status_code == 202
 
 
 # ---------- validation errors never echo input ----------

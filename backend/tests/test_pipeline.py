@@ -186,15 +186,22 @@ def test_triage_uses_ge_le_cutoffs(client, auth_headers, _db_session):
             assert e.status == "queued"
 
 
-# ---------- search/all trigger ----------
+# ---------- search/all trigger (now 202 + background) ----------
 
 
-def test_run_row_trigger_scheduled(client, _db_session, monkeypatch):
+def test_search_all_returns_202(client, _db_session, monkeypatch):
     monkeypatch.setenv("SEARCH_ALL_API_KEY", "k")
-    client.post("/api/search/all", headers={"X-API-Key": "k"})
-    runs = _db_session.query(Run).all()
-    assert len(runs) >= 1
-    assert all(r.trigger == "scheduled" for r in runs)
+    r = client.post("/api/search/all", headers={"X-API-Key": "k"})
+    assert r.status_code == 202
+    body = r.json()
+    assert body["usersQueued"] >= 1
+
+
+def test_pipeline_trigger_scheduled_direct(_db_session):
+    """run_pipeline called directly with trigger='scheduled' records the trigger."""
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    run = run_pipeline(user, _db_session, trigger="scheduled")
+    assert run.trigger == "scheduled"
 
 
 # ---------- Event band and sourceUrl in API ----------

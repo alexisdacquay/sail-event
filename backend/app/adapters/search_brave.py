@@ -46,17 +46,7 @@ class BraveProvider:
         }
 
         url = f"{self.API_URL}?{urllib.parse.urlencode(params)}"
-        req = urllib.request.Request(url, headers={
-            "X-Subscription-Token": self._key,
-            "Accept": "application/json",
-        })
-        try:
-            with urllib.request.urlopen(req, timeout=self.TIMEOUT) as resp:
-                data = json.loads(resp.read())
-        except urllib.error.HTTPError as exc:
-            raise RuntimeError(f"Brave API error: HTTP {exc.code}") from exc
-        except urllib.error.URLError as exc:
-            raise RuntimeError(f"Brave API error: {exc.reason}") from exc
+        data = self._get(url)
 
         results: list[SearchResult] = []
         for item in data.get("web", {}).get("results", []):
@@ -76,3 +66,25 @@ class BraveProvider:
                 provider="brave",
             ))
         return results
+
+    def _get(self, url: str) -> dict:
+        """GET with one retry on 429/5xx (§8 backoff)."""
+        last_exc: Exception | None = None
+        for attempt in range(2):
+            req = urllib.request.Request(url, headers={
+                "X-Subscription-Token": self._key,
+                "Accept": "application/json",
+            })
+            try:
+                with urllib.request.urlopen(req, timeout=self.TIMEOUT) as resp:
+                    return json.loads(resp.read())
+            except urllib.error.HTTPError as exc:
+                if exc.code in (429, 500, 502, 503, 504) and attempt == 0:
+                    import time
+                    time.sleep(2)
+                    last_exc = exc
+                    continue
+                raise RuntimeError(f"Brave API error: HTTP {exc.code}") from exc
+            except urllib.error.URLError as exc:
+                raise RuntimeError(f"Brave API error: {exc.reason}") from exc
+        raise RuntimeError(f"Brave API error after retry: HTTP {getattr(last_exc, 'code', last_exc)}") from last_exc
