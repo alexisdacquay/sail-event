@@ -505,3 +505,67 @@ def test_login_rate_limit_reset_on_success(client, monkeypatch):
     # Counter is reset — next failure is 401, not 429
     r = client.post("/api/auth/login", json={"username": "demo", "password": "wrong"})
     assert r.status_code == 401
+
+
+# ---------- X-Forwarded-For spoofing ----------
+
+def test_spoofed_xff_limited_by_peer_ip(client, monkeypatch):
+    """Untrusted peer: 6 regs with 6 different spoofed XFF → 6th is 429."""
+    import time as time_mod
+    from app.routers import auth as auth_mod
+
+    base = time_mod.monotonic()
+    monkeypatch.setattr(auth_mod, "_now", lambda: base)
+    monkeypatch.setenv("REGISTER_RATE_LIMIT_PER_HOUR", "5")
+    monkeypatch.delenv("FORWARDED_ALLOW_IPS", raising=False)
+
+    for i in range(5):
+        r = client.post(
+            "/api/auth/register",
+            json={"username": f"xff{i}", "password": "pw"},
+            headers={"X-Forwarded-For": f"10.0.0.{i}"},
+        )
+        assert r.status_code == 201
+
+    r = client.post(
+        "/api/auth/register",
+        json={"username": "xff5", "password": "pw"},
+        headers={"X-Forwarded-For": "10.0.0.5"},
+    )
+    assert r.status_code == 429
+
+
+def test_trusted_proxy_uses_rightmost_xff(client, monkeypatch):
+    """Trusted proxy: rightmost XFF hop is the rate-limit key."""
+    import time as time_mod
+    from app.routers import auth as auth_mod
+
+    base = time_mod.monotonic()
+    monkeypatch.setattr(auth_mod, "_now", lambda: base)
+    monkeypatch.setenv("REGISTER_RATE_LIMIT_PER_HOUR", "5")
+    monkeypatch.setenv("FORWARDED_ALLOW_IPS", "*")
+
+    # 5 regs from the same rightmost hop (different leftmost spoofed values)
+    for i in range(5):
+        r = client.post(
+            "/api/auth/register",
+            json={"username": f"tp{i}", "password": "pw"},
+            headers={"X-Forwarded-For": f"spoofed-{i}, 192.168.1.1"},
+        )
+        assert r.status_code == 201
+
+    # 6th from same rightmost hop → 429
+    r = client.post(
+        "/api/auth/register",
+        json={"username": "tp5", "password": "pw"},
+        headers={"X-Forwarded-For": "spoofed-99, 192.168.1.1"},
+    )
+    assert r.status_code == 429
+
+    # Different rightmost hop → allowed
+    r = client.post(
+        "/api/auth/register",
+        json={"username": "tp_other", "password": "pw"},
+        headers={"X-Forwarded-For": "spoofed-99, 10.0.0.1"},
+    )
+    assert r.status_code == 201

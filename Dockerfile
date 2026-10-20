@@ -22,4 +22,4 @@ RUN cd backend && uv sync --no-dev --frozen
 COPY backend/ ./backend/
 COPY --from=frontend /build/dist ./frontend/dist
 EXPOSE 8000
-CMD ["sh", "-c", "cd /app/backend && uv run --no-dev alembic upgrade head && uv run --no-dev uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]
+CMD ["sh", "-c", "cd /app/backend && uv run --no-dev alembic upgrade head && uv run --no-dev uvicorn app.main:app --host 0.0.0.0 --port 8000"]
