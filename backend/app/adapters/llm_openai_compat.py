@@ -15,14 +15,15 @@ from .prompts.loader import load_prompt, validate_response
 
 logger = logging.getLogger(__name__)
 
-# max_tokens per prompt name
+# max_tokens per prompt name — reasoning models (DeepSeek) spend thinking
+# tokens that count against max_tokens, so all prompts need headroom.
 MAX_TOKENS: dict[str, int] = {
-    "criteria": 600,
-    "extract": 16000,  # reasoning models spend ~4k tokens thinking before output
-    "judge": 300,
-    "guard": 100,
+    "criteria": 16000,
+    "extract": 16000,
+    "judge": 16000,
+    "guard": 16000,
 }
-_DEFAULT_MAX_TOKENS = 600
+_DEFAULT_MAX_TOKENS = 16000
 
 
 @dataclass(frozen=True)
@@ -97,7 +98,8 @@ class OpenAICompatibleModel:
         for attempt in range(2):
             try:
                 req = urllib.request.Request(url, data=raw_body, headers=headers, method="POST")
-                with urllib.request.urlopen(req, timeout=30) as resp:
+                timeout = int(os.environ.get("LLM_TIMEOUT_SECONDS", "120"))
+                with urllib.request.urlopen(req, timeout=timeout) as resp:
                     data = json.loads(resp.read())
 
                 content = data["choices"][0]["message"].get("content") or ""

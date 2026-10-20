@@ -1,6 +1,6 @@
-"""Judge — score one event against criteria via the LLM, then apply caps.
+"""Judge — score one event against criteria via the LLM (v3: suitability only).
 
-Not wired into the pipeline yet (F2). The caller counts judge_errors.
+The caller counts judge_errors.
 """
 
 from __future__ import annotations
@@ -14,25 +14,7 @@ from ..services import clock
 from ..services.extract import ExtractedEvent
 
 PROMPT_NAME = "judge"
-PROMPT_VERSION = "v2"
-
-# ---------- caps table (spec §7) ----------
-
-_CAPS: list[tuple[str, str, int]] = [
-    # (flag_name, flag_value_that_triggers_cap, max_score)
-    ("place", "no", 0),
-    ("date", "no", 10),
-    ("budget", "no", 30),
-    ("topic", "no", 39),
-]
-
-
-def apply_caps(score: int, fit: dict[str, str]) -> int:
-    """Enforce the caps table: each flag=no limits the score."""
-    for flag, trigger, cap in _CAPS:
-        if fit.get(flag) == trigger:
-            score = min(score, cap)
-    return score
+PROMPT_VERSION = "v3"
 
 
 # ---------- band words (spec §8) ----------
@@ -58,30 +40,16 @@ def band_word(score: int) -> str:
 
 _URL_RE = re.compile(r"https?://", re.IGNORECASE)
 _MARKUP_RE = re.compile(r"<[^>]+>|&[a-z]+;|\[.*?\]", re.IGNORECASE)
-# Date tokens: month names (abbreviated or full), or digits that look like a date
-_DATE_TOKEN_RE = re.compile(
-    r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|"
-    r"January|February|March|April|June|July|August|September|October|November|December|"
-    r"Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember|"
-    r"\d{1,2}[\./\-]\d{1,2}|\d{1,2}\s+\w+\s+\d{4}|\d{1,2}\s+\w+)\b",
-    re.IGNORECASE,
-)
-# Place token: any capitalised word that could be a city (at least one word starting uppercase)
-_PLACE_TOKEN_RE = re.compile(r"\bin\s+[A-ZÀ-ɏ][\w\-]+", re.UNICODE)
 
 
 def validate_reason(reason: str) -> str | None:
-    """Return an error message if the reason fails the pattern check, else None."""
+    """Return an error message if the reason fails basic checks, else None."""
     if len(reason) > 140:
         return f"reason too long ({len(reason)} chars, max 140)"
     if _URL_RE.search(reason):
         return "reason contains a URL"
     if _MARKUP_RE.search(reason):
         return "reason contains markup"
-    if not _DATE_TOKEN_RE.search(reason):
-        return "reason missing a date token"
-    if not _PLACE_TOKEN_RE.search(reason):
-        return "reason missing a place token"
     return None
 
 
@@ -93,7 +61,7 @@ class Verdict:
     reason: str
     fit: dict[str, str]
     is_event: bool
-    capped: bool  # True when caps changed the score
+    capped: bool  # kept for API compat; always False in v3
 
 
 @dataclass
@@ -120,9 +88,8 @@ def _event_to_json(ev: ExtractedEvent) -> str:
         "venue": ev.venue,
         "city": ev.city,
         "country": ev.country,
-        "price_amount": ev.price_amount,
-        "price_currency": ev.price_currency,
         "description": ev.description,
+        "link": ev.link,
     }
     return json.dumps(obj)
 
@@ -141,25 +108,16 @@ def judge_event(
 
     The caller counts JudgeError as judge_errors; the event stays `new`.
     """
-    from zoneinfo import ZoneInfo
-
     schema = _read_schema()
     schema_text = json.dumps(schema, indent=2)
 
-    tz = ZoneInfo(user_tz)
-    ws = window_start.astimezone(tz).strftime("%Y-%m-%d")
-    we = window_end.astimezone(tz).strftime("%Y-%m-%d")
-    today = clock.now().astimezone(tz).strftime("%Y-%m-%d")
-    input_language = facets.get("input_language", "en")
+    today = clock.now().astimezone(timezone.utc).strftime("%Y-%m-%d")
 
     variables = {
         "criteria_text": criteria_text,
-        "facets_json": json.dumps(facets),
-        "window_start": ws,
-        "window_end": we,
         "event_json": _event_to_json(event),
         "today": today,
-        "input_language": input_language,
+        "user_tz": user_tz,
         "schema": schema_text,
     }
 
@@ -174,13 +132,12 @@ def judge_event(
 
     raw_score = response.get("score", 0)
     reason = response.get("reason", "")
-    fit = response.get("fit", {})
     is_event = response.get("is_event", True)
 
     # is_event=false → score 0, event dropped
     if not is_event:
         return Verdict(
-            score=0, reason=reason, fit=fit, is_event=False, capped=raw_score != 0,
+            score=0, reason=reason, fit={}, is_event=False, capped=False,
         )
 
     # Reason validation → error result, not an exception
@@ -188,13 +145,10 @@ def judge_event(
     if reason_err is not None:
         return JudgeError(event=event, error=f"reason check: {reason_err}")
 
-    # Apply caps
-    capped_score = apply_caps(raw_score, fit)
-
     return Verdict(
-        score=capped_score,
+        score=raw_score,
         reason=reason,
-        fit=fit,
+        fit={},
         is_event=True,
-        capped=capped_score != raw_score,
+        capped=False,
     )

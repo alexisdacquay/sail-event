@@ -11,7 +11,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["title", "start_local", "start_tz", "end_local", "venue", "city", "country", "link", "price_amount", "price_currency", "is_free", "description", "confidence"],
+        "required": ["title", "start_local", "start_tz", "end_local", "venue", "city", "country", "link", "description", "confidence"],
         "additionalProperties": false,
         "properties": {
           "title": {"type": "string"},
@@ -22,9 +22,6 @@
           "city": {},
           "country": {},
           "link": {"type": "string"},
-          "price_amount": {},
-          "price_currency": {},
-          "is_free": {},
           "description": {"type": "string"},
           "confidence": {"type": "number"}
         }

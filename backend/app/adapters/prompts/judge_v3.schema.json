@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "required": ["score", "reason", "is_event"],
+  "additionalProperties": false,
+  "properties": {
+    "score": {"type": "integer"},
+    "reason": {"type": "string"},
+    "is_event": {"type": "boolean"}
+  }
+}

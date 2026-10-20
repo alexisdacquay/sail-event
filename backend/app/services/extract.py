@@ -37,9 +37,6 @@ class ExtractedEvent:
     city: str | None
     country: str | None
     link: str
-    price_amount: float | None
-    price_currency: str | None
-    is_free: bool | None
     description: str
     confidence: float
     source_url: str
@@ -261,9 +258,6 @@ def _process_pass1(
             city=ev.get("city"),
             country=ev.get("country"),
             link=link,
-            price_amount=ev.get("price_amount"),
-            price_currency=ev.get("price_currency"),
-            is_free=ev.get("is_free"),
             description=ev.get("description", "")[:200],
             confidence=confidence,
             source_url=source_url,
@@ -316,9 +310,6 @@ def _process_pass2(
             city=ev.get("city"),
             country=ev.get("country"),
             link=ev.get("link", result.url),
-            price_amount=ev.get("price_amount"),
-            price_currency=ev.get("price_currency"),
-            is_free=ev.get("is_free"),
             description=ev.get("description", "")[:200],
             confidence=confidence,
             source_url=result.url,

@@ -154,51 +154,20 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                     _emit_metrics(trigger, error_msg, events_found, events_new, elapsed)
                     return run
 
-            # --- Stage 3: plan queries ---
-            with tracer.start_as_current_span("plan"):
-                max_q = int(os.environ.get("MAX_QUERIES_PER_RUN", "6"))
-                if trigger == "scheduled":
-                    max_q = int(os.environ.get("MAX_QUERIES_SCHEDULED", "2"))
-                # offset for scheduled: count of user's scheduled runs mod plan length
-                offset = 0
-                if trigger == "scheduled":
-                    sched_count = db.query(orm.Run).filter(
-                        orm.Run.user_id == user.id,
-                        orm.Run.trigger == "scheduled",
-                    ).count()
-                    offset = sched_count
-
-                planned = plan_queries(facets, window, max_queries=max_q, offset=offset)
-                counts["queries_planned"] = len(planned)
-
-                if not planned:
-                    place = facets.get("place")
-                    is_online = place.get("online", False) if place else False
-                    if not is_online:
-                        error_msg = "no place in criteria"
-                        stopped_at_stage = "search"
-                        _finalise_run(
-                            run, db, events_found, events_new, error_msg,
-                            counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
-                            stopped_at_stage, error_detail,
-                        )
-                        elapsed = time.monotonic() - t0
-                        _emit_metrics(trigger, error_msg, events_found, events_new, elapsed)
-                        return run
-
-            # --- Stage 4: search ---
+            # --- Stage 3: search (verbatim query, no planner) ---
             from ..adapters.search import SearchResult as SResult
             max_results_per_q = int(os.environ.get("MAX_RESULTS_PER_QUERY", "6"))
             all_results: list[SResult] = []
 
             with tracer.start_as_current_span("search"):
                 search_errors = 0
-                for pq in planned:
+                query_text = (criteria_text + " event") if criteria_text else ""
+                counts["queries_planned"] = 1 if query_text else 0
+
+                if query_text:
                     try:
                         results = provider.search(
-                            pq.text,
-                            country=pq.country,
-                            language=pq.language,
+                            query_text,
                             max_results=max_results_per_q,
                         )
                         search_calls += 1
@@ -319,8 +288,6 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                     page_kind=ev.page_kind,
                     city=ev.city or "",
                     country=ev.country or "ZZ",
-                    price_amount=ev.price_amount,
-                    price_currency=ev.price_currency,
                     source_query=None,
                     extraction_confidence=ev.confidence,
                     status="new",
@@ -425,9 +392,6 @@ def _judge_and_triage(
                 city=evt.city,
                 country=evt.country,
                 link=evt.link,
-                price_amount=evt.price_amount,
-                price_currency=evt.price_currency,
-                is_free=evt.price_amount == 0 if evt.price_amount is not None else None,
                 description=evt.description,
                 confidence=evt.extraction_confidence or 1.0,
                 source_url=evt.source_url or evt.link,
@@ -461,7 +425,7 @@ def _judge_and_triage(
                     evt.score = result.score
                     evt.score_reason = result.reason
                 evt.judge_model = model.model_id if hasattr(model, "model_id") else None
-                evt.judge_version = "judge_v2"
+                evt.judge_version = "judge_v3"
 
     # Triage
     with tracer.start_as_current_span("triage"):
