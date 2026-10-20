@@ -490,11 +490,12 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
             db.rollback()
 
         # --- Stage 9: persist run ---
-        _finalise_run(
-            run, db, events_found, events_new, error_msg,
-            counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
-            stopped_at_stage, error_detail,
-        )
+        with tracer.start_as_current_span("persist"):
+            _finalise_run(
+                run, db, events_found, events_new, error_msg,
+                counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
+                stopped_at_stage, error_detail,
+            )
 
         elapsed = time.monotonic() - t0
         _emit_metrics(trigger, error_msg, events_found, events_new, elapsed)

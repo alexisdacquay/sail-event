@@ -16,8 +16,12 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
+from opentelemetry import trace
+
 from ..adapters.search import SearchResult
 from ..services import clock
+
+tracer = trace.get_tracer("sail-event.extract")
 
 logger = logging.getLogger(__name__)
 
@@ -182,38 +186,45 @@ def extract_events(
 
         counts.pages_content_pass += 1
 
-        sliced, truncated = _slice_content(r.raw_content, anchors)
-        if truncated:
-            counts.extract_truncated += 1
+        with tracer.start_as_current_span("page") as pspan:
+            sliced, truncated = _slice_content(r.raw_content, anchors)
+            if truncated:
+                counts.extract_truncated += 1
 
-        try:
-            guardrail.check(sliced)
-        except Exception as exc:
-            logger.warning("guard blocked page %s: %s", r.url, exc)
-            continue
+            try:
+                guardrail.check(sliced)
+            except Exception as exc:
+                logger.warning("guard blocked page %s: %s", r.url, exc)
+                pspan.set_attribute("page_kind", "guard_blocked")
+                pspan.set_attribute("event_count", 0)
+                continue
 
-        variables = {
-            "today": today,
-            "window_start": ws,
-            "window_end": we,
-            "target_city": target_city,
-            "target_country": target_country,
-            "content": f"URL: {r.url}\n\n{sliced}",
-            "schema": schema_text,
-        }
-        try:
-            response, _usage = model.complete_json(
-                prompt_name=PROMPT_NAME,
-                prompt_version=PROMPT_VERSION,
-                variables=variables,
-            )
-            # Replace pass-1 events for this URL with pass-2 events
-            all_events = [e for e in all_events if e.source_url != r.url]
-            pass2_events = _process_pass2(response, r, counts)
-            all_events.extend(pass2_events)
-        except Exception as exc:
-            logger.warning("extract pass 2 error for %s: %s", r.url, exc)
-            counts.extract_errors += 1
+            variables = {
+                "today": today,
+                "window_start": ws,
+                "window_end": we,
+                "target_city": target_city,
+                "target_country": target_country,
+                "content": f"URL: {r.url}\n\n{sliced}",
+                "schema": schema_text,
+            }
+            try:
+                response, _usage = model.complete_json(
+                    prompt_name=PROMPT_NAME,
+                    prompt_version=PROMPT_VERSION,
+                    variables=variables,
+                )
+                # Replace pass-1 events for this URL with pass-2 events
+                all_events = [e for e in all_events if e.source_url != r.url]
+                pass2_events = _process_pass2(response, r, counts)
+                all_events.extend(pass2_events)
+                pspan.set_attribute("page_kind", response.get("page_kind", "unknown"))
+                pspan.set_attribute("event_count", len(pass2_events))
+            except Exception as exc:
+                logger.warning("extract pass 2 error for %s: %s", r.url, exc)
+                counts.extract_errors += 1
+                pspan.set_attribute("page_kind", "error")
+                pspan.set_attribute("event_count", 0)
 
     return all_events, counts
 

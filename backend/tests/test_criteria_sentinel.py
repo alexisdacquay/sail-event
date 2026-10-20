@@ -1,14 +1,22 @@
-"""Sentinel test — criteria text must not appear in log records or span attributes."""
+"""Sentinel test — criteria, query and page text must not appear in log records."""
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
-import os
+from datetime import datetime, timezone
+from unittest.mock import patch
 
 import pytest
 
+from app.adapters.search import SearchResult
+from app.services.extract import ExtractedEvent
+
 
 SENTINEL = "SENTINEL-7Q-criteria-text-must-not-leak"
+QUERY_SENTINEL = "QUERY-SENTINEL-8X-must-not-leak"
+PAGE_SENTINEL = "PAGE-SENTINEL-9Y-must-not-leak"
 
 
 def test_criteria_text_not_in_logs(monkeypatch, caplog):
@@ -34,68 +42,82 @@ def test_criteria_text_not_in_logs(monkeypatch, caplog):
             f"Criteria text leaked into log: {record.getMessage()!r}"
 
 
-QUERY_SENTINEL = "QUERY-SENTINEL-8X-must-not-leak"
-PAGE_SENTINEL = "PAGE-SENTINEL-9Y-must-not-leak"
+def test_query_text_not_in_logs(monkeypatch, caplog, _db_session):
+    """Query text flowing through the search stage must not appear in logs.
 
-
-def test_query_text_not_in_logs(monkeypatch, caplog):
-    """Query text must not appear verbatim in log records."""
+    Patches the planner to emit a query carrying the sentinel, and the search
+    provider to accept it. The pipeline's search loop processes the sentinel
+    query; no log record may contain it.
+    """
     monkeypatch.setenv("FAKE_NOW", "2026-10-18T12:00:00+02:00")
 
+    from app.orm import User, Criteria
+    from app.services.pipeline import run_pipeline
     from app.services.planner import PlannedQuery
 
-    pq = PlannedQuery(text=QUERY_SENTINEL, country="DE", language="de", priority=1)
+    user = _db_session.query(User).filter(User.username == "demo").first()
 
-    # Run the planner with sentinel text — the query text itself should not leak
-    import logging as _logging
+    # Provider that records what query text it received
+    class _SentinelProvider:
+        name = "sentinel_test"
+        def search(self, query, **kw):
+            # Return one result so the pipeline continues
+            return [SearchResult(
+                url="https://example.com/sentinel",
+                title="Sentinel Result",
+                snippet="snippet",
+                raw_content=None,
+                published_at=None,
+                provider="sentinel_test",
+            )]
 
-    with caplog.at_level(_logging.DEBUG):
-        # Just ensure the query text exists and is not logged as-is
-        assert pq.text == QUERY_SENTINEL
+    # Planner that emits the sentinel query
+    def _sentinel_plan(facets, window, **kw):
+        return [PlannedQuery(text=QUERY_SENTINEL, country="DE", language="de", priority=1)]
+
+    with caplog.at_level(logging.DEBUG):
+        with patch("app.services.pipeline.get_search_provider", return_value=_SentinelProvider()), \
+             patch("app.services.pipeline.plan_queries", side_effect=_sentinel_plan):
+            run_pipeline(user, _db_session, trigger="manual")
 
     for record in caplog.records:
         assert QUERY_SENTINEL not in record.getMessage(), \
             f"Query text leaked into log: {record.getMessage()!r}"
 
 
-def test_page_text_not_in_logs_during_extract(monkeypatch, caplog):
-    """Page raw_content must not appear verbatim in log records."""
+def test_page_text_not_in_logs(monkeypatch, caplog, _db_session):
+    """Page raw_content flowing through extract must not appear in logs.
+
+    Patches the search provider to return a result whose raw_content is the
+    sentinel, then runs the pipeline. No log record may contain the sentinel.
+    """
     monkeypatch.setenv("FAKE_NOW", "2026-10-18T12:00:00+02:00")
-    monkeypatch.setenv("LLM_PROVIDER", "fake")
 
-    from app.adapters.factory import get_language_model, get_guardrail
-    from app.adapters.search import SearchResult
-    from app.services.extract import extract_events
-    from datetime import datetime, timezone
-    import logging as _logging
+    from app.orm import User
+    from app.services.pipeline import run_pipeline
+    from app.services.planner import PlannedQuery
 
-    model = get_language_model()
-    guardrail = get_guardrail()
+    user = _db_session.query(User).filter(User.username == "demo").first()
 
-    results = [SearchResult(
-        url="https://example.com/page",
-        title="Test Page",
-        snippet="snippet",
-        raw_content=PAGE_SENTINEL * 10,
-        published_at=None,
-        provider="fixture",
-    )]
+    class _PageSentinelProvider:
+        name = "sentinel_test"
+        def search(self, query, **kw):
+            return [SearchResult(
+                url="https://example.com/page-sentinel",
+                title="Page Sentinel",
+                snippet="snippet",
+                raw_content=PAGE_SENTINEL * 10,
+                published_at=None,
+                provider="sentinel_test",
+            )]
 
-    with caplog.at_level(_logging.DEBUG):
-        try:
-            extract_events(
-                results,
-                window_start=datetime(2026, 10, 19, tzinfo=timezone.utc),
-                window_end=datetime(2026, 10, 21, tzinfo=timezone.utc),
-                target_city="Berlin",
-                target_country="DE",
-                language="de",
-                user_tz="Europe/Berlin",
-                model=model,
-                guardrail=guardrail,
-            )
-        except (FileNotFoundError, RuntimeError):
-            pass  # expected: no recording for sentinel input
+    def _plan(facets, window, **kw):
+        return [PlannedQuery(text="safe query text", country="DE", language="de", priority=1)]
+
+    with caplog.at_level(logging.DEBUG):
+        with patch("app.services.pipeline.get_search_provider", return_value=_PageSentinelProvider()), \
+             patch("app.services.pipeline.plan_queries", side_effect=_plan):
+            run_pipeline(user, _db_session, trigger="manual")
 
     for record in caplog.records:
         assert PAGE_SENTINEL not in record.getMessage(), \
