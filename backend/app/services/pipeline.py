@@ -82,8 +82,14 @@ def _compute_cost(search_calls: int, llm_tokens_in: int, llm_tokens_out: int) ->
     )
 
 
-def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
-    """Execute one search run for a user.  Always returns a Run row."""
+def run_pipeline(
+    user: orm.User, db: Session, *, trigger: str, run_id: str | None = None,
+) -> orm.Run:
+    """Execute one search run for a user.  Always returns a Run row.
+
+    When *run_id* is given (enqueue-time row from search_all), reuse it
+    instead of creating a second row.
+    """
     t0 = time.monotonic()
 
     with tracer.start_as_current_span("search_run", attributes={
@@ -92,9 +98,17 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
     }) as span:
         logger.info("search run started")
 
-        run = orm.Run(user_id=user.id, started_at=datetime.now(UTC), trigger=trigger)
-        db.add(run)
-        db.flush()
+        if run_id:
+            run = db.query(orm.Run).filter(orm.Run.id == run_id).first()
+            if run is None:
+                # Row deleted between enqueue and execution; create a new one
+                run = orm.Run(user_id=user.id, started_at=datetime.now(UTC), trigger=trigger)
+                db.add(run)
+                db.flush()
+        else:
+            run = orm.Run(user_id=user.id, started_at=datetime.now(UTC), trigger=trigger)
+            db.add(run)
+            db.flush()
         span.set_attribute("run_id", run.id)
 
         # Accumulators

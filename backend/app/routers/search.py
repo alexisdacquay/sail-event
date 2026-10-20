@@ -149,16 +149,37 @@ def _get_session_factory():
     return _session_factory
 
 
-def _run_scheduled_user(user_id: str) -> None:
+def _finalise_orphan_run(run_id: str, error: str) -> None:
+    """Best-effort finalise an enqueue-time Run row that never reached run_pipeline."""
+    try:
+        factory = _get_session_factory()
+        db2 = factory()
+        try:
+            row = db2.query(orm.Run).filter(orm.Run.id == run_id).first()
+            if row and row.finished_at is None:
+                row.finished_at = datetime.now(UTC)
+                row.error = error
+                row.stopped_at_stage = "enqueue"
+                db2.commit()
+        finally:
+            db2.close()
+    except Exception:
+        logger.warning("could not finalise orphan run %s", run_id)
+
+
+def _run_scheduled_user(user_id: str, run_id: str) -> None:
     """Background task: run the pipeline for one user with a fresh DB session."""
     factory = _get_session_factory()
     db = factory()
     try:
         user = db.query(orm.User).filter(orm.User.id == user_id).first()
         if user:
-            run_pipeline(user, db, trigger="scheduled")
-    except Exception:
+            run_pipeline(user, db, trigger="scheduled", run_id=run_id)
+        else:
+            _finalise_orphan_run(run_id, "user not found")
+    except Exception as exc:
         logger.exception("scheduled run failed for user %s", user_id)
+        _finalise_orphan_run(run_id, f"{type(exc).__name__}: {str(exc)[:200]}")
     finally:
         db.close()
 
@@ -176,8 +197,14 @@ def search_all(
     max_users = int(os.environ.get("MAX_SCHEDULED_USERS", "50"))
     queued, skipped = _select_users(db, max_users)
 
+    # #73: write Run rows at enqueue time so the 55-min skip sees queued users
+    now = datetime.now(UTC)
     for user in queued:
-        background_tasks.add_task(_run_scheduled_user, user.id)
+        run = orm.Run(user_id=user.id, started_at=now, trigger="scheduled")
+        db.add(run)
+        db.flush()
+        background_tasks.add_task(_run_scheduled_user, user.id, run.id)
+    db.commit()
 
     return JSONResponse(
         status_code=202,
