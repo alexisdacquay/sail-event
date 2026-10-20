@@ -95,7 +95,7 @@ def test_recovery_of_new_events(client, auth_headers, _db_session):
 
 
 def test_past_dates_do_not_stop_run(client, auth_headers, _db_session, monkeypatch):
-    """Past absolute dates produce a completed run, not an early stop."""
+    """Past absolute dates run the search; past/date filters drop old events."""
     import hashlib
     h = auth_headers("past", "past")
     text = "jazz in Berlin (Germany) last week (10-12 October 2026)"
@@ -113,13 +113,73 @@ def test_past_dates_do_not_stop_run(client, auth_headers, _db_session, monkeypat
     crit.facets_text_sha = hashlib.sha256(text.encode()).hexdigest()
     _db_session.commit()
 
-    body = client.post("/api/search", headers=h).json()
-    # Run completes (no window stop); the past/date filters handle events
-    assert body.get("stoppedAtStage") is None or body["stoppedAtStage"] != "window"
-    assert body.get("stageCounts") is not None
+    # Stub LLM-touching stages so the fixture provider runs real but we
+    # don't need fake-model recordings for a past-window prompt hash.
+    from app.services.extract import ExtractedEvent, ExtractionCounts
+    past_event = ExtractedEvent(
+        title="Past Jazz",
+        start_local="2026-10-11T20:00",
+        start_tz="Europe/Berlin",
+        end_local=None,
+        venue="A-Trane",
+        city="Berlin",
+        country="DE",
+        link="https://example.com/past-jazz",
+        description="a past jazz event",
+        confidence=0.9,
+        source_url="https://example.com/past-jazz",
+        page_kind="single_event",
+    )
+    extract_counts = ExtractionCounts(
+        pages_content_pass=0, extract_truncated=0, events_extracted=1,
+        extract_errors=0, guard_skipped=0, guard_fallback=0,
+        guard_errors=0, filtered_non_event=0,
+    )
+
+    with (
+        patch("app.services.pipeline.parse_criteria", return_value={
+            "place": {"city": "Berlin", "country": "DE", "online": False},
+            "date": {"start": "2026-10-10", "end": "2026-10-12"},
+            "topics": ["jazz"],
+            "language": "de",
+            "input_language": "en",
+        }),
+        patch("app.services.pipeline.extract_events", return_value=([past_event], extract_counts)),
+        patch("app.services.pipeline.judge_event") as mock_judge,
+    ):
+        # Judge should not be called (event filtered before judging)
+        body = client.post("/api/search", headers=h).json()
+
+    assert body.get("stoppedAtStage") is None, f"run should not stop early: {body}"
+    sc = body["stageCounts"]
+    assert sc is not None
+    run = _db_session.query(Run).filter(Run.id == body["runId"]).first()
+    assert run.search_calls == 1
+    # The past event should be filtered (past or outside date window)
+    assert sc.get("filtered_past", 0) + sc.get("filtered_date", 0) > 0
 
 
 # ---------- Every early stop writes stage_counts (#70) ----------
+
+
+def test_empty_criteria_stops_run(client, auth_headers, _db_session):
+    """Empty criteria text → stopped_at_stage='criteria', error='no criteria text'."""
+    h = auth_headers("empty", "empty")
+    # No criteria saved → empty text
+    body = client.post("/api/search", headers=h).json()
+    assert body["stoppedAtStage"] == "criteria"
+    assert body["error"] == "no criteria text"
+    assert body["stageCounts"] is not None
+
+
+def test_empty_criteria_text_stops_run(client, auth_headers, _db_session):
+    """Criteria saved as empty string → same stop."""
+    h = auth_headers("empty2", "empty2")
+    client.put("/api/criteria", headers=h, json={"text": ""})
+    body = client.post("/api/search", headers=h).json()
+    assert body["stoppedAtStage"] == "criteria"
+    assert body["error"] == "no criteria text"
+    assert body["stageCounts"] is not None
 
 
 def test_adapter_stop_has_stage_counts(client, auth_headers, _db_session, monkeypatch):

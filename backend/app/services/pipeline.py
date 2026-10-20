@@ -165,10 +165,22 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
 
             # --- Stage 1: understand criteria ---
             current_stage = "criteria"
+            if not criteria_text:
+                error_msg = "no criteria text"
+                stopped_at_stage = "criteria"
+                _finalise_run(
+                    run, db, events_found, events_new, error_msg,
+                    counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
+                    stopped_at_stage, error_detail,
+                )
+                elapsed = time.monotonic() - t0
+                _emit_metrics(trigger, error_msg, events_found, events_new, elapsed)
+                return run
+
             with tracer.start_as_current_span("criteria"):
                 if criteria_row and criteria_text:
                     # Budget check before criteria LLM call
-                    if needs_parse(criteria_text, criteria_row.facets_text_sha, criteria_row.facets_version, facets_json=criteria_row.facets_json):
+                    if needs_parse(criteria_text, criteria_row.facets_text_sha, criteria_row.facets_version, facets_json=criteria_row.facets_json, user_tz=user_tz):
                         budget_stop = check_llm_budget(db)
                         if budget_stop:
                             error_msg = budget_stop

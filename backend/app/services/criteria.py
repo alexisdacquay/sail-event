@@ -25,38 +25,47 @@ def needs_parse(
     facets_version: str | None,
     *,
     facets_json: str | None = None,
+    user_tz: str = "UTC",
 ) -> bool:
     """Return True when the criteria text must be (re-)parsed.
 
     Re-parses when the text changed, the prompt version changed, or the
-    stored absolute window end is in the past (so date phrases follow the
-    calendar without a stale cache).
+    stored *relative* window has expired (so date phrases like "next week"
+    follow the calendar).  Absolute-only dates never trigger a re-parse
+    because the LLM would return the same dates.
     """
     current_sha = _text_sha(text)
     expected_version = f"{PROMPT_NAME}_{PROMPT_VERSION}"
     if facets_text_sha != current_sha or facets_version != expected_version:
         return True
     if facets_json:
-        return _window_expired(facets_json)
+        return _relative_window_expired(facets_json, user_tz)
     return False
 
 
-def _window_expired(facets_json: str) -> bool:
-    """True when the stored absolute date.end is before today."""
+def _relative_window_expired(facets_json: str, user_tz: str) -> bool:
+    """True when the facets carry a relative date expression whose resolved
+    window end is now in the past.  Absolute-only dates never expire (the
+    LLM would return the same result)."""
     try:
         facets = json.loads(facets_json)
     except (json.JSONDecodeError, TypeError):
         return False
     date_facets = facets.get("date") or {}
+    # Only re-parse when there is a relative expression
+    if not date_facets.get("relative"):
+        return False
     end_str = date_facets.get("end")
     if not end_str:
         return False
     try:
         from datetime import date
+        from zoneinfo import ZoneInfo
         end_date = date.fromisoformat(end_str)
     except ValueError:
         return False
-    return end_date < clock.now().date()
+    today_user = clock.now().astimezone(ZoneInfo(user_tz)).date()
+    return end_date < today_user
 
 
 def parse_criteria(text: str, user_tz: str, model) -> dict:
