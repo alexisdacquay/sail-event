@@ -180,7 +180,7 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
             with tracer.start_as_current_span("criteria"):
                 if criteria_row and criteria_text:
                     # Budget check before criteria LLM call
-                    if needs_parse(criteria_text, criteria_row.facets_text_sha, criteria_row.facets_version, facets_json=criteria_row.facets_json, user_tz=user_tz):
+                    if needs_parse(criteria_text, criteria_row.facets_text_sha, criteria_row.facets_version):
                         budget_stop = check_llm_budget(db)
                         if budget_stop:
                             error_msg = budget_stop

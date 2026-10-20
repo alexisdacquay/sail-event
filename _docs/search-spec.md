@@ -75,7 +75,7 @@ Relative dates:
 
 - Resolution happens at run time, every run, in the user's time zone, never at parse time.
 - Window start is clipped to now: an event that has already ended is past (§6 has the end-of-day rule).
-- Window end before now (the absolute dates have passed): the run continues; the per-event past filter and the judge handle dates. Facets are re-parsed when the stored window end is before now (cheap compare, not a model call unless the window expired), so date phrases follow the calendar.
+- Window end before now (the absolute dates have passed): the run continues; the per-event past filter and the judge handle dates. Facets are parsed once per criteria text; relative date words resolve against now on every run; absolute dates are fixed.
 - The user's time zone is `UTC` until their first criteria save from the new UI; the UI says so.
 - The reference case resolves to 2026-10-19 00:00 → 2026-10-21 23:59 Europe/Berlin because the absolute dates win over "next week" (19–25 Oct).
 
@@ -313,7 +313,7 @@ Golden set B — labelled candidates for C1, now = 2026-10-18 12:00 Europe/Berli
 5. Every stored event has a score, a reason sentence ≤ 140 characters passing the pattern check, a judge model and a judge version.
 6. The reason sentence names at least the date and the place, in the language of the criteria text.
 7. The smoke script with three repeats prints the score spread per event; the owner reads it against ±5 (measurement, not a CI assertion).
-8. Facets are stored with the hash of the text that produced them and re-parsed when the hash or the prompt version changes, or when a stored relative date expression's window has expired (compared in the user's time zone); absolute-only dates never trigger a re-parse.
+8. Facets are parsed once per criteria text (hash) or prompt version change. Relative date words resolve against now on every run in `window.py`; absolute dates are fixed and the past filter and the judge handle them.
 9. "next week" resolves to the ISO week after the run date in the user's time zone; absolute dates win; a window that ended before now does not stop the run — the per-event past filter and the judge handle dates (#70).
 10. Criteria without a place and without an online format produce a run with zero queries and the report says why.
 11. Every query contains the city and the year; when the place's language is not English, at least one query is in that language; Tavily receives the country as its name (`germany`), Brave as `DE`.

@@ -27,10 +27,10 @@ Control flow rules:
 - Each stage returns data; `pipeline.py` loops and counts. No stage calls another.
 - A model response that fails its schema raises for that item; nothing is guessed.
 - Errors from one query, one page or one event are compacted into the run: the item is skipped, a counter incremented (`search_errors`, `extract_errors`, `judge_errors`), the first error message kept in `Run.error_detail` as `<stage>: <ExceptionType>: <message[:200]>`. A judge error leaves that event `new` for the next run's recovery; the run completes. The run fails only when a whole stage produced nothing because of errors.
-- Stage 2 resolves the window; past dates are handled by the per-event past filter and the judge (#70). Facets are re-parsed when the stored absolute window end is before now.
+- Stage 2 resolves the window; past dates are handled by the per-event past filter and the judge (#70). Facets are parsed once per criteria text; relative date words resolve against now on every run; absolute dates are fixed and the past filter and the judge handle them.
 - The factories refuse `fixture`/`fake` under `APP_ENV=prod` at first use, inside the run: the run records `error = "adapters refused in prod: set SEARCH_PROVIDER and LLM_PROVIDER"`, nothing is stored, health stays 200.
 - All "now" values come from `services/clock.py: now()`, which returns `FAKE_NOW` (ISO-8601) when set, else `datetime.now(UTC)`. Prompts, filters and the fake model's recordings depend on it.
-- Stage 1 runs before the budget check for the run because it is at most one call per text change or expired relative window.
+- Stage 1 runs before the budget check for the run because it is at most one call per text change.
 
 ## 2. Data model changes
 
@@ -312,7 +312,7 @@ Issues in dependency order; each one engineer session; new files only until F2.
 6. Contract tests against recorded DeepSeek-shaped responses: request body, empty-content retry, 429 retry, usage; `.env.example` and `docs/deployment.md` list `LLM_*`, `FAKE_NOW`, and the dev row states `APP_ENV=dev`, `FAKE_NOW`, `SEED_DEMO=1`.
 
 ### Issue C — Criteria understanding and window resolution
-1. `criteria_v2.md` + schema; `criteria.py` re-parses when `sha256(text) != facets_text_sha` or version differs, or a stored relative window has expired (#70); stores `facets_json`, `facets_version`, `facets_text_sha`, `parsed_at`.
+1. `criteria_v2.md` + schema; `criteria.py` re-parses when `sha256(text) != facets_text_sha` or version differs; stores `facets_json`, `facets_version`, `facets_text_sha`, `parsed_at`. Relative date words resolve against now on every run in `window.py` (#70).
 2. `window.py` resolves every relative value from §6 on `clock.now()`; absolute wins; default 30 days; start clipped to now; past dates return a valid window and the per-event filters handle the rest (#70).
 3. Golden set A with 13 entries and recorded parser responses under `FAKE_NOW`; `test_golden_criteria.py` passes.
 4. Boundary tests: year end, a DST change in `Europe/Berlin`, "this weekend" on a Sunday, C1 after 22 Oct returns a window with start > end (#70).
@@ -386,7 +386,7 @@ Issues in dependency order; each one engineer session; new files only until F2.
 | Absolute dates win over relative ones when both are present | The owner's own text pairs "next week" with 19–21 Oct; a user who writes a stale date and "next week" keeps getting the stale window until they edit |
 | Relative dates resolved at run time in the user's zone, parse cached on the criteria by text hash | A prompt version bump forces a re-parse for every user on the next run (one call each) |
 | Past and window filters on the event's end, date-only events end at 23:59 | A multi-day festival that started last week stays visible until its last day; a stale listing with no end date is kept all day |
-| Past dates do not stop the run; the per-event past filter and judge handle them (#70) | A user with stale absolute dates gets zero events every run (all filtered); a relative date expression triggers a re-parse once the window expires |
+| Past dates do not stop the run; the per-event past filter and judge handle them (#70) | A user with stale absolute dates gets zero events every run (all filtered); facets are parsed once per text, relative date words resolve against now on every run, absolute dates are fixed |
 | Default window 30 days when no date is given | Events sell out within a day (plan), yet 30 days of generic results dilute the queue for a user who meant "soon" |
 | Judge returns flags; code caps the score from them | A judge that sets `date = no` for an event the filter kept means the extractor and judge disagree; the cap hides that disagreement rather than surfacing it |
 | Scheduled runs use 2 rotating queries, manual runs 6 | A newly listed event may take up to three hours to be reached by its query; the plan's "within a day" still holds |
