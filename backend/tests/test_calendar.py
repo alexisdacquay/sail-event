@@ -372,3 +372,76 @@ def test_ics_naive_row_fallback(client, _db_session):
             break
     else:
         raise AssertionError("Legacy naive VEVENT not found")
+
+
+def test_ics_unknown_zone_stays_floating(client, _db_session):
+    """Legacy row with start_tz NULL and country ZZ stays floating, not UTC."""
+    from app.orm import User
+
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    evt = Event(
+        user_id=user.id,
+        title="Unknown zone event",
+        date_time="2026-10-22T19:00:00",
+        place="Somewhere",
+        link="https://example.com/unknown-zone-ics",
+        description="No zone info",
+        score=80,
+        score_reason="OK",
+        status="accepted",
+        start_tz=None,
+        city="",
+        country="ZZ",
+    )
+    _db_session.add(evt)
+    _db_session.commit()
+
+    r = client.get("/api/calendar/demo-ics-token")
+    cal = Calendar.from_ical(r.content)
+    for c in cal.walk():
+        if c.name == "VEVENT" and str(c["UID"]) == f"{evt.id}@sail-event":
+            dtstart_prop = c.get("DTSTART")
+            # No TZID parameter — floating local time
+            assert "TZID" not in dtstart_prop.params
+            # Time is 19:00, not shifted
+            assert dtstart_prop.dt.hour == 19
+            # No timezone — naive
+            assert dtstart_prop.dt.tzinfo is None
+            break
+    else:
+        raise AssertionError("Unknown-zone VEVENT not found")
+
+
+def test_ics_country_zone_uses_iana_tzid(client, _db_session):
+    """Legacy row with start_tz NULL but single-zone country gets IANA TZID."""
+    from app.orm import User
+
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    evt = Event(
+        user_id=user.id,
+        title="Country zone event",
+        date_time="2026-10-22T19:00:00",
+        place="Berlin",
+        link="https://example.com/country-zone-ics",
+        description="Country DE resolves to Europe/Berlin",
+        score=85,
+        score_reason="Good",
+        status="accepted",
+        start_tz=None,
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(evt)
+    _db_session.commit()
+
+    r = client.get("/api/calendar/demo-ics-token")
+    cal = Calendar.from_ical(r.content)
+    for c in cal.walk():
+        if c.name == "VEVENT" and str(c["UID"]) == f"{evt.id}@sail-event":
+            dtstart_prop = c.get("DTSTART")
+            # IANA TZID from country table, not a pseudo-TZID like "UTC+02:00"
+            assert dtstart_prop.params.get("TZID") == "Europe/Berlin"
+            assert dtstart_prop.dt.hour == 19
+            break
+    else:
+        raise AssertionError("Country-zone VEVENT not found")

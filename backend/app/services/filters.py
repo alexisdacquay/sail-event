@@ -93,11 +93,29 @@ def _is_date_only(dt_str: str) -> bool:
     return len(dt_str) == 10 and "T" not in dt_str
 
 
+def resolve_iana_zone(start_tz: str | None, country: str | None) -> str | None:
+    """Return the IANA zone name when one can be resolved, else None.
+
+    Resolution order: explicit start_tz > country single-zone table.
+    Returns None (not UTC) when neither source yields a zone.
+    """
+    if start_tz:
+        try:
+            ZoneInfo(start_tz)  # validate
+            return start_tz
+        except (KeyError, ValueError):
+            pass
+    if country and country in _SINGLE_ZONE:
+        return _SINGLE_ZONE[country]
+    return None
+
+
 def attach_offset(dt_str: str, start_tz: str | None, country: str | None) -> str:
     """Attach UTC offset to a naive local datetime when the zone is known.
 
     Date-only strings and strings that already carry an offset pass through unchanged.
-    Uses _resolve_zone with fallback to UTC so the caller never sees a naive timed value.
+    When no zone can be resolved (start_tz invalid/None AND country not single-zone),
+    the string is returned naive — never stamped as UTC.
     Preserves the original local-time string to avoid format changes (e.g. 'T21:00' stays,
     never becomes 'T21:00:00').
     """
@@ -112,7 +130,10 @@ def attach_offset(dt_str: str, start_tz: str | None, country: str | None) -> str
         return dt_str
     if naive.tzinfo is not None:
         return dt_str
-    zone = _resolve_zone(start_tz, country, "UTC")
+    iana = resolve_iana_zone(start_tz, country)
+    if iana is None:
+        return dt_str  # no zone resolvable — leave naive
+    zone = ZoneInfo(iana)
     # Compute the offset string and append to the original local-time string
     offset = zone.utcoffset(naive)
     total_seconds = int(offset.total_seconds())

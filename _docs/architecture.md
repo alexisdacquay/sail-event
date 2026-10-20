@@ -41,7 +41,7 @@
 |---|---|---|
 | User | id, username, password_hash, upper_threshold, lower_threshold, ics_token, created_at | username UNIQUE; lower_threshold < upper_threshold (validated on write) |
 | Criteria | id, user_id FK, text, updated_at | user_id UNIQUE (one profile per user) |
-| Event | id, user_id FK, title, date_time, place, link, description, score, score_reason, scorer_model, status, run_id FK, created_at | status ENUM(new, accepted, rejected, queued); UNIQUE(user_id, link) for dedup |
+| Event | id, user_id FK, title, date_time, place, link, description, score, score_reason, judge_model, status, run_id FK, created_at | status ENUM(new, accepted, rejected, queued); UNIQUE(user_id, link, date_time) for dedup |
 | Run | id, user_id FK, started_at, finished_at, events_found, events_new, trigger | one row per search execution |
 - Events enter as `new`; each run first scores any leftover `new` events (recovery after a crash between insert and scoring)
 

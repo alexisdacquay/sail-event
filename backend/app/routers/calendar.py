@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..deps import get_current_user
-from ..services.filters import attach_offset
+from ..services.filters import attach_offset, resolve_iana_zone
 from .. import orm
 
 logger = logging.getLogger(__name__)
@@ -66,15 +66,19 @@ def _build_calendar(user: orm.User, events: list[orm.Event]) -> bytes:
         ve.add("uid", f"{evt.id}@sail-event")
         ve.add("summary", evt.title)
 
-        if evt.start_tz:
-            # DTSTART with TZID: convert to local time in the event zone
-            tz = ZoneInfo(evt.start_tz)
+        iana = resolve_iana_zone(evt.start_tz,
+                                evt.country if getattr(evt, "country", "ZZ") != "ZZ" else None)
+        if iana:
+            # DTSTART with IANA TZID
+            tz = ZoneInfo(iana)
             local_dt = dtstart.astimezone(tz) if dtstart.tzinfo else dtstart.replace(tzinfo=tz)
             naive_local = local_dt.replace(tzinfo=None)
-            ve.add("dtstart", naive_local, parameters={"TZID": evt.start_tz})
-            ve.add("dtend", naive_local + _EVENT_DURATION, parameters={"TZID": evt.start_tz})
+            ve.add("dtstart", naive_local, parameters={"TZID": iana})
+            ve.add("dtend", naive_local + _EVENT_DURATION, parameters={"TZID": iana})
         else:
-            # No zone: floating local time (unchanged for legacy)
+            # No zone resolvable: floating local time
+            if dtstart.tzinfo is not None:
+                dtstart = dtstart.replace(tzinfo=None)
             ve.add("dtstart", dtstart)
             ve.add("dtend", dtstart + _EVENT_DURATION)
 
