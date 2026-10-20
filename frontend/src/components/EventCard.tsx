@@ -89,7 +89,8 @@ function formatWhere(event: Event): string {
   const parts: string[] = []
   if (event.place) parts.push(event.place)
   if (event.city && !event.place.includes(event.city)) parts.push(event.city)
-  if (event.country) parts.push(event.country)
+  // the API's place is "venue, city, country" since search v2; do not print the country twice
+  if (event.country && !event.place.endsWith(event.country)) parts.push(event.country)
   return parts.join(', ') || 'place unknown'
 }
 
