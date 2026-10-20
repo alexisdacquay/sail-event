@@ -38,6 +38,7 @@ class BraveProvider:
         language: str | None = None,
         freshness_days: int | None = None,
         max_results: int = 6,
+        **kwargs: object,
     ) -> list[SearchResult]:
         params: dict[str, str] = {
             "q": query,

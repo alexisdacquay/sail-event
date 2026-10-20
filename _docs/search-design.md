@@ -57,7 +57,7 @@ One Alembic migration `backend/alembic/versions/<rev>_search_v2.py`, first issue
 | events | judge_model | String | yes | renamed from `scorer_model` (`op.alter_column(new_column_name=...)`) |
 | events | judge_version | String(16) | yes | e.g. `judge_v2` |
 | runs | stage_counts | Text | yes | JSON: `queries_planned, results_fetched, results_known, pages_content_pass, extract_truncated, events_extracted, filtered_past, filtered_date, filtered_place, filtered_non_event, filtered_duplicate, events_judged, accepted, rejected, queued, search_errors, extract_errors, judge_errors` |
-| runs | search_calls | Integer | no, default 0 | |
+| runs | search_calls | Integer | no, default 0 | credits since #77 |
 | runs | llm_calls | Integer | no, default 0 | |
 | runs | llm_tokens_in | Integer | no, default 0 | 0 when the API returns no usage |
 | runs | llm_tokens_out | Integer | no, default 0 | |
@@ -233,21 +233,21 @@ Consequences: `planner.py`, `PlannedQuery`, the local-language month and event-w
 
 ## 8. Budget enforcement and backoff
 
-- `budget.py`: `daily_used(db, column) = SUM(runs.<column>) WHERE started_at >= today 00:00 UTC`; checked before search (`search_calls + len(plan) > SEARCH_DAILY_CALLS`) and before each model call (`llm_calls + 1 > LLM_DAILY_CALLS`).
+- `budget.py`: `daily_used(db, column) = SUM(runs.<column>) WHERE started_at >= today 00:00 UTC`; checked before search (`search_credits_used + credits_per_call > SEARCH_DAILY_CALLS`) and before each model call (`llm_calls + 1 > LLM_DAILY_CALLS`). `SEARCH_DAILY_CALLS` counts credits, not calls (#77): advanced = `SEARCH_CREDITS_ADVANCED` (default 2, verified at docs.tavily.com/documentation/api-credits), basic = 1; `runs.search_calls` stores credits; scheduled runs default to basic depth (`TAVILY_SEARCH_DEPTH_SCHEDULED`), manual runs keep advanced.
 - On breach: the stage stops, `Run.stopped_at_stage` set, `Run.error = "budget: search"` or `"budget: llm"`, run finishes normally, HTTP 200 with the report; events already inserted as `new` wait for the next run's recovery.
-- Cap sizing, assumption 10 users: hourly runs 2 search + 4–16 model calls per user → 480 search, 960–3 840 model calls a day; plus ~10 cold manual runs (6 search, 1 + 6 + ~10 + 10 ≈ 27 model calls) → ~540 search, ~4 100 model calls. Defaults 600 / 5 000. Tavily plan: ~1 500 searches per user per month. At 50 users multiply by five and raise the caps, or the day ends early.
+- Cap sizing, assumption 10 users (#77: 1 query per run, basic on schedule, advanced on manual): scheduled 24 runs × 10 users × 1 credit = 240 credits/day; ~10 manual runs × 2 credits = 20 credits/day; 4–16 model calls per scheduled run → 960–3 840 model calls/day plus ~270 from manual. Totals ~260 credits, ~4 100 model calls. Defaults 600 / 5 000. Tavily plan: ~1 500 searches per user per month. At 50 users multiply by five and raise the caps, or the day ends early.
 - Per-run caps: `MAX_QUERIES_*`, `MAX_RESULTS_PER_QUERY`, extraction pass 1 ≤ queries, pass 2 ≤ results after known-page removal, judge ≤ `MAX_EVENTS_PER_RUN` (the rest stay `new`, recovered next run).
 - Backoff: provider or model HTTP 429/5xx → one retry after 2 s; second failure skips that item (query, page or event) and counts `search_errors` / `extract_errors` / `judge_errors`; a judge failure leaves the event `new` and the run completes.
 - "Search now" (`POST /api/search`): `SEARCH_NOW_PER_HOUR` = 6 per user, counted from `runs` with `trigger = 'manual'` in the last hour; the 7th gets 429 with `Retry-After` = seconds until the oldest of the six is an hour old.
 - Hourly job (`POST /api/search/all`): the endpoint selects users with criteria, skips any whose latest run started < 55 minutes ago and has no `finished_at`, orders the rest by oldest last run (never-run first), caps at `MAX_SCHEDULED_USERS`, writes a Run row per queued user at enqueue time (`started_at = now`, `finished_at = NULL`, `trigger = "scheduled"`) so the 55-minute skip sees queued-but-not-yet-started users (#73), enqueues one `run_pipeline` per user on FastAPI `BackgroundTasks` (passing the run id so the pipeline reuses the row), and returns 202 `{usersQueued, usersSkipped}` within seconds. `hourly-search.yml` accepts 202 and prints `usersQueued`. Background runs execute sequentially in the worker; the 55-minute rule stops the next hour's job from stacking a second run on a user still running.
 - Who loses at the cap: with oldest-last-run ordering the users who hit `budget: *` rotate from hour to hour; the previous `criteria.updated_at desc` ordering would have starved the same users every day.
-- Cost: `cost_usd = llm_tokens_in/1000 × LLM_USD_PER_1K_IN + llm_tokens_out/1000 × LLM_USD_PER_1K_OUT + search_calls × SEARCH_USD_PER_CALL`, null when any price is unset.
+- Cost: `cost_usd = llm_tokens_in/1000 × LLM_USD_PER_1K_IN + llm_tokens_out/1000 × LLM_USD_PER_1K_OUT + search_credits × SEARCH_USD_PER_CALL` (where `SEARCH_USD_PER_CALL` is USD per credit since #77), null when any price is unset.
 
 ## 9. Observability
 
 - Spans under `search_run`: `criteria`, `plan`, `search` (one child per query with `provider`, `result_count`), `extract` (one child per page with `page_kind`, `event_count`), `filter`, `judge` (one child per event with `score`, `capped`), `triage`, `persist`.
 - Span attributes and log records carry counts, versions, provider and model names, latency, token counts, hashes. Never criteria text, query text, page content, prompt bodies, event titles or descriptions. Query text appears only as `sha256[:12]`.
-- Metrics (existing meter): `sail_stage_items_total{stage, outcome}` where outcome is the filter reason or `kept`; `sail_llm_calls_total{prompt, provider}`; `sail_llm_tokens_total{direction}`; `sail_search_calls_total{provider, outcome}`; `sail_budget_stops_total{which}`; `sail_guard_runs_total{guard="lakera"|"self_check", target="criteria"|"page", outcome="allowed"|"flagged"|"error"}` (a day on the fallback shows as `guard="self_check"`); `sail_search_now_limited_total`; `sail_adapters_refused_total`; existing run counters unchanged.
+- Metrics (existing meter): `sail_stage_items_total{stage, outcome}` where outcome is the filter reason or `kept`; `sail_llm_calls_total{prompt, provider}`; `sail_llm_tokens_total{direction}`; `sail_search_calls_total{provider, outcome}` counts requests (one per API call), while `runs.search_calls` stores credits (#77); `sail_budget_stops_total{which}`; `sail_guard_runs_total{guard="lakera"|"self_check", target="criteria"|"page", outcome="allowed"|"flagged"|"error"}` (a day on the fallback shows as `guard="self_check"`); `sail_search_now_limited_total`; `sail_adapters_refused_total`; existing run counters unchanged.
 - A test asserts that running the pipeline with a sentinel criteria string leaves no log record or span attribute containing the sentinel.
 
 ## 10. Testing

@@ -228,8 +228,14 @@ def run_pipeline(
 
             # --- Stage 3: search (verbatim query, no planner) ---
             current_stage = "search"
-            # Budget check before search (1 call)
-            budget_stop = check_search_budget(db, 1)
+            # Depth selection: scheduled runs default to basic (cheap)
+            if trigger == "scheduled":
+                search_depth = os.environ.get("TAVILY_SEARCH_DEPTH_SCHEDULED", "basic")
+            else:
+                search_depth = os.environ.get("TAVILY_SEARCH_DEPTH", "advanced")
+            credits_per_call = int(os.environ.get("SEARCH_CREDITS_ADVANCED", "2")) if search_depth == "advanced" else 1
+            # Budget check before search (credits, not calls)
+            budget_stop = check_search_budget(db, credits_per_call)
             if budget_stop:
                 error_msg = budget_stop
                 stopped_at_stage = "search"
@@ -262,14 +268,15 @@ def run_pipeline(
                             results = provider.search(
                                 query_text,
                                 max_results=max_results_per_q,
+                                search_depth=search_depth,
                             )
-                            search_calls += 1
+                            search_calls += credits_per_call
                             _search_calls_counter.add(1, {"provider": provider_name, "outcome": "ok"})
                             qspan.set_attribute("result_count", len(results))
                             all_results.extend(results)
                         except Exception as exc:
                             search_errors += 1
-                            search_calls += 1
+                            search_calls += credits_per_call
                             _search_calls_counter.add(1, {"provider": provider_name, "outcome": "error"})
                             if first_search_exc is None:
                                 first_search_exc = f"{type(exc).__name__}: {str(exc)[:200]}"

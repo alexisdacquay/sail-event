@@ -60,6 +60,20 @@ class TestRequestBody:
         body = json.loads(req.data)
         assert body["search_depth"] == "basic"
 
+    @patch("urllib.request.urlopen")
+    def test_search_depth_kwarg_overrides_env(self, mock_urlopen, monkeypatch):
+        """search_depth kwarg takes precedence over the env var (#77)."""
+        monkeypatch.setenv("TAVILY_API_KEY", "test-key")
+        monkeypatch.setenv("TAVILY_SEARCH_DEPTH", "advanced")
+        mock_urlopen.return_value = _fake_urlopen()
+
+        provider = TavilyProvider()
+        provider.search("test", max_results=6, search_depth="basic")
+
+        req = mock_urlopen.call_args[0][0]
+        body = json.loads(req.data)
+        assert body["search_depth"] == "basic"
+
 
 # ---------- response mapping ----------
 

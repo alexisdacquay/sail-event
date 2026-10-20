@@ -153,7 +153,7 @@ def test_past_dates_do_not_stop_run(client, auth_headers, _db_session, monkeypat
     sc = body["stageCounts"]
     assert sc is not None
     run = _db_session.query(Run).filter(Run.id == body["runId"]).first()
-    assert run.search_calls == 1
+    assert run.search_calls == 2  # 1 call × 2 credits (advanced, manual trigger)
     # The past event should be filtered (past or outside date window)
     assert sc.get("filtered_past", 0) + sc.get("filtered_date", 0) > 0
 

@@ -19,7 +19,9 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `JWT_SECRET` | random |
 | `SEARCH_ALL_API_KEY` | random; the same value is the GitHub Actions secret `SEARCH_ALL_API_KEY` |
 | `SEARCH_PROVIDER`, `TAVILY_API_KEY` | `tavily` + key for real web search; unset = fixtures |
-| `TAVILY_SEARCH_DEPTH` | `advanced` (default) or `basic` |
+| `TAVILY_SEARCH_DEPTH` | `advanced` (default) or `basic`; manual runs |
+| `TAVILY_SEARCH_DEPTH_SCHEDULED` | `basic` (default); hourly scheduled runs |
+| `SEARCH_CREDITS_ADVANCED` | `2` — credits per advanced call (basic = 1; verified at docs.tavily.com/documentation/api-credits) |
 | `MAX_RESULTS_PER_QUERY` | `20` (default, Tavily max) |
 | `SCORER`, `ANTHROPIC_API_KEY` | **Remove after v2 upgrade** (replaced by `LLM_PROVIDER`, `LLM_API_KEY`). Also remove `SCORER_MODEL` |
 | `LLM_PROVIDER` | `openai_compatible` for real scoring; `fake` (default outside prod) |
@@ -31,11 +33,11 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `MAX_SCHEDULED_USERS` | `50` — max users per scheduled search |
 | `REGISTER_RATE_LIMIT_PER_HOUR` | `5` — successful registrations per IP per hour |
 | `REGISTRATION_CODE` | optional — invite code for registration; unset = open |
-| `SEARCH_DAILY_CALLS` | `600` — daily search-call budget across all users |
+| `SEARCH_DAILY_CALLS` | `600` — daily search-credit budget across all users (advanced = 2 credits, basic = 1) |
 | `LLM_DAILY_CALLS` | `5000` — daily LLM-call budget across all users |
 | `LLM_USD_PER_1K_IN` | cost per 1 000 input tokens; set all three price vars to enable `cost_usd` |
 | `LLM_USD_PER_1K_OUT` | cost per 1 000 output tokens |
-| `SEARCH_USD_PER_CALL` | cost per search API call |
+| `SEARCH_USD_PER_CALL` | USD per Tavily credit (an advanced call = 2 credits, basic = 1) |
 | `GUARDRAIL` | `lakera` (prod) or `none` (default, dev/CI); set at issue H promote. The Lakera guard blocks `prompt_attack` detectors only; content-moderation, PII and unknown-link detections are ignored |
 | `LAKERA_API_KEY` | Lakera Guard API key (required when `GUARDRAIL=lakera`) |
 | `GUARD_FALLBACK` | `self_check` (prod) or `none`; used only when Lakera errors or quota exhausted. The fallback checks for prompt injection only (not content moderation); Lakera 429 is retried once before falling back |

@@ -121,6 +121,70 @@ def test_cost_usd_null_when_prices_unset(_db_session, monkeypatch):
     assert run.cost_usd is None
 
 
+# ---------- #77: scheduled runs use basic depth, budget counts credits ----------
+
+
+def test_scheduled_uses_basic_depth(_db_session, monkeypatch):
+    """Scheduled trigger → basic depth → 1 credit on search_calls."""
+    monkeypatch.delenv("TAVILY_SEARCH_DEPTH_SCHEDULED", raising=False)
+    monkeypatch.delenv("SEARCH_CREDITS_ADVANCED", raising=False)
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    run = run_pipeline(user, _db_session, trigger="scheduled")
+    # Fixture provider: 1 call × 1 credit (basic) = 1
+    assert run.search_calls == 1
+
+
+def test_manual_uses_advanced_depth(_db_session, monkeypatch):
+    """Manual trigger → advanced depth → 2 credits on search_calls."""
+    monkeypatch.delenv("TAVILY_SEARCH_DEPTH", raising=False)
+    monkeypatch.delenv("SEARCH_CREDITS_ADVANCED", raising=False)
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    run = run_pipeline(user, _db_session, trigger="manual")
+    # Fixture provider: 1 call × 2 credits (advanced) = 2
+    assert run.search_calls == 2
+
+
+def test_credits_advanced_env_override(_db_session, monkeypatch):
+    """SEARCH_CREDITS_ADVANCED overrides the default 2."""
+    monkeypatch.setenv("SEARCH_CREDITS_ADVANCED", "3")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    run = run_pipeline(user, _db_session, trigger="manual")
+    assert run.search_calls == 3
+
+
+def test_budget_counts_credits_not_calls(_db_session, monkeypatch):
+    """Budget cap of 1 blocks an advanced call (2 credits) but not basic (1 credit)."""
+    monkeypatch.setenv("SEARCH_DAILY_CALLS", "1")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+
+    # Advanced (2 credits) should be blocked by cap=1
+    run_adv = run_pipeline(user, _db_session, trigger="manual")
+    assert run_adv.error == "budget: search"
+    assert run_adv.search_calls == 0  # never called
+
+    # Basic (1 credit) should fit under cap=1
+    run_basic = run_pipeline(user, _db_session, trigger="scheduled")
+    assert run_basic.error != "budget: search"
+    assert run_basic.search_calls >= 1  # provider was called
+
+
+def test_failed_call_still_counts_credits(_db_session, monkeypatch):
+    """A failed search call still charges credits."""
+    from unittest.mock import patch
+
+    class _BoomProvider:
+        name = "boom"
+        def search(self, query, **kw):
+            raise RuntimeError("boom")
+
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    with patch("app.services.pipeline.get_search_provider",
+               return_value=_BoomProvider()):
+        run = run_pipeline(user, _db_session, trigger="manual")
+    # advanced default = 2 credits, even though the call failed
+    assert run.search_calls == 2
+
+
 # ---------- daily_used helper ----------
 
 

@@ -36,8 +36,9 @@ class TavilyProvider:
         language: str | None = None,
         freshness_days: int | None = None,
         max_results: int = 20,
+        search_depth: str | None = None,
     ) -> list[SearchResult]:
-        depth = os.environ.get("TAVILY_SEARCH_DEPTH", "advanced")
+        depth = search_depth or os.environ.get("TAVILY_SEARCH_DEPTH", "advanced")
         body: dict = {
             "query": query,
             "search_depth": depth,
