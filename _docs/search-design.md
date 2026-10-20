@@ -233,7 +233,7 @@ Consequences: `planner.py`, `PlannedQuery`, the local-language month and event-w
 
 ## 8. Budget enforcement and backoff
 
-- `budget.py`: `daily_used(db, column) = SUM(runs.<column>) WHERE started_at >= today 00:00 UTC`; checked before search (`search_calls + len(plan) > SEARCH_DAILY_CALLS`) and before each model call (`llm_calls + 1 > LLM_DAILY_CALLS`).
+- `budget.py`: `daily_used(db, column) = SUM(runs.<column>) WHERE started_at >= today 00:00 UTC`; checked before search (`search_calls + len(plan) > SEARCH_DAILY_CALLS`) and before each model call (`llm_calls + 1 > LLM_DAILY_CALLS`). `SEARCH_DAILY_CALLS` counts credits, not calls: advanced = `SEARCH_CREDITS_ADVANCED` (default 2, verified), basic = 1; scheduled runs default to basic depth (`TAVILY_SEARCH_DEPTH_SCHEDULED`), manual runs keep advanced (#77).
 - On breach: the stage stops, `Run.stopped_at_stage` set, `Run.error = "budget: search"` or `"budget: llm"`, run finishes normally, HTTP 200 with the report; events already inserted as `new` wait for the next run's recovery.
 - Cap sizing, assumption 10 users: hourly runs 2 search + 4–16 model calls per user → 480 search, 960–3 840 model calls a day; plus ~10 cold manual runs (6 search, 1 + 6 + ~10 + 10 ≈ 27 model calls) → ~540 search, ~4 100 model calls. Defaults 600 / 5 000. Tavily plan: ~1 500 searches per user per month. At 50 users multiply by five and raise the caps, or the day ends early.
 - Per-run caps: `MAX_QUERIES_*`, `MAX_RESULTS_PER_QUERY`, extraction pass 1 ≤ queries, pass 2 ≤ results after known-page removal, judge ≤ `MAX_EVENTS_PER_RUN` (the rest stay `new`, recovered next run).

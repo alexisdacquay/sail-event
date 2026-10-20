@@ -30,6 +30,7 @@ class FixtureProvider:
         language: str | None = None,
         freshness_days: int | None = None,
         max_results: int = 6,
+        **kwargs: object,
     ) -> list[SearchResult]:
         # Return all fixture results regardless of query; the pipeline's
         # filters and extraction decide what passes.
