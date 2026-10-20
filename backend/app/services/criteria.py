@@ -20,7 +20,12 @@ def _text_sha(text: str) -> str:
 
 
 def needs_parse(text: str, facets_text_sha: str | None, facets_version: str | None) -> bool:
-    """Return True when the criteria text must be (re-)parsed."""
+    """Return True when the criteria text must be (re-)parsed.
+
+    Facets are parsed once per criteria text (hash) or prompt version.
+    Relative date words resolve against now on every run in window.py;
+    absolute dates are fixed; the past filter and the judge handle them.
+    """
     current_sha = _text_sha(text)
     expected_version = f"{PROMPT_NAME}_{PROMPT_VERSION}"
     return facets_text_sha != current_sha or facets_version != expected_version

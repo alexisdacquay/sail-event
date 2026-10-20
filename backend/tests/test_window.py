@@ -1,4 +1,4 @@
-"""Boundary tests for window.py — year end, DST, this_weekend on Sunday, WindowInPast."""
+"""Boundary tests for window.py — year end, DST, this_weekend on Sunday, past dates."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from app.services.window import WindowInPast, resolve
+from app.services.window import resolve
 
 
 def _local_date(w, which="start"):
@@ -70,10 +70,12 @@ class TestAbsoluteWins:
         assert _local_date(w, "end") == date(2026, 10, 21)
 
 
-class TestWindowInPast:
+class TestPastDatesReturnWindow:
+    """Past absolute dates no longer raise; they return a window where
+    start is clipped to now (so start > end), and filters handle the rest."""
 
-    def test_c1_after_oct_22(self, monkeypatch):
-        """C1 criteria (19-21 Oct) run on Oct 22 → WindowInPast."""
+    def test_c1_after_oct_22_returns_window(self, monkeypatch):
+        """C1 criteria (19-21 Oct) run on Oct 22 → valid window, start > end."""
         monkeypatch.setenv("FAKE_NOW", "2026-10-22T12:00:00+02:00")
         facets = {
             "start": "2026-10-19",
@@ -81,10 +83,11 @@ class TestWindowInPast:
             "relative": "next_week",
             "relative_n": None,
         }
-        with pytest.raises(WindowInPast):
-            resolve(facets, "Europe/Berlin")
+        w = resolve(facets, "Europe/Berlin")
+        # start clipped to now, end stays Oct 21 → start > end
+        assert w.start_utc > w.end_utc
 
-    def test_both_dates_past(self, monkeypatch):
+    def test_both_dates_past_returns_window(self, monkeypatch):
         monkeypatch.setenv("FAKE_NOW", "2027-01-01T12:00:00+00:00")
         facets = {
             "start": "2026-10-19",
@@ -92,8 +95,8 @@ class TestWindowInPast:
             "relative": None,
             "relative_n": None,
         }
-        with pytest.raises(WindowInPast):
-            resolve(facets, "UTC")
+        w = resolve(facets, "UTC")
+        assert w.start_utc > w.end_utc
 
 
 class TestYearEnd:

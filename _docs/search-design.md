@@ -27,7 +27,7 @@ Control flow rules:
 - Each stage returns data; `pipeline.py` loops and counts. No stage calls another.
 - A model response that fails its schema raises for that item; nothing is guessed.
 - Errors from one query, one page or one event are compacted into the run: the item is skipped, a counter incremented (`search_errors`, `extract_errors`, `judge_errors`), the first error message kept in `Run.error_detail` as `<stage>: <ExceptionType>: <message[:200]>`. A judge error leaves that event `new` for the next run's recovery; the run completes. The run fails only when a whole stage produced nothing because of errors.
-- Stage 2 raises `WindowInPast` when the resolved window ends before now; the run stops before any search or model call with `error = "dates in the past: edit your criteria"`.
+- Stage 2 resolves the window; past dates are handled by the per-event past filter and the judge (#70). Facets are parsed once per criteria text; relative date words resolve against now on every run; absolute dates are fixed and the past filter and the judge handle them.
 - The factories refuse `fixture`/`fake` under `APP_ENV=prod` at first use, inside the run: the run records `error = "adapters refused in prod: set SEARCH_PROVIDER and LLM_PROVIDER"`, nothing is stored, health stays 200.
 - All "now" values come from `services/clock.py: now()`, which returns `FAKE_NOW` (ISO-8601) when set, else `datetime.now(UTC)`. Prompts, filters and the fake model's recordings depend on it.
 - Stage 1 runs before the budget check for the run because it is at most one call per text change.
@@ -202,14 +202,14 @@ Code after the judge (`judge.py`): apply the caps table from spec §7 to `score`
 
 ## 5. Query rule (revised 2026-10-18, owner decision)
 
-There is no query planning. The search stage sends `Criteria.text` to the provider verbatim, one call, raw page content requested, no `country`, `language` or freshness parameter. The provider's results are what the extractor gets. The code never rewrites, translates, templates or targets the query, and never stops a run for a missing city or country; the only stop before search is empty criteria text (and `WindowInPast`, §1).
+There is no query planning. The search stage sends `Criteria.text` to the provider verbatim, one call, raw page content requested, no `country`, `language` or freshness parameter. The provider's results are what the extractor gets. The code never rewrites, translates, templates or targets the query, and never stops a run for a missing city or country; the only stop before search is empty criteria text (`stopped_at_stage="criteria"`, `error="no criteria text"`).
 
 Consequences: `planner.py`, `PlannedQuery`, the local-language month and event-word tables, the Tavily country-name map and the `language` parameter are deleted; "queries per run" is 1 (budget maths in §8 scale by that); the facets (§4) serve the window and the judge only. The earlier templated planner (seven templates, six queries, local-language variants, "no place" stop) is withdrawn: it put the code's opinion between the user and the search engine and produced empty runs for country-only or place-less criteria.
 
 ## 6. Relative dates and time zones
 
 - `User.time_zone` (IANA) set by the frontend from `Intl.DateTimeFormat().resolvedOptions().timeZone` on every criteria save; default `UTC`.
-- `window.py`: `resolve(facets.date, now_utc, tz) -> Window`; `now_utc = clock.now()`; `now_local = now_utc.astimezone(ZoneInfo(tz))`; ISO weeks Monday–Sunday; weekend = Saturday 00:00 → Sunday 23:59:59 (on a Sunday, "this weekend" is the rest of today); `next_n_days` = `now_local` → `now_local + n days` end of day; absolute dates win; neither → `now_local` → `+30 days`. Start is `max(window start, now_local)`; when the end is before `now_local`, `resolve` raises `WindowInPast` and the run stops before any call (§1).
+- `window.py`: `resolve(facets.date, now_utc, tz) -> Window`; `now_utc = clock.now()`; `now_local = now_utc.astimezone(ZoneInfo(tz))`; ISO weeks Monday–Sunday; weekend = Saturday 00:00 → Sunday 23:59:59 (on a Sunday, "this weekend" is the rest of today); `next_n_days` = `now_local` → `now_local + n days` end of day; absolute dates win; neither → `now_local` → `+30 days`. Start is `max(window start, now_local)`. When the end is before `now_local`, start > end and the per-event past/date filters remove everything; the run is not stopped (#70).
 - `Window` carries `start_utc`, `end_utc`, `tz`; filters compare in UTC.
 - Past filter: `event_end < now`, where `event_end` = `end` when known, else `start` for timed events, else 23:59:59 of the start day for date-only events. Window filter: overlap, `start <= window_end and event_end >= window_start`. Both in `filters.py`.
 - Event instant: `start_local` parsed with `start_tz` when known; unknown zone → country's single zone from a code table (`DE → Europe/Berlin`, `AT`, `FR`, `GB`, `PT`, `NL`, `JP`, …; multi-zone countries such as `US`, `AU`, `BR`, `RU`, `CA` → null); still unknown → compared in the user's zone and stored with `start_tz = null`.
@@ -312,10 +312,10 @@ Issues in dependency order; each one engineer session; new files only until F2.
 6. Contract tests against recorded DeepSeek-shaped responses: request body, empty-content retry, 429 retry, usage; `.env.example` and `docs/deployment.md` list `LLM_*`, `FAKE_NOW`, and the dev row states `APP_ENV=dev`, `FAKE_NOW`, `SEED_DEMO=1`.
 
 ### Issue C — Criteria understanding and window resolution
-1. `criteria_v2.md` + schema; `criteria.py` re-parses when `sha256(text) != facets_text_sha` or version differs; stores `facets_json`, `facets_version`, `facets_text_sha`, `parsed_at`.
-2. `window.py` resolves every relative value from §6 on `clock.now()`; absolute wins; default 30 days; start clipped to now; end before now raises `WindowInPast`.
+1. `criteria_v2.md` + schema; `criteria.py` re-parses when `sha256(text) != facets_text_sha` or version differs; stores `facets_json`, `facets_version`, `facets_text_sha`, `parsed_at`. Relative date words resolve against now on every run in `window.py` (#70).
+2. `window.py` resolves every relative value from §6 on `clock.now()`; absolute wins; default 30 days; start clipped to now; past dates return a valid window and the per-event filters handle the rest (#70).
 3. Golden set A with 13 entries and recorded parser responses under `FAKE_NOW`; `test_golden_criteria.py` passes.
-4. Boundary tests: year end, a DST change in `Europe/Berlin`, "this weekend" on a Sunday, C1 after 22 Oct → `WindowInPast`.
+4. Boundary tests: year end, a DST change in `Europe/Berlin`, "this weekend" on a Sunday, C1 after 22 Oct returns a window with start > end (#70).
 5. Sentinel test: no criteria text in log records or span attributes.
 
 ### Issue D — Search providers v2 and query planner (new files only)
@@ -341,7 +341,7 @@ Issues in dependency order; each one engineer session; new files only until F2.
 5. Not wired into the pipeline yet; all existing tests still pass.
 
 ### Issue F2 — Pipeline swap, smoke script, deletions
-1. `pipeline.py` runs the nine stages with `stage_counts`, calls, tokens, `stopped_at_stage`, `error_detail`; judge error leaves the event `new` and counts; `WindowInPast` and no-place stops; factory refusal recorded on the run with health 200; recovery of `new` events unchanged.
+1. `pipeline.py` runs the nine stages with `stage_counts`, calls, tokens, `stopped_at_stage`, `error_detail`; judge error leaves the event `new` and counts; empty-criteria and budget stops; factory refusal recorded on the run with health 200; recovery of `new` events unchanged.
 2. Old `search_tavily.py`, `fixture.py`, `fixtures.json`, `fake.py`, `scorer_claude.py`, `scorer_v1.md`, `RawEvent`, `derive_queries` deleted; `_v2` files renamed to plain names; `anthropic` removed from `pyproject.toml`; `test_pipeline.py` rewritten; all backend tests pass.
 3. `SearchResult` API response carries `stageCounts`, `stoppedAtStage`, `error`; `Event` carries `band` and `sourceUrl`.
 4. `FAKE_NOW` set in CI, `docker-compose.yml`, e2e and the dev service; e2e journey 1 passes with the seeded demo queue non-empty.
@@ -386,7 +386,7 @@ Issues in dependency order; each one engineer session; new files only until F2.
 | Absolute dates win over relative ones when both are present | The owner's own text pairs "next week" with 19–21 Oct; a user who writes a stale date and "next week" keeps getting the stale window until they edit |
 | Relative dates resolved at run time in the user's zone, parse cached on the criteria by text hash | A prompt version bump forces a re-parse for every user on the next run (one call each) |
 | Past and window filters on the event's end, date-only events end at 23:59 | A multi-day festival that started last week stays visible until its last day; a stale listing with no end date is kept all day |
-| A window that ended stops the run with zero calls | The user sees the same "dates in the past" report every hour until they edit; nothing nudges them beyond the report line |
+| Past dates do not stop the run; the per-event past filter and judge handle them (#70) | A user with stale absolute dates gets zero events every run (all filtered); facets are parsed once per text, relative date words resolve against now on every run, absolute dates are fixed |
 | Default window 30 days when no date is given | Events sell out within a day (plan), yet 30 days of generic results dilute the queue for a user who meant "soon" |
 | Judge returns flags; code caps the score from them | A judge that sets `date = no` for an event the filter kept means the extractor and judge disagree; the cap hides that disagreement rather than surfacing it |
 | Scheduled runs use 2 rotating queries, manual runs 6 | A newly listed event may take up to three hours to be reached by its query; the plan's "within a day" still holds |
@@ -423,7 +423,7 @@ Source: `_docs/search-design-review.md`, 2026-10-18.
 | F8 judge failure fails run | §1 control flow; §8 backoff; issue F2.1 |
 | F9 past/window on start only | §6 last bullet; issue E.2, E.5 |
 | F10 unknown country | §6/§7 via `filters.py`; issue E.2 |
-| F11 past window searched hourly | §1 `WindowInPast`; §6; issue C.2, C.4 |
+| F11 past window searched hourly | §1 past dates handled by filters (#70); §6; issue C.2, C.4 |
 | F12 price contradiction | §4 judge prompt |
 | F13 cut-offs vs defaults | §2 registration defaults, `>=`/`<=`; issue A.2; issue I.5 |
 | F14 subset rule | §7 near-match; issue E.4 |

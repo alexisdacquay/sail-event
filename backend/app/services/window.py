@@ -10,10 +10,6 @@ from zoneinfo import ZoneInfo
 from ..services import clock
 
 
-class WindowInPast(Exception):
-    """The resolved window ends before now."""
-
-
 @dataclass(frozen=True)
 class Window:
     start_utc: datetime
@@ -28,7 +24,6 @@ def resolve(date_facets: dict, tz: str) -> Window:
     - Absolute dates win over relative.
     - Neither → now → +30 days.
     - Start clipped to now.
-    - End before now → WindowInPast.
     """
     now_utc = clock.now()
     zone = ZoneInfo(tz)
@@ -70,10 +65,6 @@ def resolve(date_facets: dict, tz: str) -> Window:
     # Clip start to now
     if start_local < now_local:
         start_local = now_local
-
-    # End before now → WindowInPast
-    if end_local < now_local:
-        raise WindowInPast("dates in the past: edit your criteria")
 
     start_utc = start_local.astimezone(timezone.utc)
     end_utc = end_local.astimezone(timezone.utc)

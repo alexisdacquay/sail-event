@@ -311,3 +311,66 @@ def test_decided_by_user_on_reject(client, auth_headers):
     r = client.post(f"/api/events/{eid}/decision", json={"decision": "rejected"}, headers=h)
     assert r.status_code == 200
     assert r.json()["decidedBy"] == "user"
+
+
+# --- #71: on-read fallback keeps unknown zones naive, resolves country zones ---
+
+def test_api_unknown_zone_stays_naive(client, auth_headers, _db_session):
+    """Legacy row with start_tz NULL and country ZZ keeps naive dateTime in the API."""
+    from app.orm import User, Event as OrmEvent
+
+    h = auth_headers("demo", "demo")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    evt = OrmEvent(
+        user_id=user.id,
+        title="Unknown zone event",
+        date_time="2026-10-22T19:00:00",
+        place="Somewhere",
+        link="https://example.com/unknown-zone-api",
+        description="No zone",
+        score=80,
+        score_reason="OK",
+        status="queued",
+        start_tz=None,
+        city="",
+        country="ZZ",
+    )
+    _db_session.add(evt)
+    _db_session.commit()
+
+    events = client.get("/api/events?status=queued", headers=h).json()
+    match = [e for e in events if e["title"] == "Unknown zone event"]
+    assert len(match) == 1
+    # dateTime must stay naive — no offset appended
+    assert match[0]["dateTime"] == "2026-10-22T19:00:00"
+    assert match[0]["startTz"] is None
+
+
+def test_api_country_zone_gets_offset(client, auth_headers, _db_session):
+    """Legacy row with start_tz NULL but country DE gets the Europe/Berlin offset."""
+    from app.orm import User, Event as OrmEvent
+
+    h = auth_headers("demo", "demo")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    evt = OrmEvent(
+        user_id=user.id,
+        title="Country zone event",
+        date_time="2026-10-22T19:00:00",
+        place="Berlin",
+        link="https://example.com/country-zone-api",
+        description="Country resolves",
+        score=85,
+        score_reason="Good",
+        status="queued",
+        start_tz=None,
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(evt)
+    _db_session.commit()
+
+    events = client.get("/api/events?status=queued", headers=h).json()
+    match = [e for e in events if e["title"] == "Country zone event"]
+    assert len(match) == 1
+    # October 22 in Europe/Berlin is CEST (+02:00)
+    assert match[0]["dateTime"] == "2026-10-22T19:00:00+02:00"

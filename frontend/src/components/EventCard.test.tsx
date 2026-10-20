@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { EventCard } from './EventCard'
+import { EventCard, formatWhen, getBrowserTz } from './EventCard'
 import type { Event } from '@/services/api'
 
 const event: Event = {
@@ -181,5 +181,48 @@ describe('EventCard', () => {
     const dt = screen.getByTestId('event-datetime')
     // Should contain the event tz in parentheses
     expect(dt.textContent).toMatch(/\(Europe\/London\)/)
+  })
+})
+
+// --- #71: event times carry their offset end to end ---
+
+const tokyoEvent: Event = {
+  ...event,
+  id: 'evt-tokyo',
+  title: 'Tokyo Jazz Night',
+  dateTime: '2026-10-20T20:00:00+09:00',
+  startTz: 'Asia/Tokyo',
+  city: 'Tokyo',
+  country: 'JP',
+}
+
+describe('formatWhen — offset-aware (#71)', () => {
+  it('Tokyo event shows 20:00 (Asia/Tokyo) regardless of browser zone', () => {
+    const text = formatWhen(tokyoEvent, 'Europe/Berlin')
+    expect(text).toContain('20:00')
+    expect(text).toContain('(Asia/Tokyo)')
+    expect(text).toMatch(/Tue 20 Oct 2026/)
+  })
+
+  it('Tokyo event viewed from Europe/Berlin shows Berlin annotation', () => {
+    const text = formatWhen(tokyoEvent, 'Europe/Berlin')
+    expect(text).toContain('(Asia/Tokyo)')
+    expect(text).toContain('13:00')  // 20:00 JST = 13:00 CEST
+    expect(text).toContain('(Europe/Berlin)')
+  })
+
+  it('Tokyo event viewed from America/New_York shows NY annotation', () => {
+    const text = formatWhen(tokyoEvent, 'America/New_York')
+    expect(text).toContain('(Asia/Tokyo)')
+    expect(text).toContain('07:00')  // 20:00 JST = 07:00 EDT
+    expect(text).toContain('(America/New_York)')
+  })
+
+  it('date-only event shows correct date from any timezone', () => {
+    const dateOnly: Event = { ...event, dateTime: '2026-10-20', startTz: null }
+    // Pass a western timezone to prove the date doesn't roll back
+    const text = formatWhen(dateOnly, 'America/New_York')
+    expect(text).toMatch(/Tue 20 Oct 2026/)
+    expect(text).not.toMatch(/\d{2}:\d{2}/)
   })
 })
