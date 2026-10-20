@@ -88,6 +88,15 @@ class TestLakeraAdapter:
                     return_value=_mock_urlopen_ok("moderation_only")):
             g.check("something fun this weekend")  # should not raise
 
+    def test_no_prompt_attack_detector_raises_guard_unavailable(self, monkeypatch):
+        """#68: breakdown without prompt_attack detector → GuardUnavailable (misconfiguration)."""
+        monkeypatch.setenv("LAKERA_API_KEY", "test-key")
+        g = LakeraGuardrail()
+        with patch("app.adapters.guard_lakera.urllib.request.urlopen",
+                    return_value=_mock_urlopen_ok("no_prompt_attack_detector")):
+            with pytest.raises(GuardUnavailable, match="no prompt_attack"):
+                g.check("anything")
+
     def test_error_500(self, monkeypatch):
         monkeypatch.setenv("LAKERA_API_KEY", "test-key")
         g = LakeraGuardrail()

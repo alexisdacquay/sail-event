@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 85,
+    "reason": "Jazz event in Berlin on 20 Oct matches dates but description contains irrelevant instructions",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 750,
+    "completion_tokens": 70
+  },
+  "recorded_at": "2026-10-20T12:00:00+00:00",
+  "model": "fake:page-injection-test",
+  "recorded": "hand-written"
+}

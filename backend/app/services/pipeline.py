@@ -560,6 +560,11 @@ def _judge_and_triage(
                 if isinstance(result, Verdict):
                     espan.set_attribute("score", result.score)
                     espan.set_attribute("capped", result.capped)
+                    try:
+                        from urllib.parse import urlparse
+                        espan.set_attribute("source_host", urlparse(extracted.source_url).hostname or "")
+                    except Exception:
+                        pass
                     if not result.is_event:
                         # Drop non-events: mark rejected with score 0
                         evt.score = 0

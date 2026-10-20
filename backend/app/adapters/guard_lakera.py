@@ -56,6 +56,11 @@ class LakeraGuardrail:
             raise GuardUnavailable(f"lakera network: {exc}") from exc
 
         # Block only on prompt_attack detectors; moderation/pii/links are ignored
+        has_prompt_attack_detector = False
         for entry in data.get("breakdown", []):
-            if entry.get("detected") and entry.get("detector_type", "").startswith("prompt_attack"):
-                raise ContentFlagged("lakera flagged")
+            if entry.get("detector_type", "").startswith("prompt_attack"):
+                has_prompt_attack_detector = True
+                if entry.get("detected"):
+                    raise ContentFlagged("lakera flagged")
+        if not has_prompt_attack_detector:
+            raise GuardUnavailable("lakera project has no prompt_attack detector")
