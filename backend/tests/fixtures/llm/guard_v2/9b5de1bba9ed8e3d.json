@@ -4,9 +4,9 @@
     "reason": "ok"
   },
   "usage": {
-    "prompt_tokens": 251,
-    "completion_tokens": 82
+    "prompt_tokens": 176,
+    "completion_tokens": 37
   },
-  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "recorded_at": "2026-10-20T12:26:52.547033+00:00",
   "model": "deepseek-flash"
 }

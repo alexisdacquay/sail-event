@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import time
 import urllib.error
 import urllib.request
 
@@ -31,6 +32,12 @@ class LakeraGuardrail:
     def __init__(self) -> None:
         self.api_key: str | None = os.environ.get("LAKERA_API_KEY")
 
+    @staticmethod
+    def _request(req: urllib.request.Request) -> dict:
+        """Fire one HTTP request, return parsed JSON. Let HTTPError propagate."""
+        with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
+            return json.loads(resp.read())
+
     def check(self, text: str) -> None:
         """Raise ContentFlagged if the text is flagged, GuardUnavailable on error."""
         if not self.api_key:
@@ -46,12 +53,22 @@ class LakeraGuardrail:
             _LAKERA_URL, data=body, headers=headers, method="POST",
         )
         try:
-            with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
-                data = json.loads(resp.read())
+            data = self._request(req)
         except urllib.error.HTTPError as exc:
             if exc.code == 429:
-                raise GuardUnavailable("lakera quota exhausted") from exc
-            raise GuardUnavailable(f"lakera HTTP {exc.code}") from exc
+                logger.warning("lakera 429, retrying in 1 s")
+                time.sleep(1)
+                try:
+                    req = urllib.request.Request(
+                        _LAKERA_URL, data=body, headers=headers, method="POST",
+                    )
+                    data = self._request(req)
+                except urllib.error.HTTPError as exc2:
+                    raise GuardUnavailable(f"lakera HTTP {exc2.code} after retry") from exc2
+                except (urllib.error.URLError, TimeoutError, OSError) as exc2:
+                    raise GuardUnavailable(f"lakera network: {exc2}") from exc2
+            else:
+                raise GuardUnavailable(f"lakera HTTP {exc.code}") from exc
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             raise GuardUnavailable(f"lakera network: {exc}") from exc
 

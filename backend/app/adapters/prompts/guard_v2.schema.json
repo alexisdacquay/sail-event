@@ -2,7 +2,7 @@
   "type": "object",
   "properties": {
     "blocked": {"type": "boolean"},
-    "reason": {"type": "string", "enum": ["injection", "harmful", "off_topic", "ok"]}
+    "reason": {"type": "string", "enum": ["injection", "ok"]}
   },
   "required": ["blocked", "reason"],
   "additionalProperties": false

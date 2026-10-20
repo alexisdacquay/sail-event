@@ -1,0 +1,7 @@
+{
+  "description": "Both calls return 429 — synthetic fixture for retry-then-fail logic",
+  "calls": [
+    {"status": 429},
+    {"status": 429}
+  ]
+}

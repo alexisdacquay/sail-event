@@ -12,7 +12,7 @@ from ...adapters.guard_lakera import ContentFlagged, GuardUnavailable
 logger = logging.getLogger(__name__)
 
 PROMPT_NAME = "guard"
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 
 
 class SelfCheckGuardrail:

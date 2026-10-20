@@ -4,9 +4,9 @@
     "reason": "injection"
   },
   "usage": {
-    "prompt_tokens": 241,
-    "completion_tokens": 55
+    "prompt_tokens": 183,
+    "completion_tokens": 71
   },
-  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "recorded_at": "2026-10-20T12:26:59.292291+00:00",
   "model": "deepseek-flash"
 }
