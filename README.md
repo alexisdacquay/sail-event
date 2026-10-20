@@ -179,7 +179,7 @@ How they are organised: [docs/testing.md](docs/testing.md).
 
 ## When it breaks
 
-The key journey, a search run, is instrumented end to end: a metric per run with its outcome, a trace per request, and structured logs that carry the trace id. No user content or credentials go to telemetry.
+The key journey, a search run, is instrumented end to end: a metric per run with its outcome, a trace per request, and structured logs that carry the trace id. No user content or credentials go to telemetry. The observability stack runs locally with the commands below; the public URL serves the app only, there is no Grafana on Render.
 
 ```bash
 export RESPONDER_WEBHOOK_SECRET=any-string   # shared by Grafana's webhook and the responder
@@ -237,5 +237,5 @@ Policy, prompt and limits: [`incident-response/`](incident-response/). Security 
 ## Status
 
 - Live on real web search (Tavily) and a real model (DeepSeek through an OpenAI-compatible adapter), searching hourly; the screenshots above are from prod. Your criteria text goes to the search engine as written, the model extracts the events and judges each one against your text ([_docs/search-spec.md](_docs/search-spec.md)).
-- Two environments on Render: dev follows main, prod moves only by the promote workflow.
+- Two environments on Render, both on paid instances (no sleep, no cold start): dev follows main, prod moves only by the promote workflow.
 - Security findings deferred to post-MVP are issues [#33 to #36](https://github.com/alexisdacquay/sail-event/issues?q=is%3Aissue+label%3Apost-mvp).

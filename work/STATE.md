@@ -1,5 +1,10 @@
 # ProjectOne — work state (resumable)
 
+## 2026-10-20 12:10 — prod on b57bbaa; blind rubric review 24/24 ×3
+- Promote of b57bbaa succeeded (run 39398819593). Three blind reviewers (strict, 15-minute, hands-on) each scored 24/24; log in work/RUBRIC-REVIEWS.md; skill `.claude/skills/rubric-review/SKILL.md` (`/rubric-review`) re-runs it. Fixes from the review: OTEL_COLLECTOR_PORT override, README lines (observability local-only, paid instances).
+- Owner direction 12:00: rubric alignment is the top priority as a regular scoring mechanism; stabilise features, focus on scoring. Next: re-run /rubric-review after each release; keep the review log moving.
+- STILL OWNER (bold in chat): Render dev TAVILY_API_KEY; both services LAKERA_API_KEY → then GUARDRAIL=lakera on both and a Lakera check on prod.
+
 ## 2026-10-20 11:25 — search v2 live, PRs 66 + 67 merged, prod promoting b57bbaa
 - Merged: #67 card Where line (842dc31, promoted 11:05), #66 issue 65 (b57bbaa: run failures reported as `<Type>: <msg>` with stoppedAtStage incl. "adapters"; Lakera guard GuardUnavailable without key → 503/fallback; SCORER message; deployment.md removal list). Issue 65 closed. Promote run 39398819593 for b57bbaa started 11:24.
 - README a2bf5b9: four screenshots from prod (accounts reviewer_104654 / reviewer_105356 on prod, real Berlin search), thresholds 90/40, adapter list, status text.

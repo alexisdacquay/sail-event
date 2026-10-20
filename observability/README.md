@@ -3,7 +3,7 @@
 `make up-all` starts both the app (with `docker-compose.observability.yml` overlay) and the observability stack; `make observability-up` starts the stack alone (collector, Prometheus, Loki, Tempo, Grafana).
 `make observability-down` tears it down.
 
-Grafana is at `http://localhost:3001` (or `$GRAFANA_PORT`).
+Grafana is at `http://localhost:3001` (or `$GRAFANA_PORT`). Every host port has an override: `GRAFANA_PORT`, `PROMETHEUS_PORT`, `LOKI_PORT`, `TEMPO_PORT`, `OTEL_COLLECTOR_PORT` (default 4318).
 
 ## Alerting
 

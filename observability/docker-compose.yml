@@ -5,7 +5,7 @@ services:
       - ./collector.yaml:/etc/otelcol-contrib/config.yaml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     ports:
-      - "4318:4318"
+      - "${OTEL_COLLECTOR_PORT:-4318}:4318"
       - "8889:8889"
     networks:
       - default
