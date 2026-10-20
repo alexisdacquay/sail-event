@@ -112,13 +112,15 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
 
         try:
             # --- get adapters (may fail in prod with fixture/fake) ---
+            current_stage = "adapters"
             try:
                 provider = get_search_provider()
                 model = get_language_model()
                 guardrail = get_guardrail()
-            except RuntimeError as exc:
-                error_msg = str(exc)
-                _finalise_run(
+            except Exception as exc:
+                error_msg = f"{type(exc).__name__}: {str(exc)[:200]}"
+                stopped_at_stage = "adapters"
+                run = _finalise_run(
                     run, db, events_found, events_new, error_msg,
                     counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
                     stopped_at_stage, error_detail,
@@ -129,8 +131,9 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
 
             # Deferred prod guards refuse at first use
             if getattr(provider, '_refused', False) or getattr(model, '_refused', False):
-                error_msg = "adapters refused in prod: set SEARCH_PROVIDER and LLM_PROVIDER"
-                _finalise_run(
+                error_msg = "RuntimeError: adapters refused in prod: set SEARCH_PROVIDER and LLM_PROVIDER"
+                stopped_at_stage = "adapters"
+                run = _finalise_run(
                     run, db, events_found, events_new, error_msg,
                     counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
                     stopped_at_stage, error_detail,

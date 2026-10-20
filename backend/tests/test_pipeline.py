@@ -159,7 +159,9 @@ def test_prod_refusal_recorded_on_run(client, auth_headers, _db_session, monkeyp
     h = auth_headers("demo", "demo")
     body = client.post("/api/search", headers=h).json()
     assert body.get("error") is not None
-    assert "refused" in body["error"].lower() or "prod" in body["error"].lower()
+    assert body["error"].startswith("RuntimeError: ")
+    assert "refused" in body["error"].lower()
+    assert body["stoppedAtStage"] == "adapters"
     monkeypatch.delenv("APP_ENV")
 
 
@@ -272,10 +274,24 @@ def test_search_provider_all_queries_fail(client, auth_headers, _db_session):
 
 
 def test_scorer_env_var_reported(client, auth_headers, _db_session, monkeypatch):
-    """Leftover SCORER env var is reported in the API error."""
+    """Leftover SCORER env var is reported in the API error with format and stage."""
     monkeypatch.setenv("SCORER", "claude")
     h = auth_headers("demo", "demo")
     body = client.post("/api/search", headers=h).json()
     assert body["error"] is not None
+    assert body["error"].startswith("ValueError: "), "error must be <Type>: <msg>"
     assert "SCORER" in body["error"]
     assert "LLM_PROVIDER" in body["error"]
+    assert body["stoppedAtStage"] == "adapters"
+
+
+def test_factory_runtime_error_reported(client, auth_headers, _db_session):
+    """A RuntimeError from a factory must report format and stage='adapters'."""
+    h = auth_headers("demo", "demo")
+
+    with patch("app.services.pipeline.get_search_provider",
+               side_effect=RuntimeError("bad config")):
+        body = client.post("/api/search", headers=h).json()
+
+    assert body["error"] == "RuntimeError: bad config"
+    assert body["stoppedAtStage"] == "adapters"
