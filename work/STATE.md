@@ -1,5 +1,12 @@
 # ProjectOne — work state (resumable)
 
+## 2026-10-20 11:25 — search v2 live, PRs 66 + 67 merged, prod promoting b57bbaa
+- Merged: #67 card Where line (842dc31, promoted 11:05), #66 issue 65 (b57bbaa: run failures reported as `<Type>: <msg>` with stoppedAtStage incl. "adapters"; Lakera guard GuardUnavailable without key → 503/fallback; SCORER message; deployment.md removal list). Issue 65 closed. Promote run 39398819593 for b57bbaa started 11:24.
+- README a2bf5b9: four screenshots from prod (accounts reviewer_104654 / reviewer_105356 on prod, real Berlin search), thresholds 90/40, adapter list, status text.
+- Still OWNER: Render env — dev TAVILY_API_KEY; both LAKERA_API_KEY then GUARDRAIL=lakera on both (today GUARDRAIL=none); health check path /api/health; old DB user; prod DB inbound rule. After the keys: dev smoke (`scratchpad/smoke_remote.sh` pattern: register, PUT criteria, POST search, GET events) and a Lakera check (PUT criteria with an injection text → 400).
+- Branches search-v2, search-v2-g/h/i still on origin (delete when convenient); no worktrees left.
+- Not verified: budget-stop and WindowInPast branches in pipeline.py call _finalise_run without reassigning `run` (QA note on PR 66); the router may read a stale object there. Candidate issue.
+
 ## LIVE 2026-10-20 10:55 — prod runs search v2 on Tavily + DeepSeek
 - Owner's word given 10:27. Render env set on dev + prod: SEARCH_PROVIDER=tavily, LLM_PROVIDER=openai_compatible, MAX_RESULTS_PER_QUERY=20, TAVILY_SEARCH_DEPTH=advanced, LLM_TIMEOUT_SECONDS=120, LLM_JSON_MODE=json_object (was missing on both → KeyError), SCORER="" (dev had the old value → ValueError), GUARDRAIL=none for now (LAKERA_API_KEY missing on both). Both services deployed main 487cb1a through the env change (prod auto-deploy stays off; promote.yml not needed this time).
 - Prod smoke 10:43 (user smoke_*, Berlin text): 20 results → 30 extracted → 17 judged → 2 accepted (Ignaz Schick 95, 13 Kuukautta 92, both 21 Oct Berlin), 2 queued, 13 rejected (dates). Dev smoke blocked: TAVILY_API_KEY missing on dev.
