@@ -1,5 +1,13 @@
 # ProjectOne — work state (resumable)
 
+## 2026-10-20 18:40 — day's end: main 36990d7 promoting to prod; batch 4 running
+- Merged today after QA: #67 card, #66 silent errors (issue 65), #69 guard split (68), #79 no window stop (70), #80 time zones (71), #82 fallback scope + Lakera 429 retry (81). Prod promoted 842dc31 → b57bbaa → 66490e8 → 50b49f4 → 36990d7 (run 39427391647 started 18:38). Dev follows main.
+- Design reviews (work/DESIGN-REVIEW-2026-10-20.md): guard split accepted with changes (done); latent counter-effects → issues #70-#78; done: 70, 71, health-check path (#72 part), GUARD_FALLBACK set; OPEN: #72 rollback doc + probe, #73 queue double-run, #74 page_kind, #75 token cost, #76 X-Forwarded-For, #77 Tavily credits, #78 low.
+- Standing tests: `/rubric-review` (3 blind peers, 24/24 ×3 today, log work/RUBRIC-REVIEWS.md); `backend/scripts/remote_batch.py` breadth batch on dev/prod (log work/SEARCH-BATCHES.md, batches 1-3 logged, 4 running on 36990d7). Expect after 82: "...", "buy a bike", emoji texts accepted on prod.
+- Render: RENDER_API_KEY in backend/.env.local; scripts in the session scratchpad (copy_keys.sh, copy_env.sh, set_health.sh) copy env prod→dev and patch services; dev has REGISTER_RATE_LIMIT_PER_HOUR=1000; both have GUARDRAIL=lakera, GUARD_FALLBACK=self_check, health path /api/health.
+- Owner decisions today: query = text + "event" verbatim; judge = suitability; no price; Lakera on criteria only (prompt attacks); pages never guarded; no code stop on parsed facets; breadth testing over single cases; status as ASCII blocks; asks as instruction sheets.
+- Next candidates (owner's "focus on scoring, stabilise"): #73/#76 (prod safety), #77 (cost), UI hint when criteria name no place/date ("jazz" → 19 US auto-accepts), re-run /rubric-review after the README mentions the breadth test.
+
 ## 2026-10-20 13:50 — keys on Render, guard on, breadth batches on prod + dev
 - Owner created a Render API key (stored in backend/.env.local as RENDER_API_KEY); scripts in scratchpad copy_keys.sh / copy_env.sh copied TAVILY + LAKERA + LLM_* prod→dev through the API, values never in chat. GUARDRAIL=lakera on both; guard check: benign 200, injection 400 on both. Dev REGISTER_RATE_LIMIT_PER_HOUR=1000 (test env). Both services on ee6459b.
 - Breadth batches (20 texts, 10 parallel, remote_batch.py) on prod and dev: work/SEARCH-BATCHES.md. Top problem: Lakera moderation/link detectors block a benign text and skip full pages → issue #68 (prompt_attack only), engineer running on branch fix-guard-scope. After merge + promote: rerun both batches, move remote_batch.py into backend/scripts.
