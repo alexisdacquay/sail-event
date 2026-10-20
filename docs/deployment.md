@@ -19,6 +19,8 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `JWT_SECRET` | random |
 | `SEARCH_ALL_API_KEY` | random; the same value is the GitHub Actions secret `SEARCH_ALL_API_KEY` |
 | `SEARCH_PROVIDER`, `TAVILY_API_KEY` | `tavily` + key for real web search; unset = fixtures |
+| `TAVILY_SEARCH_DEPTH` | `advanced` (default) or `basic` |
+| `MAX_RESULTS_PER_QUERY` | `20` (default, Tavily max) |
 | `SCORER`, `ANTHROPIC_API_KEY` | `claude` + key for real scoring; unset = fake scorer |
 | `LLM_PROVIDER` | `openai_compatible` for real scoring; `fake` (default outside prod) |
 | `LLM_BASE_URL` | `https://api.deepseek.com` (required when `LLM_PROVIDER=openai_compatible`) |

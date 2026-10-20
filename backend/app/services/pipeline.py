@@ -156,7 +156,7 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
 
             # --- Stage 3: search (verbatim query, no planner) ---
             from ..adapters.search import SearchResult as SResult
-            max_results_per_q = int(os.environ.get("MAX_RESULTS_PER_QUERY", "6"))
+            max_results_per_q = int(os.environ.get("MAX_RESULTS_PER_QUERY", "20"))
             all_results: list[SResult] = []
 
             with tracer.start_as_current_span("search"):
