@@ -19,10 +19,33 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `JWT_SECRET` | random |
 | `SEARCH_ALL_API_KEY` | random; the same value is the GitHub Actions secret `SEARCH_ALL_API_KEY` |
 | `SEARCH_PROVIDER`, `TAVILY_API_KEY` | `tavily` + key for real web search; unset = fixtures |
+| `TAVILY_SEARCH_DEPTH` | `advanced` (default) or `basic` |
+| `MAX_RESULTS_PER_QUERY` | `20` (default, Tavily max) |
 | `SCORER`, `ANTHROPIC_API_KEY` | `claude` + key for real scoring; unset = fake scorer |
+| `LLM_PROVIDER` | `openai_compatible` for real scoring; `fake` (default outside prod) |
+| `LLM_BASE_URL` | `https://api.deepseek.com` (required when `LLM_PROVIDER=openai_compatible`) |
+| `LLM_MODEL` | `deepseek-flash` |
+| `LLM_API_KEY` | DeepSeek API key (required when `LLM_PROVIDER=openai_compatible`) |
+| `LLM_JSON_MODE` | `json_object` (DeepSeek) or `json_schema` |
+| `FAKE_NOW` | ISO-8601 instant; set in dev/CI/compose (`2026-10-18T12:00:00+02:00`), unset in prod |
 | `MAX_SCHEDULED_USERS` | `50` — max users per scheduled search |
 | `REGISTER_RATE_LIMIT_PER_HOUR` | `5` — successful registrations per IP per hour |
 | `REGISTRATION_CODE` | optional — invite code for registration; unset = open |
+| `SEARCH_DAILY_CALLS` | `600` — daily search-call budget across all users |
+| `LLM_DAILY_CALLS` | `5000` — daily LLM-call budget across all users |
+| `LLM_USD_PER_1K_IN` | cost per 1 000 input tokens; set all three price vars to enable `cost_usd` |
+| `LLM_USD_PER_1K_OUT` | cost per 1 000 output tokens |
+| `SEARCH_USD_PER_CALL` | cost per search API call |
+| `GUARDRAIL` | `lakera` (prod) or `none` (default, dev/CI); set at issue H promote |
+| `LAKERA_API_KEY` | Lakera Guard API key (required when `GUARDRAIL=lakera`) |
+| `GUARD_FALLBACK` | `self_check` (prod) or `none`; used only when Lakera errors or quota exhausted |
+| `SEARCH_NOW_PER_HOUR` | `6` — "Search now" manual runs per user per rolling hour |
+
+Dev environment (`sail-event-dev`): `APP_ENV=dev`, `FAKE_NOW=2026-10-18T12:00:00+02:00`, `SEED_DEMO=1`.
+
+`docker-compose.yml` defaults `FAKE_NOW` to `2026-10-18T12:00:00+02:00`
+so `docker compose up` with no env gives the demo a non-empty queue.
+Render dev sets `FAKE_NOW` explicitly; prod never sets it.
 
 Secrets live only in Render and GitHub secrets, never in the repo.
 

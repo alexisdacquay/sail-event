@@ -1,0 +1,187 @@
+{
+  "fake_now": "2026-10-18T12:00:00+02:00",
+  "entries": [
+    {
+      "id": "C1",
+      "text": "jazz in Berlin (Germany) next week (19-21st October 2026)",
+      "user_tz": "Europe/Berlin",
+      "expected": {
+        "place": {"city": "Berlin", "country": "DE", "region": null, "radius_km": null, "online": false},
+        "date": {"start": "2026-10-19", "end": "2026-10-21", "relative": "next_week", "relative_n": null},
+        "topics": ["jazz"],
+        "formats": [],
+        "budget": {"max_amount": null, "currency": null, "free_only": false},
+        "language": "de",
+        "input_language": "en"
+      }
+    },
+    {
+      "id": "C2",
+      "text": "classical concerts in Vienna, under 30 EUR, 1–15 Nov 2026",
+      "user_tz": "Europe/Vienna",
+      "expected": {
+        "place": {"city": "Vienna", "country": "AT", "region": null, "radius_km": null, "online": false},
+        "date": {"start": "2026-11-01", "end": "2026-11-15", "relative": null, "relative_n": null},
+        "topics": ["classical"],
+        "formats": ["concert"],
+        "budget": {"max_amount": 30, "currency": "EUR", "free_only": false},
+        "language": "de",
+        "input_language": "en"
+      }
+    },
+    {
+      "id": "C3",
+      "text": "something fun this weekend",
+      "user_tz": "UTC",
+      "expected": {
+        "place": null,
+        "date": {"start": null, "end": null, "relative": "this_weekend", "relative_n": null},
+        "topics": [],
+        "formats": [],
+        "budget": {"max_amount": null, "currency": null, "free_only": false},
+        "language": null,
+        "input_language": "en"
+      }
+    },
+    {
+      "id": "C4",
+      "text": "something fun in Lisbon this weekend",
+      "user_tz": "Europe/Lisbon",
+      "expected": {
+        "place": {"city": "Lisbon", "country": "PT", "region": null, "radius_km": null, "online": false},
+        "date": {"start": null, "end": null, "relative": "this_weekend", "relative_n": null},
+        "topics": [],
+        "formats": [],
+        "budget": {"max_amount": null, "currency": null, "free_only": false},
+        "language": "pt",
+        "input_language": "en"
+      }
+    },
+    {
+      "id": "C5",
+      "text": "online webinars about Rust, next month, free",
+      "user_tz": "UTC",
+      "expected": {
+        "place": {"city": null, "country": null, "region": null, "radius_km": null, "online": true},
+        "date": {"start": null, "end": null, "relative": "next_month", "relative_n": null},
+        "topics": ["Rust"],
+        "formats": ["webinar"],
+        "budget": {"max_amount": null, "currency": null, "free_only": true},
+        "language": null,
+        "input_language": "en"
+      }
+    },
+    {
+      "id": "C6",
+      "text": "sailing regattas on the Solent next summer",
+      "user_tz": "Europe/London",
+      "expected": {
+        "place": {"city": null, "country": "GB", "region": "Solent", "radius_km": 30, "online": false},
+        "date": {"start": "2027-06-01", "end": "2027-08-31", "relative": null, "relative_n": null},
+        "topics": ["sailing"],
+        "formats": ["sport"],
+        "budget": {"max_amount": null, "currency": null, "free_only": false},
+        "language": "en",
+        "input_language": "en"
+      }
+    },
+    {
+      "id": "C7",
+      "text": "Techno-Partys in Berlin am 31. Oktober 2026",
+      "user_tz": "Europe/Berlin",
+      "expected": {
+        "place": {"city": "Berlin", "country": "DE", "region": null, "radius_km": null, "online": false},
+        "date": {"start": "2026-10-31", "end": "2026-10-31", "relative": null, "relative_n": null},
+        "topics": ["techno"],
+        "formats": ["party"],
+        "budget": {"max_amount": null, "currency": null, "free_only": false},
+        "language": "de",
+        "input_language": "de"
+      }
+    },
+    {
+      "id": "C8",
+      "text": "art exhibitions in Paris within 20 km, this month, English-friendly",
+      "user_tz": "Europe/Paris",
+      "expected": {
+        "place": {"city": "Paris", "country": "FR", "region": null, "radius_km": 20, "online": false},
+        "date": {"start": null, "end": null, "relative": "this_month", "relative_n": null},
+        "topics": ["art"],
+        "formats": ["exhibition"],
+        "budget": {"max_amount": null, "currency": null, "free_only": false},
+        "language": "fr",
+        "input_language": "en"
+      }
+    },
+    {
+      "id": "C9",
+      "text": "kids science workshops near Amsterdam on Saturdays in November",
+      "user_tz": "Europe/Amsterdam",
+      "expected": {
+        "place": {"city": "Amsterdam", "country": "NL", "region": null, "radius_km": 25, "online": false},
+        "date": {"start": "2026-11-01", "end": "2026-11-30", "relative": null, "relative_n": null},
+        "topics": ["science"],
+        "formats": ["workshop"],
+        "budget": {"max_amount": null, "currency": null, "free_only": false},
+        "language": "nl",
+        "input_language": "en"
+      }
+    },
+    {
+      "id": "C10",
+      "text": "jazz",
+      "user_tz": "UTC",
+      "expected": {
+        "place": null,
+        "date": {"start": null, "end": null, "relative": null, "relative_n": null},
+        "topics": ["jazz"],
+        "formats": [],
+        "budget": {"max_amount": null, "currency": null, "free_only": false},
+        "language": null,
+        "input_language": "en"
+      }
+    },
+    {
+      "id": "C11",
+      "text": "tech meetups in Tokyo, 2026-10-20 to 2026-10-22, Japanese ok",
+      "user_tz": "Asia/Tokyo",
+      "expected": {
+        "place": {"city": "Tokyo", "country": "JP", "region": null, "radius_km": null, "online": false},
+        "date": {"start": "2026-10-20", "end": "2026-10-22", "relative": null, "relative_n": null},
+        "topics": ["tech"],
+        "formats": ["meetup"],
+        "budget": {"max_amount": null, "currency": null, "free_only": false},
+        "language": "ja",
+        "input_language": "en"
+      }
+    },
+    {
+      "id": "C12",
+      "text": "beer festivals in Munich, Germany, from 20 to 30 euros, in the next 10 days",
+      "user_tz": "Europe/Berlin",
+      "expected": {
+        "place": {"city": "Munich", "country": "DE", "region": null, "radius_km": null, "online": false},
+        "date": {"start": null, "end": null, "relative": "next_n_days", "relative_n": 10},
+        "topics": ["beer"],
+        "formats": ["festival"],
+        "budget": {"max_amount": 30, "currency": "EUR", "free_only": false},
+        "language": "de",
+        "input_language": "en"
+      }
+    },
+    {
+      "id": "C13",
+      "text": "anything in Berlin",
+      "user_tz": "Europe/Berlin",
+      "expected": {
+        "place": {"city": "Berlin", "country": "DE", "region": null, "radius_km": null, "online": false},
+        "date": {"start": null, "end": null, "relative": null, "relative_n": null},
+        "topics": [],
+        "formats": [],
+        "budget": {"max_amount": null, "currency": null, "free_only": false},
+        "language": "de",
+        "input_language": "en"
+      }
+    }
+  ]
+}

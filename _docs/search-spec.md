@@ -1,6 +1,8 @@
 # Search and scoring — specification (v2)
 
 What the search must deliver. The how is in `search-design.md`.
+
+Revision 2026-10-18 (owner): the user's criteria text is the search query, sent to the engine as written; the code adds nothing, translates nothing, and never stops a run for a missing city or country. The extractor records title, description, start with time zone, city, country, link; no price. The judge scores topic, place and dates against the criteria; there is no price or budget rule and no budget cap. Rows below that say otherwise (place "run stops", query strategy bullets, price rows, C3/C10 "run stops") are superseded.
 Reference case throughout: criteria `jazz in Berlin (Germany) next week (19-21st October 2026)`, run on 2026-10-18 in `Europe/Berlin`.
 
 First fact: the deployed result ("Outdoor Photography Meetup", Portland) is a configuration state, not a scoring defect. Prod has no keys, so `SEARCH_PROVIDER` and `SCORER` fell back to the canned fixture list and the `md5(title)` scorer; the Berlin text never reached a search engine or a model. This spec makes that state impossible to miss (§9: a run on fixture or fake adapters in production is recorded as refused) and then defines quality once real adapters run.
@@ -92,12 +94,7 @@ Sources, from the owner's keys:
 
 Query strategy:
 
-- Queries are built from facets by code, not by a model: deterministic, testable, free.
-- Each query targets one facet combination: topic × place × month, topic × place × exact dates, place-language variants, event-listing words of the place's language, ticket/programme words.
-- Every query carries the city and the year. Nothing is searched without a place unless the format is online.
-- Queries run in the place's language as well as English when they differ.
-- Locale: country = the place's country (a ranking boost on Tavily, a filter on Brave; the place filter in code is what excludes wrong countries); language = the place's language for the local-language queries.
-- Publication dates are not used as a filter on either provider: event listing pages are old pages updated often, and a freshness window would drop them.
+- The criteria text is the query, verbatim, one call per run (revision 2026-10-18). No templates, no translation, no country or language parameter, no freshness filter. What the engine returns is what the extractor reads; the place filter in code (city and country required on the event) and the judge do the rest.
 
 Result budget per run:
 
@@ -116,13 +113,14 @@ From one search result to zero or more events.
 |---|---|
 | title | the event's own name, not the page title when they differ |
 | start | local date-time; date alone allowed; missing date → not an event |
-| time zone | from the page; else the country's zone when the country has one; else unknown |
+| time zone | IANA zone derived from the city (the model does the lookup); required |
 | end | optional |
-| place | venue, city, country (ISO-2); city or country missing → the place filter treats it as unknown |
+| place | city and country (ISO-2) required; venue and street optional, never required |
 | link | the page URL, or the deeper event URL when the page is a listing |
-| price | amount + currency when printed; "free" recorded as free; else unknown |
 | description | one line, ≤ 200 characters, from the page |
 | confidence | 0–1; below 0.5 the event is dropped and counted |
+
+- Owner rule (2026-10-18): every stored event has a title, a description, a start date-time with its time zone, a city and a country. An extracted event missing any of these is dropped and counted (`filtered_incomplete`), never stored. Language of the event is not tracked.
 
 - A page with many events (venue programme, listing): up to 10 events whose dates fall in the window; the rest ignored.
 - A page with none (article, listicle, venue homepage, radio stream): no event, counted as non-event.
@@ -157,7 +155,6 @@ Rubric the judge applies:
 | 70–89 | All stated hard facets fit (place, date, topic); one soft facet is unknown or slightly off: price unknown while the user stated a budget, sub-genre adjacent, format differs |
 | 40–69 | Topic fits loosely, or one facet is uncertain: date unclear inside the window, place nearby rather than in the city |
 
-Price rule, one answer only: price unknown and a budget stated → 70–89; no budget stated → price has no effect on the score.
 | 10–39 | Place and date fit but the topic does not; or topic fits but a stated constraint fails |
 | 0–9 | Not an event, or two or more facets fail |
 
@@ -167,7 +164,6 @@ Caps enforced in code from the flags, whatever the judge's number:
 |---|---|
 | place = no | 0 |
 | date = no | 10 |
-| budget = no (price over the stated maximum) | 30 |
 | topic = no | 39 |
 
 The sentence:
@@ -206,7 +202,6 @@ Queue card:
 | Title | event title |
 | When | `Tue 20 Oct 2026, 21:00 (Europe/Berlin)`; the user's zone beside it when different |
 | Where | venue, city, country |
-| Price | `18 EUR` / `free` / omitted when unknown |
 | Link | the event page |
 
 Run report (after "Search now" and on the last scheduled run):

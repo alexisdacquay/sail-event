@@ -1,0 +1,20 @@
+{
+  "response": {
+    "score": 15,
+    "reason": "Photography meetup in Berlin on 20 Oct: right place and dates, but not jazz",
+    "fit": {
+      "place": "yes",
+      "date": "yes",
+      "topic": "no",
+      "budget": "unknown"
+    },
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 1539,
+    "completion_tokens": 102
+  },
+  "recorded_at": "2026-10-18T21:44:20.521145+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

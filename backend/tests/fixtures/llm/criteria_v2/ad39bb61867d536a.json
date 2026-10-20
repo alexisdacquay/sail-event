@@ -1,0 +1,45 @@
+{
+  "response": {
+    "place": {
+      "city": "Lisbon",
+      "country": "PT",
+      "region": null,
+      "radius_km": null,
+      "online": false
+    },
+    "date": {
+      "start": null,
+      "end": null,
+      "relative": "this_weekend",
+      "relative_n": null
+    },
+    "topics": [],
+    "topics_local": [],
+    "formats": [],
+    "budget": {
+      "max_amount": null,
+      "currency": null,
+      "free_only": false
+    },
+    "language": "pt",
+    "input_language": "en",
+    "other_constraints": [
+      "something fun / entertaining, open to any category"
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 1535,
+    "completion_tokens": 226,
+    "total_tokens": 1761,
+    "prompt_tokens_details": {
+      "cached_tokens": 896
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 96
+    },
+    "prompt_cache_hit_tokens": 896,
+    "prompt_cache_miss_tokens": 639
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "deepseek-flash"
+}

@@ -1,65 +1,200 @@
 [
   {
-    "title": "Outdoor Photography Meetup",
-    "date_time": "2026-11-07T10:00:00",
-    "place": "Riverside Park, Portland",
-    "link": "https://events.example.com/photo-meetup-nov",
-    "description": "Bring your camera and join fellow photographers for a morning walk through the park."
+    "id": "E1",
+    "url": "https://www.a-trane.de/events/jazz-trio-2026-10-20",
+    "title": "Jazz Trio at A-Trane",
+    "snippet": "Live jazz trio performance at A-Trane Berlin. Tuesday 20 October 2026 at 21:00. Tickets 18 EUR.",
+    "raw_content": "Jazz Trio at A-Trane\n\nA-Trane Jazz Club, Bleibtreustr. 1, Berlin-Charlottenburg\n\nTuesday 20 October 2026, doors open 20:30, show starts 21:00\n\nTickets: 18 EUR at the door\n\nThe house trio plays classic jazz standards and modern arrangements.",
+    "published_at": "2026-10-10",
+    "provider": "tavily"
   },
   {
-    "title": "Introduction to Ceramic Glazing",
-    "date_time": "2026-11-14T14:00:00",
-    "place": "Clay Studio, Austin",
-    "link": "https://events.example.com/ceramic-glazing",
-    "description": "Hands-on workshop covering basic glazing techniques for beginners."
+    "id": "E2",
+    "url": "https://www.zigzagjazzclub.berlin/events/late-night-jam-oct21",
+    "title": "Late Night Jam Session, Zig Zag Jazz Club",
+    "snippet": "Zig Zag Jazz Club Berlin. Late Night Jam Session, 21 October 2026, 22:00. All musicians welcome.",
+    "raw_content": "Late Night Jam Session\n\nZig Zag Jazz Club, Hauptstr. 89, Berlin-Schöneberg\n\nWednesday 21 October 2026, 22:00\n\nFree entry for musicians, 5 EUR for listeners.\n\nOpen jam with house rhythm section.",
+    "published_at": "2026-10-12",
+    "provider": "tavily"
   },
   {
+    "id": "E3",
+    "url": "https://www.berlin-events.de/open-air-jazz-mauerpark",
+    "title": "Open-air jazz, Mauerpark, free",
+    "snippet": "Open-air jazz concert in Mauerpark Berlin. Sunday 19 October 2026, 16:00. Free admission.",
+    "raw_content": "Open-air Jazz in Mauerpark\n\nMauerpark, Prenzlauer Berg, Berlin\n\nSunday 19 October 2026, 16:00–18:00\n\nFree admission\n\nLocal jazz ensemble plays in the amphitheatre.",
+    "published_at": "2026-10-14",
+    "provider": "tavily"
+  },
+  {
+    "id": "E4",
+    "url": "https://www.berlin-workshops.de/jazz-vocal-workshop-oct21",
+    "title": "Jazz vocal workshop",
+    "snippet": "Jazz vocal workshop in Berlin. Wednesday 21 October 2026, 18:00. Learn jazz phrasing and improvisation.",
+    "raw_content": "Jazz Vocal Workshop\n\nMusikschule Berlin, Torstr. 50, Berlin-Mitte\n\n21 October 2026, 18:00–20:00\n\nPrice: 25 EUR\n\nLearn vocal jazz techniques with a professional singer.",
+    "published_at": "2026-10-05",
+    "provider": "tavily"
+  },
+  {
+    "id": "E5",
+    "url": "https://www.chicagojazz.com/events/jazz-under-stars",
     "title": "Jazz Under the Stars",
-    "date_time": "2026-12-01T20:00:00",
-    "place": "Rooftop Terrace, Chicago",
-    "link": "https://events.example.com/jazz-stars-dec",
-    "description": "An evening of live jazz with local quartet The Blue Notes."
+    "snippet": "Jazz Under the Stars in Chicago. Tuesday 20 October 2026, 20:00. Outdoor jazz night at Millennium Park.",
+    "raw_content": null,
+    "published_at": "2026-10-08",
+    "provider": "tavily"
   },
   {
-    "title": "Blockchain for Non-Engineers",
-    "date_time": "2026-11-20T18:30:00",
-    "place": "Downtown Library, Denver",
-    "link": "https://events.example.com/blockchain-talk",
-    "description": "A plain-language talk explaining distributed ledgers and smart contracts."
+    "id": "E6",
+    "url": "https://www.potsdam-jazz.de/jazz-night-oct20",
+    "title": "Jazz night Potsdam",
+    "snippet": "Jazz night in Potsdam. 20 October 2026, 20:00. Live jazz at Waschhaus.",
+    "raw_content": null,
+    "published_at": "2026-10-11",
+    "provider": "tavily"
   },
   {
-    "title": "Weekend Trail Run",
-    "date_time": "2026-11-22T07:00:00",
-    "place": "Eagle Creek Trailhead, Portland",
-    "link": "https://events.example.com/trail-run-nov",
-    "description": "Guided 10K trail run through old-growth forest. All paces welcome."
+    "id": "E7",
+    "url": "https://www.jazzfestival-bern.ch/events/oct20",
+    "title": "Jazz in Bern",
+    "snippet": "Jazz concert in Bern, Switzerland. 20 October 2026, 20:00.",
+    "raw_content": null,
+    "published_at": "2026-10-09",
+    "provider": "tavily"
   },
   {
-    "title": "Fermentation Workshop",
-    "date_time": "2026-12-05T11:00:00",
-    "place": "Community Kitchen, Seattle",
-    "link": "https://events.example.com/fermentation-ws",
-    "description": "Learn to make kimchi, sauerkraut, and kombucha from scratch."
+    "id": "E8",
+    "url": "https://www.jazzfest-berlin.de/2026",
+    "title": "Jazzfest Berlin",
+    "snippet": "Jazzfest Berlin 2026. 5 November 2026, 20:00. Haus der Berliner Festspiele.",
+    "raw_content": null,
+    "published_at": "2026-09-15",
+    "provider": "tavily"
   },
   {
-    "title": "Classical Guitar Concert",
-    "date_time": "2026-12-12T19:30:00",
-    "place": "Recital Hall, San Francisco",
-    "link": "https://events.example.com/guitar-concert-dec",
-    "description": "Solo recital featuring works by Tárrega, Barrios, and Villa-Lobos."
+    "id": "E9",
+    "url": "https://www.berlin-brunch.de/sunday-jazz-oct25",
+    "title": "Sunday Jazz Brunch",
+    "snippet": "Sunday Jazz Brunch in Berlin. 25 October 2026, 11:00. Live jazz with brunch buffet.",
+    "raw_content": null,
+    "published_at": "2026-10-10",
+    "provider": "tavily"
   },
   {
-    "title": "Startup Pitch Night",
-    "date_time": "2026-11-28T18:00:00",
-    "place": "Innovation Hub, Austin",
-    "link": "https://events.example.com/blockchain-talk",
-    "description": "Five early-stage startups pitch to a panel of local investors."
+    "id": "E10",
+    "url": "https://www.a-trane.de/events/jazz-trio-2026-10-22",
+    "title": "Jazz Trio at A-Trane",
+    "snippet": "Jazz Trio at A-Trane Berlin. Thursday 22 October 2026, 21:00.",
+    "raw_content": null,
+    "published_at": "2026-10-10",
+    "provider": "tavily"
   },
   {
-    "title": "Watercolor Landscapes",
-    "date_time": "2026-12-10T09:00:00",
-    "place": "Art Centre, Denver",
-    "link": "https://events.example.com/watercolor-dec",
-    "description": "Half-day painting session focused on mountain and sky techniques."
+    "id": "E11",
+    "url": "https://www.chicagojazz.com/events/jazz-under-stars-dec",
+    "title": "Jazz Under the Stars",
+    "snippet": "Jazz Under the Stars in Chicago. 1 December 2026, 20:00.",
+    "raw_content": null,
+    "published_at": "2026-10-01",
+    "provider": "tavily"
+  },
+  {
+    "id": "E12",
+    "url": "https://www.berlin-events.de/jazz-in-the-park-oct10",
+    "title": "Jazz in the Park",
+    "snippet": "Jazz in the Park, Berlin. 10 October 2026, 15:00. Free outdoor concert.",
+    "raw_content": null,
+    "published_at": "2026-09-25",
+    "provider": "tavily"
+  },
+  {
+    "id": "E13",
+    "url": "https://www.b-flat-berlin.de/events/jazz-oct17",
+    "title": "Jazz at b-flat",
+    "snippet": "Jazz at b-flat Berlin. 17 October 2026, 21:00. Live jazz performance.",
+    "raw_content": null,
+    "published_at": "2026-10-10",
+    "provider": "tavily"
+  },
+  {
+    "id": "E14",
+    "url": "https://www.timeout.com/berlin/top-10-jazz-clubs",
+    "title": "Top 10 jazz clubs in Berlin",
+    "snippet": "The best jazz clubs in Berlin. From A-Trane to Zig Zag, here are Berlin's finest jazz venues for live music lovers.",
+    "raw_content": "Top 10 jazz clubs in Berlin\n\n1. A-Trane\n2. Zig Zag Jazz Club\n3. b-flat\n4. Quasimodo\n5. Kunstfabrik Schlot\n6. Yorckschlösschen\n7. Junction Bar\n8. Donau 115\n9. Madame Claude\n10. Badenscher Hof\n\nBerlin's jazz scene is one of the most vibrant in Europe.",
+    "published_at": null,
+    "provider": "tavily"
+  },
+  {
+    "id": "E15",
+    "url": "https://en.wikipedia.org/wiki/Jazz_in_Berlin",
+    "title": "History of jazz in Berlin (encyclopedia page)",
+    "snippet": "Jazz in Berlin has a long history dating back to the 1920s Weimar Republic era. The city remains a major European jazz centre.",
+    "raw_content": null,
+    "published_at": null,
+    "provider": "tavily"
+  },
+  {
+    "id": "E16",
+    "url": "https://www.a-trane.de/",
+    "title": "A-Trane venue homepage, no dates",
+    "snippet": "A-Trane is Berlin's premier jazz club since 1992. Located in Charlottenburg. Check our programme for upcoming shows.",
+    "raw_content": "A-Trane Jazz Club\n\nBleibtreustr. 1, 10623 Berlin\n\nSince 1992, A-Trane has been the heart of Berlin's jazz scene.\n\nContact: info@a-trane.de\nPhone: +49 30 313 25 50",
+    "published_at": null,
+    "provider": "tavily"
+  },
+  {
+    "id": "E17",
+    "url": "https://www.jazzradio.de/",
+    "title": "Berlin jazz radio, 24/7 stream",
+    "snippet": "JazzRadio Berlin. 24/7 live jazz stream from Berlin. Listen to the best jazz music online.",
+    "raw_content": null,
+    "published_at": null,
+    "provider": "tavily"
+  },
+  {
+    "id": "E18",
+    "url": "https://www.a-trane.de/events/jazz-trio-2026-10-20?utm_source=x",
+    "title": "Jazz Trio at A-Trane",
+    "snippet": "Live jazz trio at A-Trane Berlin. 20 October 2026 at 21:00. Tickets 18 EUR.",
+    "raw_content": null,
+    "published_at": "2026-10-10",
+    "provider": "tavily"
+  },
+  {
+    "id": "E19",
+    "url": "https://www.berlinjazz-guide.de/a-trane-jazz-trio-oct20",
+    "title": "A-Trane: Jazz Trio",
+    "snippet": "A-Trane Jazz Trio in Berlin. 20 October 2026, 21:00. Concert at A-Trane jazz club.",
+    "raw_content": null,
+    "published_at": "2026-10-12",
+    "provider": "tavily"
+  },
+  {
+    "id": "E20",
+    "url": "https://www.berghain.berlin/events/techno-night-oct20",
+    "title": "Techno night at Berghain",
+    "snippet": "Techno night at Berghain, Berlin. 20 October 2026, 23:00. All night long.",
+    "raw_content": null,
+    "published_at": "2026-10-15",
+    "provider": "tavily"
+  },
+  {
+    "id": "E21",
+    "url": "https://www.berlin-meetups.de/outdoor-photography-oct20",
+    "title": "Outdoor Photography Meetup",
+    "snippet": "Outdoor Photography Meetup in Berlin. 20 October 2026, 10:00. Bring your camera to Tiergarten.",
+    "raw_content": null,
+    "published_at": "2026-10-08",
+    "provider": "tavily"
+  },
+  {
+    "id": "E22",
+    "url": "https://www.wiener-philharmoniker.at/en/concert-nov5",
+    "title": "Vienna Philharmonic, 120 EUR",
+    "snippet": "Vienna Philharmonic concert. 5 November 2026, 19:30. Musikverein, Vienna. Tickets from 120 EUR.",
+    "raw_content": null,
+    "published_at": "2026-09-20",
+    "provider": "tavily"
   }
 ]

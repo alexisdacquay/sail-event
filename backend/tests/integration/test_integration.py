@@ -45,8 +45,8 @@ def test_full_journey(http: httpx.Client):
     assert r.status_code == 200
     headers = {"Authorization": f"Bearer {r.json()['token']}"}
 
-    # set criteria
-    r = http.put("/api/criteria", json={"text": "outdoor concerts"}, headers=headers)
+    # set criteria (city required; use C1 text so fixture recordings match)
+    r = http.put("/api/criteria", json={"text": "jazz in Berlin (Germany) next week (19-21st October 2026)"}, headers=headers)
     assert r.status_code == 200
 
     # set thresholds
@@ -68,10 +68,11 @@ def test_full_journey(http: httpx.Client):
     events = r.json()
     assert isinstance(events, list)
 
-    # pick two events to decide on — need at least two
-    if len(events) < 2:
-        pytest.skip("fixture returned fewer than 2 events")
-    evt_accept, evt_reject = events[0], events[1]
+    # pick two decidable events (queued or accepted — not already auto-rejected)
+    decidable = [e for e in events if e["status"] in ("queued", "accepted")]
+    if len(decidable) < 2:
+        pytest.skip("fewer than 2 decidable events")
+    evt_accept, evt_reject = decidable[0], decidable[1]
 
     # accept one
     r = http.post(
@@ -107,7 +108,7 @@ def test_dedup(http: httpx.Client):
     r = http.post("/api/auth/login", json={"username": user, "password": pw})
     headers = {"Authorization": f"Bearer {r.json()['token']}"}
 
-    http.put("/api/criteria", json={"text": "anything"}, headers=headers)
+    http.put("/api/criteria", json={"text": "jazz in Berlin (Germany) next week (19-21st October 2026)"}, headers=headers)
     http.put(
         "/api/thresholds",
         json={"lowerThreshold": 20, "upperThreshold": 80},
@@ -135,7 +136,7 @@ def test_user_isolation(http: httpx.Client):
     http.post("/api/auth/register", json={"username": ua, "password": pa})
     r = http.post("/api/auth/login", json={"username": ua, "password": pa})
     ha = {"Authorization": f"Bearer {r.json()['token']}"}
-    http.put("/api/criteria", json={"text": "music"}, headers=ha)
+    http.put("/api/criteria", json={"text": "jazz in Berlin (Germany) next week (19-21st October 2026)"}, headers=ha)
     http.put(
         "/api/thresholds",
         json={"lowerThreshold": 20, "upperThreshold": 80},
@@ -164,7 +165,7 @@ def test_search_all(http: httpx.Client, api_key: str):
     http.post("/api/auth/register", json={"username": user, "password": pw})
     r = http.post("/api/auth/login", json={"username": user, "password": pw})
     headers = {"Authorization": f"Bearer {r.json()['token']}"}
-    http.put("/api/criteria", json={"text": "festivals"}, headers=headers)
+    http.put("/api/criteria", json={"text": "jazz in Berlin (Germany) next week (19-21st October 2026)"}, headers=headers)
     http.put(
         "/api/thresholds",
         json={"lowerThreshold": 20, "upperThreshold": 80},
@@ -172,8 +173,8 @@ def test_search_all(http: httpx.Client, api_key: str):
     )
 
     r = http.post("/api/search/all", headers={"X-API-Key": api_key})
-    assert r.status_code == 200
-    assert r.json()["usersProcessed"] >= 1
+    assert r.status_code == 202
+    assert r.json()["usersQueued"] >= 1
 
 
 # ---------- ICS feed ----------
@@ -186,7 +187,7 @@ def test_ics_feed(http: httpx.Client):
     r = http.post("/api/auth/login", json={"username": user, "password": pw})
     headers = {"Authorization": f"Bearer {r.json()['token']}"}
 
-    http.put("/api/criteria", json={"text": "art"}, headers=headers)
+    http.put("/api/criteria", json={"text": "jazz in Berlin (Germany) next week (19-21st October 2026)"}, headers=headers)
     http.put(
         "/api/thresholds",
         json={"lowerThreshold": 20, "upperThreshold": 80},
@@ -247,7 +248,7 @@ def test_data_survives_restart(http: httpx.Client, base_url: str):
     r = http.post("/api/auth/login", json={"username": user, "password": pw})
     headers = {"Authorization": f"Bearer {r.json()['token']}"}
 
-    http.put("/api/criteria", json={"text": "sailing"}, headers=headers)
+    http.put("/api/criteria", json={"text": "jazz in Berlin (Germany) next week (19-21st October 2026)"}, headers=headers)
     http.put(
         "/api/thresholds",
         json={"lowerThreshold": 20, "upperThreshold": 80},

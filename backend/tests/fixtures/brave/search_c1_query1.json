@@ -1,0 +1,63 @@
+{
+  "_comment": "Hand-written fixture based on Brave Web Search API documented response schema (https://api.search.brave.com/app#/web/get-api--res--v1--web--search). No live API call was made; no Brave key is available.",
+  "query": {
+    "original": "jazz Berlin October 2026",
+    "show_strict_warning": false,
+    "is_navigational": false,
+    "local_decision": "drop",
+    "local_locations_idx": 0,
+    "is_news_breaking": false,
+    "spellcheck_off": true,
+    "country": "DE",
+    "bad_results": false,
+    "should_fallback": false,
+    "language": "en"
+  },
+  "mixed": {
+    "type": "web",
+    "main": [
+      {"type": "web", "index": 0, "all": false},
+      {"type": "web", "index": 1, "all": false},
+      {"type": "web", "index": 2, "all": false}
+    ]
+  },
+  "web": {
+    "type": "search",
+    "results": [
+      {
+        "title": "Jazzfest Berlin 2026 - Programme & Tickets",
+        "url": "https://www.berlinerfestspiele.de/en/jazzfest-berlin",
+        "is_source_local": false,
+        "is_source_both": false,
+        "description": "Jazzfest Berlin 2026 runs from 29 October to 1 November at Haus der Berliner Festspiele. Discover the full programme and book tickets.",
+        "page_age": "2026-10-01T00:00:00",
+        "family_friendly": true,
+        "extra_snippets": [
+          "The 63rd edition features 24 acts from more than 25 countries.",
+          "Free community events in Berlin-Moabit from 26 October."
+        ]
+      },
+      {
+        "title": "A-Trane Jazz Club Berlin - October Programme",
+        "url": "https://www.a-trane.de/programme/october-2026",
+        "is_source_local": true,
+        "is_source_both": false,
+        "description": "A-Trane presents live jazz every night in October 2026. Check our calendar for upcoming shows in Berlin-Charlottenburg.",
+        "family_friendly": true,
+        "extra_snippets": [
+          "Jazz Trio on 20 October, 21:00. Tickets 18 EUR."
+        ]
+      },
+      {
+        "title": "Jazz in Berlin - Events October 2026",
+        "url": "https://www.visitberlin.de/en/jazz-events-october-2026",
+        "is_source_local": false,
+        "is_source_both": false,
+        "description": "Find jazz concerts and events in Berlin this October. From intimate club nights to the famous Jazzfest Berlin.",
+        "page_age": "2026-09-28T00:00:00",
+        "family_friendly": true,
+        "extra_snippets": []
+      }
+    ]
+  }
+}

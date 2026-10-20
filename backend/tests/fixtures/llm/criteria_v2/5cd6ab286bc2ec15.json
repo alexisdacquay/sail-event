@@ -1,0 +1,49 @@
+{
+  "response": {
+    "place": {
+      "city": "Berlin",
+      "country": "DE",
+      "region": null,
+      "radius_km": null,
+      "online": false
+    },
+    "date": {
+      "start": "2026-10-31",
+      "end": "2026-10-31",
+      "relative": null,
+      "relative_n": null
+    },
+    "topics": [
+      "techno"
+    ],
+    "topics_local": [
+      "Techno"
+    ],
+    "formats": [
+      "party"
+    ],
+    "budget": {
+      "max_amount": null,
+      "currency": null,
+      "free_only": false
+    },
+    "language": "de",
+    "input_language": "de",
+    "other_constraints": []
+  },
+  "usage": {
+    "prompt_tokens": 1544,
+    "completion_tokens": 226,
+    "total_tokens": 1770,
+    "prompt_tokens_details": {
+      "cached_tokens": 896
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 91
+    },
+    "prompt_cache_hit_tokens": 896,
+    "prompt_cache_miss_tokens": 648
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "deepseek-flash"
+}

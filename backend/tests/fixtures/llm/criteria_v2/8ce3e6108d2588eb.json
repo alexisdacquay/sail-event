@@ -1,0 +1,49 @@
+{
+  "response": {
+    "place": {
+      "city": "Vienna",
+      "country": "AT",
+      "region": null,
+      "radius_km": null,
+      "online": false
+    },
+    "date": {
+      "start": "2026-11-01",
+      "end": "2026-11-15",
+      "relative": null,
+      "relative_n": null
+    },
+    "topics": [
+      "classical"
+    ],
+    "topics_local": [
+      "Klassik"
+    ],
+    "formats": [
+      "concert"
+    ],
+    "budget": {
+      "max_amount": 30,
+      "currency": "EUR",
+      "free_only": false
+    },
+    "language": "de",
+    "input_language": "en",
+    "other_constraints": []
+  },
+  "usage": {
+    "prompt_tokens": 1547,
+    "completion_tokens": 243,
+    "total_tokens": 1790,
+    "prompt_tokens_details": {
+      "cached_tokens": 896
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 126
+    },
+    "prompt_cache_hit_tokens": 896,
+    "prompt_cache_miss_tokens": 651
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "deepseek-flash"
+}

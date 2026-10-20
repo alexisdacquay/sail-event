@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "blocked": {"type": "boolean"},
+    "reason": {"type": "string", "enum": ["injection", "harmful", "off_topic", "ok"]}
+  },
+  "required": ["blocked", "reason"],
+  "additionalProperties": false
+}

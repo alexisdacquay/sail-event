@@ -19,6 +19,8 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      FAKE_NOW: "2026-10-18T12:00:00+02:00"
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
@@ -51,6 +53,7 @@ jobs:
       SAIL_BASE_URL: http://localhost:8000
       SAIL_COMPOSE_MANAGED: "1"
       REGISTER_RATE_LIMIT_PER_HOUR: "1000"
+      FAKE_NOW: "2026-10-18T12:00:00+02:00"
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7

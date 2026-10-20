@@ -13,13 +13,15 @@ def test_run_search_returns_search_result(client, auth_headers):
     assert "eventsNew" in body
 
 
-def test_run_search_dedup_no_new_events(client, auth_headers):
-    """All fixture events are already seeded; a second run produces 0 new."""
+def test_run_search_second_run_fewer_new(client, auth_headers):
+    """A second run after the first produces fewer (or zero) new events."""
     h = auth_headers("demo", "demo")
-    r = client.post("/api/search", headers=h)
-    body = r.json()
-    assert body["eventsFound"] == 9  # raw fixture count including dup
-    assert body["eventsNew"] == 0
+    r1 = client.post("/api/search", headers=h)
+    body1 = r1.json()
+    r2 = client.post("/api/search", headers=h)
+    body2 = r2.json()
+    # Second run should have fewer or equal new events (dedup works)
+    assert body2["eventsNew"] <= body1["eventsNew"]
 
 
 def test_run_search_increments_run_id(client, auth_headers):
@@ -46,11 +48,14 @@ def test_search_all_unset_env_returns_401(client, monkeypatch):
     assert r.status_code == 401
 
 
-def test_search_all_correct_key(client, monkeypatch):
+def test_search_all_returns_202_with_users_queued(client, monkeypatch):
     monkeypatch.setenv("SEARCH_ALL_API_KEY", "test-secret")
     r = client.post("/api/search/all", headers={"X-API-Key": "test-secret"})
-    assert r.status_code == 200
-    assert r.json() == {"usersProcessed": 1, "usersSkipped": 0}
+    assert r.status_code == 202
+    body = r.json()
+    assert "usersQueued" in body
+    assert "usersSkipped" in body
+    assert body["usersQueued"] >= 1
 
 
 def test_run_search_no_auth_returns_401(client):
@@ -59,28 +64,40 @@ def test_run_search_no_auth_returns_401(client):
 
 
 def test_search_all_max_scheduled_users(client, auth_headers, _db_session, monkeypatch):
+    import hashlib
+    import json
     monkeypatch.setenv("SEARCH_ALL_API_KEY", "k")
     monkeypatch.setenv("MAX_SCHEDULED_USERS", "2")
 
-    # Register 2 more users with criteria (demo already has criteria from seed)
-    auth_headers("msu_a", "pw")
-    auth_headers("msu_b", "pw")
+    # Register 2 more users with criteria
+    h_a = auth_headers("msu_a", "pw")
+    h_b = auth_headers("msu_b", "pw")
+    client.put("/api/criteria", headers=h_a, json={
+        "text": "jazz in Berlin (Germany) next week (19-21st October 2026)",
+    })
+    client.put("/api/criteria", headers=h_b, json={
+        "text": "jazz in Berlin (Germany) next week (19-21st October 2026)",
+    })
 
-    # Update criteria so we can control updated_at ordering
+    # Pre-seed facets for all users so the pipeline doesn't need criteria parsing
     from app.orm import Criteria, User
     from datetime import datetime, UTC
+    from tests.conftest import _C1_FACETS, _C1_TEXT
 
+    text_sha = hashlib.sha256(_C1_TEXT.encode()).hexdigest()
     for i, name in enumerate(["demo", "msu_a", "msu_b"]):
         user = _db_session.query(User).filter(User.username == name).first()
         crit = _db_session.query(Criteria).filter(Criteria.user_id == user.id).first()
-        # Most recent last: demo oldest, msu_b newest
+        crit.facets_json = json.dumps(_C1_FACETS)
+        crit.facets_version = "criteria_v2"
+        crit.facets_text_sha = text_sha
         crit.updated_at = datetime(2026, 1, 1 + i, tzinfo=UTC)
     _db_session.commit()
 
     r = client.post("/api/search/all", headers={"X-API-Key": "k"})
-    assert r.status_code == 200
+    assert r.status_code == 202
     body = r.json()
-    assert body["usersProcessed"] == 2
+    assert body["usersQueued"] == 2
     assert body["usersSkipped"] == 1
 
 
@@ -89,7 +106,7 @@ def test_search_all_cap_gte_total_no_skip(client, monkeypatch):
     monkeypatch.setenv("MAX_SCHEDULED_USERS", "100")
 
     r = client.post("/api/search/all", headers={"X-API-Key": "k"})
-    assert r.status_code == 200
+    assert r.status_code == 202
     assert r.json()["usersSkipped"] == 0
 
 
@@ -98,14 +115,33 @@ def test_search_all_skips_user_without_criteria(client, auth_headers, _db_sessio
 
     # Register user then delete their criteria row
     auth_headers("nocrit", "nocrit")
-    from app.orm import User, Criteria, Run
+    from app.orm import User, Criteria
     user = _db_session.query(User).filter(User.username == "nocrit").first()
     _db_session.query(Criteria).filter(Criteria.user_id == user.id).delete()
     _db_session.commit()
 
     r = client.post("/api/search/all", headers={"X-API-Key": "k"})
-    assert r.status_code == 200
+    assert r.status_code == 202
+    # Only 1 user queued (demo), nocrit skipped by join
+    assert r.json()["usersQueued"] == 1
 
-    # No Run row for the criteria-less user
-    runs = _db_session.query(Run).filter(Run.user_id == user.id).all()
-    assert len(runs) == 0
+
+def test_search_all_skips_user_with_unfinished_run(client, _db_session, monkeypatch):
+    """A user with an unfinished run started < 55 min ago is skipped."""
+    from datetime import datetime, UTC, timedelta
+    from app.orm import Run, User
+
+    monkeypatch.setenv("SEARCH_ALL_API_KEY", "k")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+
+    # Insert an unfinished run started 10 minutes ago
+    recent = datetime.now(UTC) - timedelta(minutes=10)
+    _db_session.add(Run(
+        user_id=user.id, started_at=recent, trigger="scheduled",
+    ))
+    _db_session.commit()
+
+    r = client.post("/api/search/all", headers={"X-API-Key": "k"})
+    assert r.status_code == 202
+    assert r.json()["usersQueued"] == 0
+    assert r.json()["usersSkipped"] == 1

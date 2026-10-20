@@ -1,0 +1,7 @@
+{
+  "description": "Lakera quota exhausted — hand-written from API docs",
+  "status": 429,
+  "response": {
+    "error": "Rate limit exceeded"
+  }
+}

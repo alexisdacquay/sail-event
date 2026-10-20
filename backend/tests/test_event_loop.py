@@ -28,6 +28,8 @@ async def test_search_does_not_block_event_loop(_db_session, monkeypatch):
             events_found = 0
             events_new = 0
             error = None
+            stage_counts = None
+            stopped_at_stage = None
 
         return _FakeRun()
 

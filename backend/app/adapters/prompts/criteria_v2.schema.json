@@ -1,0 +1,52 @@
+{
+  "type": "object",
+  "required": ["place", "date", "topics", "topics_local", "formats", "budget", "language", "input_language", "other_constraints"],
+  "additionalProperties": false,
+  "properties": {
+    "place": {},
+    "date": {
+      "type": "object",
+      "required": ["start", "end", "relative", "relative_n"],
+      "additionalProperties": false,
+      "properties": {
+        "start": {},
+        "end": {},
+        "relative": {
+          "enum": ["today", "tomorrow", "this_week", "next_week", "this_weekend", "next_weekend", "this_month", "next_month", "next_n_days", null]
+        },
+        "relative_n": {}
+      }
+    },
+    "topics": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "topics_local": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "formats": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["concert", "festival", "workshop", "meetup", "talk", "exhibition", "party", "sport", "market", "webinar", "other"]
+      }
+    },
+    "budget": {
+      "type": "object",
+      "required": ["max_amount", "currency", "free_only"],
+      "additionalProperties": false,
+      "properties": {
+        "max_amount": {},
+        "currency": {},
+        "free_only": {"type": "boolean"}
+      }
+    },
+    "language": {},
+    "input_language": {"type": "string"},
+    "other_constraints": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}

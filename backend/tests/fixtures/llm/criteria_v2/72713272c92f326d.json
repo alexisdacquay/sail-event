@@ -1,0 +1,47 @@
+{
+  "response": {
+    "place": {
+      "city": null,
+      "country": "GB",
+      "region": "Solent",
+      "radius_km": 30,
+      "online": false
+    },
+    "date": {
+      "start": "2027-06-01",
+      "end": "2027-08-31",
+      "relative": null,
+      "relative_n": null
+    },
+    "topics": [
+      "sailing"
+    ],
+    "topics_local": [],
+    "formats": [
+      "sport"
+    ],
+    "budget": {
+      "max_amount": null,
+      "currency": null,
+      "free_only": false
+    },
+    "language": "en",
+    "input_language": "en",
+    "other_constraints": []
+  },
+  "usage": {
+    "prompt_tokens": 1539,
+    "completion_tokens": 441,
+    "total_tokens": 1980,
+    "prompt_tokens_details": {
+      "cached_tokens": 896
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 327
+    },
+    "prompt_cache_hit_tokens": 896,
+    "prompt_cache_miss_tokens": 643
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "deepseek-flash"
+}

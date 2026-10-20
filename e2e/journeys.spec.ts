@@ -22,20 +22,21 @@ test.describe("Journey 1: full user flow", () => {
     await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
 
     // Set criteria
-    await page.getByLabel("What I'm looking for").fill("outdoor concerts and festivals");
+    await page.getByLabel("What I'm looking for").fill("jazz in Berlin (Germany) next week (19-21st October 2026)");
     await page.getByRole("button", { name: "Save criteria" }).click();
     await expect(page.getByText("Saved.")).toBeVisible();
 
-    // Adjust scoring scale: lower Auto-accept above by 5 (70 → 65)
+    // Adjust scoring scale: raise Auto-accept above by 6 (90 → 96) so
+    // more events land in the queue for the accept/reject test below
     const slider = page.getByRole("slider", { name: "Auto-accept above" });
     await slider.focus();
-    for (let i = 0; i < 5; i++) {
-      await slider.press("ArrowLeft");
+    for (let i = 0; i < 6; i++) {
+      await slider.press("ArrowRight");
     }
     // the key presses must have reached the shared state before saving
     await expect(
       page.getByRole("spinbutton", { name: "Auto-accept above" })
-    ).toHaveValue("65");
+    ).toHaveValue("96");
     const saveScoring = page.getByRole("button", { name: "Save scoring" });
     await expect(saveScoring).toBeEnabled();
     const [saved] = await Promise.all([
@@ -52,11 +53,11 @@ test.describe("Journey 1: full user flow", () => {
     await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
     await expect(
       page.getByRole("spinbutton", { name: "Auto-accept above" })
-    ).toHaveValue("65");
+    ).toHaveValue("96");
 
-    // Search
+    // Search — run report shows pipeline line or fallback "Found N events"
     await page.getByRole("button", { name: "Search now" }).click();
-    await expect(page.getByText(/Found \d+ events, \d+ new\./)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("search-result")).toBeVisible({ timeout: 15_000 });
 
     // Assert To review badge with count is visible in the header before clicking
     await expect(page.getByRole("button", { name: /To review \(\d+\)/ })).toBeVisible();
@@ -110,10 +111,10 @@ test.describe("Journey 2: user isolation", () => {
     await expect(
       page1.getByRole("heading", { name: "Sail Event" })
     ).toBeVisible();
-    await page1.getByLabel("What I'm looking for").fill("sailing regattas");
+    await page1.getByLabel("What I'm looking for").fill("jazz in Berlin (Germany) next week (19-21st October 2026)");
     await page1.getByRole("button", { name: "Save criteria" }).click();
     await page1.getByRole("button", { name: "Search now" }).click();
-    await expect(page1.getByText(/Found \d+ events, \d+ new\./)).toBeVisible({
+    await expect(page1.getByTestId("search-result")).toBeVisible({
       timeout: 15_000,
     });
 

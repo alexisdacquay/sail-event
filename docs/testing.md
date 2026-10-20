@@ -26,11 +26,11 @@ Scenarios: health, full user journey (register → search → decide → re-fetc
 dedup, user isolation, search/all, ICS feed, data survives restart.
 
 ```
-HOST_PORT=8010 make test-integration
+make test-integration
 ```
 
-The target:
-1. `docker compose up --build -d --wait` (reads `HOST_PORT`, default 8000)
+The target (uses `TEST_HOST_PORT`, default 8030; override with `TEST_HOST_PORT=8010 make test-integration`):
+1. `docker compose up --build -d --wait` (reads `TEST_HOST_PORT`, default 8030)
 2. Runs pytest on `backend/tests/integration/` with `-m integration`
 3. `docker compose down -v`
 4. Exit code = pytest exit code
@@ -63,7 +63,7 @@ cd e2e && npm install && npx playwright install chromium
 **Run:**
 
 ```
-HOST_PORT=8010 make test-e2e
+make test-e2e
 ```
 
 The target:
@@ -82,29 +82,68 @@ To run against an already-running stack:
 SAIL_BASE_URL=http://localhost:8010 make test-e2e
 ```
 
-## Real adapters
+## Real adapters smoke
 
-To smoke-test the Tavily adapter against the live API (not run in CI):
+`backend/scripts/smoke_search.py` runs the full pipeline (criteria parse,
+window, plan, search, extract, filter, judge) against live adapters using a
+throwaway SQLite database (never touches the dev database).
+
+**Single criteria:**
 
 ```
-SEARCH_PROVIDER=tavily TAVILY_API_KEY=... uv run python -m app.adapters.search_tavily "sailing regattas 2026"
+set -a; . backend/.env.local; set +a
+SSL_CERT_FILE=$(uv run --project backend --directory backend python -m certifi) \
+  uv run --project backend --directory backend python scripts/smoke_search.py \
+    --criteria "jazz in Berlin (Germany) next week (19-21st October 2026)" \
+    --tz Europe/Berlin
 ```
+
+**Score spread (consistency check):**
+
+```
+uv run --project backend --directory backend python scripts/smoke_search.py \
+    --criteria "jazz in Berlin" --tz Europe/Berlin --repeat 3
+```
+
+**Record model responses as fixtures:**
+
+```
+FAKE_NOW=2026-10-18T12:00:00+02:00 \
+  uv run --project backend --directory backend python scripts/smoke_search.py \
+    --criteria "jazz in Berlin (Germany) next week" --tz Europe/Berlin --record
+```
+
+Writes to `backend/tests/fixtures/llm/` under the same hash the
+`FakeLanguageModel` replays. Set `FAKE_NOW` so hashes match test
+expectations.
+
+**Batch suite (10 texts):**
+
+```
+uv run --project backend --directory backend python scripts/smoke_search.py --batch
+```
+
+Prints a Markdown table: text, status, stage counts, calls, seconds, top 3
+kept events.
+
+**Environment:** keys (`TAVILY_API_KEY`, `LLM_BASE_URL`, `LLM_API_KEY`,
+`LLM_MODEL`, `LLM_JSON_MODE`, `GUARDRAIL`) come from `backend/.env.local`
+(git-ignored). Set `GUARDRAIL=none` until the Lakera adapter is wired.
 
 CI stays fixture-only; `make test` never hits the network.
 
-To smoke-test the Claude scorer adapter against the live API (not run in CI):
-
-```
-SCORER=claude ANTHROPIC_API_KEY=... uv run python -m app.adapters.scorer_claude "<criteria>"
-```
-
-Scores one hard-coded fixture event, prints score and reason. CI stays fixture-only.
-
 ## Adapter-stub approach
 
-`FixtureSearchProvider` returns canned events from `fixtures.json`.
-`FakeScorer` produces a deterministic score via `md5(title) mod 101`.
+`FixtureProvider` returns canned events from `fixtures.json`.
+`FakeLanguageModel` replays recorded responses keyed by prompt hash.
 
-These stubs keep tests key-free and offline through S12. Env vars
-`SEARCH_PROVIDER` and `SCORER` toggle real implementations (S13);
+These stubs keep tests key-free and offline. Env vars
+`SEARCH_PROVIDER` and `LLM_PROVIDER` toggle real implementations;
 fixture/fake are the default when unset.
+
+## Fixed clock
+
+All tests, CI, compose and the dev service run with
+`FAKE_NOW=2026-10-18T12:00:00+02:00` so that fixture recordings and
+date-dependent filters produce stable results. Production never sets
+`FAKE_NOW`.

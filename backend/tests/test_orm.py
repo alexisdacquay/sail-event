@@ -101,9 +101,39 @@ def test_duplicate_ics_token(db: Session) -> None:
         db.commit()
 
 
-# --- (c) duplicate (user_id, link) on Event ---
+# --- (c) duplicate (user_id, link, date_time) on Event ---
 
-def test_duplicate_user_link(db: Session) -> None:
+def test_duplicate_user_link_date(db: Session) -> None:
+    """Same user + link + date_time → IntegrityError."""
+    user = _insert_user(db)
+    e1 = Event(
+        user_id=user.id,
+        title="E1",
+        date_time="2026-07-01",
+        place="P",
+        link="https://example.com/dup",
+        description="D",
+        status="new",
+    )
+    db.add(e1)
+    db.commit()
+
+    e2 = Event(
+        user_id=user.id,
+        title="E2",
+        date_time="2026-07-01",
+        place="P2",
+        link="https://example.com/dup",
+        description="D2",
+        status="new",
+    )
+    db.add(e2)
+    with pytest.raises(IntegrityError):
+        db.commit()
+
+
+def test_same_link_different_date_allowed(db: Session) -> None:
+    """Same user + link with different date_time is allowed (listing pages)."""
     user = _insert_user(db)
     e1 = Event(
         user_id=user.id,
@@ -127,8 +157,8 @@ def test_duplicate_user_link(db: Session) -> None:
         status="new",
     )
     db.add(e2)
-    with pytest.raises(IntegrityError):
-        db.commit()
+    db.commit()
+    assert e2.id is not None
 
 
 # --- (d) lower_threshold >= upper_threshold ---

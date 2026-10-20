@@ -21,6 +21,7 @@ Setup
 
 - Run `make hooks` after cloning to install the pre-commit hook. Agent worktrees share `.git/hooks` from the main clone, so the hook applies there too.
 - The QA subagent is defined at `.claude/agents/qa-engineer.md`
+- Owner status updates follow `.claude/skills/status-update/SKILL.md` (`/status-update`)
 
 Rules
 

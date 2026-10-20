@@ -29,7 +29,7 @@ def test_register_populates_ics_token(client):
 def test_register_creates_default_thresholds_and_criteria(client, auth_headers):
     h = auth_headers("newuser2", "pw")
     r = client.get("/api/thresholds", headers=h)
-    assert r.json() == {"lowerThreshold": 30, "upperThreshold": 70}
+    assert r.json() == {"lowerThreshold": 40, "upperThreshold": 90}
 
     r = client.get("/api/criteria", headers=h)
     assert r.json()["text"] == ""
@@ -225,7 +225,7 @@ def test_calendar_no_auth_required(client):
 def test_search_all_no_bearer_required(client, monkeypatch):
     monkeypatch.setenv("SEARCH_ALL_API_KEY", "key")
     r = client.post("/api/search/all", headers={"X-API-Key": "key"})
-    assert r.status_code == 200
+    assert r.status_code == 202
 
 
 # ---------- validation errors never echo input ----------

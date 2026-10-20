@@ -28,12 +28,69 @@ const badgeVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
 
 const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-function formatDateTime(iso: string): string {
-  const date = new Date(iso)
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date) + ` (${browserTz})`
+/** Format date-time parts without the comma after weekday that en-GB adds. */
+function fmtParts(date: Date, tz: string | undefined, includeTime: boolean): string {
+  const opts: Intl.DateTimeFormatOptions = {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    ...(includeTime ? { hour: '2-digit', minute: '2-digit', hour12: false } : {}),
+    timeZone: tz,
+  }
+  const parts = new Intl.DateTimeFormat('en-GB', opts).formatToParts(date)
+  let out = ''
+  let afterWeekday = false
+  for (const p of parts) {
+    if (p.type === 'weekday') {
+      out += p.value
+      afterWeekday = true
+    } else if (afterWeekday && p.type === 'literal') {
+      out += ' ' // replace ", " with " "
+      afterWeekday = false
+    } else {
+      out += p.value
+      afterWeekday = false
+    }
+  }
+  return out
+}
+
+function formatWhen(event: Event): string {
+  const { dateTime, startTz } = event
+  const date = new Date(dateTime)
+
+  // Date-only: no T in the string
+  if (!dateTime.includes('T')) {
+    return fmtParts(date, startTz || undefined, false)
+  }
+
+  const tz = startTz || undefined
+  const tzLabel = startTz || 'local time'
+
+  let result = `${fmtParts(date, tz, true)} (${tzLabel})`
+
+  // Show browser time when event tz differs from browser tz
+  if (startTz && startTz !== browserTz) {
+    const browserTime = new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: browserTz,
+    }).format(date)
+    result += ` · ${browserTime} (${browserTz})`
+  }
+
+  return result
+}
+
+function formatWhere(event: Event): string {
+  if (event.country === 'ZZ') return 'place unknown'
+  const parts: string[] = []
+  if (event.place) parts.push(event.place)
+  if (event.city && !event.place.includes(event.city)) parts.push(event.city)
+  if (event.country) parts.push(event.country)
+  return parts.join(', ') || 'place unknown'
 }
 
 type EventCardProps = {
@@ -65,16 +122,17 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
     <>
       <p>
         <span className="font-semibold tabular-nums">Score {event.score}%</span>
+        {event.band && <span className="text-muted-foreground"> · {event.band}</span>}
       </p>
       <p>
         <span className="font-medium text-muted-foreground">When: </span>
         <span data-testid="event-datetime">
-          {formatDateTime(event.dateTime)}
+          {formatWhen(event)}
         </span>
       </p>
       <p>
         <span className="font-medium text-muted-foreground">Where: </span>
-        {event.place}
+        {formatWhere(event)}
       </p>
       <p>
         <span className="font-medium text-muted-foreground">Link: </span>

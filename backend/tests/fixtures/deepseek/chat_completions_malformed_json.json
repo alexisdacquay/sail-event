@@ -1,0 +1,20 @@
+{
+  "id": "chatcmpl-test-bad",
+  "object": "chat.completion",
+  "created": 1729245600,
+  "model": "deepseek-flash",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{not valid json at all"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 50,
+    "completion_tokens": 10
+  }
+}

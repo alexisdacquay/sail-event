@@ -1,0 +1,19 @@
+{
+  "response": {
+    "score": 96,
+    "reason": "Free open-air jazz at Mauerpark in Berlin on Sun 19 Oct: fits your dates and topic",
+    "fit": {
+      "place": "yes",
+      "date": "yes",
+      "topic": "yes",
+      "budget": "yes"
+    },
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 1500,
+    "completion_tokens": 100
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "fake:recorded"
+}

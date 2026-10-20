@@ -7,7 +7,7 @@ def test_get_thresholds(client, auth_headers):
     h = auth_headers("demo", "demo")
     r = client.get("/api/thresholds", headers=h)
     assert r.status_code == 200
-    assert r.json() == {"lowerThreshold": 30, "upperThreshold": 70}
+    assert r.json() == {"lowerThreshold": 40, "upperThreshold": 90}
 
 
 def test_save_thresholds(client, auth_headers):

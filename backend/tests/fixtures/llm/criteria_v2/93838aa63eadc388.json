@@ -1,0 +1,51 @@
+{
+  "response": {
+    "place": {
+      "city": "Paris",
+      "country": "FR",
+      "region": null,
+      "radius_km": 20,
+      "online": false
+    },
+    "date": {
+      "start": null,
+      "end": null,
+      "relative": "this_month",
+      "relative_n": null
+    },
+    "topics": [
+      "art"
+    ],
+    "topics_local": [
+      "art"
+    ],
+    "formats": [
+      "exhibition"
+    ],
+    "budget": {
+      "max_amount": null,
+      "currency": null,
+      "free_only": false
+    },
+    "language": "fr",
+    "input_language": "en",
+    "other_constraints": [
+      "English-friendly"
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 1542,
+    "completion_tokens": 228,
+    "total_tokens": 1770,
+    "prompt_tokens_details": {
+      "cached_tokens": 896
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 120
+    },
+    "prompt_cache_hit_tokens": 896,
+    "prompt_cache_miss_tokens": 646
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "deepseek-flash"
+}

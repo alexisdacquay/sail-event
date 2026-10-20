@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 8,
+    "reason": "This jazz night on 20 October is in Potsdam, not Berlin as you asked \u2014 wrong city, though the topic and dates match.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 726,
+    "completion_tokens": 107
+  },
+  "recorded_at": "2026-10-20T05:57:45.233319+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

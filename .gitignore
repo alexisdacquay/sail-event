@@ -29,3 +29,5 @@ e2e/blob-report/
 
 # Incident response — runtime directory at repo root
 /incidents/
+.env.local
+test-results/

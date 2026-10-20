@@ -1,43 +1,24 @@
-"""Tavily Search API adapter — real web search for event candidates."""
+"""Tavily Search API adapter.
+
+Verbatim query, raw_content requested, no country/language/freshness parameters.
+"""
 
 from __future__ import annotations
 
 import json
 import os
-import re
-import sys
+import urllib.error
 import urllib.request
 from typing import ClassVar
 
-from .base import RawEvent
-
-# Regex for ISO date (YYYY-MM-DD with optional time) and two textual forms.
-# Returns "unknown" for anything else — good enough until the scorer (#20)
-# parses the full description text.
-_ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2})?")
-_TEXTUAL_DATE = re.compile(
-    r"(?:January|February|March|April|May|June|July|August|September"
-    r"|October|November|December)\s+\d{1,2},?\s+\d{4}"
-)
-_SHORT_DATE = re.compile(
-    r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)"
-    r"\s+\d{1,2},?\s+\d{4}"
-)
+from .search import SearchResult
 
 
-def _extract_date(text: str) -> str | None:
-    """Best-effort date from text; None on no match."""
-    for pattern in (_ISO_DATE, _TEXTUAL_DATE, _SHORT_DATE):
-        m = pattern.search(text)
-        if m:
-            return m.group()
-    return None
-
-
-class TavilySearchProvider:
+class TavilyProvider:
     API_URL: ClassVar[str] = "https://api.tavily.com/search"
     TIMEOUT: ClassVar[int] = 10
-    MAX_PER_QUERY: ClassVar[int] = 5
+
+    name: str = "tavily"
 
     def __init__(self, api_key: str | None = None) -> None:
         self._key = api_key or os.environ.get("TAVILY_API_KEY", "")
@@ -47,70 +28,60 @@ class TavilySearchProvider:
                 "when SEARCH_PROVIDER=tavily"
             )
 
-    def search(self, queries: list[str]) -> list[RawEvent]:
-        seen_urls: set[str] = set()
-        results: list[RawEvent] = []
-        cap = int(os.environ.get("MAX_EVENTS_PER_RUN", "50"))
+    def search(
+        self,
+        query: str,
+        *,
+        country: str | None = None,
+        language: str | None = None,
+        freshness_days: int | None = None,
+        max_results: int = 20,
+    ) -> list[SearchResult]:
+        depth = os.environ.get("TAVILY_SEARCH_DEPTH", "advanced")
+        body: dict = {
+            "query": query,
+            "search_depth": depth,
+            "max_results": max_results,
+            "include_raw_content": True,
+        }
 
-        for q in queries:
-            if len(results) >= cap:
-                break
-            for item in self._query(q):
-                url = item.get("url", "")
-                if url in seen_urls:
-                    continue
-                seen_urls.add(url)
-
-                content = item.get("content", "")
-                title = item.get("title", "")
-                date_text = _extract_date(content) or _extract_date(title) or "unknown"
-
-                results.append(RawEvent(
-                    title=title,
-                    date_time=date_text,
-                    place="unknown",
-                    link=url,
-                    description=content,
-                ))
-                if len(results) >= cap:
-                    break
-
+        data = self._post(body)
+        results: list[SearchResult] = []
+        for item in data.get("results", []):
+            results.append(SearchResult(
+                url=item.get("url", ""),
+                title=item.get("title", ""),
+                snippet=item.get("content", ""),
+                raw_content=item.get("raw_content") or None,
+                published_at=item.get("published_date") or None,
+                provider="tavily",
+            ))
         return results
 
-    def _query(self, q: str) -> list[dict]:
-        body = json.dumps({
-            "query": q,
-            "search_depth": "basic",
-            "max_results": self.MAX_PER_QUERY,
-        }).encode()
-        req = urllib.request.Request(
-            self.API_URL,
-            data=body,
-            headers={
-                "Authorization": f"Bearer {self._key}",
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=self.TIMEOUT) as resp:
-                data = json.loads(resp.read())
-        except urllib.error.HTTPError as exc:
-            raise RuntimeError(
-                f"Tavily API error: HTTP {exc.code}"
-            ) from exc
-        except urllib.error.URLError as exc:
-            raise RuntimeError(
-                f"Tavily API error: {exc.reason}"
-            ) from exc
-        return data.get("results", [])
-
-
-if __name__ == "__main__":
-    query = sys.argv[1] if len(sys.argv) > 1 else "sailing events 2026"
-    provider = TavilySearchProvider()
-    for event in provider.search([query]):
-        print(f"{event.date_time}  {event.title}")
-        print(f"  {event.link}")
-        print(f"  {event.description[:120]}...")
-        print()
+    def _post(self, body: dict) -> dict:
+        """POST with one retry on 429/5xx."""
+        payload = json.dumps(body).encode()
+        last_exc: Exception | None = None
+        for attempt in range(2):
+            req = urllib.request.Request(
+                self.API_URL,
+                data=payload,
+                headers={
+                    "Authorization": f"Bearer {self._key}",
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=self.TIMEOUT) as resp:
+                    return json.loads(resp.read())
+            except urllib.error.HTTPError as exc:
+                if exc.code in (429, 500, 502, 503, 504) and attempt == 0:
+                    import time
+                    time.sleep(2)
+                    last_exc = exc
+                    continue
+                raise RuntimeError(f"Tavily API error: HTTP {exc.code}") from exc
+            except urllib.error.URLError as exc:
+                raise RuntimeError(f"Tavily API error: {exc.reason}") from exc
+        raise RuntimeError(f"Tavily API error after retry: HTTP {getattr(last_exc, 'code', last_exc)}") from last_exc

@@ -1,0 +1,43 @@
+{
+  "response": {
+    "place": {
+      "city": "Berlin",
+      "country": "DE",
+      "region": null,
+      "radius_km": null,
+      "online": false
+    },
+    "date": {
+      "start": null,
+      "end": null,
+      "relative": null,
+      "relative_n": null
+    },
+    "topics": [],
+    "topics_local": [],
+    "formats": [],
+    "budget": {
+      "max_amount": null,
+      "currency": null,
+      "free_only": false
+    },
+    "language": "de",
+    "input_language": "en",
+    "other_constraints": []
+  },
+  "usage": {
+    "prompt_tokens": 1532,
+    "completion_tokens": 177,
+    "total_tokens": 1709,
+    "prompt_tokens_details": {
+      "cached_tokens": 896
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 62
+    },
+    "prompt_cache_hit_tokens": 896,
+    "prompt_cache_miss_tokens": 636
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "deepseek-flash"
+}

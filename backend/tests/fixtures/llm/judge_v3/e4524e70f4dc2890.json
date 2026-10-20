@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 92,
+    "reason": "Late-night jazz jam at Zig Zag Jazz Club Berlin on 21 October matches your jazz-in-Berlin dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 734,
+    "completion_tokens": 120
+  },
+  "recorded_at": "2026-10-20T05:57:40.240106+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}
