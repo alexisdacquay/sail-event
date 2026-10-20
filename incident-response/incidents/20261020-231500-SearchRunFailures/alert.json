@@ -1,0 +1,12 @@
+{
+  "status": "firing",
+  "labels": {
+    "alertname": "SearchRunFailures",
+    "severity": "critical"
+  },
+  "annotations": {
+    "summary": "Two or more search runs failed in the last 10 minutes",
+    "description": "Observed 8 failed run(s) in a 10-minute window"
+  },
+  "startsAt": "2026-10-20T23:15:00Z"
+}

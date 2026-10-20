@@ -14,7 +14,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-INCIDENTS_DIR = REPO_ROOT / "incidents"
+INCIDENTS_DIR = REPO_ROOT / "incident-response" / "incidents"
 INCIDENT_RESPONSE_DIR = REPO_ROOT / "incident-response"
 CLAUDE_BIN = os.environ.get("CLAUDE_BIN", "claude")
 PORT = int(os.environ.get("RESPONDER_PORT", "8001"))
@@ -44,12 +44,23 @@ def validate_alertname(alertname: str) -> bool:
 
 
 def build_agent_env() -> dict:
-    """Allowlist: only PATH, HOME, SKIP_HOOK_TESTS, and (when set) ANTHROPIC_API_KEY."""
+    """Allowlist of env vars for the agent subprocess.
+
+    The Claude CLI uses OAuth stored under ~/.claude; it must NOT inherit
+    ANTHROPIC_* or CLAUDE_* vars from a parent session (they point it at
+    the wrong endpoint or model).  We pass only OS-level vars the CLI
+    needs to run on macOS: PATH, HOME, TMPDIR, USER, LANG, SHELL, plus
+    SKIP_HOOK_TESTS and (when set) ANTHROPIC_API_KEY.
+    """
     env = {
         "PATH": os.environ.get("PATH", ""),
         "HOME": os.environ.get("HOME", ""),
         "SKIP_HOOK_TESTS": "1",
     }
+    for var in ("TMPDIR", "USER", "LANG", "SHELL"):
+        val = os.environ.get(var)
+        if val:
+            env[var] = val
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if api_key:
         env["ANTHROPIC_API_KEY"] = api_key
