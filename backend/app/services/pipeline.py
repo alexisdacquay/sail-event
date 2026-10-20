@@ -17,7 +17,7 @@ from ..adapters.search import remove_known_pages
 from ..services import clock
 from ..services.budget import check_search_budget, check_llm_budget
 from ..services.criteria import needs_parse, parse_criteria, parse_metadata
-from ..services.window import WindowInPast, resolve
+from ..services.window import resolve
 from ..services.extract import extract_events
 from ..services.filters import attach_offset, filter_events
 from ..services.judge import judge_event, Verdict, JudgeError, band_word
@@ -164,6 +164,18 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
 
             # --- Stage 1: understand criteria ---
             current_stage = "criteria"
+            if not criteria_text:
+                error_msg = "no criteria text"
+                stopped_at_stage = "criteria"
+                _finalise_run(
+                    run, db, events_found, events_new, error_msg,
+                    counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
+                    stopped_at_stage, error_detail,
+                )
+                elapsed = time.monotonic() - t0
+                _emit_metrics(trigger, error_msg, events_found, events_new, elapsed)
+                return run
+
             with tracer.start_as_current_span("criteria"):
                 if criteria_row and criteria_text:
                     # Budget check before criteria LLM call
@@ -198,18 +210,7 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
             current_stage = "window"
             with tracer.start_as_current_span("window"):
                 date_facets = facets.get("date", {}) or {}
-                try:
-                    window = resolve(date_facets, user_tz)
-                except WindowInPast:
-                    error_msg = "dates in the past: edit your criteria"
-                    _finalise_run(
-                        run, db, events_found, events_new, error_msg,
-                        counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
-                        stopped_at_stage, error_detail,
-                    )
-                    elapsed = time.monotonic() - t0
-                    _emit_metrics(trigger, error_msg, events_found, events_new, elapsed)
-                    return run
+                window = resolve(date_facets, user_tz)
 
             # --- Stage 3: search (verbatim query, no planner) ---
             current_stage = "search"
@@ -502,15 +503,7 @@ def _judge_and_triage(
     facets = json.loads(criteria_row.facets_json) if criteria_row and criteria_row.facets_json else {}
     date_facets = facets.get("date", {}) or {}
 
-    # We need a window for the judge; re-resolve (safe since we already checked WindowInPast)
-    try:
-        window = resolve(date_facets, user_tz)
-    except WindowInPast:
-        # For recovery of old events, just use a wide window
-        now_utc = clock.now()
-        from ..services.window import Window
-        from datetime import timedelta
-        window = Window(start_utc=now_utc, end_utc=now_utc + timedelta(days=30), tz=user_tz)
+    window = resolve(date_facets, user_tz)
 
     llm_calls = 0
     tokens_in = 0
@@ -629,7 +622,7 @@ def _finalise_run(
     run.events_found = events_found
     run.events_new = events_new
     run.error = error_msg
-    run.stage_counts = json.dumps(counts) if counts else None
+    run.stage_counts = json.dumps(counts)
     run.search_calls = search_calls
     run.llm_calls = llm_calls
     run.llm_tokens_in = llm_tokens_in

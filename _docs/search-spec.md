@@ -75,7 +75,7 @@ Relative dates:
 
 - Resolution happens at run time, every run, in the user's time zone, never at parse time.
 - Window start is clipped to now: an event that has already ended is past (§6 has the end-of-day rule).
-- Window end before now (the absolute dates have passed): the run stops before any search or model call, with the reason `dates in the past: edit your criteria` on the run and in the report.
+- Window end before now (the absolute dates have passed): the run continues; the per-event past filter and the judge handle dates. Facets are parsed once per criteria text; relative date words resolve against now on every run; absolute dates are fixed.
 - The user's time zone is `UTC` until their first criteria save from the new UI; the UI says so.
 - The reference case resolves to 2026-10-19 00:00 → 2026-10-21 23:59 Europe/Berlin because the absolute dates win over "next week" (19–25 Oct).
 
@@ -208,7 +208,7 @@ Run report (after "Search now" and on the last scheduled run):
 
 - `6 queries → 31 results → 12 events → 7 passed filters → 7 judged → 2 accepted, 3 queued, 2 rejected`.
 - What the filters removed, by count.
-- When the run stopped early: at which stage and why (budget, provider error, no place in criteria, dates in the past, adapters refused in production).
+- When the run stopped early: at which stage and why (budget, provider error, adapters refused in production). Every early stop sets `stopped_at_stage` and writes zero `stage_counts` so the UI shows the reason.
 - "Search now" beyond 6 in an hour: `Search limit reached, try again in N minutes` (HTTP 429 with `Retry-After`).
 - Times are shown in UTC until the user saves their criteria from the new UI; the page says so.
 - Never the criteria text in logs; never fixture data labelled as a search.
@@ -313,8 +313,8 @@ Golden set B — labelled candidates for C1, now = 2026-10-18 12:00 Europe/Berli
 5. Every stored event has a score, a reason sentence ≤ 140 characters passing the pattern check, a judge model and a judge version.
 6. The reason sentence names at least the date and the place, in the language of the criteria text.
 7. The smoke script with three repeats prints the score spread per event; the owner reads it against ±5 (measurement, not a CI assertion).
-8. Facets are stored with the hash of the text that produced them and re-parsed only when the hash or the prompt version changes.
-9. "next week" resolves to the ISO week after the run date in the user's time zone; absolute dates win; a window that ended before now stops the run before any call with `dates in the past` recorded.
+8. Facets are parsed once per criteria text (hash) or prompt version change. Relative date words resolve against now on every run in `window.py`; absolute dates are fixed and the past filter and the judge handle them.
+9. "next week" resolves to the ISO week after the run date in the user's time zone; absolute dates win; a window that ended before now does not stop the run — the per-event past filter and the judge handle dates (#70).
 10. Criteria without a place and without an online format produce a run with zero queries and the report says why.
 11. Every query contains the city and the year; when the place's language is not English, at least one query is in that language; Tavily receives the country as its name (`germany`), Brave as `DE`.
 12. A listing page yields at most 10 events, each overlapping the window; a listing page seen before is extracted again on the next run and only its new occurrences are stored.
