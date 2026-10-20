@@ -22,23 +22,31 @@ Everything runs in one terminal. The overlay file connects the app to the
 collector network so metrics reach Prometheus.
 
 ```bash
-# 1. Start the observability stack + the app with an invalid search provider
+# 1. Start the observability stack + the app with an invalid search provider.
+#    SEARCH_NOW_PER_HOUR=1000 disables the per-user rate limit so every
+#    request reaches the pipeline (default is 6/hour).
 make up-all
-# Override just the app with SEARCH_PROVIDER=unknown so every search errors
-SEARCH_PROVIDER=unknown docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build -d --wait
+SEARCH_PROVIDER=unknown SEARCH_NOW_PER_HOUR=1000 \
+  docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build -d --wait
 
 # 2. Get a token (demo user is seeded automatically)
 B=http://localhost:${HOST_PORT:-8000}
 T=$(curl -s -X POST $B/api/auth/login -H 'Content-Type: application/json' \
   -d '{"username":"demo","password":"demo"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
 
-# 3. Send failing searches every 30 s (the rule's `for: 5m` needs sustained errors)
-for i in $(seq 1 14); do
+# 3. Send failing searches every 30 s until the rule fires (~7-8 min:
+#    ~60 s for the first metric export, then the rule must evaluate true
+#    for 5 consecutive minutes, evaluated every 60 s).
+while true; do
   curl -s -X POST $B/api/search -H "Authorization: Bearer $T" | head -1
+  STATE=$(curl -s http://localhost:${GRAFANA_PORT:-3001}/api/prometheus/grafana/api/v1/rules \
+    | grep -o '"state":"[a-z]*"' | head -1)
+  echo "  SearchRunFailures $STATE"
+  [ "$STATE" = '"state":"firing"' ] && break
   sleep 30
 done
 
-# 5. Check the alert
+# 4. Check the alert
 curl -s http://localhost:${GRAFANA_PORT:-3001}/api/alertmanager/grafana/api/v2/alerts | python3 -m json.tool
 ```
 
@@ -88,7 +96,8 @@ for b in d["batches"]:
 
 Expected: the Loki query returns a log line with a non-zero `trace_id`, and
 the Tempo query returns the same trace with spans including `search_run`,
-`search`, `extract`, `filter`, `persist`, `judge`, `triage`.
+`search`, `extract`, `filter`, `persist`. Runs that find new events also
+show `judge` and `triage` spans.
 
 ## `otel-collector` hostname collision
 

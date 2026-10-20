@@ -215,7 +215,7 @@ for b in d["batches"]:
 '
 ```
 
-The Loki query returns a log line with a `trace_id`; the Tempo query returns the full trace with spans `search_run`, `search`, `extract`, `filter`, `persist`, `judge`, `triage`. See [observability/README.md](observability/README.md#trace-id-correlation-proof) for detail.
+The Loki query returns a log line with a `trace_id`; the Tempo query returns the full trace with spans `search_run`, `search`, `extract`, `filter`, `persist` (runs that find new events also show `judge` and `triage`). See [observability/README.md](observability/README.md#trace-id-correlation-proof) for detail.
 
 Two alerts fire on user impact, not CPU: **SearchRunFailures** (two or more runs failed in ten minutes) and **SearchRunsSilent** (no run at all in two hours). [Fire the alert locally](observability/README.md#fire-the-alert-locally-copy-paste-block) to see it in action. They hit a webhook that wakes an on-call agent:
 
