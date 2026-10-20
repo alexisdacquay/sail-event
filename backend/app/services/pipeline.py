@@ -108,6 +108,7 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
         error_msg: str | None = None
         error_detail: str | None = None
         stopped_at_stage: str | None = None
+        current_stage: str | None = None
 
         try:
             # --- get adapters (may fail in prod with fixture/fake) ---
@@ -160,6 +161,7 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                 db.commit()
 
             # --- Stage 1: understand criteria ---
+            current_stage = "criteria"
             with tracer.start_as_current_span("criteria"):
                 if criteria_row and criteria_text:
                     # Budget check before criteria LLM call
@@ -191,6 +193,7 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                 facets = json.loads(criteria_row.facets_json) if criteria_row and criteria_row.facets_json else {}
 
             # --- Stage 2: resolve window ---
+            current_stage = "window"
             with tracer.start_as_current_span("window"):
                 date_facets = facets.get("date", {}) or {}
                 try:
@@ -207,6 +210,7 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                     return run
 
             # --- Stage 3: search (verbatim query, no planner) ---
+            current_stage = "search"
             # Budget check before search (1 call)
             budget_stop = check_search_budget(db, 1)
             if budget_stop:
@@ -229,6 +233,7 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
 
             with tracer.start_as_current_span("search"):
                 search_errors = 0
+                first_search_exc: str | None = None
                 query_text = (criteria_text + " event") if criteria_text else ""
                 counts["queries_planned"] = 1 if query_text else 0
 
@@ -249,12 +254,20 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                             search_errors += 1
                             search_calls += 1
                             _search_calls_counter.add(1, {"provider": provider_name, "outcome": "error"})
+                            if first_search_exc is None:
+                                first_search_exc = f"{type(exc).__name__}: {str(exc)[:200]}"
                             if not error_detail:
-                                error_detail = f"search: {type(exc).__name__}: {str(exc)[:200]}"
+                                error_detail = f"search: {first_search_exc}"
                             logger.warning("search error for query: %s", type(exc).__name__)
 
                 counts["search_errors"] = search_errors
                 counts["results_fetched"] = len(all_results)
+
+                # When every query failed, promote to run error
+                queries_planned = counts["queries_planned"]
+                if queries_planned > 0 and search_errors >= queries_planned:
+                    error_msg = first_search_exc
+                    stopped_at_stage = "search"
 
                 # Dedup results by URL
                 seen_urls: set[str] = set()
@@ -279,6 +292,7 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                 events_found = len(all_results)
 
             # --- Stage 5: extract ---
+            current_stage = "extract"
             with tracer.start_as_current_span("extract"):
                 # Budget check before extract LLM calls
                 budget_stop = check_llm_budget(db)
@@ -332,6 +346,7 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                 counts["filtered_non_event"] = extract_counts.filtered_non_event
 
             # --- Stage 6: filter ---
+            current_stage = "filter"
             with tracer.start_as_current_span("filter"):
                 now_utc = clock.now()
                 # Stored events for dedup
@@ -402,6 +417,7 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
             db.commit()
 
             # --- Stage 7 + 8: judge and triage ---
+            current_stage = "judge"
             if events_new > 0:
                 # Budget check before judge LLM calls
                 budget_stop = check_llm_budget(db)
@@ -452,9 +468,11 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
             logger.info("search run completed")
 
         except Exception as exc:
-            error_msg = str(exc)
+            error_msg = f"{type(exc).__name__}: {str(exc)[:200]}"
             if not error_detail:
-                error_detail = f"pipeline: {type(exc).__name__}: {str(exc)[:200]}"
+                error_detail = f"pipeline: {error_msg}"
+            if not stopped_at_stage:
+                stopped_at_stage = current_stage
             span.record_exception(exc)
             span.set_status(trace.StatusCode.ERROR, type(exc).__name__)
             logger.error("search run failed: %s", type(exc).__name__)

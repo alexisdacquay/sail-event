@@ -247,7 +247,28 @@ def test_extract_exception_reported_in_api(client, auth_headers, _db_session):
         body = client.post("/api/search", headers=h).json()
 
     assert body["error"] is not None, "error must not be null after pipeline exception"
+    assert body["error"].startswith("RuntimeError: "), "error must be <Type>: <msg>"
     assert "kaboom" in body["error"]
+    assert body["stoppedAtStage"] == "extract"
+
+
+def test_search_provider_all_queries_fail(client, auth_headers, _db_session):
+    """When every search query fails, error and stoppedAtStage='search' (#65)."""
+    h = auth_headers("demo", "demo")
+
+    class _BoomProvider:
+        name = "boom"
+        def search(self, query, **kw):
+            raise RuntimeError("kaboom from provider")
+
+    with patch("app.services.pipeline.get_search_provider",
+               return_value=_BoomProvider()):
+        body = client.post("/api/search", headers=h).json()
+
+    assert body["error"] is not None
+    assert body["error"].startswith("RuntimeError: "), "error must be <Type>: <msg>"
+    assert "kaboom" in body["error"]
+    assert body["stoppedAtStage"] == "search"
 
 
 def test_scorer_env_var_reported(client, auth_headers, _db_session, monkeypatch):
