@@ -149,6 +149,24 @@ def _get_session_factory():
     return _session_factory
 
 
+def _finalise_orphan_run(run_id: str, error: str) -> None:
+    """Best-effort finalise an enqueue-time Run row that never reached run_pipeline."""
+    try:
+        factory = _get_session_factory()
+        db2 = factory()
+        try:
+            row = db2.query(orm.Run).filter(orm.Run.id == run_id).first()
+            if row and row.finished_at is None:
+                row.finished_at = datetime.now(UTC)
+                row.error = error
+                row.stopped_at_stage = "enqueue"
+                db2.commit()
+        finally:
+            db2.close()
+    except Exception:
+        logger.warning("could not finalise orphan run %s", run_id)
+
+
 def _run_scheduled_user(user_id: str, run_id: str) -> None:
     """Background task: run the pipeline for one user with a fresh DB session."""
     factory = _get_session_factory()
@@ -157,8 +175,11 @@ def _run_scheduled_user(user_id: str, run_id: str) -> None:
         user = db.query(orm.User).filter(orm.User.id == user_id).first()
         if user:
             run_pipeline(user, db, trigger="scheduled", run_id=run_id)
-    except Exception:
+        else:
+            _finalise_orphan_run(run_id, "user not found")
+    except Exception as exc:
         logger.exception("scheduled run failed for user %s", user_id)
+        _finalise_orphan_run(run_id, f"{type(exc).__name__}: {str(exc)[:200]}")
     finally:
         db.close()
 
