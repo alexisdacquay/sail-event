@@ -33,7 +33,7 @@ Final project for the [DataTalksClub AI Dev Tools Zoomcamp 2026](https://github.
                                                                             └────────────────┘
 ```
 
-The two thresholds (30 and 70 above) are yours to move. Everything is per user: criteria, events, thresholds, and the calendar feed URL.
+The two thresholds (40 and 90 above) are yours to move. Everything is per user: criteria, events, thresholds, and the calendar feed URL.
 
 ## Problem
 
@@ -150,6 +150,9 @@ QA caught real defects before they shipped: an invalid decision crashing with 50
 make test              # backend unit + frontend unit + responder unit, one exit code (installs frontend deps on first run)
 make test-integration  # starts compose, runs the API against real Postgres, tears down
 make test-e2e          # starts compose, runs Playwright journeys in Chromium, tears down
+# Both bind TEST_HOST_PORT (default 8030) under compose project TEST_COMPOSE_PROJECT (default sail-test)
+# and tear that project down afterward. Override to avoid port clashes:
+#   TEST_HOST_PORT=8031 make test-integration
 ```
 
 One-time setup before `make test-e2e` (downloads Chromium):
@@ -158,10 +161,12 @@ One-time setup before `make test-e2e` (downloads Chromium):
 cd e2e && npm ci && npx playwright install chromium
 ```
 
+Counts drift as features land; these are from the last `make test` run:
+
 | Suite | Count | Tool |
 |---|---|---|
-| Backend unit | 180 | pytest |
-| Frontend unit | 25 | Vitest |
+| Backend unit | 401 | pytest |
+| Frontend unit | 84 | Vitest |
 | On-call responder unit | 19 | unittest |
 | Integration (real Postgres) | 7 | pytest, marker `integration` |
 | End to end (browser) | 2 journeys | Playwright |
@@ -172,7 +177,7 @@ How they are organised: [docs/testing.md](docs/testing.md).
 
 | Step | What happens | Where |
 |---|---|---|
-| Pull request | CI runs backend, frontend, then integration and e2e | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
+| Pull request | CI runs backend, frontend, then the integration job, which also runs the two Playwright journeys | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | Merge to main | Render builds the image and deploys it to **dev** (sail-event-dev.onrender.com) | [docs/deployment.md](docs/deployment.md) |
 | Promote to prod | Manual workflow: pick a commit, Render deploys it to **prod**, the job waits until `/api/health` reports that commit | [`.github/workflows/promote.yml`](.github/workflows/promote.yml) |
 | Rollback | Run the promote workflow with the previous commit | [docs/release-process.md](docs/release-process.md) |
@@ -187,7 +192,7 @@ export RESPONDER_WEBHOOK_SECRET=any-string   # shared by Grafana's webhook and t
 make up-all                                  # app + Postgres + the whole observability stack (6 containers, ~2 GB RAM)
 ```
 
-Grafana is at <http://localhost:3001> (no login), dashboard "Sail-event, Search Run Journey". Run a search or two first and give it a minute: metrics are exported every 60 seconds, so the panels say "No data" until then.
+Grafana is at <http://localhost:3001> (anonymous access with the Admin role, login form disabled; local only, not exposed on Render), dashboard "Sail-event, Search Run Journey". Run a search or two first and give it a minute: metrics are exported every 60 seconds, so the panels say "No data" until then.
 
 ![grafana](docs/images/05-grafana.png)
 

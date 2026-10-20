@@ -29,10 +29,17 @@ dedup, user isolation, search/all, ICS feed, data survives restart.
 make test-integration
 ```
 
-The target (uses `TEST_HOST_PORT`, default 8030; override with `TEST_HOST_PORT=8010 make test-integration`):
-1. `docker compose up --build -d --wait` (reads `TEST_HOST_PORT`, default 8030)
+The target uses `TEST_HOST_PORT` (default 8030) and `TEST_COMPOSE_PROJECT`
+(default `sail-test`). Override either to avoid clashes with a running stack:
+
+```
+TEST_HOST_PORT=8031 TEST_COMPOSE_PROJECT=sail-test-2 make test-integration
+```
+
+Steps:
+1. `docker compose up --build -d --wait` under `COMPOSE_PROJECT_NAME=$TEST_COMPOSE_PROJECT`
 2. Runs pytest on `backend/tests/integration/` with `-m integration`
-3. `docker compose down -v`
+3. `docker compose down -v` (same project name)
 4. Exit code = pytest exit code
 
 To run against an already-running stack (skips compose lifecycle):
@@ -66,10 +73,11 @@ cd e2e && npm install && npx playwright install chromium
 make test-e2e
 ```
 
-The target:
-1. `docker compose up --build -d --wait`
+The target uses the same `TEST_HOST_PORT` and `TEST_COMPOSE_PROJECT` variables
+as `test-integration`:
+1. `docker compose up --build -d --wait` under `COMPOSE_PROJECT_NAME=$TEST_COMPOSE_PROJECT`
 2. Runs `npx playwright test` in `e2e/`
-3. `docker compose down -v`
+3. `docker compose down -v` (same project name)
 4. Exit code = Playwright exit code
 
 Journeys:
