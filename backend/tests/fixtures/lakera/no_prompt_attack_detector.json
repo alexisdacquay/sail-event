@@ -1,0 +1,14 @@
+{
+  "description": "Breakdown with no prompt_attack detector -- hand-written; simulates a Lakera project misconfiguration",
+  "input": "anything",
+  "status": 200,
+  "response": {
+    "flagged": false,
+    "action": "enforce",
+    "metadata": {},
+    "breakdown": [
+      {"detector_type": "moderated_content/sexual", "detected": false},
+      {"detector_type": "pii/email", "detected": false}
+    ]
+  }
+}

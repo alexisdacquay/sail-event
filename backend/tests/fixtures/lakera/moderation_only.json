@@ -1,0 +1,29 @@
+{
+  "description": "Flagged by moderated_content/sexual only (false positive) -- live-recorded 2026-10-20 with breakdown:true; no prompt_attack so the adapter allows it",
+  "input": "something fun this weekend",
+  "status": 200,
+  "response": {
+    "flagged": true,
+    "action": "enforce",
+    "metadata": {},
+    "breakdown": [
+      {"detector_type": "moderated_content/crime", "detected": false},
+      {"detector_type": "moderated_content/hate", "detected": false},
+      {"detector_type": "moderated_content/profanity", "detected": false},
+      {"detector_type": "moderated_content/self_harm", "detected": false},
+      {"detector_type": "moderated_content/sexual", "detected": true},
+      {"detector_type": "moderated_content/violence", "detected": false},
+      {"detector_type": "moderated_content/weapons", "detected": false},
+      {"detector_type": "pii/address", "detected": false},
+      {"detector_type": "pii/credit_card", "detected": false},
+      {"detector_type": "pii/email", "detected": false},
+      {"detector_type": "pii/iban_code", "detected": false},
+      {"detector_type": "pii/ip_address", "detected": false},
+      {"detector_type": "pii/name", "detected": false},
+      {"detector_type": "pii/phone_number", "detected": false},
+      {"detector_type": "pii/us_social_security_number", "detected": false},
+      {"detector_type": "prompt_attack", "detected": false},
+      {"detector_type": "unknown_links", "detected": false}
+    ]
+  }
+}

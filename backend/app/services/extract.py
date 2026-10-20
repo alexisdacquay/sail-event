@@ -4,7 +4,7 @@ Pass 1: one call per query over its results (title + snippet each, numbered).
 Pass 2: one call per listing or incomplete page, using the 20 000-char
          month-anchored slice of raw_content.
 
-The get_guardrail() hook runs before every pass-2 call (no-op when GUARDRAIL=none).
+The guard runs only on criteria text at save; pages are never guarded.
 """
 
 from __future__ import annotations
@@ -79,9 +79,6 @@ class ExtractionCounts:
     events_extracted: int = 0
     filtered_non_event: int = 0
     extract_errors: int = 0
-    guard_skipped: int = 0
-    guard_fallback: int = 0
-    guard_errors: int = 0
 
 
 def _read_schema() -> dict:
@@ -151,7 +148,6 @@ def extract_events(
     language: str | None,
     user_tz: str,
     model,
-    guardrail,
 ) -> tuple[list[ExtractedEvent], ExtractionCounts]:
     """Run extraction over a list of search results. Returns (events, counts)."""
     counts = ExtractionCounts()
@@ -215,19 +211,6 @@ def extract_events(
             sliced, truncated = _slice_content(r.raw_content, anchors)
             if truncated:
                 counts.extract_truncated += 1
-
-            try:
-                guardrail.check(sliced, target="page")
-            except Exception as exc:
-                from ..adapters.guard_lakera import ContentFlagged
-                if isinstance(exc, ContentFlagged):
-                    counts.guard_skipped += 1
-                else:
-                    # Both guards failed or RuntimeError — skip page, count error
-                    counts.guard_errors += 1
-                pspan.set_attribute("page_kind", "guard_blocked")
-                pspan.set_attribute("event_count", 0)
-                continue
 
             variables = {
                 "today": today,

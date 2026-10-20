@@ -12,7 +12,7 @@ from datetime import UTC, datetime
 from opentelemetry import trace, metrics
 from sqlalchemy.orm import Session
 
-from ..adapters.factory import get_language_model, get_search_provider, get_guardrail
+from ..adapters.factory import get_language_model, get_search_provider
 from ..adapters.search import remove_known_pages
 from ..services import clock
 from ..services.budget import check_search_budget, check_llm_budget
@@ -116,7 +116,6 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
             try:
                 provider = get_search_provider()
                 model = get_language_model()
-                guardrail = get_guardrail()
             except Exception as exc:
                 error_msg = f"{type(exc).__name__}: {str(exc)[:200]}"
                 stopped_at_stage = "adapters"
@@ -326,7 +325,6 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                     language=language,
                     user_tz=user_tz,
                     model=model,
-                    guardrail=guardrail,
                 )
                 # Count LLM calls from extraction: 1 for pass-1 (if results) + pages_content_pass for pass-2
                 if all_results:
@@ -342,9 +340,6 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                 counts["extract_errors"] = extract_counts.extract_errors
                 if extract_counts.extract_errors > 0 and not error_detail:
                     error_detail = f"extract: {extract_counts.extract_errors} error(s)"
-                counts["guard_skipped"] = extract_counts.guard_skipped
-                counts["guard_fallback"] = extract_counts.guard_fallback
-                counts["guard_errors"] = extract_counts.guard_errors
                 # Non-event count from extraction
                 counts["filtered_non_event"] = extract_counts.filtered_non_event
 
@@ -559,12 +554,18 @@ def _judge_and_triage(
 
                 if isinstance(result, JudgeError):
                     judge_errors += 1
+                    logger.warning("judge error: %s", result.error)
                     # event stays `new`
                     continue
 
                 if isinstance(result, Verdict):
                     espan.set_attribute("score", result.score)
                     espan.set_attribute("capped", result.capped)
+                    try:
+                        from urllib.parse import urlparse
+                        espan.set_attribute("source_host", urlparse(extracted.source_url).hostname or "")
+                    except Exception:
+                        pass
                     if not result.is_event:
                         # Drop non-events: mark rejected with score 0
                         evt.score = 0

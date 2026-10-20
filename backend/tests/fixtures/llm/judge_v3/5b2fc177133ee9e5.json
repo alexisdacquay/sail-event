@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 95,
+    "reason": "Jazz show in Berlin on 20 October 2026 falls right within your 19–21 October window and matches your genre.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 740,
+    "completion_tokens": 90
+  },
+  "recorded_at": "2026-10-20T12:02:14.458721+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

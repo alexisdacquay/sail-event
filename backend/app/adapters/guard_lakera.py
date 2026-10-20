@@ -35,7 +35,9 @@ class LakeraGuardrail:
         """Raise ContentFlagged if the text is flagged, GuardUnavailable on error."""
         if not self.api_key:
             raise GuardUnavailable("LAKERA_API_KEY not set")
-        body = json.dumps({"messages": [{"role": "user", "content": text}]}).encode()
+        body = json.dumps(
+            {"messages": [{"role": "user", "content": text}], "breakdown": True},
+        ).encode()
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
@@ -53,5 +55,12 @@ class LakeraGuardrail:
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             raise GuardUnavailable(f"lakera network: {exc}") from exc
 
-        if data.get("flagged"):
-            raise ContentFlagged("lakera flagged")
+        # Block only on prompt_attack detectors; moderation/pii/links are ignored
+        has_prompt_attack_detector = False
+        for entry in data.get("breakdown", []):
+            if entry.get("detector_type", "").startswith("prompt_attack"):
+                has_prompt_attack_detector = True
+                if entry.get("detected"):
+                    raise ContentFlagged("lakera flagged")
+        if not has_prompt_attack_detector:
+            raise GuardUnavailable("lakera project has no prompt_attack detector")

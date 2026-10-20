@@ -35,14 +35,13 @@ def _load_fixtures():
 @pytest.fixture(scope="module")
 def extraction_result():
     """Run extraction + filtering on all 22 fixture candidates."""
-    from app.adapters.factory import get_language_model, get_guardrail
+    from app.adapters.factory import get_language_model
     from app.adapters.search import SearchResult
     from app.services import clock
     from app.services.extract import extract_events
     from app.services.filters import filter_events
 
     model = get_language_model()
-    guardrail = get_guardrail()
     fixtures = _load_fixtures()
 
     results = [
@@ -68,7 +67,6 @@ def extraction_result():
         language="de",
         user_tz="Europe/Berlin",
         model=model,
-        guardrail=guardrail,
     )
 
     kept, filter_counts = filter_events(
