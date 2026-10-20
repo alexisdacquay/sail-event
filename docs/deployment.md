@@ -36,7 +36,7 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `LLM_USD_PER_1K_IN` | cost per 1 000 input tokens; set all three price vars to enable `cost_usd` |
 | `LLM_USD_PER_1K_OUT` | cost per 1 000 output tokens |
 | `SEARCH_USD_PER_CALL` | cost per search API call |
-| `GUARDRAIL` | `lakera` (prod) or `none` (default, dev/CI); set at issue H promote |
+| `GUARDRAIL` | `lakera` (prod) or `none` (default, dev/CI); set at issue H promote. The Lakera guard blocks `prompt_attack` detectors only; content-moderation, PII and unknown-link detections are ignored |
 | `LAKERA_API_KEY` | Lakera Guard API key (required when `GUARDRAIL=lakera`) |
 | `GUARD_FALLBACK` | `self_check` (prod) or `none`; used only when Lakera errors or quota exhausted |
 | `SEARCH_NOW_PER_HOUR` | `6` — "Search now" manual runs per user per rolling hour |

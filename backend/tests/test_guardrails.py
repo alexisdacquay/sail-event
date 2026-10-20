@@ -80,6 +80,14 @@ class TestLakeraAdapter:
             with pytest.raises(ContentFlagged):
                 g.check("injection attempt")
 
+    def test_moderation_only_allowed(self, monkeypatch):
+        """#68: moderated_content detection without prompt_attack is not blocked."""
+        monkeypatch.setenv("LAKERA_API_KEY", "test-key")
+        g = LakeraGuardrail()
+        with patch("app.adapters.guard_lakera.urllib.request.urlopen",
+                    return_value=_mock_urlopen_ok("moderation_only")):
+            g.check("something fun this weekend")  # should not raise
+
     def test_error_500(self, monkeypatch):
         monkeypatch.setenv("LAKERA_API_KEY", "test-key")
         g = LakeraGuardrail()
@@ -287,8 +295,6 @@ class TestStructureLayer:
 
     def test_extract_replaces_foreign_link(self):
         """A model response with a foreign URL gets link replaced to source_url."""
-        from app.adapters.factory import _NoOpGuardrail
-
         model = MagicMock()
         model.complete_json.return_value = (
             {
@@ -331,7 +337,6 @@ class TestStructureLayer:
             language="de",
             user_tz="Europe/Berlin",
             model=model,
-            guardrail=_NoOpGuardrail(),
         )
 
         assert len(events) == 1
@@ -455,64 +460,3 @@ class TestGuardPromptFormat:
         assert "json" in text.lower().split("\n")[-1] or "json" in text.lower().split("\n")[-2]
 
 
-# ---------------------------------------------------------------------------
-# AC1: Page guard skip and count
-# ---------------------------------------------------------------------------
-
-class TestPageGuard:
-
-    def test_flagged_page_skipped_and_counted(self):
-        """A flagged page is skipped (no extraction) and guard_skipped counted."""
-        model = MagicMock()
-        # Pass 1 returns 2 events for the same URL → page_kind "listing" → pass 2
-        _ev_template = {
-            "start_local": "2026-10-20T21:00:00",
-            "start_tz": "Europe/Berlin",
-            "end_local": None,
-            "venue": None,
-            "city": "Berlin",
-            "country": "DE",
-            "link": "https://example.com/listing",
-            "price_amount": None,
-            "price_currency": None,
-            "is_free": None,
-            "confidence": 0.9,
-        }
-        model.complete_json.return_value = (
-            {
-                "events": [
-                    {**_ev_template, "title": "Event A", "description": "A"},
-                    {**_ev_template, "title": "Event B", "description": "B"},
-                ],
-            },
-            None,
-        )
-
-        guard = MagicMock()
-        guard.check.side_effect = ContentFlagged("flagged")
-
-        results = [
-            SearchResult(
-                title="Listing Page",
-                url="https://example.com/listing",
-                snippet="Events listing",
-                raw_content="<html>Events page content</html>",
-                provider="fixture",
-            ),
-        ]
-
-        from datetime import datetime, timezone
-        events, counts = extract_events(
-            results,
-            window_start=datetime(2026, 10, 19, tzinfo=timezone.utc),
-            window_end=datetime(2026, 10, 21, tzinfo=timezone.utc),
-            target_city="Berlin",
-            target_country="DE",
-            language="de",
-            user_tz="Europe/Berlin",
-            model=model,
-            guardrail=guard,
-        )
-
-        assert counts.guard_skipped == 1
-        assert counts.pages_content_pass == 1
