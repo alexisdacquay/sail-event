@@ -3,7 +3,7 @@
   "required": ["score", "reason", "is_event"],
   "additionalProperties": false,
   "properties": {
-    "score": {"type": "integer"},
+    "score": {"type": "integer", "minimum": 0, "maximum": 100},
     "reason": {"type": "string"},
     "is_event": {"type": "boolean"}
   }

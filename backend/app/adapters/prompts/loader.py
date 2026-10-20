@@ -71,6 +71,17 @@ def _validate_field(prompt_name: str, field: str, value: Any, field_schema: dict
             f"not in {field_schema['enum']}"
         )
 
+    if "minimum" in field_schema and isinstance(value, (int, float)) and value < field_schema["minimum"]:
+        raise RuntimeError(
+            f"{prompt_name}: schema violation: field '{field}' value {value} "
+            f"< minimum {field_schema['minimum']}"
+        )
+    if "maximum" in field_schema and isinstance(value, (int, float)) and value > field_schema["maximum"]:
+        raise RuntimeError(
+            f"{prompt_name}: schema violation: field '{field}' value {value} "
+            f"> maximum {field_schema['maximum']}"
+        )
+
 
 def load_prompt(
     name: str,
