@@ -206,15 +206,17 @@ Two alerts fire on user impact, not CPU: **SearchRunFailures** (two or more runs
                  incident/<id>, never main                                      evidence.md
 ```
 
-It ran for real once. A deliberate fault made every search run fail; the alert fired, the agent read the evidence, found the injected `raise`, fixed it on branch `incident/20261017-052050-SearchRunFailures` and left a verdict. Everything it saw and did is in [`incident-response/incidents/20261017-052050-SearchRunFailures/`](incident-response/incidents/20261017-052050-SearchRunFailures/). Reproduce it with:
+It ran for real: a deliberate fault made every search run fail; the alert fired, the agent read the evidence, found the injected `raise`, fixed it on branch `incident/20261017-052050-SearchRunFailures` and left a verdict (`fix.diff` included). A second run on 2026-10-20 proves the chain up to the agent launch on the current code (the CLI could not reach the API from the host at that time; the real stderr is in `agent.log`). Both recorded incidents are in [`incident-response/incidents/`](incident-response/incidents/). Reproduce it with:
 
 ```bash
+# prerequisite: `claude` CLI installed and signed in (claude --version);
+# run from a normal terminal, not from inside a Claude Code session
 export RESPONDER_WEBHOOK_SECRET=any-string   # same value in both terminals
 make responder                               # terminal 1
 incident-response/test-incident.sh           # terminal 2: injects the fault, fires the alert
 ```
 
-The agent step needs the `claude` CLI signed in on your machine. If you do not have it, the recorded incident above is the full run, end to end.
+Ports default to the values in `make up-all`; override with `HOST_PORT`, `GRAFANA_PORT`, `RESPONDER_PORT`, `COMPOSE_PROJECT_NAME`, etc. The full list is in [`incident-response/README.md`](incident-response/README.md). If you do not have the `claude` CLI, the recorded incidents above show the full run.
 
 Policy, prompt and limits: [`incident-response/`](incident-response/). Security audit and the data policy for AI tools: [docs/operations-and-security-report.md](docs/operations-and-security-report.md).
 

@@ -1,0 +1,5 @@
+{
+  "verdict": "error",
+  "summary": "headless claude could not reach the API (ENOTFOUND) on the host at the time; chain proven up to the agent launch",
+  "commit": null
+}

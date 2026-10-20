@@ -56,11 +56,12 @@ class TestValidateAlertname(unittest.TestCase):
 
 class TestBuildAgentEnv(unittest.TestCase):
     def test_allowlist_only(self):
-        # Inject extra env vars, verify they don't leak
         old = os.environ.copy()
         try:
             os.environ["DATABASE_URL"] = "postgres://leaked"
             os.environ["AWS_SECRET_ACCESS_KEY"] = "leaked"
+            os.environ["ANTHROPIC_BASE_URL"] = "https://wrong"
+            os.environ["CLAUDE_CODE_ENTRYPOINT"] = "leaked"
             os.environ["ANTHROPIC_API_KEY"] = "sk-test"
             env = responder.build_agent_env()
             self.assertIn("PATH", env)
@@ -70,6 +71,8 @@ class TestBuildAgentEnv(unittest.TestCase):
             self.assertEqual(env["SKIP_HOOK_TESTS"], "1")
             self.assertNotIn("DATABASE_URL", env)
             self.assertNotIn("AWS_SECRET_ACCESS_KEY", env)
+            self.assertNotIn("ANTHROPIC_BASE_URL", env)
+            self.assertNotIn("CLAUDE_CODE_ENTRYPOINT", env)
         finally:
             os.environ.clear()
             os.environ.update(old)
@@ -80,7 +83,8 @@ class TestBuildAgentEnv(unittest.TestCase):
             os.environ.pop("ANTHROPIC_API_KEY", None)
             env = responder.build_agent_env()
             self.assertNotIn("ANTHROPIC_API_KEY", env)
-            self.assertEqual(len(env), 3)  # PATH + HOME + SKIP_HOOK_TESTS
+            # PATH + HOME + SKIP_HOOK_TESTS + optional TMPDIR/USER/LANG/SHELL
+            self.assertGreaterEqual(len(env), 3)
         finally:
             os.environ.clear()
             os.environ.update(old)
