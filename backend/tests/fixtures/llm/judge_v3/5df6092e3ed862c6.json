@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 92,
+    "reason": "Jazz event in Berlin on 20 October 2026, right within your 19–21 October window.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0
+  },
+  "recorded_at": "2026-10-20T12:02:00+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "hand-written from e2bf20d8766322d6 (same event, UTC user_tz)"
+}

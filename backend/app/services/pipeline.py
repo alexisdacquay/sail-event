@@ -554,6 +554,7 @@ def _judge_and_triage(
 
                 if isinstance(result, JudgeError):
                     judge_errors += 1
+                    logger.warning("judge error: %s", result.error)
                     # event stays `new`
                     continue
 

@@ -358,7 +358,7 @@ Issues in dependency order; each one engineer session; new files only until F2.
 
 ### Issue H — Guardrails (small)
 1. `adapters/guard_lakera.py` behind `get_guardrail()` (`GUARDRAIL=lakera|none`, `LAKERA_API_KEY`); wired into the criteria save only (flagged → 400 generic, no echo, no log); sends `breakdown: true` and blocks only on `prompt_attack` detectors; contract test against recorded allowed, flagged, moderation-only, error and quota responses.
-2. `guard_v1.md` + schema from NeMo's complex self_check_input prompt plus the two domain lines, source cited in the file header; `self_check.py` runs only on `GuardUnavailable` with `GUARD_FALLBACK=self_check`; criteria fail closed (503) when it also errors; pages skip and count; recorded responses: golden A all allowed, three injections blocked.
+2. `guard_v1.md` + schema from NeMo's complex self_check_input prompt plus the two domain lines, source cited in the file header; `self_check.py` runs only on `GuardUnavailable` with `GUARD_FALLBACK=self_check`; criteria fail closed (503) when it also errors; recorded responses: golden A all allowed, three injections blocked.
 3. Structure layer wired: link allow-list in `extract.py`, markup and control-character stripping; tests with a model response carrying a foreign URL and HTML (the reason check already lives in `judge.py`).
 4. `POST /api/search` limited to `SEARCH_NOW_PER_HOUR` per user with 429 and `Retry-After`; test for the 7th call.
 5. Sentinel tests from §11 pass; `sail_guard_runs_total{guard, target, outcome}` emitted; `.env.example` and `docs/deployment.md` list `GUARDRAIL`, `LAKERA_API_KEY`, `GUARD_FALLBACK`.
@@ -398,7 +398,7 @@ Issues in dependency order; each one engineer session; new files only until F2.
 | Fixture search provider rewritten as golden-set pages, demo seeded with C1 | The dev deployment's demo data changes; README screenshots and e2e expectations move with it (issue I) |
 | Production refuses fixture and fake adapters at first use, not at start-up | A prod deploy with no keys stays healthy and records refused runs every hour; nobody is paged, the queue just stays empty until someone reads a run |
 | `SCORER`/`SCORER_MODEL` removed at the swap, not aliased; new adapters as `_v2` files until then | Render env vars already set with the old names break on the swap deploy; the `_v2` suffix is a rename churn in F2 |
-| Lakera Guard is the only detector; NeMo-style self-check only as its fallback; no rules of our own | The free plan's monthly cap is the real limit: at 10 users every pass-2 page costs one request, so a busy month ends on the fallback, which is one model call that can be fooled |
+| Lakera Guard is the only detector (criteria text only); NeMo-style self-check only as its fallback; no rules of our own | The free plan's monthly cap is the real limit: one request per criteria save; a busy month ends on the fallback, which is one model call that can be fooled |
 | Guard once at save, never per run | A criteria text saved before issue H lands is never guarded; a backfill pass over stored criteria is not planned |
 | "Search now" limited to 6 per user per hour | A user iterating on criteria hits the limit in minutes and must wait; the message says how long |
 | Registration defaults 90/40, existing users untouched | Existing users on 70/30 auto-accept the 70–89 band into their calendar until they move the sliders; only the thresholds page tells them |
