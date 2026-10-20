@@ -91,4 +91,5 @@ services:
 
 networks:
   sail-observability:
+    name: ${SAIL_OBS_NETWORK:-sail-observability}
     external: true

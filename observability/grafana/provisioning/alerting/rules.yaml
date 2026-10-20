@@ -53,8 +53,8 @@ groups:
         for: 5m0s
         labels:
           service: sail-event-backend
-          environment: '{{ $$labels.deployment_environment | default "dev" }}'
-          version: '{{ $$labels.service_version | default "dev" }}'
+          environment: dev
+          version: dev
           severity: critical
           owner: alexisdacquay
         annotations:
@@ -110,8 +110,8 @@ groups:
         for: 10m0s
         labels:
           service: sail-event-backend
-          environment: '{{ $$labels.deployment_environment | default "dev" }}'
-          version: '{{ $$labels.service_version | default "dev" }}'
+          environment: dev
+          version: dev
           severity: critical
           owner: alexisdacquay
         annotations:

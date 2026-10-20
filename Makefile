@@ -57,7 +57,7 @@ else
 endif
 
 observability-network:
-	docker network create sail-observability || true
+	docker network create $${SAIL_OBS_NETWORK:-sail-observability} || true
 
 observability-up: observability-network
 	# Requires: export RESPONDER_WEBHOOK_SECRET=<value>

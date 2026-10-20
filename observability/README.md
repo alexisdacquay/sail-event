@@ -16,31 +16,101 @@ Two provisioned alert rules evaluate every minute against the Prometheus datasou
 
 Alerts with `severity=critical` route to the **responder-webhook** contact point, which POSTs to `$RESPONDER_WEBHOOK_URL` (default `http://host.docker.internal:8001/alerts`).
 
-### Testing with a throwaway listener
+### Fire the alert locally (copy-paste block)
+
+Everything runs in one terminal. The overlay file connects the app to the
+collector network so metrics reach Prometheus.
 
 ```bash
-# terminal 1 — tiny POST listener
-python3 -c "
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import json, sys
+# 1. Start the observability stack + the app with an invalid search provider.
+#    SEARCH_NOW_PER_HOUR=1000 disables the per-user rate limit so every
+#    request reaches the pipeline (default is 6/hour).
+make up-all
+SEARCH_PROVIDER=unknown SEARCH_NOW_PER_HOUR=1000 \
+  docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build -d --wait
 
-class H(BaseHTTPRequestHandler):
-    def do_POST(self):
-        body = self.rfile.read(int(self.headers['Content-Length']))
-        print(json.dumps(json.loads(body), indent=2), flush=True)
-        self.send_response(200)
-        self.end_headers()
+# 2. Get a token (demo user is seeded automatically)
+B=http://localhost:${HOST_PORT:-8000}
+T=$(curl -s -X POST $B/api/auth/login -H 'Content-Type: application/json' \
+  -d '{"username":"demo","password":"demo"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
 
-HTTPServer(('', 8001), H).serve_forever()
-"
+# 3. Send failing searches every 30 s until the rule fires (~7-8 min:
+#    ~60 s for the first metric export, then the rule must evaluate true
+#    for 5 consecutive minutes, evaluated every 60 s).
+while true; do
+  curl -s -X POST $B/api/search -H "Authorization: Bearer $T" | head -1
+  STATE=$(curl -s http://localhost:${GRAFANA_PORT:-3001}/api/prometheus/grafana/api/v1/rules \
+    | grep -o '"state":"[a-z]*"' | head -1)
+  echo "  SearchRunFailures $STATE"
+  [ "$STATE" = '"state":"firing"' ] && break
+  sleep 30
+done
 
-# terminal 2 — trigger failures
-SEARCH_PROVIDER=unknown HOST_PORT=8010 docker compose up --build -d --wait
-curl -s -X POST http://localhost:8010/api/search | head
-# wait ~1 min, send a second request
-curl -s -X POST http://localhost:8010/api/search | head
-# wait 5-6 minutes, then check
-curl -s http://localhost:3001/api/alertmanager/grafana/api/v2/alerts | python3 -m json.tool
+# 4. Check the alert
+curl -s http://localhost:${GRAFANA_PORT:-3001}/api/alertmanager/grafana/api/v2/alerts | python3 -m json.tool
+```
+
+Expected output (abridged): an array with one object whose
+`labels.alertname` is `SearchRunFailures` and `status.state` is `active`.
+
+```json
+[
+  {
+    "labels": {
+      "alertname": "SearchRunFailures",
+      "severity": "critical",
+      "service": "sail-event-backend"
+    },
+    "status": { "state": "active" }
+  }
+]
+```
+
+## Trace-id correlation proof
+
+After at least one successful search run (`SEARCH_PROVIDER=fixture`), the
+trace id appears in both Loki (structured log) and Tempo (distributed trace).
+
+```bash
+# 1. Find a trace id in the logs (Loki)
+#    trace_id is a stream label set by the OTel log exporter
+curl -sG http://localhost:${LOKI_PORT:-3100}/loki/api/v1/query_range \
+  --data-urlencode 'query={service_name="sail-event-backend"} |= "search run completed"' \
+  --data-urlencode 'limit=1' | python3 -c '
+import sys, json
+r = json.load(sys.stdin)
+stream = r["data"]["result"][0]["stream"]
+print("trace_id:", stream["trace_id"])
+'
+
+# 2. Fetch that trace from Tempo
+TRACE_ID=<paste the trace_id from step 1>
+curl -s http://localhost:${TEMPO_PORT:-3200}/api/traces/$TRACE_ID | python3 -c '
+import sys, json; d = json.load(sys.stdin)
+for b in d["batches"]:
+  for s in b["scopeSpans"]:
+    for sp in s["spans"]:
+      print(sp["name"])
+'
+```
+
+Expected: the Loki query returns a log line with a non-zero `trace_id`, and
+the Tempo query returns the same trace with spans including `search_run`,
+`search`, `extract`, `filter`, `persist`. Runs that find new events also
+show `judge` and `triage` spans.
+
+## `otel-collector` hostname collision
+
+Both compose files (`observability/docker-compose.yml` and the app overlay)
+place services on the shared `sail-observability` network. The collector's
+hostname is `otel-collector` in that network. If you run a second
+observability stack on the same Docker network (e.g. for another project),
+the hostname will collide. Override with `SAIL_OBS_NETWORK` to use a
+separate network per project:
+
+```bash
+SAIL_OBS_NETWORK=my-project-obs docker network create my-project-obs
+SAIL_OBS_NETWORK=my-project-obs make up-all
 ```
 
 ### Linux caveat
