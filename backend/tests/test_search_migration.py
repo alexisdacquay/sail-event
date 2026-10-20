@@ -100,10 +100,11 @@ def test_migration_up_down_up_sqlite():
             "DATABASE_URL": f"sqlite:///{db_path}",
         }
         import subprocess
+        backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         base_cmd = [
             "uv", "run",
-            "--project", "/Users/ad/code/ProjectOne/backend",
-            "--directory", "/Users/ad/code/ProjectOne/backend",
+            "--project", backend_dir,
+            "--directory", backend_dir,
             "alembic",
         ]
 
