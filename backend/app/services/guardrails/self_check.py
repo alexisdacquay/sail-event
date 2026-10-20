@@ -1,4 +1,4 @@
-"""Self-check fallback guardrail — NeMo-style self_check_input on the LLM.
+"""Self-check fallback guardrail — single prompt-injection question on the LLM.
 
 Runs only when Lakera is unavailable (GuardUnavailable) and GUARD_FALLBACK=self_check.
 """
@@ -12,11 +12,11 @@ from ...adapters.guard_lakera import ContentFlagged, GuardUnavailable
 logger = logging.getLogger(__name__)
 
 PROMPT_NAME = "guard"
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 
 
 class SelfCheckGuardrail:
-    """Fallback: one LLM call with the NeMo self_check_input prompt."""
+    """Fallback: one LLM call with the guard_v2 prompt-injection check."""
 
     def __init__(self, model) -> None:
         self._model = model

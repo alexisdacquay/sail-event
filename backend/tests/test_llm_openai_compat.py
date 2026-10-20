@@ -52,7 +52,7 @@ class TestRequestBody:
         with patch("app.adapters.llm_openai_compat.urllib.request.urlopen", fake_urlopen):
             model.complete_json(
                 prompt_name="guard",
-                prompt_version="v1",
+                prompt_version="v2",
                 variables={"text": "jazz in Berlin"},
                 schema={"type": "object"},
             )
@@ -80,7 +80,7 @@ class TestRequestBody:
         with patch("app.adapters.llm_openai_compat.urllib.request.urlopen", fake_urlopen):
             model.complete_json(
                 prompt_name="guard",
-                prompt_version="v1",
+                prompt_version="v2",
                 variables={"text": "test"},
                 schema={"type": "object", "properties": {"blocked": {"type": "boolean"}}},
             )
@@ -103,12 +103,12 @@ class TestRequestBody:
                 captured.update(body)
                 return _make_response("chat_completions_ok.json")
 
-            # Create a minimal prompt file if needed — guard_v1 is all we have
+            # guard prompt uses v2
             if name == "guard":
                 with patch("app.adapters.llm_openai_compat.urllib.request.urlopen", fake_urlopen):
                     model.complete_json(
                         prompt_name="guard",
-                        prompt_version="v1",
+                        prompt_version="v2",
                         variables={"text": "test"},
                         schema={"type": "object"},
                     )
@@ -125,7 +125,7 @@ class TestRequestBody:
         with patch("app.adapters.llm_openai_compat.urllib.request.urlopen", fake_urlopen):
             model.complete_json(
                 prompt_name="guard",
-                prompt_version="v1",
+                prompt_version="v2",
                 variables={"text": "test"},
                 schema={"type": "object"},
             )
@@ -151,7 +151,7 @@ class TestEmptyContentRetry:
             with patch("app.adapters.llm_openai_compat.time.sleep"):
                 result, usage = model.complete_json(
                     prompt_name="guard",
-                    prompt_version="v1",
+                    prompt_version="v2",
                     variables={"text": "test"},
                     schema={"type": "object"},
                 )
@@ -170,7 +170,7 @@ class TestEmptyContentRetry:
                 with pytest.raises(RuntimeError, match="empty content after retry"):
                     model.complete_json(
                         prompt_name="guard",
-                        prompt_version="v1",
+                        prompt_version="v2",
                         variables={"text": "test"},
                         schema={"type": "object"},
                     )
@@ -196,7 +196,7 @@ class TestRetry429:
             with patch("app.adapters.llm_openai_compat.time.sleep") as mock_sleep:
                 result, usage = model.complete_json(
                     prompt_name="guard",
-                    prompt_version="v1",
+                    prompt_version="v2",
                     variables={"text": "test"},
                     schema={"type": "object"},
                 )
@@ -218,7 +218,7 @@ class TestRetry429:
                 with pytest.raises(RuntimeError, match="HTTP 429"):
                     model.complete_json(
                         prompt_name="guard",
-                        prompt_version="v1",
+                        prompt_version="v2",
                         variables={"text": "test"},
                         schema={"type": "object"},
                     )
@@ -240,7 +240,7 @@ class TestRetry429:
             with patch("app.adapters.llm_openai_compat.time.sleep"):
                 result, _ = model.complete_json(
                     prompt_name="guard",
-                    prompt_version="v1",
+                    prompt_version="v2",
                     variables={"text": "test"},
                     schema={"type": "object"},
                 )
@@ -259,7 +259,7 @@ class TestRetry429:
             with pytest.raises(RuntimeError, match="HTTP 400"):
                 model.complete_json(
                     prompt_name="guard",
-                    prompt_version="v1",
+                    prompt_version="v2",
                     variables={"text": "test"},
                     schema={"type": "object"},
                 )
@@ -268,7 +268,7 @@ class TestRetry429:
 class TestSchemaValidation:
     """Every response validated against the prompt's JSON schema (design §3)."""
 
-    # Use the real guard_v1.schema.json: {blocked: bool, reason: enum} required, no additionalProperties
+    # Use the real guard_v2.schema.json: {blocked: bool, reason: enum} required, no additionalProperties
 
     def test_malformed_json_raises_with_prompt_name(self):
         model = _make_model()
@@ -280,7 +280,7 @@ class TestSchemaValidation:
             with pytest.raises(RuntimeError, match="guard: schema violation: malformed JSON"):
                 model.complete_json(
                     prompt_name="guard",
-                    prompt_version="v1",
+                    prompt_version="v2",
                     variables={"text": "test"},
                 )
 
@@ -294,7 +294,7 @@ class TestSchemaValidation:
             with pytest.raises(RuntimeError, match=r"guard: schema violation: missing required field 'reason'"):
                 model.complete_json(
                     prompt_name="guard",
-                    prompt_version="v1",
+                    prompt_version="v2",
                     variables={"text": "test"},
                 )
 
@@ -319,7 +319,7 @@ class TestSchemaValidation:
         with patch("app.adapters.llm_openai_compat.urllib.request.urlopen", fake_urlopen):
             result, usage = model.complete_json(
                 prompt_name="guard",
-                prompt_version="v1",
+                prompt_version="v2",
                 variables={"text": "test"},
             )
 
@@ -338,7 +338,7 @@ class TestUsage:
         with patch("app.adapters.llm_openai_compat.urllib.request.urlopen", fake_urlopen):
             _, usage = model.complete_json(
                 prompt_name="guard",
-                prompt_version="v1",
+                prompt_version="v2",
                 variables={"text": "test"},
                 schema={"type": "object"},
             )
@@ -364,7 +364,7 @@ class TestUsage:
         with patch("app.adapters.llm_openai_compat.urllib.request.urlopen", fake_urlopen):
             _, usage = model.complete_json(
                 prompt_name="guard",
-                prompt_version="v1",
+                prompt_version="v2",
                 variables={"text": "test"},
                 schema={"type": "object"},
             )

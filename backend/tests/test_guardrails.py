@@ -105,13 +105,34 @@ class TestLakeraAdapter:
             with pytest.raises(GuardUnavailable, match="HTTP 500"):
                 g.check("anything")
 
-    def test_quota_429(self, monkeypatch):
+    def test_429_retry_then_ok(self, monkeypatch):
+        """#81: 429 → sleep 1 s → retry → 200 allowed."""
+        monkeypatch.setenv("LAKERA_API_KEY", "test-key")
+        g = LakeraGuardrail()
+        calls = [0]
+
+        def _side_effect(*a, **kw):
+            calls[0] += 1
+            if calls[0] == 1:
+                return _mock_urlopen_error(429)
+            return _mock_urlopen_ok("allowed")
+
+        with patch("app.adapters.guard_lakera.urllib.request.urlopen", side_effect=_side_effect), \
+             patch("app.adapters.guard_lakera.time.sleep") as mock_sleep:
+            g.check("jazz in Berlin")
+            mock_sleep.assert_called_once_with(1)
+        assert calls[0] == 2
+
+    def test_429_retry_then_429(self, monkeypatch):
+        """#81: 429 → sleep 1 s → 429 again → GuardUnavailable."""
         monkeypatch.setenv("LAKERA_API_KEY", "test-key")
         g = LakeraGuardrail()
         with patch("app.adapters.guard_lakera.urllib.request.urlopen",
-                    side_effect=lambda *a, **kw: _mock_urlopen_error(429)):
-            with pytest.raises(GuardUnavailable, match="quota"):
+                    side_effect=lambda *a, **kw: _mock_urlopen_error(429)), \
+             patch("app.adapters.guard_lakera.time.sleep") as mock_sleep:
+            with pytest.raises(GuardUnavailable, match="after retry"):
                 g.check("anything")
+            mock_sleep.assert_called_once_with(1)
 
     def test_missing_key_raises_guard_unavailable(self, monkeypatch):
         """#65: missing LAKERA_API_KEY → GuardUnavailable at check(), not KeyError at init."""
@@ -204,6 +225,21 @@ class TestSelfCheck:
             "something fun in Lisbon this weekend",
         ]
         for text in golden_a:
+            sc.check(text)  # should not raise
+
+    def test_recorded_benign_allowed(self):
+        """#81: off-topic, terse, emoji-only texts must not be blocked."""
+        from app.adapters.llm_fake import FakeLanguageModel
+        model = FakeLanguageModel()
+        sc = SelfCheckGuardrail(model)
+
+        benign = [
+            "buy a bike",
+            "\U0001f3b7\U0001f3b6\U0001f3ba",
+            "...",
+            "something fun this weekend",
+        ]
+        for text in benign:
             sc.check(text)  # should not raise
 
     def test_recorded_injections_blocked(self):
@@ -457,14 +493,14 @@ class TestSentinel:
 
 
 # ---------------------------------------------------------------------------
-# AC5: guard_v1.md ends with json
+# AC5: guard_v2.md ends with json
 # ---------------------------------------------------------------------------
 
 class TestGuardPromptFormat:
 
-    def test_guard_v1_ends_with_json(self):
+    def test_guard_v2_ends_with_json(self):
         from pathlib import Path
-        md_path = Path(__file__).parent.parent / "app" / "adapters" / "prompts" / "guard_v1.md"
+        md_path = Path(__file__).parent.parent / "app" / "adapters" / "prompts" / "guard_v2.md"
         text = md_path.read_text()
         assert "json" in text.lower().split("\n")[-1] or "json" in text.lower().split("\n")[-2]
 

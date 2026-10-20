@@ -14,14 +14,14 @@ _PROMPTS_DIR = Path(__file__).parent.parent / "app" / "adapters" / "prompts"
 
 class TestLoader:
     def test_renders_variables(self):
-        rendered, schema = load_prompt("guard", "v1", {"text": "hello"})
+        rendered, schema = load_prompt("guard", "v2", {"text": "hello"})
         assert "hello" in rendered
         assert "<<<" in rendered
         assert schema["type"] == "object"
 
     def test_missing_variable_raises(self):
         with pytest.raises(KeyError):
-            load_prompt("guard", "v1", {})
+            load_prompt("guard", "v2", {})
 
     def test_missing_file_raises(self):
         with pytest.raises(FileNotFoundError):
@@ -29,18 +29,14 @@ class TestLoader:
 
 
 class TestPromptConventions:
-    """Every prompts/*_v2.md and guard_v1.md ends with its schema and 'json'."""
+    """Every prompts/*_v2.md ends with its schema and 'json'."""
 
     def _prompt_files(self):
-        files = list(_PROMPTS_DIR.glob("*_v2.md"))
-        guard = _PROMPTS_DIR / "guard_v1.md"
-        if guard.exists():
-            files.append(guard)
-        return files
+        return list(_PROMPTS_DIR.glob("*_v2.md"))
 
     def test_all_prompts_end_with_json(self):
         files = self._prompt_files()
-        assert len(files) >= 1, "Expected at least guard_v1.md"
+        assert len(files) >= 1, "Expected at least one *_v2.md prompt"
         for path in files:
             content = path.read_text()
             # Last non-empty line must contain "json"
@@ -54,7 +50,7 @@ class TestPromptConventions:
     def test_all_prompts_have_schema_file(self):
         files = self._prompt_files()
         for path in files:
-            stem = path.stem  # e.g. guard_v1
+            stem = path.stem  # e.g. guard_v2
             schema_path = path.with_suffix(".schema.json")
             assert schema_path.exists(), f"Missing schema: {schema_path.name}"
             schema = json.loads(schema_path.read_text())
@@ -74,7 +70,7 @@ _GUARD_SCHEMA = {
     "type": "object",
     "properties": {
         "blocked": {"type": "boolean"},
-        "reason": {"type": "string", "enum": ["injection", "harmful", "off_topic", "ok"]},
+        "reason": {"type": "string", "enum": ["injection", "ok"]},
     },
     "required": ["blocked", "reason"],
     "additionalProperties": False,

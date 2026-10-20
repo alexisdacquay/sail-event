@@ -1,6 +1,0 @@
-{
-  "response": {"blocked": false, "reason": "ok"},
-  "usage": {"prompt_tokens": 180, "completion_tokens": 12},
-  "recorded_at": "2026-10-18T12:00:00+02:00",
-  "model": "deepseek-flash"
-}
