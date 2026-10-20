@@ -105,6 +105,14 @@ describe('MainPage criteria card', () => {
       expect(screen.getByText('Saved.')).toBeInTheDocument()
     })
   })
+
+  it('shows UTC notice when user timeZone is UTC', async () => {
+    renderMainPage()
+    const notice = await screen.findByTestId('utc-notice')
+    expect(notice).toHaveTextContent(
+      'Times shown in UTC until you save your criteria.',
+    )
+  })
 })
 
 describe('MainPage scoring card', () => {
@@ -128,6 +136,15 @@ describe('MainPage scoring card', () => {
     expect(screen.getByText('Below 30: rejected.')).toBeInTheDocument()
     expect(screen.getByText('Above 70: accepted.')).toBeInTheDocument()
   })
+
+  it('shows band meaning explanation', async () => {
+    renderMainPage()
+    await screen.findByRole('spinbutton', { name: 'Auto-reject below' })
+    expect(
+      screen.getByText(/Recommended thresholds: 90 \/ 40/),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/90\+ fits/)).toBeInTheDocument()
+  })
 })
 
 describe('MainPage search card', () => {
@@ -143,16 +160,70 @@ describe('MainPage search card', () => {
     ).toBeInTheDocument()
   })
 
-  it('calls onSearchComplete and shows review button', async () => {
+  it('calls onSearchComplete and shows run report', async () => {
     const onSearchComplete = vi.fn().mockResolvedValue(5)
     renderMainPage(onSearchComplete)
     await screen.findByLabelText("What I'm looking for")
 
     fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
     const result = await screen.findByTestId('search-result')
-    expect(result).toHaveTextContent('Found 12 events, 4 new.')
+    // Run report includes the pipeline line
+    expect(result).toHaveTextContent(/6 queries → 31 results/)
+    expect(result).toHaveTextContent(/2 accepted, 3 queued, 2 rejected/)
     expect(screen.getByRole('button', { name: /Review 5 events/ })).toBeInTheDocument()
     expect(onSearchComplete).toHaveBeenCalled()
+  })
+
+  it('shows filter details in run report', async () => {
+    const onSearchComplete = vi.fn().mockResolvedValue(0)
+    renderMainPage(onSearchComplete)
+    await screen.findByLabelText("What I'm looking for")
+
+    fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
+    const result = await screen.findByTestId('search-result')
+    expect(result).toHaveTextContent(/Filtered:/)
+    expect(result).toHaveTextContent(/2 past/)
+  })
+
+  it('shows 429 rate-limit message with minutes from Retry-After', async () => {
+    const { runSearch: _orig } = await import('@/services/api')
+    const api = await import('@/services/api')
+    const err = new Error('Too many requests') as Error & { status: number; retryAfter: number }
+    err.status = 429
+    err.retryAfter = 300 // 5 minutes
+    vi.spyOn(api, 'runSearch').mockRejectedValueOnce(err)
+
+    renderMainPage()
+    await screen.findByLabelText("What I'm looking for")
+
+    fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
+    const result = await screen.findByTestId('search-result')
+    expect(result).toHaveTextContent('Search limit reached, try again in 5 minutes')
+    vi.restoreAllMocks()
+  })
+
+  it('shows stopped-at stage and error in run report', async () => {
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'runSearch').mockResolvedValueOnce({
+      runId: 'run-stop',
+      eventsFound: 0,
+      eventsNew: 0,
+      stageCounts: {
+        queries_planned: 2,
+        results_fetched: 0,
+      },
+      stoppedAtStage: 'search',
+      error: 'budget: search',
+    })
+
+    const onSearchComplete = vi.fn().mockResolvedValue(0)
+    renderMainPage(onSearchComplete)
+    await screen.findByLabelText("What I'm looking for")
+
+    fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
+    const result = await screen.findByTestId('search-result')
+    expect(result).toHaveTextContent('Stopped at search: budget: search.')
+    vi.restoreAllMocks()
   })
 })
 
@@ -163,9 +234,15 @@ describe('MainPage right column', () => {
         id: 'q1',
         title: 'Queued Event 1',
         dateTime: '2026-07-15T20:00:00Z',
-        place: 'London',
+        place: 'Venue',
         link: 'https://example.com/q1',
         description: '',
+        startTz: 'Europe/London',
+        endTime: null,
+        city: 'London',
+        country: 'GB',
+        sourceUrl: null,
+        band: 'open question',
         score: 55,
         scoreReason: 'moderate',
         status: 'queued',

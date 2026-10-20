@@ -13,9 +13,16 @@ const INITIAL_EVENTS: Event[] = [
     id: 'evt-1',
     title: 'React London Meetup',
     dateTime: '2026-07-10T18:30:00Z',
-    place: 'WeWork Moorgate, London',
+    place: 'WeWork Moorgate',
     link: 'https://meetup.com/react-london/july-2026',
     description: 'Monthly React meetup with talks on server components and signals.',
+    startTz: 'Europe/London',
+    endTime: null,
+    city: 'London',
+    country: 'GB',
+
+    sourceUrl: 'https://meetup.com/react-london/july-2026',
+    band: 'mostly fits',
     score: 82,
     scoreReason: 'Strong match: tech meetup, aligns with frontend interest.',
     status: 'accepted',
@@ -24,12 +31,19 @@ const INITIAL_EVENTS: Event[] = [
   {
     id: 'evt-2',
     title: 'Jazz in the Park',
-    dateTime: '2026-07-15T20:00:00Z',
-    place: 'Hyde Park, London',
+    dateTime: '2026-07-15T19:00:00Z',
+    place: 'Hyde Park',
     link: 'https://jazzpark.co.uk/summer-2026',
     description: 'Open-air jazz concert featuring international artists.',
+    startTz: 'Europe/London',
+    endTime: null,
+    city: 'London',
+    country: 'GB',
+
+    sourceUrl: 'https://jazzpark.co.uk/summer-2026',
+    band: 'open question',
     score: 45,
-    scoreReason: 'Moderate match: entertainment, but not a tech or professional event.',
+    scoreReason: 'Entertainment event, but not a tech or professional event.',
     status: 'queued',
     decidedBy: null,
   },
@@ -37,11 +51,18 @@ const INITIAL_EVENTS: Event[] = [
     id: 'evt-3',
     title: 'AWS re:Invent Watch Party',
     dateTime: '2026-12-02T09:00:00Z',
-    place: 'TechHub Manchester',
+    place: 'TechHub',
     link: 'https://techhub.com/reinvent-watch-2026',
     description: 'Live stream of AWS re:Invent keynotes with local networking.',
+    startTz: 'Europe/London',
+    endTime: null,
+    city: 'Manchester',
+    country: 'GB',
+
+    sourceUrl: 'https://techhub.com/reinvent-watch-2026',
+    band: 'mostly fits',
     score: 75,
-    scoreReason: 'Good match: cloud computing event, professional networking.',
+    scoreReason: 'Cloud computing event with professional networking.',
     status: 'queued',
     decidedBy: null,
   },
@@ -49,11 +70,18 @@ const INITIAL_EVENTS: Event[] = [
     id: 'evt-4',
     title: 'Pottery Workshop for Beginners',
     dateTime: '2026-08-20T14:00:00Z',
-    place: 'Clay Studio, Brighton',
+    place: 'Clay Studio',
     link: 'https://claystudio.co.uk/workshops/beginner',
     description: 'Hands-on pottery session, no experience needed.',
+    startTz: 'Europe/London',
+    endTime: null,
+    city: 'Brighton',
+    country: 'GB',
+
+    sourceUrl: 'https://claystudio.co.uk/workshops/beginner',
+    band: 'off topic',
     score: 12,
-    scoreReason: 'Low relevance: arts and crafts, no professional or tech angle.',
+    scoreReason: 'Arts and crafts, no professional or tech angle.',
     status: 'rejected',
     decidedBy: 'auto',
   },
@@ -61,11 +89,18 @@ const INITIAL_EVENTS: Event[] = [
     id: 'evt-5',
     title: 'TypeScript Conference 2026',
     dateTime: '2026-09-18T09:00:00Z',
-    place: 'QEII Centre, London',
+    place: 'QEII Centre',
     link: 'https://tsconf.eu/2026',
     description: 'Two-day conference on TypeScript, type systems, and tooling.',
+    startTz: 'Europe/London',
+    endTime: null,
+    city: 'London',
+    country: 'GB',
+
+    sourceUrl: 'https://tsconf.eu/2026',
+    band: 'fits',
     score: 91,
-    scoreReason: 'Excellent match: core technology conference.',
+    scoreReason: 'Core technology conference, excellent match.',
     status: 'new',
     decidedBy: null,
   },
@@ -81,6 +116,7 @@ export function _resetMockEvents() {
 let mockCriteria: Criteria = {
   text: 'sailing regattas in the Mediterranean, July 2026',
   updatedAt: '2026-01-15T10:00:00Z',
+  timeZone: 'UTC',
 }
 
 let mockThresholds: Thresholds = {
@@ -111,8 +147,8 @@ export async function getCriteria(): Promise<Criteria> {
   return { ...mockCriteria }
 }
 
-export async function saveCriteria(text: string): Promise<Criteria> {
-  mockCriteria = { text, updatedAt: new Date().toISOString() }
+export async function saveCriteria(text: string, timeZone?: string): Promise<Criteria> {
+  mockCriteria = { text, updatedAt: new Date().toISOString(), timeZone: timeZone || mockCriteria.timeZone }
   return { ...mockCriteria }
 }
 
@@ -128,7 +164,25 @@ export async function saveThresholds(
 }
 
 export async function runSearch(): Promise<SearchResult> {
-  return { runId: 'run-001', eventsFound: 12, eventsNew: 4 }
+  return {
+    runId: 'run-001',
+    eventsFound: 12,
+    eventsNew: 4,
+    stageCounts: {
+      queries_planned: 6,
+      results_fetched: 31,
+      events_extracted: 12,
+      filtered_past: 2,
+      filtered_place: 1,
+      filtered_non_event: 2,
+      events_judged: 7,
+      accepted: 2,
+      queued: 3,
+      rejected: 2,
+    },
+    stoppedAtStage: null,
+    error: null,
+  }
 }
 
 export async function listEvents(status?: EventStatus): Promise<Event[]> {

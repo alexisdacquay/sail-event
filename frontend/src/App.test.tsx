@@ -161,7 +161,8 @@ describe('Search', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Search now' })).toBeEnabled())
     fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
     const result = await screen.findByTestId('search-result')
-    expect(result).toHaveTextContent('Found 12 events, 4 new.')
+    // Mock returns stageCounts, so we see the pipeline report line
+    expect(result).toHaveTextContent(/6 queries → 31 results/)
     // Mock has 2 queued events — review button should appear
     expect(screen.getByRole('button', { name: /Review 2 events/ })).toBeInTheDocument()
   })

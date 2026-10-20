@@ -7,9 +7,15 @@ const event: Event = {
   id: 'evt-test',
   title: 'Test Conference 2026',
   dateTime: '2026-09-18T09:00:00Z',
-  place: 'QEII Centre, London',
+  place: 'QEII Centre',
   link: 'https://example.com/conf',
   description: 'A test event description.',
+  startTz: 'Europe/London',
+  endTime: null,
+  city: 'London',
+  country: 'GB',
+  sourceUrl: 'https://example.com/conf',
+  band: 'mostly fits',
   score: 85,
   scoreReason: 'Strong match: test event.',
   status: 'queued',
@@ -21,11 +27,46 @@ describe('EventCard', () => {
     render(<EventCard event={event} variant="queue" />)
 
     expect(screen.getByText('Test Conference 2026')).toBeInTheDocument()
-    expect(screen.getByText('QEII Centre, London')).toBeInTheDocument()
+    expect(screen.getByText(/QEII Centre/)).toBeInTheDocument()
     expect(screen.getByText('https://example.com/conf')).toBeInTheDocument()
     expect(screen.getByText(/Score 85%/)).toBeInTheDocument()
+    expect(screen.getByText(/mostly fits/)).toBeInTheDocument()
     expect(screen.getByText(/Strong match: test event\./)).toBeInTheDocument()
     expect(screen.getByTestId('event-datetime')).toBeInTheDocument()
+  })
+
+  it('renders score with band word', () => {
+    render(<EventCard event={event} variant="queue" />)
+    const scoreEl = screen.getByText(/Score 85%/)
+    // The band word appears as a sibling span in the same <p>
+    expect(scoreEl.closest('p')!.textContent).toContain('· mostly fits')
+  })
+
+  it('renders where as venue, city, country', () => {
+    render(<EventCard event={event} variant="queue" />)
+    expect(screen.getByText('QEII Centre, London, GB')).toBeInTheDocument()
+  })
+
+  it('renders place unknown for ZZ country', () => {
+    const zz = { ...event, country: 'ZZ', city: '', place: '' }
+    render(<EventCard event={zz} variant="queue" />)
+    expect(screen.getByText('place unknown')).toBeInTheDocument()
+  })
+
+  it('renders date only when no T in dateTime', () => {
+    const dateOnly = { ...event, dateTime: '2026-10-20', startTz: null }
+    render(<EventCard event={dateOnly} variant="queue" />)
+    const dt = screen.getByTestId('event-datetime')
+    // Should contain a date but no time (HH:MM)
+    expect(dt.textContent).toMatch(/Oct 2026/)
+    expect(dt.textContent).not.toMatch(/\d{2}:\d{2}/)
+  })
+
+  it('shows local time label when startTz is null', () => {
+    const noTz = { ...event, startTz: null }
+    render(<EventCard event={noTz} variant="queue" />)
+    const dt = screen.getByTestId('event-datetime')
+    expect(dt.textContent).toContain('(local time)')
   })
 
   it('queue variant renders reason before the title in DOM order', () => {
@@ -132,7 +173,7 @@ describe('EventCard', () => {
   it('datetime includes timezone', () => {
     render(<EventCard event={event} variant="queue" />)
     const dt = screen.getByTestId('event-datetime')
-    // Should end with the browser's zone in parentheses: (America/New_York) locally, (UTC) on CI
-    expect(dt.textContent).toMatch(/\([A-Za-z_]+(\/[A-Za-z_]+)*\)$/)
+    // Should contain the event tz in parentheses
+    expect(dt.textContent).toMatch(/\(Europe\/London\)/)
   })
 })

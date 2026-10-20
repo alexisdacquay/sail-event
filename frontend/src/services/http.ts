@@ -41,8 +41,12 @@ async function request<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: res.statusText }))
-    const err = new Error(body.detail ?? res.statusText) as Error & { status: number }
+    const err = new Error(body.detail ?? res.statusText) as Error & { status: number; retryAfter?: number }
     err.status = res.status
+    if (res.status === 429) {
+      const ra = res.headers.get('Retry-After')
+      if (ra) err.retryAfter = parseInt(ra, 10)
+    }
     throw err
   }
 
@@ -80,10 +84,10 @@ export async function getCriteria(): Promise<Criteria> {
   return request<Criteria>('/api/criteria')
 }
 
-export async function saveCriteria(text: string): Promise<Criteria> {
+export async function saveCriteria(text: string, timeZone?: string): Promise<Criteria> {
   return request<Criteria>('/api/criteria', {
     method: 'PUT',
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, timeZone }),
   })
 }
 
