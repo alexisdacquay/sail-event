@@ -309,7 +309,7 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
             aria-busy={searching ? true : undefined}
             onClick={handleSearch}
           >
-            {searching ? 'Searching…' : 'Search now'}
+            {searching ? 'Searching… (one to two minutes)' : 'Search now'}
           </Button>
           {searchReport && (
             <div data-testid="search-result" role="status" className="text-sm animate-in fade-in-0 slide-in-from-top-1 duration-200">

@@ -59,7 +59,7 @@ Needs Docker. One command starts the app and its Postgres:
 docker compose up --build
 ```
 
-Open <http://localhost:8000>, log in as **demo / demo**, press **Search now**, then open **To review**. Locally the search provider and the model are fixtures with recorded responses, so results are canned and scores are deterministic: no API keys needed. Port 8000 already taken? `HOST_PORT=8010 docker compose up --build` and open <http://localhost:8010>.
+Open <http://localhost:8000>, log in as **demo / demo**, press **Search now**, then open **To review**. Locally the search provider and the model are fixtures with recorded responses, so results are canned and scores are deterministic: no API keys needed. On the live site a search takes one to two minutes (real web search, then a model call per page and per event); the button shows the progress. Port 8000 already taken? `HOST_PORT=8010 docker compose up --build` and open <http://localhost:8010>.
 
 <details>
 <summary>Same journey with curl (no browser)</summary>
@@ -68,8 +68,9 @@ Open <http://localhost:8000>, log in as **demo / demo**, press **Search now**, t
 B=http://localhost:8000
 curl -s -X POST $B/api/auth/register -H 'Content-Type: application/json' -d '{"username":"me","password":"secret1"}'
 T=$(curl -s -X POST $B/api/auth/login -H 'Content-Type: application/json' -d '{"username":"me","password":"secret1"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
-curl -s -X PUT $B/api/criteria -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"text":"jazz or folk concerts near Paris on weekends"}'
-curl -s -X POST $B/api/search -H "Authorization: Bearer $T"
+# locally the model is a recorder: use this exact text, it is the one with recorded answers
+curl -s -X PUT $B/api/criteria -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"text":"jazz in Berlin (Germany) next week (19-21st October 2026)"}'
+curl -s -X POST $B/api/search -H "Authorization: Bearer $T"                   # seconds locally; 1-2 minutes on the live site (real search + model)
 curl -s "$B/api/events?status=queued" -H "Authorization: Bearer $T"          # the queue
 ID=$(curl -s "$B/api/events?status=queued" -H "Authorization: Bearer $T" | python3 -c 'import sys,json;print(json.load(sys.stdin)[0]["id"])')
 curl -s -X POST $B/api/events/$ID/decision -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"decision":"accepted"}'
