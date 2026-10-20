@@ -191,7 +191,33 @@ Grafana is at <http://localhost:3001> (no login), dashboard "Sail-event, Search 
 
 ![grafana](docs/images/05-grafana.png)
 
-Two alerts fire on user impact, not CPU: **SearchRunFailures** (two or more runs failed in ten minutes) and **SearchRunsSilent** (no run at all in two hours). They hit a webhook that wakes an on-call agent:
+Every search run carries a trace id through logs and traces. Prove the correlation after a successful search:
+
+```bash
+# Loki: find the trace_id in a "search run completed" log line
+curl -sG http://localhost:${LOKI_PORT:-3100}/loki/api/v1/query_range \
+  --data-urlencode 'query={service_name="sail-event-backend"} |= "search run completed"' \
+  --data-urlencode 'limit=1' | python3 -c '
+import sys, json
+r = json.load(sys.stdin)
+stream = r["data"]["result"][0]["stream"]
+print("trace_id:", stream["trace_id"])
+'
+
+# Tempo: fetch the same trace
+TRACE_ID=<paste the trace_id from above>
+curl -s http://localhost:${TEMPO_PORT:-3200}/api/traces/$TRACE_ID | python3 -c '
+import sys, json; d = json.load(sys.stdin)
+for b in d["batches"]:
+  for s in b["scopeSpans"]:
+    for sp in s["spans"]:
+      print(sp["name"])
+'
+```
+
+The Loki query returns a log line with a `trace_id`; the Tempo query returns the full trace with spans `search_run`, `search`, `extract`, `filter`, `persist`, `judge`, `triage`. See [observability/README.md](observability/README.md#trace-id-correlation-proof) for detail.
+
+Two alerts fire on user impact, not CPU: **SearchRunFailures** (two or more runs failed in ten minutes) and **SearchRunsSilent** (no run at all in two hours). [Fire the alert locally](observability/README.md#fire-the-alert-locally-copy-paste-block) to see it in action. They hit a webhook that wakes an on-call agent:
 
 ```
   Grafana alert ──▶ responder (port 8001) ──▶ collect evidence (error-run metric, error logs, health, git log)

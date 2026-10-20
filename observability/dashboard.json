@@ -105,6 +105,20 @@
           "refId": "A"
         }
       ]
+    },
+    {
+      "id": 6,
+      "title": "Search run traces",
+      "type": "traces",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 26 },
+      "datasource": { "uid": "tempo" },
+      "targets": [
+        {
+          "queryType": "traceqlSearch",
+          "query": "{ resource.service.name = \"sail-event-backend\" && name = \"search_run\" }",
+          "refId": "A"
+        }
+      ]
     }
   ],
   "time": { "from": "now-1h", "to": "now" },
