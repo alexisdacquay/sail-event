@@ -75,7 +75,7 @@ Relative dates:
 
 - Resolution happens at run time, every run, in the user's time zone, never at parse time.
 - Window start is clipped to now: an event that has already ended is past (§6 has the end-of-day rule).
-- Window end before now (the absolute dates have passed): the run stops before any search or model call, with the reason `dates in the past: edit your criteria` on the run and in the report.
+- Window end before now (the absolute dates have passed): the run continues; the per-event past filter and the judge handle dates. Facets are re-parsed when the stored window end is before now (cheap compare, not a model call unless the window expired), so date phrases follow the calendar.
 - The user's time zone is `UTC` until their first criteria save from the new UI; the UI says so.
 - The reference case resolves to 2026-10-19 00:00 → 2026-10-21 23:59 Europe/Berlin because the absolute dates win over "next week" (19–25 Oct).
 
@@ -208,7 +208,7 @@ Run report (after "Search now" and on the last scheduled run):
 
 - `6 queries → 31 results → 12 events → 7 passed filters → 7 judged → 2 accepted, 3 queued, 2 rejected`.
 - What the filters removed, by count.
-- When the run stopped early: at which stage and why (budget, provider error, no place in criteria, dates in the past, adapters refused in production).
+- When the run stopped early: at which stage and why (budget, provider error, adapters refused in production). Every early stop sets `stopped_at_stage` and writes zero `stage_counts` so the UI shows the reason.
 - "Search now" beyond 6 in an hour: `Search limit reached, try again in N minutes` (HTTP 429 with `Retry-After`).
 - Times are shown in UTC until the user saves their criteria from the new UI; the page says so.
 - Never the criteria text in logs; never fixture data labelled as a search.

@@ -27,7 +27,7 @@ Control flow rules:
 - Each stage returns data; `pipeline.py` loops and counts. No stage calls another.
 - A model response that fails its schema raises for that item; nothing is guessed.
 - Errors from one query, one page or one event are compacted into the run: the item is skipped, a counter incremented (`search_errors`, `extract_errors`, `judge_errors`), the first error message kept in `Run.error_detail` as `<stage>: <ExceptionType>: <message[:200]>`. A judge error leaves that event `new` for the next run's recovery; the run completes. The run fails only when a whole stage produced nothing because of errors.
-- Stage 2 raises `WindowInPast` when the resolved window ends before now; the run stops before any search or model call with `error = "dates in the past: edit your criteria"`.
+- Stage 2 resolves the window; past dates are handled by the per-event past filter and the judge (#70). Facets are re-parsed when the stored absolute window end is before now.
 - The factories refuse `fixture`/`fake` under `APP_ENV=prod` at first use, inside the run: the run records `error = "adapters refused in prod: set SEARCH_PROVIDER and LLM_PROVIDER"`, nothing is stored, health stays 200.
 - All "now" values come from `services/clock.py: now()`, which returns `FAKE_NOW` (ISO-8601) when set, else `datetime.now(UTC)`. Prompts, filters and the fake model's recordings depend on it.
 - Stage 1 runs before the budget check for the run because it is at most one call per text change.
@@ -202,14 +202,14 @@ Code after the judge (`judge.py`): apply the caps table from spec §7 to `score`
 
 ## 5. Query rule (revised 2026-10-18, owner decision)
 
-There is no query planning. The search stage sends `Criteria.text` to the provider verbatim, one call, raw page content requested, no `country`, `language` or freshness parameter. The provider's results are what the extractor gets. The code never rewrites, translates, templates or targets the query, and never stops a run for a missing city or country; the only stop before search is empty criteria text (and `WindowInPast`, §1).
+There is no query planning. The search stage sends `Criteria.text` to the provider verbatim, one call, raw page content requested, no `country`, `language` or freshness parameter. The provider's results are what the extractor gets. The code never rewrites, translates, templates or targets the query, and never stops a run for a missing city or country; the only stop before search is empty criteria text.
 
 Consequences: `planner.py`, `PlannedQuery`, the local-language month and event-word tables, the Tavily country-name map and the `language` parameter are deleted; "queries per run" is 1 (budget maths in §8 scale by that); the facets (§4) serve the window and the judge only. The earlier templated planner (seven templates, six queries, local-language variants, "no place" stop) is withdrawn: it put the code's opinion between the user and the search engine and produced empty runs for country-only or place-less criteria.
 
 ## 6. Relative dates and time zones
 
 - `User.time_zone` (IANA) set by the frontend from `Intl.DateTimeFormat().resolvedOptions().timeZone` on every criteria save; default `UTC`.
-- `window.py`: `resolve(facets.date, now_utc, tz) -> Window`; `now_utc = clock.now()`; `now_local = now_utc.astimezone(ZoneInfo(tz))`; ISO weeks Monday–Sunday; weekend = Saturday 00:00 → Sunday 23:59:59 (on a Sunday, "this weekend" is the rest of today); `next_n_days` = `now_local` → `now_local + n days` end of day; absolute dates win; neither → `now_local` → `+30 days`. Start is `max(window start, now_local)`; when the end is before `now_local`, `resolve` raises `WindowInPast` and the run stops before any call (§1).
+- `window.py`: `resolve(facets.date, now_utc, tz) -> Window`; `now_utc = clock.now()`; `now_local = now_utc.astimezone(ZoneInfo(tz))`; ISO weeks Monday–Sunday; weekend = Saturday 00:00 → Sunday 23:59:59 (on a Sunday, "this weekend" is the rest of today); `next_n_days` = `now_local` → `now_local + n days` end of day; absolute dates win; neither → `now_local` → `+30 days`. Start is `max(window start, now_local)`. When the end is before `now_local`, start > end and the per-event past/date filters remove everything; the run is not stopped (#70).
 - `Window` carries `start_utc`, `end_utc`, `tz`; filters compare in UTC.
 - Past filter: `event_end < now`, where `event_end` = `end` when known, else `start` for timed events, else 23:59:59 of the start day for date-only events. Window filter: overlap, `start <= window_end and event_end >= window_start`. Both in `filters.py`.
 - Event instant: `start_local` parsed with `start_tz` when known; unknown zone → country's single zone from a code table (`DE → Europe/Berlin`, `AT`, `FR`, `GB`, `PT`, `NL`, `JP`, …; multi-zone countries such as `US`, `AU`, `BR`, `RU`, `CA` → null); still unknown → compared in the user's zone and stored with `start_tz = null`.

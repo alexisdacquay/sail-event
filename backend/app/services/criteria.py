@@ -19,11 +19,44 @@ def _text_sha(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
 
 
-def needs_parse(text: str, facets_text_sha: str | None, facets_version: str | None) -> bool:
-    """Return True when the criteria text must be (re-)parsed."""
+def needs_parse(
+    text: str,
+    facets_text_sha: str | None,
+    facets_version: str | None,
+    *,
+    facets_json: str | None = None,
+) -> bool:
+    """Return True when the criteria text must be (re-)parsed.
+
+    Re-parses when the text changed, the prompt version changed, or the
+    stored absolute window end is in the past (so date phrases follow the
+    calendar without a stale cache).
+    """
     current_sha = _text_sha(text)
     expected_version = f"{PROMPT_NAME}_{PROMPT_VERSION}"
-    return facets_text_sha != current_sha or facets_version != expected_version
+    if facets_text_sha != current_sha or facets_version != expected_version:
+        return True
+    if facets_json:
+        return _window_expired(facets_json)
+    return False
+
+
+def _window_expired(facets_json: str) -> bool:
+    """True when the stored absolute date.end is before today."""
+    try:
+        facets = json.loads(facets_json)
+    except (json.JSONDecodeError, TypeError):
+        return False
+    date_facets = facets.get("date") or {}
+    end_str = date_facets.get("end")
+    if not end_str:
+        return False
+    try:
+        from datetime import date
+        end_date = date.fromisoformat(end_str)
+    except ValueError:
+        return False
+    return end_date < clock.now().date()
 
 
 def parse_criteria(text: str, user_tz: str, model) -> dict:

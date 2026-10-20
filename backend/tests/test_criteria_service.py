@@ -28,6 +28,33 @@ class TestNeedsParse:
         assert needs_parse(text, sha, "criteria_v1") is True
 
 
+    def test_window_expired_triggers_reparse(self, monkeypatch):
+        """When stored date.end is before today, needs_parse returns True."""
+        monkeypatch.setenv("FAKE_NOW", "2026-10-22T12:00:00+02:00")
+        text = "jazz in Berlin"
+        sha = hashlib.sha256(text.encode()).hexdigest()
+        import json
+        facets_json = json.dumps({"date": {"end": "2026-10-21"}})
+        assert needs_parse(text, sha, "criteria_v2", facets_json=facets_json) is True
+
+    def test_window_not_expired_no_reparse(self, monkeypatch):
+        """When stored date.end is in the future, text unchanged → no re-parse."""
+        monkeypatch.setenv("FAKE_NOW", "2026-10-18T12:00:00+02:00")
+        text = "jazz in Berlin"
+        sha = hashlib.sha256(text.encode()).hexdigest()
+        import json
+        facets_json = json.dumps({"date": {"end": "2026-10-21"}})
+        assert needs_parse(text, sha, "criteria_v2", facets_json=facets_json) is False
+
+    def test_no_date_end_no_reparse(self):
+        """When there is no absolute end, no window-based re-parse."""
+        text = "jazz in Berlin"
+        sha = hashlib.sha256(text.encode()).hexdigest()
+        import json
+        facets_json = json.dumps({"date": {"relative": "next_week"}})
+        assert needs_parse(text, sha, "criteria_v2", facets_json=facets_json) is False
+
+
 class TestParseMetadata:
     def test_returns_sha_and_version(self, monkeypatch):
         monkeypatch.setenv("FAKE_NOW", "2026-10-18T12:00:00+02:00")

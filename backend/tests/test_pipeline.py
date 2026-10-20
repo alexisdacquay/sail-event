@@ -91,15 +91,15 @@ def test_recovery_of_new_events(client, auth_headers, _db_session):
     assert leftover.score is not None
 
 
-# ---------- WindowInPast stops the run ----------
+# ---------- Past dates no longer stop the run (#70) ----------
 
 
-def test_window_in_past_stops_run(client, auth_headers, _db_session, monkeypatch):
+def test_past_dates_do_not_stop_run(client, auth_headers, _db_session, monkeypatch):
+    """Past absolute dates produce a completed run, not an early stop."""
     import hashlib
     h = auth_headers("past", "past")
     text = "jazz in Berlin (Germany) last week (10-12 October 2026)"
     client.put("/api/criteria", headers=h, json={"text": text})
-    # Manually set facets with past dates, using correct SHA to avoid re-parse
     user = _db_session.query(User).filter(User.username == "past").first()
     crit = _db_session.query(Criteria).filter(Criteria.user_id == user.id).first()
     crit.facets_json = json.dumps({
@@ -114,7 +114,43 @@ def test_window_in_past_stops_run(client, auth_headers, _db_session, monkeypatch
     _db_session.commit()
 
     body = client.post("/api/search", headers=h).json()
-    assert body.get("error") == "dates in the past: edit your criteria"
+    # Run completes (no window stop); the past/date filters handle events
+    assert body.get("stoppedAtStage") is None or body["stoppedAtStage"] != "window"
+    assert body.get("stageCounts") is not None
+
+
+# ---------- Every early stop writes stage_counts (#70) ----------
+
+
+def test_adapter_stop_has_stage_counts(client, auth_headers, _db_session, monkeypatch):
+    """Adapter refusal sets stopped_at_stage AND stage_counts (not null)."""
+    monkeypatch.setenv("APP_ENV", "prod")
+    h = auth_headers("demo", "demo")
+    body = client.post("/api/search", headers=h).json()
+    assert body["stoppedAtStage"] == "adapters"
+    assert body["stageCounts"] is not None  # was null before #70
+    monkeypatch.delenv("APP_ENV")
+
+
+def test_budget_search_stop_has_stage_counts(client, auth_headers, _db_session, monkeypatch):
+    """Budget stop at search sets stopped_at_stage AND stage_counts."""
+    monkeypatch.setenv("SEARCH_DAILY_CALLS", "0")
+    h = auth_headers("demo", "demo")
+    body = client.post("/api/search", headers=h).json()
+    assert body["stoppedAtStage"] == "search"
+    assert body["stageCounts"] is not None
+    monkeypatch.delenv("SEARCH_DAILY_CALLS")
+
+
+def test_budget_llm_stop_has_stage_counts(client, auth_headers, _db_session, monkeypatch):
+    """Budget stop at extract sets stopped_at_stage AND stage_counts."""
+    monkeypatch.setenv("LLM_DAILY_CALLS", "0")
+    h = auth_headers("demo", "demo")
+    body = client.post("/api/search", headers=h).json()
+    # Should stop at criteria or extract (whichever needs the first LLM call)
+    assert body["stoppedAtStage"] is not None
+    assert body["stageCounts"] is not None
+    monkeypatch.delenv("LLM_DAILY_CALLS")
 
 
 # ---------- Judge error leaves event `new` ----------

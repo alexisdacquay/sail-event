@@ -7,6 +7,7 @@ export default defineConfig({
   reporter: [["list", { printSteps: true }]],
   use: {
     baseURL: process.env.SAIL_BASE_URL || `http://localhost:${process.env.HOST_PORT || "8000"}`,
+    timezoneId: 'Europe/Berlin',
   },
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],
 });
