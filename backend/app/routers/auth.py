@@ -30,6 +30,20 @@ _REGISTER_WINDOW = 3600  # 1 hour
 _now = time.monotonic  # seam for deterministic tests
 
 
+def _client_ip(request: Request) -> str:
+    """Real client IP: rightmost X-Forwarded-For hop when a proxy is trusted, else peer address.
+
+    All IP-dependent code must call this, never request.client.host directly
+    (uvicorn's ProxyHeadersMiddleware sets that to the leftmost hop when
+    trusted_hosts='*', which the client can spoof).
+    """
+    if os.environ.get("FORWARDED_ALLOW_IPS", ""):
+        xff = request.headers.get("x-forwarded-for", "")
+        if xff:
+            return xff.rsplit(",", 1)[-1].strip()
+    return request.client.host if request.client else ""
+
+
 @router.post("/api/auth/register", operation_id="register", status_code=201)
 def register(
     body: RegisterRequest,
@@ -37,7 +51,7 @@ def register(
     db: Session = Depends(get_db),
 ) -> JSONResponse:
     # 1. Rate-limit check (cheapest rejection)
-    ip = request.client.host if request.client else ""
+    ip = _client_ip(request)
     now = _now()
     max_reg = int(os.environ.get("REGISTER_RATE_LIMIT_PER_HOUR", "5"))
     successes = [t for t in _register_successes.get(ip, []) if t > now - _REGISTER_WINDOW]
@@ -118,7 +132,7 @@ def login(
             content={"detail": "password must not be empty"},
         )
 
-    ip = request.client.host if request.client else ""
+    ip = _client_ip(request)
     key = (body.username, ip)
     now = _now()
 

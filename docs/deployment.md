@@ -40,6 +40,7 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `LAKERA_API_KEY` | Lakera Guard API key (required when `GUARDRAIL=lakera`) |
 | `GUARD_FALLBACK` | `self_check` (prod) or `none`; used only when Lakera errors or quota exhausted. The fallback checks for prompt injection only (not content moderation); Lakera 429 is retried once before falling back |
 | `SEARCH_NOW_PER_HOUR` | `6` — "Search now" manual runs per user per rolling hour |
+| `FORWARDED_ALLOW_IPS` | `*` — set on **both** Render services before deploying the commit that reads it. Render's single-hop proxy appends the real client IP; the app takes the rightmost X-Forwarded-For entry for rate-limit buckets. If unset behind the proxy: all users share the proxy's address in rate-limit buckets and `/api/calendar-url` returns `http://` (uvicorn's proxy-headers middleware falls back to trusting only 127.0.0.1). Empty locally/compose = ignore the header. Code rule: read the client IP only through `_client_ip(request)` in `auth.py`, never `request.client.host` directly |
 
 Dev environment (`sail-event-dev`): `APP_ENV=dev`, `FAKE_NOW=2026-10-18T12:00:00+02:00`, `SEED_DEMO=1`.
 
