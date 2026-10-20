@@ -25,7 +25,7 @@ Final project for the [DataTalksClub AI Dev Tools Zoomcamp 2026](https://github.
                                                                │
                               ┌────────────────────────────────┼─────────────────────┐
                               ▼                                ▼                     ▼
-                         score > 70                      30 ≤ score ≤ 70        score < 30
+                         score > 90                      40 ≤ score ≤ 90        score < 40
                      ┌────────────────┐               ┌────────────────┐    ┌────────────────┐
                      │ auto-accepted  │               │ queue: you     │    │ auto-rejected  │
                      │ → ICS calendar │ ◀── Accept ── │ Accept/Reject  │    │ never shown    │
@@ -59,7 +59,7 @@ Needs Docker. One command starts the app and its Postgres:
 docker compose up --build
 ```
 
-Open <http://localhost:8000>, log in as **demo / demo**, press **Search now**, then open **Queue**. Locally the search provider and the scorer are fixtures, so results are canned and scores are deterministic: no API keys needed. Port 8000 already taken? `HOST_PORT=8010 docker compose up --build` and open <http://localhost:8010>.
+Open <http://localhost:8000>, log in as **demo / demo**, press **Search now**, then open **To review**. Locally the search provider and the model are fixtures with recorded responses, so results are canned and scores are deterministic: no API keys needed. Port 8000 already taken? `HOST_PORT=8010 docker compose up --build` and open <http://localhost:8010>.
 
 <details>
 <summary>Same journey with curl (no browser)</summary>
@@ -97,7 +97,8 @@ The live deployment is <https://sail-event.onrender.com>. Create your own accoun
                  │         │                (SQLite in local dev)
                  │         └── adapters, chosen by env var:
                  │              SEARCH_PROVIDER = fixture | tavily
-                 │              SCORER          = fake    | claude
+                 │              LLM_PROVIDER    = fake    | openai_compatible (DeepSeek)
+                 │              GUARDRAIL       = none    | lakera
                  ▼
           OpenTelemetry ──▶ collector ──▶ Prometheus + Loki + Tempo ──▶ Grafana
 
@@ -235,6 +236,6 @@ Policy, prompt and limits: [`incident-response/`](incident-response/). Security 
 
 ## Status
 
-- Live and searching hourly with fixture adapters; real web search and model scoring switch on with two API keys on Render ([docs/deployment.md](docs/deployment.md)).
+- Live on real web search (Tavily) and a real model (DeepSeek through an OpenAI-compatible adapter), searching hourly; the screenshots above are from prod. Your criteria text goes to the search engine as written, the model extracts the events and judges each one against your text ([_docs/search-spec.md](_docs/search-spec.md)).
 - Two environments on Render: dev follows main, prod moves only by the promote workflow.
 - Security findings deferred to post-MVP are issues [#33 to #36](https://github.com/alexisdacquay/sail-event/issues?q=is%3Aissue+label%3Apost-mvp).
