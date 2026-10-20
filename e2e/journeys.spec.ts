@@ -26,16 +26,17 @@ test.describe("Journey 1: full user flow", () => {
     await page.getByRole("button", { name: "Save criteria" }).click();
     await expect(page.getByText("Saved.")).toBeVisible();
 
-    // Adjust scoring scale: lower Auto-accept above by 5 (70 → 65)
+    // Adjust scoring scale: raise Auto-accept above by 6 (90 → 96) so
+    // more events land in the queue for the accept/reject test below
     const slider = page.getByRole("slider", { name: "Auto-accept above" });
     await slider.focus();
-    for (let i = 0; i < 5; i++) {
-      await slider.press("ArrowLeft");
+    for (let i = 0; i < 6; i++) {
+      await slider.press("ArrowRight");
     }
     // the key presses must have reached the shared state before saving
     await expect(
       page.getByRole("spinbutton", { name: "Auto-accept above" })
-    ).toHaveValue("65");
+    ).toHaveValue("96");
     const saveScoring = page.getByRole("button", { name: "Save scoring" });
     await expect(saveScoring).toBeEnabled();
     const [saved] = await Promise.all([
@@ -52,7 +53,7 @@ test.describe("Journey 1: full user flow", () => {
     await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
     await expect(
       page.getByRole("spinbutton", { name: "Auto-accept above" })
-    ).toHaveValue("65");
+    ).toHaveValue("96");
 
     // Search
     await page.getByRole("button", { name: "Search now" }).click();

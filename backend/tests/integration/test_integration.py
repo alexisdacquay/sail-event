@@ -68,10 +68,11 @@ def test_full_journey(http: httpx.Client):
     events = r.json()
     assert isinstance(events, list)
 
-    # pick two events to decide on — need at least two
-    if len(events) < 2:
-        pytest.skip("fixture returned fewer than 2 events")
-    evt_accept, evt_reject = events[0], events[1]
+    # pick two decidable events (queued or accepted — not already auto-rejected)
+    decidable = [e for e in events if e["status"] in ("queued", "accepted")]
+    if len(decidable) < 2:
+        pytest.skip("fewer than 2 decidable events")
+    evt_accept, evt_reject = decidable[0], decidable[1]
 
     # accept one
     r = http.post(
