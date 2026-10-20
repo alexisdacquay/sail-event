@@ -26,7 +26,10 @@ const badgeVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
   queued: 'secondary',
 }
 
-const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+/** Exported for testing — mock this to simulate a different browser zone. */
+export function getBrowserTz(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone
+}
 
 /** Format date-time parts without the comma after weekday that en-GB adds. */
 function fmtParts(date: Date, tz: string | undefined, includeTime: boolean): string {
@@ -56,15 +59,18 @@ function fmtParts(date: Date, tz: string | undefined, includeTime: boolean): str
   return out
 }
 
-function formatWhen(event: Event): string {
+export function formatWhen(event: Event, viewerTz?: string): string {
   const { dateTime, startTz } = event
-  const date = new Date(dateTime)
+  const browserTz = viewerTz ?? getBrowserTz()
 
-  // Date-only: no T in the string
+  // Date-only: no T in the string — use midday UTC to avoid date rollover
   if (!dateTime.includes('T')) {
-    return fmtParts(date, startTz || undefined, false)
+    const [y, m, d] = dateTime.split('-').map(Number)
+    const midday = new Date(Date.UTC(y, m - 1, d, 12, 0, 0))
+    return fmtParts(midday, 'UTC', false)
   }
 
+  const date = new Date(dateTime)
   const tz = startTz || undefined
   const tzLabel = startTz || 'local time'
 

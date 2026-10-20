@@ -93,6 +93,35 @@ def _is_date_only(dt_str: str) -> bool:
     return len(dt_str) == 10 and "T" not in dt_str
 
 
+def attach_offset(dt_str: str, start_tz: str | None, country: str | None) -> str:
+    """Attach UTC offset to a naive local datetime when the zone is known.
+
+    Date-only strings and strings that already carry an offset pass through unchanged.
+    Uses _resolve_zone with fallback to UTC so the caller never sees a naive timed value.
+    Preserves the original local-time string to avoid format changes (e.g. 'T21:00' stays,
+    never becomes 'T21:00:00').
+    """
+    if not dt_str or _is_date_only(dt_str):
+        return dt_str
+    # Already has offset (+HH:MM, -HH:MM) or Z
+    if "+" in dt_str[10:] or dt_str.endswith("Z") or dt_str[10:].count("-") > 0:
+        return dt_str
+    try:
+        naive = datetime.fromisoformat(dt_str)
+    except ValueError:
+        return dt_str
+    if naive.tzinfo is not None:
+        return dt_str
+    zone = _resolve_zone(start_tz, country, "UTC")
+    # Compute the offset string and append to the original local-time string
+    offset = zone.utcoffset(naive)
+    total_seconds = int(offset.total_seconds())
+    sign = "+" if total_seconds >= 0 else "-"
+    hh, mm = divmod(abs(total_seconds), 3600)
+    mm //= 60
+    return f"{dt_str}{sign}{hh:02d}:{mm:02d}"
+
+
 def _event_end_utc(ev: ExtractedEvent, user_tz: str) -> datetime | None:
     """Compute the event's effective end in UTC.
 
