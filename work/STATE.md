@@ -1,5 +1,12 @@
 # ProjectOne — work state (resumable)
 
+## MERGED 2026-10-20 10:28 — WAITING FOR OWNER'S WORD
+- PR #64 merged into main (befe764): search v2 revision (verbatim query + "event", judge_v3 suitability, no planner, no price), #61 budgets/queue, #62 Lakera, #63 UI card. Issues #54-#63 closed. CI green on the branch (one fix 90790fd: hardcoded path in a test). Dev auto-deploys main (fixture/fake adapters, FAKE_NOW set).
+- Waiting on the owner for: (a) promote befe764 to prod via promote.yml; (b) Render env on both services: SEARCH_PROVIDER=tavily, LLM_PROVIDER=openai_compatible, GUARDRAIL=lakera, MAX_RESULTS_PER_QUERY=20, TAVILY_SEARCH_DEPTH=advanced, LLM_TIMEOUT_SECONDS=120 (keys already there); dev also FAKE_NOW unset for real runs. Then a live Berlin smoke on dev and prod, README screenshots from dev.
+- Owner-side leftovers unchanged: Render health check path /api/health on both services (dev shows empty), old DB user sail_event_db_user to delete, prod DB inbound rule.
+- Branches search-v2, search-v2-g/h/i still on origin (delete after promote); worktrees wt-g/h/i in the scratchpad.
+- Skill `.claude/skills/status-update/SKILL.md` (`/status-update`) for the owner's 5-minute status blocks; the cron was deleted at merge time, recreate on the next run.
+
 ## PAUSE 2026-10-20 08:03 (owner: laptop) — RESUME HERE
 - Branch search-v2: rounds 1-3 committed (4f09844 quick path, b656aa5 strict judge + no code place/date filters, 8fb7099 Tavily 20 results + advanced depth). Round-3 table on issue 60: Berlin 3 real jazz events, Sevilla 3, Manchester 2, junk texts 0, Tokyo 15. WIP commit after 8fb7099 = the cleanup mid-flight (planner.py, test_planner.py, judge_v2 deleted; price columns migration c2d3e4f5a6b7; tests rewritten; judge_v3 + extract fixtures re-recorded) — `make test` NOT yet confirmed green; the engineer was killed while running the full suite. Resume: run `make test`, fix the red, commit "#60: cleanup ...", then compose fix (missing fake recording must fail loud), `HOST_PORT=8030 make test-integration`, `make test-e2e`.
 - Side branches, all pushed, QA-clean: search-v2-g (#61, 0b3205c, QA PASS re-check), search-v2-h (#62 Lakera, a01e522, QA PASS), search-v2-i (#63 UI, 15c8705, price removed, QA defect fixed). Merge into search-v2 in that order after the cleanup is green; expect conflicts in pipeline.py, routers/search.py, extract.py, .env.example, test_pipeline.py, test_search.py, test_criteria_sentinel.py (its D3 test patches `plan_queries`, which no longer exists → patch the search call instead).
