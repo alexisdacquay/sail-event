@@ -37,7 +37,7 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `LLM_DAILY_CALLS` | `5000` — daily LLM-call budget across all users |
 | `LLM_USD_PER_1K_IN` | cost per 1 000 input tokens; set all three price vars to enable `cost_usd` |
 | `LLM_USD_PER_1K_OUT` | cost per 1 000 output tokens |
-| `SEARCH_USD_PER_CALL` | cost per search API call |
+| `SEARCH_USD_PER_CALL` | USD per Tavily credit (an advanced call = 2 credits, basic = 1) |
 | `GUARDRAIL` | `lakera` (prod) or `none` (default, dev/CI); set at issue H promote. The Lakera guard blocks `prompt_attack` detectors only; content-moderation, PII and unknown-link detections are ignored |
 | `LAKERA_API_KEY` | Lakera Guard API key (required when `GUARDRAIL=lakera`) |
 | `GUARD_FALLBACK` | `self_check` (prod) or `none`; used only when Lakera errors or quota exhausted. The fallback checks for prompt injection only (not content moderation); Lakera 429 is retried once before falling back |

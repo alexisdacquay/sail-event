@@ -160,10 +160,12 @@ def test_budget_counts_credits_not_calls(_db_session, monkeypatch):
     # Advanced (2 credits) should be blocked by cap=1
     run_adv = run_pipeline(user, _db_session, trigger="manual")
     assert run_adv.error == "budget: search"
+    assert run_adv.search_calls == 0  # never called
 
     # Basic (1 credit) should fit under cap=1
     run_basic = run_pipeline(user, _db_session, trigger="scheduled")
-    assert run_basic.error != "budget: search" or run_basic.error is None
+    assert run_basic.error != "budget: search"
+    assert run_basic.search_calls >= 1  # provider was called
 
 
 def test_failed_call_still_counts_credits(_db_session, monkeypatch):
