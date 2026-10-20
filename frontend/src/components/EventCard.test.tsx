@@ -47,6 +47,12 @@ describe('EventCard', () => {
     expect(screen.getByText('QEII Centre, London, GB')).toBeInTheDocument()
   })
 
+  it('does not repeat the country when place already ends with it', () => {
+    const full = { ...event, place: 'YSY Bar, Berlin, DE', city: 'Berlin', country: 'DE' }
+    render(<EventCard event={full} variant="queue" />)
+    expect(screen.getByText('YSY Bar, Berlin, DE')).toBeInTheDocument()
+  })
+
   it('renders place unknown for ZZ country', () => {
     const zz = { ...event, country: 'ZZ', city: '', place: '' }
     render(<EventCard event={zz} variant="queue" />)
