@@ -46,7 +46,8 @@ def test_save_criteria_with_invalid_timezone(client, auth_headers):
 
 
 def test_save_criteria_without_timezone_keeps_default(client, auth_headers):
-    h = auth_headers("demo", "demo")
+    # Use a fresh user (default time_zone=UTC), not the demo user seeded with Europe/Berlin
+    h = auth_headers("tz_default", "tz_default")
     r = client.put(
         "/api/criteria",
         json={"text": "jazz"},
