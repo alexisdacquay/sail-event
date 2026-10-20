@@ -132,8 +132,7 @@ def test_past_dates_do_not_stop_run(client, auth_headers, _db_session, monkeypat
     )
     extract_counts = ExtractionCounts(
         pages_content_pass=0, extract_truncated=0, events_extracted=1,
-        extract_errors=0, guard_skipped=0, guard_fallback=0,
-        guard_errors=0, filtered_non_event=0,
+        extract_errors=0, filtered_non_event=0,
     )
 
     with (
