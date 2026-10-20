@@ -1,5 +1,10 @@
 # ProjectOne — work state (resumable)
 
+## 2026-10-20 13:50 — keys on Render, guard on, breadth batches on prod + dev
+- Owner created a Render API key (stored in backend/.env.local as RENDER_API_KEY); scripts in scratchpad copy_keys.sh / copy_env.sh copied TAVILY + LAKERA + LLM_* prod→dev through the API, values never in chat. GUARDRAIL=lakera on both; guard check: benign 200, injection 400 on both. Dev REGISTER_RATE_LIMIT_PER_HOUR=1000 (test env). Both services on ee6459b.
+- Breadth batches (20 texts, 10 parallel, remote_batch.py) on prod and dev: work/SEARCH-BATCHES.md. Top problem: Lakera moderation/link detectors block a benign text and skip full pages → issue #68 (prompt_attack only), engineer running on branch fix-guard-scope. After merge + promote: rerun both batches, move remote_batch.py into backend/scripts.
+- Owner 13:30: "proper test, not just Berlin" → the 20-text batch is the standard; keep extending it.
+
 ## 2026-10-20 12:10 — prod on b57bbaa; blind rubric review 24/24 ×3
 - Promote of b57bbaa succeeded (run 39398819593). Three blind reviewers (strict, 15-minute, hands-on) each scored 24/24; log in work/RUBRIC-REVIEWS.md; skill `.claude/skills/rubric-review/SKILL.md` (`/rubric-review`) re-runs it. Fixes from the review: OTEL_COLLECTOR_PORT override, README lines (observability local-only, paid instances).
 - Owner direction 12:00: rubric alignment is the top priority as a regular scoring mechanism; stabilise features, focus on scoring. Next: re-run /rubric-review after each release; keep the review log moving.
