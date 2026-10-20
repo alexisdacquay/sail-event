@@ -24,5 +24,5 @@ class TestFactories:
 
     def test_scorer_env_raises(self, monkeypatch):
         monkeypatch.setenv("SCORER", "anything")
-        with pytest.raises(ValueError, match="SCORER is replaced by LLM_PROVIDER"):
+        with pytest.raises(ValueError, match="unset SCORER; use LLM_PROVIDER"):
             get_search_provider()

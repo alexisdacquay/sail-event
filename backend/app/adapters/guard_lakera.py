@@ -29,10 +29,12 @@ class LakeraGuardrail:
     """Primary guardrail: Lakera Guard API."""
 
     def __init__(self) -> None:
-        self.api_key = os.environ["LAKERA_API_KEY"]
+        self.api_key: str | None = os.environ.get("LAKERA_API_KEY")
 
     def check(self, text: str) -> None:
         """Raise ContentFlagged if the text is flagged, GuardUnavailable on error."""
+        if not self.api_key:
+            raise GuardUnavailable("LAKERA_API_KEY not set")
         body = json.dumps({"messages": [{"role": "user", "content": text}]}).encode()
         headers = {
             "Content-Type": "application/json",

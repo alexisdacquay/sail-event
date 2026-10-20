@@ -462,7 +462,7 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
 
         # --- Stage 9: persist run ---
         with tracer.start_as_current_span("persist"):
-            _finalise_run(
+            run = _finalise_run(
                 run, db, events_found, events_new, error_msg,
                 counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
                 stopped_at_stage, error_detail,
@@ -588,8 +588,8 @@ def _finalise_run(
     llm_tokens_out: int,
     stopped_at_stage: str | None,
     error_detail: str | None,
-) -> None:
-    """Write final fields on the run row and commit."""
+) -> orm.Run:
+    """Write final fields on the run row and commit.  Returns the attached row."""
     run = db.merge(run)
     run.finished_at = datetime.now(UTC)
     run.events_found = events_found
@@ -611,6 +611,7 @@ def _finalise_run(
         _llm_tokens_counter.add(llm_tokens_out, {"direction": "out"})
 
     db.commit()
+    return run
 
 
 def _emit_metrics(
