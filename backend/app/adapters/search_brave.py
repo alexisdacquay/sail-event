@@ -86,5 +86,17 @@ class BraveProvider:
                     continue
                 raise RuntimeError(f"Brave API error: HTTP {exc.code}") from exc
             except urllib.error.URLError as exc:
+                if isinstance(exc.reason, TimeoutError) and attempt == 0:
+                    import time
+                    time.sleep(2)
+                    last_exc = exc
+                    continue
                 raise RuntimeError(f"Brave API error: {exc.reason}") from exc
+            except TimeoutError as exc:
+                if attempt == 0:
+                    import time
+                    time.sleep(2)
+                    last_exc = exc
+                    continue
+                raise RuntimeError(f"Brave API error: {exc}") from exc
         raise RuntimeError(f"Brave API error after retry: HTTP {getattr(last_exc, 'code', last_exc)}") from last_exc

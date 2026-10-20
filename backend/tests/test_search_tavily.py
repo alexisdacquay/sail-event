@@ -130,6 +130,39 @@ class TestErrors:
         with pytest.raises(RuntimeError, match="Connection timed out"):
             provider.search("q")
 
+    @patch("time.sleep")
+    @patch("urllib.request.urlopen")
+    def test_timeout_retries_then_succeeds(self, mock_urlopen, mock_sleep, monkeypatch):
+        """Read timeout on first call retried; second call succeeds."""
+        import socket
+        import urllib.error
+        monkeypatch.setenv("TAVILY_API_KEY", "test-key")
+        mock_urlopen.side_effect = [
+            urllib.error.URLError(socket.timeout("The read operation timed out")),
+            _fake_urlopen(),
+        ]
+        provider = TavilyProvider()
+        results = provider.search("q")
+        assert len(results) > 0
+        assert mock_urlopen.call_count == 2
+        mock_sleep.assert_called_once_with(2)
+
+    @patch("time.sleep")
+    @patch("urllib.request.urlopen")
+    def test_timeout_retries_then_timeout(self, mock_urlopen, mock_sleep, monkeypatch):
+        """Read timeout on both attempts raises RuntimeError."""
+        import socket
+        import urllib.error
+        monkeypatch.setenv("TAVILY_API_KEY", "test-key")
+        mock_urlopen.side_effect = urllib.error.URLError(
+            socket.timeout("The read operation timed out"),
+        )
+        provider = TavilyProvider()
+        with pytest.raises(RuntimeError, match="timed out"):
+            provider.search("q")
+        assert mock_urlopen.call_count == 2
+        mock_sleep.assert_called_once_with(2)
+
 
 # ---------- missing key ----------
 
