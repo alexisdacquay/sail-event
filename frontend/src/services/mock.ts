@@ -20,8 +20,7 @@ const INITIAL_EVENTS: Event[] = [
     endTime: null,
     city: 'London',
     country: 'GB',
-    priceAmount: 0,
-    priceCurrency: 'GBP',
+
     sourceUrl: 'https://meetup.com/react-london/july-2026',
     band: 'mostly fits',
     score: 82,
@@ -40,8 +39,7 @@ const INITIAL_EVENTS: Event[] = [
     endTime: null,
     city: 'London',
     country: 'GB',
-    priceAmount: 15,
-    priceCurrency: 'GBP',
+
     sourceUrl: 'https://jazzpark.co.uk/summer-2026',
     band: 'open question',
     score: 45,
@@ -60,8 +58,7 @@ const INITIAL_EVENTS: Event[] = [
     endTime: null,
     city: 'Manchester',
     country: 'GB',
-    priceAmount: null,
-    priceCurrency: null,
+
     sourceUrl: 'https://techhub.com/reinvent-watch-2026',
     band: 'mostly fits',
     score: 75,
@@ -80,8 +77,7 @@ const INITIAL_EVENTS: Event[] = [
     endTime: null,
     city: 'Brighton',
     country: 'GB',
-    priceAmount: 35,
-    priceCurrency: 'GBP',
+
     sourceUrl: 'https://claystudio.co.uk/workshops/beginner',
     band: 'off topic',
     score: 12,
@@ -100,8 +96,7 @@ const INITIAL_EVENTS: Event[] = [
     endTime: null,
     city: 'London',
     country: 'GB',
-    priceAmount: 199,
-    priceCurrency: 'GBP',
+
     sourceUrl: 'https://tsconf.eu/2026',
     band: 'fits',
     score: 91,

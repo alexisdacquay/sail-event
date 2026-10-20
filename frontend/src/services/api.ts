@@ -24,8 +24,6 @@ export type Event = {
   endTime: string | null
   city: string
   country: string
-  priceAmount: number | null
-  priceCurrency: string | null
   sourceUrl: string | null
   band: string | null
   score: number

@@ -184,6 +184,47 @@ describe('MainPage search card', () => {
     expect(result).toHaveTextContent(/Filtered:/)
     expect(result).toHaveTextContent(/2 past/)
   })
+
+  it('shows 429 rate-limit message with minutes from Retry-After', async () => {
+    const { runSearch: _orig } = await import('@/services/api')
+    const api = await import('@/services/api')
+    const err = new Error('Too many requests') as Error & { status: number; retryAfter: number }
+    err.status = 429
+    err.retryAfter = 300 // 5 minutes
+    vi.spyOn(api, 'runSearch').mockRejectedValueOnce(err)
+
+    renderMainPage()
+    await screen.findByLabelText("What I'm looking for")
+
+    fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
+    const result = await screen.findByTestId('search-result')
+    expect(result).toHaveTextContent('Search limit reached, try again in 5 minutes')
+    vi.restoreAllMocks()
+  })
+
+  it('shows stopped-at stage and error in run report', async () => {
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'runSearch').mockResolvedValueOnce({
+      runId: 'run-stop',
+      eventsFound: 0,
+      eventsNew: 0,
+      stageCounts: {
+        queries_planned: 2,
+        results_fetched: 0,
+      },
+      stoppedAtStage: 'search',
+      error: 'budget: search',
+    })
+
+    const onSearchComplete = vi.fn().mockResolvedValue(0)
+    renderMainPage(onSearchComplete)
+    await screen.findByLabelText("What I'm looking for")
+
+    fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
+    const result = await screen.findByTestId('search-result')
+    expect(result).toHaveTextContent('Stopped at search: budget: search.')
+    vi.restoreAllMocks()
+  })
 })
 
 describe('MainPage right column', () => {
@@ -200,8 +241,6 @@ describe('MainPage right column', () => {
         endTime: null,
         city: 'London',
         country: 'GB',
-        priceAmount: null,
-        priceCurrency: null,
         sourceUrl: null,
         band: 'open question',
         score: 55,

@@ -93,14 +93,6 @@ function formatWhere(event: Event): string {
   return parts.join(', ') || 'place unknown'
 }
 
-function formatPrice(event: Event): string | null {
-  if (event.priceAmount === 0) return 'free'
-  if (event.priceAmount != null && event.priceCurrency) {
-    return `${event.priceAmount} ${event.priceCurrency}`
-  }
-  return null
-}
-
 type EventCardProps = {
   event: Event
   variant: 'queue' | 'all'
@@ -126,8 +118,6 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
     }
   }
 
-  const price = formatPrice(event)
-
   const fields = (
     <>
       <p>
@@ -144,12 +134,6 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
         <span className="font-medium text-muted-foreground">Where: </span>
         {formatWhere(event)}
       </p>
-      {price && (
-        <p>
-          <span className="font-medium text-muted-foreground">Price: </span>
-          {price}
-        </p>
-      )}
       <p>
         <span className="font-medium text-muted-foreground">Link: </span>
         <a

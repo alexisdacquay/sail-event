@@ -14,8 +14,6 @@ const event: Event = {
   endTime: null,
   city: 'London',
   country: 'GB',
-  priceAmount: 199,
-  priceCurrency: 'GBP',
   sourceUrl: 'https://example.com/conf',
   band: 'mostly fits',
   score: 85,
@@ -42,23 +40,6 @@ describe('EventCard', () => {
     const scoreEl = screen.getByText(/Score 85%/)
     // The band word appears as a sibling span in the same <p>
     expect(scoreEl.closest('p')!.textContent).toContain('· mostly fits')
-  })
-
-  it('renders price when known', () => {
-    render(<EventCard event={event} variant="queue" />)
-    expect(screen.getByText(/199 GBP/)).toBeInTheDocument()
-  })
-
-  it('renders free when price is 0', () => {
-    const free = { ...event, priceAmount: 0, priceCurrency: 'EUR' }
-    render(<EventCard event={free} variant="queue" />)
-    expect(screen.getByText('free')).toBeInTheDocument()
-  })
-
-  it('omits price line when unknown', () => {
-    const unknown = { ...event, priceAmount: null, priceCurrency: null }
-    render(<EventCard event={unknown} variant="queue" />)
-    expect(screen.queryByText('Price:')).not.toBeInTheDocument()
   })
 
   it('renders where as venue, city, country', () => {
