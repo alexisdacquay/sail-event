@@ -428,6 +428,9 @@ components:
           type: string
         dateTime:
           type: string
+          description: >-
+            ISO-8601 local with UTC offset when the zone is known
+            (e.g. 2026-10-20T20:00:00+02:00), or YYYY-MM-DD for date-only events
         place:
           type: string
         link:
@@ -443,7 +446,9 @@ components:
           type:
             - string
             - 'null'
-          description: End date-time in the same format as dateTime
+          description: >-
+            End date-time in the same format as dateTime
+            (ISO-8601 local with UTC offset, or YYYY-MM-DD)
         city:
           type: string
           description: City from extraction

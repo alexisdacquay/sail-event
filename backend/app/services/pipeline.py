@@ -19,7 +19,7 @@ from ..services.budget import check_search_budget, check_llm_budget
 from ..services.criteria import needs_parse, parse_criteria, parse_metadata
 from ..services.window import WindowInPast, resolve
 from ..services.extract import extract_events
-from ..services.filters import filter_events
+from ..services.filters import attach_offset, filter_events
 from ..services.judge import judge_event, Verdict, JudgeError, band_word
 from .. import orm
 
@@ -397,12 +397,12 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                 db.add(orm.Event(
                     user_id=user.id,
                     title=ev.title,
-                    date_time=ev.start_local,
+                    date_time=attach_offset(ev.start_local, ev.start_tz, ev.country),
                     place=f"{ev.venue or ''}, {ev.city or ''}, {ev.country or ''}".strip(", "),
                     link=ev.link,
                     description=ev.description,
                     start_tz=ev.start_tz,
-                    end_time=ev.end_local,
+                    end_time=attach_offset(ev.end_local, ev.start_tz, ev.country) if ev.end_local else None,
                     source_url=ev.source_url,
                     page_kind=ev.page_kind,
                     city=ev.city or "",
@@ -519,14 +519,26 @@ def _judge_and_triage(
 
     from ..services.extract import ExtractedEvent
 
+    def _strip_offset(dt_str: str | None) -> str | None:
+        """Strip UTC offset from a stored datetime for the judge prompt.
+
+        The judge sees local times as the extractor produced them;
+        the offset is a storage/display concern only.
+        """
+        if not dt_str or len(dt_str) <= 10:
+            return dt_str
+        # Chop +HH:MM or -HH:MM or Z suffix
+        import re
+        return re.sub(r"[+-]\d{2}:\d{2}$|Z$", "", dt_str)
+
     with tracer.start_as_current_span("judge"):
         for evt in events:
             # Build an ExtractedEvent from the ORM event for the judge
             extracted = ExtractedEvent(
                 title=evt.title,
-                start_local=evt.date_time,
+                start_local=_strip_offset(evt.date_time),
                 start_tz=evt.start_tz,
-                end_local=evt.end_time,
+                end_local=_strip_offset(evt.end_time),
                 venue=None,
                 city=evt.city,
                 country=evt.country,

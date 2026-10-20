@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..deps import get_current_user
 from ..models import DecisionRequest, EventStatus
+from ..services.filters import attach_offset
 from ..services.judge import band_word
 from .. import orm
 
@@ -18,15 +19,18 @@ router = APIRouter()
 
 
 def _event_dict(e: orm.Event) -> dict:
+    # On-read fallback: attach offset to naive datetimes from pre-#71 rows
+    dt = attach_offset(e.date_time, e.start_tz, e.country if e.country != "ZZ" else None)
+    et = attach_offset(e.end_time, e.start_tz, e.country if e.country != "ZZ" else None) if e.end_time else None
     return {
         "id": e.id,
         "title": e.title,
-        "dateTime": e.date_time,
+        "dateTime": dt,
         "place": e.place,
         "link": e.link,
         "description": e.description,
         "startTz": e.start_tz,
-        "endTime": e.end_time,
+        "endTime": et,
         "city": e.city,
         "country": e.country,
         "sourceUrl": e.source_url,

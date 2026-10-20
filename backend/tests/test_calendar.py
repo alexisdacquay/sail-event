@@ -285,3 +285,163 @@ def test_calendar_feed_freshly_registered_user(client, auth_headers):
     assert cal["VERSION"] == "2.0"
     vevents = [c for c in cal.walk() if c.name == "VEVENT"]
     assert len(vevents) == 0
+
+
+# --- #71: DTSTART carries TZID or DATE ---
+
+def test_ics_dtstart_has_tzid_when_start_tz_set(client, _db_session):
+    """Timed events with start_tz get DTSTART;TZID=<tz> in the ICS feed."""
+    r = client.get("/api/calendar/demo-ics-token")
+    cal = Calendar.from_ical(r.content)
+
+    ve = [c for c in cal.walk() if c.name == "VEVENT"][0]
+    dtstart_prop = ve.get("DTSTART")
+    # The TZID parameter should be set
+    assert dtstart_prop.params.get("TZID") == "Europe/Berlin"
+    # The value is a naive datetime (local in the TZID zone), not UTC
+    dt = dtstart_prop.dt
+    assert dt.tzinfo is None or "Berlin" in str(dt.tzinfo)
+
+
+def test_ics_date_only_uses_value_date(client, _db_session):
+    """Date-only events get DTSTART;VALUE=DATE in the ICS feed."""
+    from app.orm import User
+
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    evt = Event(
+        user_id=user.id,
+        title="Date only fest",
+        date_time="2026-10-22",
+        place="Berlin",
+        link="https://example.com/date-only-ics",
+        description="All-day event",
+        score=95,
+        score_reason="Fits perfectly",
+        status="accepted",
+        start_tz=None,
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(evt)
+    _db_session.commit()
+
+    r = client.get("/api/calendar/demo-ics-token")
+    cal = Calendar.from_ical(r.content)
+    for c in cal.walk():
+        if c.name == "VEVENT" and str(c["UID"]) == f"{evt.id}@sail-event":
+            from datetime import date as date_type
+            assert isinstance(c["DTSTART"].dt, date_type)
+            assert not isinstance(c["DTSTART"].dt, datetime)
+            assert c["DTSTART"].dt.isoformat() == "2026-10-22"
+            break
+    else:
+        raise AssertionError("Date-only VEVENT not found")
+
+
+def test_ics_naive_row_fallback(client, _db_session):
+    """Pre-#71 naive rows with start_tz still get TZID in the ICS feed."""
+    from app.orm import User
+
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    # Simulate a pre-#71 naive row
+    evt = Event(
+        user_id=user.id,
+        title="Legacy naive event",
+        date_time="2026-10-22T19:00:00",  # no offset
+        place="Berlin",
+        link="https://example.com/naive-ics",
+        description="Legacy row",
+        score=90,
+        score_reason="Good",
+        status="accepted",
+        start_tz="Europe/Berlin",
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(evt)
+    _db_session.commit()
+
+    r = client.get("/api/calendar/demo-ics-token")
+    cal = Calendar.from_ical(r.content)
+    for c in cal.walk():
+        if c.name == "VEVENT" and str(c["UID"]) == f"{evt.id}@sail-event":
+            dtstart_prop = c.get("DTSTART")
+            assert dtstart_prop.params.get("TZID") == "Europe/Berlin"
+            # The local time should be 19:00 (unchanged — the naive value IS the local time)
+            assert dtstart_prop.dt.hour == 19
+            break
+    else:
+        raise AssertionError("Legacy naive VEVENT not found")
+
+
+def test_ics_unknown_zone_stays_floating(client, _db_session):
+    """Legacy row with start_tz NULL and country ZZ stays floating, not UTC."""
+    from app.orm import User
+
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    evt = Event(
+        user_id=user.id,
+        title="Unknown zone event",
+        date_time="2026-10-22T19:00:00",
+        place="Somewhere",
+        link="https://example.com/unknown-zone-ics",
+        description="No zone info",
+        score=80,
+        score_reason="OK",
+        status="accepted",
+        start_tz=None,
+        city="",
+        country="ZZ",
+    )
+    _db_session.add(evt)
+    _db_session.commit()
+
+    r = client.get("/api/calendar/demo-ics-token")
+    cal = Calendar.from_ical(r.content)
+    for c in cal.walk():
+        if c.name == "VEVENT" and str(c["UID"]) == f"{evt.id}@sail-event":
+            dtstart_prop = c.get("DTSTART")
+            # No TZID parameter — floating local time
+            assert "TZID" not in dtstart_prop.params
+            # Time is 19:00, not shifted
+            assert dtstart_prop.dt.hour == 19
+            # No timezone — naive
+            assert dtstart_prop.dt.tzinfo is None
+            break
+    else:
+        raise AssertionError("Unknown-zone VEVENT not found")
+
+
+def test_ics_country_zone_uses_iana_tzid(client, _db_session):
+    """Legacy row with start_tz NULL but single-zone country gets IANA TZID."""
+    from app.orm import User
+
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    evt = Event(
+        user_id=user.id,
+        title="Country zone event",
+        date_time="2026-10-22T19:00:00",
+        place="Berlin",
+        link="https://example.com/country-zone-ics",
+        description="Country DE resolves to Europe/Berlin",
+        score=85,
+        score_reason="Good",
+        status="accepted",
+        start_tz=None,
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(evt)
+    _db_session.commit()
+
+    r = client.get("/api/calendar/demo-ics-token")
+    cal = Calendar.from_ical(r.content)
+    for c in cal.walk():
+        if c.name == "VEVENT" and str(c["UID"]) == f"{evt.id}@sail-event":
+            dtstart_prop = c.get("DTSTART")
+            # IANA TZID from country table, not a pseudo-TZID like "UTC+02:00"
+            assert dtstart_prop.params.get("TZID") == "Europe/Berlin"
+            assert dtstart_prop.dt.hour == 19
+            break
+    else:
+        raise AssertionError("Country-zone VEVENT not found")
