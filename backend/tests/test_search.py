@@ -126,6 +126,62 @@ def test_search_all_skips_user_without_criteria(client, auth_headers, _db_sessio
     assert r.json()["usersQueued"] == 1
 
 
+def test_search_all_second_call_skips_queued_users(client, _db_session, monkeypatch):
+    """Two consecutive search/all calls: first queues the user, second skips it.
+
+    A slow pipeline means the enqueue-time Run row still has finished_at=NULL
+    when the next hourly call arrives (#73).
+    """
+    from unittest.mock import patch
+    from app.orm import Run, User
+
+    monkeypatch.setenv("SEARCH_ALL_API_KEY", "k")
+
+    # Patch _run_scheduled_user to be a no-op (simulates slow pipeline)
+    with patch("app.routers.search._run_scheduled_user"):
+        r1 = client.post("/api/search/all", headers={"X-API-Key": "k"})
+        assert r1.status_code == 202
+        assert r1.json()["usersQueued"] == 1
+        assert r1.json()["usersSkipped"] == 0
+
+        # The enqueue-time Run row exists with finished_at=NULL
+        user = _db_session.query(User).filter(User.username == "demo").first()
+        runs = _db_session.query(Run).filter(
+            Run.user_id == user.id, Run.finished_at.is_(None),
+        ).all()
+        assert len(runs) == 1
+
+        # Second call sees the unfinished row and skips the user
+        r2 = client.post("/api/search/all", headers={"X-API-Key": "k"})
+        assert r2.status_code == 202
+        assert r2.json()["usersQueued"] == 0
+        assert r2.json()["usersSkipped"] == 1
+
+
+def test_search_all_crashed_row_does_not_block_forever(client, _db_session, monkeypatch):
+    """An enqueue-time Run row older than the overlap window does not block the user."""
+    from datetime import datetime, UTC, timedelta
+    from app.orm import Run, User
+    from unittest.mock import patch
+
+    monkeypatch.setenv("SEARCH_ALL_API_KEY", "k")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+
+    # Simulate a crashed enqueue-time row: started 60 min ago, never finished
+    old = datetime.now(UTC) - timedelta(minutes=60)
+    _db_session.add(Run(
+        user_id=user.id, started_at=old, trigger="scheduled",
+    ))
+    _db_session.commit()
+
+    # The stale row is older than the 55-min window, so the user is eligible
+    with patch("app.routers.search._run_scheduled_user"):
+        r = client.post("/api/search/all", headers={"X-API-Key": "k"})
+    assert r.status_code == 202
+    assert r.json()["usersQueued"] == 1
+    assert r.json()["usersSkipped"] == 0
+
+
 def test_search_all_skips_user_with_unfinished_run(client, _db_session, monkeypatch):
     """A user with an unfinished run started < 55 min ago is skipped."""
     from datetime import datetime, UTC, timedelta

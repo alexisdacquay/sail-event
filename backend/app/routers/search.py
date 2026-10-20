@@ -149,14 +149,14 @@ def _get_session_factory():
     return _session_factory
 
 
-def _run_scheduled_user(user_id: str) -> None:
+def _run_scheduled_user(user_id: str, run_id: str) -> None:
     """Background task: run the pipeline for one user with a fresh DB session."""
     factory = _get_session_factory()
     db = factory()
     try:
         user = db.query(orm.User).filter(orm.User.id == user_id).first()
         if user:
-            run_pipeline(user, db, trigger="scheduled")
+            run_pipeline(user, db, trigger="scheduled", run_id=run_id)
     except Exception:
         logger.exception("scheduled run failed for user %s", user_id)
     finally:
@@ -176,8 +176,14 @@ def search_all(
     max_users = int(os.environ.get("MAX_SCHEDULED_USERS", "50"))
     queued, skipped = _select_users(db, max_users)
 
+    # #73: write Run rows at enqueue time so the 55-min skip sees queued users
+    now = datetime.now(UTC)
     for user in queued:
-        background_tasks.add_task(_run_scheduled_user, user.id)
+        run = orm.Run(user_id=user.id, started_at=now, trigger="scheduled")
+        db.add(run)
+        db.flush()
+        background_tasks.add_task(_run_scheduled_user, user.id, run.id)
+    db.commit()
 
     return JSONResponse(
         status_code=202,
