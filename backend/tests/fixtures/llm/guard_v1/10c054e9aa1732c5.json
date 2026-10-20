@@ -1,0 +1,12 @@
+{
+  "response": {
+    "blocked": true,
+    "reason": "injection"
+  },
+  "usage": {
+    "prompt_tokens": 245,
+    "completion_tokens": 72
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "deepseek-flash"
+}

@@ -48,6 +48,32 @@ def save_criteria(
             )
         user.time_zone = body.time_zone
 
+    # Guard the text before saving (Lakera primary, self-check fallback)
+    if body.text:
+        from ..adapters.factory import get_guardrail
+        from ..adapters.guard_lakera import ContentFlagged
+
+        guardrail = get_guardrail()
+        try:
+            guardrail.check(body.text, target="criteria")
+        except ContentFlagged:
+            return JSONResponse(
+                status_code=400,
+                content={"detail": "These criteria cannot be used."},
+            )
+        except RuntimeError:
+            # Both guards failed — fail closed
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Try again in a moment."},
+            )
+        except Exception:
+            # GuardUnavailable with no fallback — fail closed
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Try again in a moment."},
+            )
+
     c = db.query(orm.Criteria).filter(orm.Criteria.user_id == user.id).first()
     if c is None:
         c = orm.Criteria(user_id=user.id, text=body.text)

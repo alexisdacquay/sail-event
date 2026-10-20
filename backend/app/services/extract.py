@@ -12,6 +12,7 @@ from __future__ import annotations
 import calendar
 import json
 import logging
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from urllib.parse import urlparse
@@ -29,6 +30,30 @@ PROMPT_NAME = "extract"
 PROMPT_VERSION = "v2"
 MAX_EVENTS_PER_PAGE = 10
 CONTENT_SLICE = 20_000
+
+# --- structure layer helpers (§10) ---
+_HTML_TAG_RE = re.compile(r"<[^>]+>")
+_CTRL_CHAR_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+
+
+def _strip_markup(text: str) -> str:
+    """Remove HTML tags and control characters."""
+    text = _HTML_TAG_RE.sub("", text)
+    text = _CTRL_CHAR_RE.sub("", text)
+    return text.strip()
+
+
+def _link_allowed(link: str, result_urls: set[str]) -> bool:
+    """A link is allowed only when it equals a search-result URL or shares origin."""
+    if link in result_urls:
+        return True
+    parsed_link = urlparse(link)
+    for rurl in result_urls:
+        parsed_r = urlparse(rurl)
+        if (parsed_r.scheme == parsed_link.scheme
+                and parsed_r.netloc == parsed_link.netloc):
+            return True
+    return False
 
 
 @dataclass
@@ -54,6 +79,9 @@ class ExtractionCounts:
     events_extracted: int = 0
     filtered_non_event: int = 0
     extract_errors: int = 0
+    guard_skipped: int = 0
+    guard_fallback: int = 0
+    guard_errors: int = 0
 
 
 def _read_schema() -> dict:
@@ -189,9 +217,14 @@ def extract_events(
                 counts.extract_truncated += 1
 
             try:
-                guardrail.check(sliced)
+                guardrail.check(sliced, target="page")
             except Exception as exc:
-                logger.warning("guard blocked page %s: %s", r.url, exc)
+                from ..adapters.guard_lakera import ContentFlagged
+                if isinstance(exc, ContentFlagged):
+                    counts.guard_skipped += 1
+                else:
+                    # Both guards failed or RuntimeError — skip page, count error
+                    counts.guard_errors += 1
                 pspan.set_attribute("page_kind", "guard_blocked")
                 pspan.set_attribute("event_count", 0)
                 continue
@@ -259,9 +292,16 @@ def _process_pass1(
 
         link = ev.get("link", "")
         source_url = _match_source_url(link, results)
+        # Structure layer: link allow-list
+        if not _link_allowed(link, url_set):
+            link = source_url if source_url in url_set else results[0].url
+            source_url = link
+        # Structure layer: strip markup and control chars, truncate
+        title = _strip_markup(ev.get("title", ""))[:200]
+        description = _strip_markup(ev.get("description", ""))[:500]
 
         extracted.append(ExtractedEvent(
-            title=ev.get("title", ""),
+            title=title,
             start_local=ev.get("start_local", ""),
             start_tz=ev.get("start_tz"),
             end_local=ev.get("end_local"),
@@ -269,7 +309,7 @@ def _process_pass1(
             city=ev.get("city"),
             country=ev.get("country"),
             link=link,
-            description=ev.get("description", "")[:200],
+            description=description,
             confidence=confidence,
             source_url=source_url,
             page_kind="single_event",  # refined below
@@ -305,6 +345,7 @@ def _process_pass2(
         counts.filtered_non_event += 1
         return []
 
+    result_urls = {result.url}
     extracted: list[ExtractedEvent] = []
     for ev in raw_events[:MAX_EVENTS_PER_PAGE]:
         confidence = ev.get("confidence", 0)
@@ -312,16 +353,24 @@ def _process_pass2(
             counts.filtered_non_event += 1
             continue
 
+        link = ev.get("link", result.url)
+        # Structure layer: link allow-list
+        if not _link_allowed(link, result_urls):
+            link = result.url
+        # Structure layer: strip markup and control chars, truncate
+        title = _strip_markup(ev.get("title", ""))[:200]
+        description = _strip_markup(ev.get("description", ""))[:500]
+
         extracted.append(ExtractedEvent(
-            title=ev.get("title", ""),
+            title=title,
             start_local=ev.get("start_local", ""),
             start_tz=ev.get("start_tz"),
             end_local=ev.get("end_local"),
             venue=ev.get("venue"),
             city=ev.get("city"),
             country=ev.get("country"),
-            link=ev.get("link", result.url),
-            description=ev.get("description", "")[:200],
+            link=link,
+            description=description,
             confidence=confidence,
             source_url=result.url,
             page_kind=page_kind,

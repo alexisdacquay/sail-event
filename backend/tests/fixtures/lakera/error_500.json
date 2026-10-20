@@ -1,0 +1,7 @@
+{
+  "description": "Lakera server error — hand-written from API docs",
+  "status": 500,
+  "response": {
+    "error": "Internal server error"
+  }
+}
