@@ -96,6 +96,21 @@ class TestLakeraAdapter:
             with pytest.raises(GuardUnavailable, match="quota"):
                 g.check("anything")
 
+    def test_missing_key_raises_guard_unavailable(self, monkeypatch):
+        """#65: missing LAKERA_API_KEY → GuardUnavailable at check(), not KeyError at init."""
+        monkeypatch.delenv("LAKERA_API_KEY", raising=False)
+        g = LakeraGuardrail()  # must not raise
+        with pytest.raises(GuardUnavailable, match="LAKERA_API_KEY"):
+            g.check("anything")
+
+    def test_missing_key_criteria_503(self, client, auth_headers, monkeypatch):
+        """#65: GUARDRAIL=lakera without LAKERA_API_KEY → criteria save gets 503."""
+        monkeypatch.delenv("LAKERA_API_KEY", raising=False)
+        monkeypatch.setenv("GUARDRAIL", "lakera")
+        h = auth_headers("demo", "demo")
+        r = client.put("/api/criteria", json={"text": "jazz"}, headers=h)
+        assert r.status_code == 503
+
 
 # ---------------------------------------------------------------------------
 # AC1: Criteria guard wiring

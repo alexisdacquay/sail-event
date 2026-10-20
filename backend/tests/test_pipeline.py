@@ -159,7 +159,9 @@ def test_prod_refusal_recorded_on_run(client, auth_headers, _db_session, monkeyp
     h = auth_headers("demo", "demo")
     body = client.post("/api/search", headers=h).json()
     assert body.get("error") is not None
-    assert "refused" in body["error"].lower() or "prod" in body["error"].lower()
+    assert body["error"].startswith("RuntimeError: ")
+    assert "refused" in body["error"].lower()
+    assert body["stoppedAtStage"] == "adapters"
     monkeypatch.delenv("APP_ENV")
 
 
@@ -231,3 +233,65 @@ def test_max_events_per_run_cap(client, auth_headers, _db_session, monkeypatch):
     })
     body = client.post("/api/search", headers=h).json()
     assert body["eventsNew"] <= 2
+
+
+# ---------- #65: Provider exception reaches the API response ----------
+
+
+def test_extract_exception_reported_in_api(client, auth_headers, _db_session):
+    """An exception during extraction must reach the API error field (#65)."""
+    h = auth_headers("demo", "demo")
+
+    def _boom(*args, **kwargs):
+        raise RuntimeError("kaboom from extract")
+
+    with patch("app.services.pipeline.extract_events", side_effect=_boom):
+        body = client.post("/api/search", headers=h).json()
+
+    assert body["error"] is not None, "error must not be null after pipeline exception"
+    assert body["error"].startswith("RuntimeError: "), "error must be <Type>: <msg>"
+    assert "kaboom" in body["error"]
+    assert body["stoppedAtStage"] == "extract"
+
+
+def test_search_provider_all_queries_fail(client, auth_headers, _db_session):
+    """When every search query fails, error and stoppedAtStage='search' (#65)."""
+    h = auth_headers("demo", "demo")
+
+    class _BoomProvider:
+        name = "boom"
+        def search(self, query, **kw):
+            raise RuntimeError("kaboom from provider")
+
+    with patch("app.services.pipeline.get_search_provider",
+               return_value=_BoomProvider()):
+        body = client.post("/api/search", headers=h).json()
+
+    assert body["error"] is not None
+    assert body["error"].startswith("RuntimeError: "), "error must be <Type>: <msg>"
+    assert "kaboom" in body["error"]
+    assert body["stoppedAtStage"] == "search"
+
+
+def test_scorer_env_var_reported(client, auth_headers, _db_session, monkeypatch):
+    """Leftover SCORER env var is reported in the API error with format and stage."""
+    monkeypatch.setenv("SCORER", "claude")
+    h = auth_headers("demo", "demo")
+    body = client.post("/api/search", headers=h).json()
+    assert body["error"] is not None
+    assert body["error"].startswith("ValueError: "), "error must be <Type>: <msg>"
+    assert "SCORER" in body["error"]
+    assert "LLM_PROVIDER" in body["error"]
+    assert body["stoppedAtStage"] == "adapters"
+
+
+def test_factory_runtime_error_reported(client, auth_headers, _db_session):
+    """A RuntimeError from a factory must report format and stage='adapters'."""
+    h = auth_headers("demo", "demo")
+
+    with patch("app.services.pipeline.get_search_provider",
+               side_effect=RuntimeError("bad config")):
+        body = client.post("/api/search", headers=h).json()
+
+    assert body["error"] == "RuntimeError: bad config"
+    assert body["stoppedAtStage"] == "adapters"

@@ -39,7 +39,7 @@ class TestGetLanguageModel:
 
     def test_scorer_set_raises(self):
         with patch.dict("os.environ", {"SCORER": "claude"}):
-            with pytest.raises(ValueError, match="SCORER is replaced by LLM_PROVIDER"):
+            with pytest.raises(ValueError, match="unset SCORER; use LLM_PROVIDER"):
                 get_language_model()
 
 

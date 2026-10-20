@@ -21,7 +21,7 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `SEARCH_PROVIDER`, `TAVILY_API_KEY` | `tavily` + key for real web search; unset = fixtures |
 | `TAVILY_SEARCH_DEPTH` | `advanced` (default) or `basic` |
 | `MAX_RESULTS_PER_QUERY` | `20` (default, Tavily max) |
-| `SCORER`, `ANTHROPIC_API_KEY` | `claude` + key for real scoring; unset = fake scorer |
+| `SCORER`, `ANTHROPIC_API_KEY` | **Remove after v2 upgrade** (replaced by `LLM_PROVIDER`, `LLM_API_KEY`). Also remove `SCORER_MODEL` |
 | `LLM_PROVIDER` | `openai_compatible` for real scoring; `fake` (default outside prod) |
 | `LLM_BASE_URL` | `https://api.deepseek.com` (required when `LLM_PROVIDER=openai_compatible`) |
 | `LLM_MODEL` | `deepseek-flash` |

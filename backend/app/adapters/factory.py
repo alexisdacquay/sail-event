@@ -50,7 +50,7 @@ class _DeferredProdSearchGuard:
 
 def get_search_provider():
     if os.environ.get("SCORER"):
-        raise ValueError("SCORER is replaced by LLM_PROVIDER")
+        raise ValueError("unset SCORER; use LLM_PROVIDER")
 
     value = os.environ.get("SEARCH_PROVIDER", "fixture")
     is_prod = os.environ.get("APP_ENV") == "prod"
@@ -74,7 +74,7 @@ def get_search_provider():
 
 def get_language_model() -> LanguageModel:
     if os.environ.get("SCORER"):
-        raise ValueError("SCORER is replaced by LLM_PROVIDER")
+        raise ValueError("unset SCORER; use LLM_PROVIDER")
 
     value = os.environ.get("LLM_PROVIDER", "fake")
     is_prod = os.environ.get("APP_ENV") == "prod"
