@@ -86,20 +86,26 @@ class TavilyProvider:
         return results
 
     def _post(self, body: dict) -> dict:
+        import time as _time
         payload = json.dumps(body).encode()
-        req = urllib.request.Request(
-            self.API_URL,
-            data=payload,
-            headers={
-                "Authorization": f"Bearer {self._key}",
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=self.TIMEOUT) as resp:
-                return json.loads(resp.read())
-        except urllib.error.HTTPError as exc:
-            raise RuntimeError(f"Tavily API error: HTTP {exc.code}") from exc
-        except urllib.error.URLError as exc:
-            raise RuntimeError(f"Tavily API error: {exc.reason}") from exc
+        for attempt in range(2):
+            req = urllib.request.Request(
+                self.API_URL,
+                data=payload,
+                headers={
+                    "Authorization": f"Bearer {self._key}",
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=self.TIMEOUT) as resp:
+                    return json.loads(resp.read())
+            except urllib.error.HTTPError as exc:
+                if exc.code == 429 and attempt == 0:
+                    _time.sleep(3)
+                    continue
+                raise RuntimeError(f"Tavily API error: HTTP {exc.code}") from exc
+            except urllib.error.URLError as exc:
+                raise RuntimeError(f"Tavily API error: {exc.reason}") from exc
+        raise RuntimeError("Tavily API: failed after retry")

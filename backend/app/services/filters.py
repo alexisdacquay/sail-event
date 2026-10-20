@@ -204,32 +204,9 @@ def filter_events(
             counts.filtered_past += 1
             continue
 
-        # 2. Window filter (overlap: start <= window_end AND event_end >= window_start)
-        start_utc = _event_start_utc(ev, user_tz)
-        if start_utc and end_utc:
-            if start_utc > window_end_utc or end_utc < window_start_utc:
-                counts.filtered_date += 1
-                continue
-        elif start_utc:
-            if start_utc > window_end_utc or start_utc < window_start_utc:
-                counts.filtered_date += 1
-                continue
+        # Place and date-window filtering removed — the judge decides.
 
-        # 3. Place filter
-        if target_country:
-            ev_country = ev.country
-            if not ev_country or ev_country == "ZZ":
-                counts.filtered_place += 1
-                continue
-            if ev_country != target_country:
-                counts.filtered_place += 1
-                continue
-            if target_city and ev.city:
-                if ev.city.lower() != target_city.lower():
-                    counts.filtered_place += 1
-                    continue
-
-        # 4. Non-event: already handled in extract (confidence < 0.5 dropped there)
+        # 2. Non-event: already handled in extract (confidence < 0.5 dropped there)
         if not ev.start_local:
             counts.filtered_non_event += 1
             continue

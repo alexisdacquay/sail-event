@@ -259,6 +259,7 @@ def _run_batch(tz: str) -> str:
 
     def _one(i_text):
         i, text = i_text
+        time.sleep((i - 1) * 0.5)  # stagger to avoid provider rate limits
         t0 = time.monotonic()
         try:
             run, events = _run_once(text, tz, record=False)
@@ -288,7 +289,7 @@ def _run_batch(tz: str) -> str:
         print(f"  [{i}/{len(BATCH_TEXTS)}] {status:>10}  kept={len(kept):>2}  {elapsed:5.0f}s  {text[:50]}")
         return row
 
-    with ThreadPoolExecutor(max_workers=10) as pool:
+    with ThreadPoolExecutor(max_workers=5) as pool:
         futures = {pool.submit(_one, (i, text)): i for i, text in enumerate(BATCH_TEXTS, 1)}
         rows = [None] * len(BATCH_TEXTS)
         for f in as_completed(futures):
