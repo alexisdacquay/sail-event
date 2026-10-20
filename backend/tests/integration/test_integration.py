@@ -173,8 +173,8 @@ def test_search_all(http: httpx.Client, api_key: str):
     )
 
     r = http.post("/api/search/all", headers={"X-API-Key": api_key})
-    assert r.status_code == 200
-    assert r.json()["usersProcessed"] >= 1
+    assert r.status_code == 202
+    assert r.json()["usersQueued"] >= 1
 
 
 # ---------- ICS feed ----------
