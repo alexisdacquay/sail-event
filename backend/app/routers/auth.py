@@ -31,7 +31,12 @@ _now = time.monotonic  # seam for deterministic tests
 
 
 def _client_ip(request: Request) -> str:
-    """Real client IP: rightmost X-Forwarded-For hop when a proxy is trusted, else peer address."""
+    """Real client IP: rightmost X-Forwarded-For hop when a proxy is trusted, else peer address.
+
+    All IP-dependent code must call this, never request.client.host directly
+    (uvicorn's ProxyHeadersMiddleware sets that to the leftmost hop when
+    trusted_hosts='*', which the client can spoof).
+    """
     if os.environ.get("FORWARDED_ALLOW_IPS", ""):
         xff = request.headers.get("x-forwarded-for", "")
         if xff:
