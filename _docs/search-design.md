@@ -270,7 +270,7 @@ Consequences: `planner.py`, `PlannedQuery`, the local-language month and event-w
 
 ## 11. Guardrails
 
-Reuse published patterns; invent nothing of our own. References: OWASP Top 10 for LLM Applications (threat names in spec §10); OWASP LLM Prompt Injection Prevention Cheat Sheet, https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html (structure: schema-bound outputs, no model URL trusted as a link); Lakera Guard API (primary detector); NVIDIA NeMo Guardrails, "self check input" rail and its published "complex" `self_check_input` prompt, https://docs.nvidia.com/nemo/guardrails/latest/user-guides/guardrails-library.html (fallback). The OpenAI cookbook pattern of running a guard in parallel with the main call does not apply: the criteria guard runs once, at save, before any search exists.
+Reuse published patterns; invent nothing of our own. References: OWASP Top 10 for LLM Applications (threat names in spec §10); OWASP LLM Prompt Injection Prevention Cheat Sheet, https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html (structure: schema-bound outputs, no model URL trusted as a link); Lakera Guard API (primary detector); the self-check fallback (`guard_v2.md`) asks a single prompt-injection question scoped to the same threat as Lakera. The OpenAI cookbook pattern of running a guard in parallel with the main call does not apply: the criteria guard runs once, at save, before any search exists.
 
 | Layer | Module | Rule | Failure |
 |---|---|---|---|
@@ -398,7 +398,7 @@ Issues in dependency order; each one engineer session; new files only until F2.
 | Fixture search provider rewritten as golden-set pages, demo seeded with C1 | The dev deployment's demo data changes; README screenshots and e2e expectations move with it (issue I) |
 | Production refuses fixture and fake adapters at first use, not at start-up | A prod deploy with no keys stays healthy and records refused runs every hour; nobody is paged, the queue just stays empty until someone reads a run |
 | `SCORER`/`SCORER_MODEL` removed at the swap, not aliased; new adapters as `_v2` files until then | Render env vars already set with the old names break on the swap deploy; the `_v2` suffix is a rename churn in F2 |
-| Lakera Guard is the only detector (criteria text only); NeMo-style self-check only as its fallback; no rules of our own | The free plan's monthly cap is the real limit: one request per criteria save; a busy month ends on the fallback, which is one model call that can be fooled |
+| Lakera Guard is the only detector (criteria text only); prompt-injection self-check as its fallback; no rules of our own | The free plan's monthly cap is the real limit: one request per criteria save; a busy month ends on the fallback, which is one model call that can be fooled |
 | Guard once at save, never per run | A criteria text saved before issue H lands is never guarded; a backfill pass over stored criteria is not planned |
 | "Search now" limited to 6 per user per hour | A user iterating on criteria hits the limit in minutes and must wait; the message says how long |
 | Registration defaults 90/40, existing users untouched | Existing users on 70/30 auto-accept the 70–89 band into their calendar until they move the sliders; only the thresholds page tells them |
