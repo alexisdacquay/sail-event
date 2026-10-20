@@ -44,11 +44,6 @@ class BraveProvider:
             "count": str(max_results),
             "extra_snippets": "true",
         }
-        if country:
-            params["country"] = country.upper()
-        if language:
-            params["search_lang"] = language
-        # freshness deliberately not sent.
 
         url = f"{self.API_URL}?{urllib.parse.urlencode(params)}"
         req = urllib.request.Request(url, headers={

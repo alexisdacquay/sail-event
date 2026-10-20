@@ -144,9 +144,6 @@ def _make_event(**kwargs) -> ExtractedEvent:
         city="Berlin",
         country="DE",
         link="https://example.com/event",
-        price_amount=None,
-        price_currency=None,
-        is_free=None,
         description="A test event.",
         confidence=0.9,
         source_url="https://example.com/event",
@@ -199,45 +196,22 @@ class TestFilterPipeline:
     def test_date_only_today_kept(self):
         """Date-only event on Oct 18 (today): ends at 23:59:59, after now (12:00)."""
         ev = _make_event(start_local="2026-10-18")
-        # This event is today, not in the window (19-21), so filtered_date
         kept, counts = _filter_one(ev)
-        assert len(kept) == 0
-        assert counts.filtered_date == 1
+        assert len(kept) == 1  # no date-window filter, not past
 
-    def test_window_overlap_festival(self):
-        """Festival 17-22 Oct overlaps 19-21 Oct window."""
-        ev = _make_event(
-            start_local="2026-10-17",
-            end_local="2026-10-22",
-        )
+    def test_outside_window_not_filtered(self):
+        """Date-window filter removed; events outside the window are kept for the judge."""
+        ev = _make_event(start_local="2026-11-05T20:00")
         kept, counts = _filter_one(ev)
         assert len(kept) == 1
 
-    def test_outside_window_filtered(self):
-        ev = _make_event(start_local="2026-11-05T20:00")
-        kept, counts = _filter_one(ev)
-        assert len(kept) == 0
-        assert counts.filtered_date == 1
-
-    def test_wrong_country_filtered(self):
+    def test_wrong_country_not_filtered(self):
+        """Place filter removed; wrong-country events are kept for the judge."""
         ev = _make_event(city="Chicago", country="US", start_tz="America/Chicago")
         kept, counts = _filter_one(ev)
-        assert len(kept) == 0
-        assert counts.filtered_place == 1
+        assert len(kept) == 1
 
-    def test_wrong_city_same_country_filtered(self):
-        ev = _make_event(city="Potsdam")
-        kept, counts = _filter_one(ev)
-        assert len(kept) == 0
-        assert counts.filtered_place == 1
-
-    def test_unknown_country_filtered(self):
-        ev = _make_event(country="ZZ")
-        kept, counts = _filter_one(ev)
-        assert len(kept) == 0
-        assert counts.filtered_place == 1
-
-    def test_null_country_filtered(self):
+    def test_null_country_filtered_incomplete(self):
         ev = _make_event(country=None)
         kept, counts = _filter_one(ev)
         assert len(kept) == 0

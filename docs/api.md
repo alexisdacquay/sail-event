@@ -18,4 +18,4 @@
 | `rotateCalendarUrl` | `rotateCalendarUrl` | POST | `/api/calendar/rotate`    |
 | —                 | `getCalendarFeed`| GET    | `/api/calendar/{ics_token}` |
 
-Event fields beyond the obvious: `decidedBy` is `auto` (triaged by the pipeline), `user` (decided in the queue) or null (still to review); `scoreReason` is the one-line reason shown under the title; `scorerModel` names the model that scored it.
+Event fields beyond the obvious: `decidedBy` is `auto` (triaged by the pipeline), `user` (decided in the queue) or null (still to review); `scoreReason` is the one-line reason shown under the title.

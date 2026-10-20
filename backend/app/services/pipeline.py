@@ -17,7 +17,6 @@ from ..adapters.search import remove_known_pages
 from ..services import clock
 from ..services.criteria import needs_parse, parse_criteria, parse_metadata
 from ..services.window import WindowInPast, resolve
-from ..services.planner import plan as plan_queries
 from ..services.extract import extract_events
 from ..services.filters import filter_events
 from ..services.judge import judge_event, Verdict, JudgeError, band_word
@@ -231,6 +230,8 @@ def run_pipeline(user: orm.User, db: Session, *, trigger: str) -> orm.Run:
                 counts["extract_truncated"] = extract_counts.extract_truncated
                 counts["events_extracted"] = extract_counts.events_extracted
                 counts["extract_errors"] = extract_counts.extract_errors
+                if extract_counts.extract_errors > 0 and not error_detail:
+                    error_detail = f"extract: {extract_counts.extract_errors} error(s)"
                 # Non-event count from extraction
                 counts["filtered_non_event"] = extract_counts.filtered_non_event
 

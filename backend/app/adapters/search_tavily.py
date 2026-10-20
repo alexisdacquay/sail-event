@@ -1,7 +1,6 @@
 """Tavily Search API adapter.
 
-Country sent as a name (Tavily's requirement); language forwarded for
-local-language queries; raw_content requested; no date regex.
+Verbatim query, raw_content requested, no country/language/freshness parameters.
 """
 
 from __future__ import annotations
@@ -13,22 +12,6 @@ import urllib.request
 from typing import ClassVar
 
 from .search import SearchResult
-
-# Tavily accepts country *names*, not ISO-2 codes.
-_ISO2_TO_COUNTRY: dict[str, str] = {
-    "AT": "austria",
-    "CH": "switzerland",
-    "DE": "germany",
-    "ES": "spain",
-    "FR": "france",
-    "GB": "united kingdom",
-    "IT": "italy",
-    "JP": "japan",
-    "NL": "netherlands",
-    "PT": "portugal",
-    "US": "united states",
-    "BR": "brazil",
-}
 
 
 class TavilyProvider:
@@ -52,7 +35,7 @@ class TavilyProvider:
         country: str | None = None,
         language: str | None = None,
         freshness_days: int | None = None,
-        max_results: int = 6,
+        max_results: int = 20,
     ) -> list[SearchResult]:
         depth = os.environ.get("TAVILY_SEARCH_DEPTH", "advanced")
         body: dict = {
@@ -61,17 +44,6 @@ class TavilyProvider:
             "max_results": max_results,
             "include_raw_content": True,
         }
-        # Country as name; unknown codes omitted (ranking boost only).
-        if country:
-            name = _ISO2_TO_COUNTRY.get(country.upper())
-            if name:
-                body["country"] = name
-        # Language forwarded for local-language queries.
-        if language:
-            body["language"] = language
-
-        # freshness_days deliberately not sent (listing pages are old pages
-        # updated often).
 
         data = self._post(body)
         results: list[SearchResult] = []

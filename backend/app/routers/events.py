@@ -29,8 +29,6 @@ def _event_dict(e: orm.Event) -> dict:
         "endTime": e.end_time,
         "city": e.city,
         "country": e.country,
-        "priceAmount": e.price_amount,
-        "priceCurrency": e.price_currency,
         "sourceUrl": e.source_url,
         "band": band_word(e.score) if e.score is not None else None,
         "score": e.score,

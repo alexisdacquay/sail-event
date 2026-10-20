@@ -59,7 +59,7 @@ class TestRequestBody:
 
         assert captured["model"] == "deepseek-flash"
         assert captured["temperature"] == 0
-        assert captured["max_tokens"] == 100  # guard prompt
+        assert captured["max_tokens"] == 16000  # all prompts use 16000 for reasoning models
         assert captured["response_format"] == {"type": "json_object"}
         assert len(captured["messages"]) == 1
         assert captured["messages"][0]["role"] == "user"

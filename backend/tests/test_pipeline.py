@@ -33,7 +33,7 @@ def test_run_produces_run_row_with_stage_counts(client, auth_headers, _db_sessio
 
     sc = json.loads(run.stage_counts)
     assert "queries_planned" in sc
-    assert sc["queries_planned"] > 0
+    assert sc["queries_planned"] == 1  # verbatim query, one call
 
 
 def test_run_creates_events_with_scores(client, auth_headers, _db_session):
@@ -115,33 +115,6 @@ def test_window_in_past_stops_run(client, auth_headers, _db_session, monkeypatch
 
     body = client.post("/api/search", headers=h).json()
     assert body.get("error") == "dates in the past: edit your criteria"
-
-
-# ---------- No-place stops the run ----------
-
-
-def test_no_place_stops_run(client, auth_headers, _db_session):
-    import hashlib
-    h = auth_headers("noplace", "noplace")
-    text = "jazz"
-    client.put("/api/criteria", headers=h, json={"text": text})
-    # Set facets with no place
-    user = _db_session.query(User).filter(User.username == "noplace").first()
-    crit = _db_session.query(Criteria).filter(Criteria.user_id == user.id).first()
-    crit.facets_json = json.dumps({
-        "place": None,
-        "date": {"start": "2026-10-19", "end": "2026-10-21"},
-        "topics": ["jazz"],
-        "language": None,
-        "input_language": "en",
-    })
-    crit.facets_version = "criteria_v2"
-    crit.facets_text_sha = hashlib.sha256(text.encode()).hexdigest()
-    _db_session.commit()
-
-    body = client.post("/api/search", headers=h).json()
-    assert body.get("error") == "no place in criteria"
-    assert body.get("stoppedAtStage") == "search"
 
 
 # ---------- Judge error leaves event `new` ----------

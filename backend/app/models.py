@@ -67,8 +67,6 @@ class Event(BaseModel):
     end_time: str | None = Field(default=None, alias="endTime")
     city: str = Field(default="")
     country: str = Field(default="ZZ")
-    price_amount: float | None = Field(default=None, alias="priceAmount")
-    price_currency: str | None = Field(default=None, alias="priceCurrency")
     source_url: str | None = Field(default=None, alias="sourceUrl")
     band: str | None = Field(default=None)
     score: int

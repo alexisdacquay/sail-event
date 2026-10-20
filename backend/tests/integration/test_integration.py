@@ -155,31 +155,6 @@ def test_user_isolation(http: httpx.Client):
     assert len(r.json()) == 0, "user B sees user A's events"
 
 
-# ---------- no-place criteria stops at plan ----------
-
-
-def test_no_place_criteria_stops(http: httpx.Client):
-    """Criteria without a city stop at the plan stage with a clear error."""
-    user, pw = _unique(), "pass"
-    http.post("/api/auth/register", json={"username": user, "password": pw})
-    r = http.post("/api/auth/login", json={"username": user, "password": pw})
-    headers = {"Authorization": f"Bearer {r.json()['token']}"}
-
-    http.put("/api/criteria", json={"text": "sailing regattas"}, headers=headers)
-    http.put(
-        "/api/thresholds",
-        json={"lowerThreshold": 20, "upperThreshold": 80},
-        headers=headers,
-    )
-
-    r = http.post("/api/search", headers=headers)
-    assert r.status_code == 200
-    body = r.json()
-    assert body["eventsFound"] == 0
-    assert body["stoppedAtStage"] == "search"
-    assert body["error"] == "no place in criteria"
-
-
 # ---------- search/all ----------
 
 

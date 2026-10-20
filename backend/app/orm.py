@@ -82,8 +82,6 @@ class Event(Base):
     page_kind: Mapped[str | None] = mapped_column(String(16), nullable=True)
     city: Mapped[str] = mapped_column(String, nullable=False, server_default="", default="")
     country: Mapped[str] = mapped_column(String(2), nullable=False, server_default="ZZ", default="ZZ")
-    price_amount: Mapped[float | None] = mapped_column(Float, nullable=True)
-    price_currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
     source_query: Mapped[str | None] = mapped_column(String, nullable=True)
     extraction_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     score: Mapped[int | None] = mapped_column(Integer, nullable=True)

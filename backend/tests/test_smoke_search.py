@@ -53,8 +53,8 @@ def test_batch_table_has_header_and_ten_rows(tmp_path, monkeypatch):
     table = _run_batch("Europe/Berlin")
     lines = table.strip().split("\n")
 
-    # Header + separator + 10 data rows
-    assert len(lines) == 12
+    # Header + separator + N data rows (one per BATCH_TEXTS entry)
+    assert len(lines) == 2 + len(BATCH_TEXTS)
     assert lines[0].startswith("| # |")
     assert lines[1].startswith("|---|")
     # Each data row starts with | N |

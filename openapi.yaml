@@ -448,16 +448,6 @@ components:
         country:
           type: string
           description: ISO-3166-1 alpha-2 country code
-        priceAmount:
-          type:
-            - number
-            - 'null'
-          description: Ticket price; null = unknown, 0 = free
-        priceCurrency:
-          type:
-            - string
-            - 'null'
-          description: ISO-4217 currency code
         sourceUrl:
           type:
             - string

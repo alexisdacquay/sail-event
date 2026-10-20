@@ -176,13 +176,13 @@
     },
     {
       "id": "E22",
-      "label": "over budget",
+      "label": "over budget (budget rule removed)",
       "expected": "judged",
       "expected_band": [
-        0,
-        30
+        70,
+        100
       ],
-      "note": "CI judge row (for C2 criteria with budget)"
+      "note": "budget rule removed; Vienna Philharmonic fits C2 on place, date and topic"
     }
   ]
 }

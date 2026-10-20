@@ -28,61 +28,37 @@ def _fake_urlopen(fixture_path: pathlib.Path = FIXTURE):
 
 class TestRequestBody:
     @patch("urllib.request.urlopen")
-    def test_country_germany_and_language_de(self, mock_urlopen, monkeypatch):
-        """Local-language query sends country='germany' and language='de'."""
+    def test_verbatim_query_no_country_no_language(self, mock_urlopen, monkeypatch):
+        """Verbatim query: no country, no language param sent."""
         monkeypatch.setenv("TAVILY_API_KEY", "test-key")
         mock_urlopen.return_value = _fake_urlopen()
 
         provider = TavilyProvider()
-        provider.search(
-            "Jazz Berlin Oktober 2026",
-            country="DE",
-            language="de",
-            max_results=6,
-        )
-
-        # Inspect the request body sent to urlopen.
-        call_args = mock_urlopen.call_args
-        req = call_args[0][0]
-        body = json.loads(req.data)
-
-        assert body["country"] == "germany"
-        assert body["language"] == "de"
-        assert body["include_raw_content"] is True
-        assert body["max_results"] == 6
-
-    @patch("urllib.request.urlopen")
-    def test_english_query_no_language(self, mock_urlopen, monkeypatch):
-        """English query sends country but no language key."""
-        monkeypatch.setenv("TAVILY_API_KEY", "test-key")
-        mock_urlopen.return_value = _fake_urlopen()
-
-        provider = TavilyProvider()
-        provider.search(
-            "jazz Berlin October 2026",
-            country="DE",
-            language=None,
-            max_results=6,
-        )
+        provider.search("jazz Berlin October 2026 event", max_results=20)
 
         req = mock_urlopen.call_args[0][0]
         body = json.loads(req.data)
 
-        assert body["country"] == "germany"
-        assert "language" not in body
-
-    @patch("urllib.request.urlopen")
-    def test_unknown_country_omitted(self, mock_urlopen, monkeypatch):
-        """Country code not in the table → country param omitted."""
-        monkeypatch.setenv("TAVILY_API_KEY", "test-key")
-        mock_urlopen.return_value = _fake_urlopen()
-
-        provider = TavilyProvider()
-        provider.search("test", country="ZZ", max_results=6)
-
-        req = mock_urlopen.call_args[0][0]
-        body = json.loads(req.data)
+        assert body["query"] == "jazz Berlin October 2026 event"
         assert "country" not in body
+        assert "language" not in body
+        assert body["include_raw_content"] is True
+        assert body["max_results"] == 20
+        assert body["search_depth"] == "advanced"
+
+    @patch("urllib.request.urlopen")
+    def test_search_depth_from_env(self, mock_urlopen, monkeypatch):
+        """TAVILY_SEARCH_DEPTH env overrides the default."""
+        monkeypatch.setenv("TAVILY_API_KEY", "test-key")
+        monkeypatch.setenv("TAVILY_SEARCH_DEPTH", "basic")
+        mock_urlopen.return_value = _fake_urlopen()
+
+        provider = TavilyProvider()
+        provider.search("test", max_results=6)
+
+        req = mock_urlopen.call_args[0][0]
+        body = json.loads(req.data)
+        assert body["search_depth"] == "basic"
 
 
 # ---------- response mapping ----------
@@ -95,7 +71,7 @@ class TestMapping:
         mock_urlopen.return_value = _fake_urlopen()
 
         provider = TavilyProvider()
-        results = provider.search("jazz Berlin October 2026", country="DE", max_results=6)
+        results = provider.search("jazz Berlin October 2026", max_results=6)
 
         assert len(results) > 0
         first = results[0]
@@ -103,7 +79,6 @@ class TestMapping:
         assert first.title
         assert first.snippet  # mapped from 'content'
         assert first.provider == "tavily"
-        # Recorded response has raw_content for some results.
         has_raw = any(r.raw_content for r in results)
         assert has_raw, "At least one result should have raw_content"
 
@@ -124,7 +99,7 @@ class TestErrors:
             provider.search("q")
 
     @patch("urllib.request.urlopen")
-    def test_429_raises(self, mock_urlopen, monkeypatch):
+    def test_429_retries_then_raises(self, mock_urlopen, monkeypatch):
         import urllib.error
         monkeypatch.setenv("TAVILY_API_KEY", "test-key")
         mock_urlopen.side_effect = urllib.error.HTTPError(
@@ -133,6 +108,7 @@ class TestErrors:
         provider = TavilyProvider()
         with pytest.raises(RuntimeError, match="HTTP 429"):
             provider.search("q")
+        assert mock_urlopen.call_count == 2  # retry once
 
     @patch("urllib.request.urlopen")
     def test_5xx_raises(self, mock_urlopen, monkeypatch):

@@ -44,6 +44,7 @@ def _seed(db: Session) -> None:
         password_hash=hash_password("demo"),
         upper_threshold=90,
         lower_threshold=40,
+        time_zone="Europe/Berlin",
         ics_token="demo-ics-token",
     )
     db.add(user)

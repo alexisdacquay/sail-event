@@ -84,8 +84,6 @@ def _event_to_json(ev: ExtractedEvent) -> str:
         "title": ev.title,
         "start_local": ev.start_local,
         "start_tz": ev.start_tz,
-        "end_local": ev.end_local,
-        "venue": ev.venue,
         "city": ev.city,
         "country": ev.country,
         "description": ev.description,
