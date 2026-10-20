@@ -26,11 +26,11 @@ Scenarios: health, full user journey (register → search → decide → re-fetc
 dedup, user isolation, search/all, ICS feed, data survives restart.
 
 ```
-HOST_PORT=8010 make test-integration
+make test-integration
 ```
 
-The target:
-1. `docker compose up --build -d --wait` (reads `HOST_PORT`, default 8000)
+The target (uses `TEST_HOST_PORT`, default 8030; override with `TEST_HOST_PORT=8010 make test-integration`):
+1. `docker compose up --build -d --wait` (reads `TEST_HOST_PORT`, default 8030)
 2. Runs pytest on `backend/tests/integration/` with `-m integration`
 3. `docker compose down -v`
 4. Exit code = pytest exit code
@@ -63,7 +63,7 @@ cd e2e && npm install && npx playwright install chromium
 **Run:**
 
 ```
-HOST_PORT=8010 make test-e2e
+make test-e2e
 ```
 
 The target:
