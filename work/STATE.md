@@ -1,5 +1,13 @@
 # ProjectOne — work state (resumable)
 
+## LIVE 2026-10-20 10:55 — prod runs search v2 on Tavily + DeepSeek
+- Owner's word given 10:27. Render env set on dev + prod: SEARCH_PROVIDER=tavily, LLM_PROVIDER=openai_compatible, MAX_RESULTS_PER_QUERY=20, TAVILY_SEARCH_DEPTH=advanced, LLM_TIMEOUT_SECONDS=120, LLM_JSON_MODE=json_object (was missing on both → KeyError), SCORER="" (dev had the old value → ValueError), GUARDRAIL=none for now (LAKERA_API_KEY missing on both). Both services deployed main 487cb1a through the env change (prod auto-deploy stays off; promote.yml not needed this time).
+- Prod smoke 10:43 (user smoke_*, Berlin text): 20 results → 30 extracted → 17 judged → 2 accepted (Ignaz Schick 95, 13 Kuukautta 92, both 21 Oct Berlin), 2 queued, 13 rejected (dates). Dev smoke blocked: TAVILY_API_KEY missing on dev.
+- OWNER TODO on Render: dev TAVILY_API_KEY; both LAKERA_API_KEY (then set GUARDRAIL=lakera on both); health check path /api/health on both; delete old DB user; prod DB inbound rule.
+- Open PRs: #66 (issue 65: run failures reported in the API with `<Type>: <msg>` and stoppedAtStage, Lakera guard GuardUnavailable without key, SCORER message, deployment.md) QA re-check running on ec1eeca; #67 (card Where line printed the country twice) CI running. After merge: prod needs a promote (auto-deploy off) — ask the owner or use promote.yml with the main sha.
+- README screenshots: taken on prod with a fresh reviewer_* account (scratchpad/shots, script shots.mjs); retake in progress for 01-login and the home top; then copy into docs/images and commit.
+- Worktrees: wt-g/h/i (old side branches, can be removed), wt-where (PR 67).
+
 ## MERGED 2026-10-20 10:28 — WAITING FOR OWNER'S WORD
 - PR #64 merged into main (befe764): search v2 revision (verbatim query + "event", judge_v3 suitability, no planner, no price), #61 budgets/queue, #62 Lakera, #63 UI card. Issues #54-#63 closed. CI green on the branch (one fix 90790fd: hardcoded path in a test). Dev auto-deploys main (fixture/fake adapters, FAKE_NOW set).
 - Waiting on the owner for: (a) promote befe764 to prod via promote.yml; (b) Render env on both services: SEARCH_PROVIDER=tavily, LLM_PROVIDER=openai_compatible, GUARDRAIL=lakera, MAX_RESULTS_PER_QUERY=20, TAVILY_SEARCH_DEPTH=advanced, LLM_TIMEOUT_SECONDS=120 (keys already there); dev also FAKE_NOW unset for real runs. Then a live Berlin smoke on dev and prod, README screenshots from dev.
