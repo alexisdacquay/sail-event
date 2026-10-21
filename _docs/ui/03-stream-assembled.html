@@ -1,0 +1,214 @@
+<title>Stream, assembled</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one assembled Stream mockup (funnel, denser history, detail under Searches linked to the selected card), then one alternative for the link. */
+:root{
+  --bg:#f6f7f9; --paper:#ffffff; --ink:#15181d; --ink-2:#5b6472; --ink-3:#9aa3b0;
+  --line:#e3e6eb; --line-2:#cfd4db;
+  --accent:#1f5eff; --accent-bg:#e8efff;
+  --ok:#157f4b; --ok-bg:#e3f4ea; --warn:#9a6b00; --warn-bg:#fff3cf; --bad:#b4332c; --bad-bg:#fbe6e4;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --body:"Figtree", "Helvetica Neue", Arial, sans-serif;
+  --mono:"JetBrains Mono", "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0f1115; --paper:#171a20; --ink:#eef0f3; --ink-2:#a7afbb; --ink-3:#6b7482;
+  --line:#262b34; --line-2:#343b46; --accent:#7aa2ff; --accent-bg:#1b2742;
+  --ok:#5fd095; --ok-bg:#133425; --warn:#f0c454; --warn-bg:#3a2e0d; --bad:#ff8a80; --bad-bg:#44201d;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0f1115; --paper:#171a20; --ink:#eef0f3; --ink-2:#a7afbb; --ink-3:#6b7482;
+  --line:#262b34; --line-2:#343b46; --accent:#7aa2ff; --accent-bg:#1b2742;
+  --ok:#5fd095; --ok-bg:#133425; --warn:#f0c454; --warn-bg:#3a2e0d; --bad:#ff8a80; --bad-bg:#44201d;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;
+  padding-block:32px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1040px;margin:0 auto;display:grid;gap:48px}
+h1{font-family:var(--display);font-weight:700;font-size:34px;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.lede{color:var(--ink-2);max-width:62ch;margin:6px 0 0}
+section{display:grid;gap:14px}
+.head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.num{font-family:var(--mono);font-size:12px;color:var(--ink-3);letter-spacing:.08em}
+h2{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:-.015em;margin:0}
+.stance{color:var(--ink-2);margin:0;font-size:15px}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 24px;font-size:14px;color:var(--ink-2)}
+.notes b{color:var(--ink);font-weight:600}
+.frame{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:12px;line-height:1.4}
+.bar{height:26px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:0 10px;color:var(--ink-3);font-family:var(--mono);font-size:10px}
+.bar i{width:8px;height:8px;border-radius:50%;background:var(--line-2);display:inline-block}
+.mut{color:var(--ink-2)} .dim{color:var(--ink-3)}
+.pill{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:500}
+.ok{background:var(--ok-bg);color:var(--ok)} .warn{background:var(--warn-bg);color:var(--warn)}
+.btn{display:inline-block;border:1px solid var(--line-2);border-radius:6px;padding:3px 9px;font-size:11px;font-weight:500;color:var(--ink)}
+.btn.p{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.mono{font-family:var(--mono);font-size:11px}
+.t{font-weight:600;color:var(--ink)}
+.ev{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper);position:relative}
+.ev + .ev{margin-top:6px}
+.ev.sel{border-color:var(--accent);background:var(--accent-bg)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sb{height:5px;border-radius:3px;background:var(--line);position:relative;overflow:hidden}
+.sb i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:3px}
+.hd{font-family:var(--display);font-weight:700;letter-spacing:-.01em}
+.s1{display:grid;grid-template-columns:1fr 240px;min-height:380px;position:relative}
+.s1 .main{padding:18px 22px;border-right:1px solid var(--line)}
+.s1 .rail{padding:16px;display:grid;gap:14px;align-content:start}
+.prompt{border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;font-size:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.run{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start;margin-top:14px}
+.tl{margin:0;padding-left:14px;border-left:2px solid var(--line)}
+.tl p{margin:0 0 6px;position:relative}
+.tl p::before{content:"";position:absolute;left:-19px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--line-2)}
+.day{margin:14px 0 6px;font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-family:var(--mono);font-size:10px;text-align:center}
+.cal span{padding:3px 0;border-radius:4px;color:var(--ink-2)}
+.cal .has{background:var(--accent-bg);color:var(--accent);font-weight:500}
+.cal .now{outline:1px solid var(--ink);color:var(--ink)}
+.rail p{margin:0}
+.lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:0 0 5px}
+.detail{border:1px solid var(--accent);background:var(--accent-bg);border-radius:8px;padding:10px 12px;display:grid;gap:6px}
+.detail .sb{margin:2px 0;background:var(--paper)}
+.funnel{width:300px;max-width:100%;font-family:var(--mono);font-size:10px}
+.funnel text{fill:var(--ink-2)} .funnel text.k{fill:var(--ink);font-weight:500}
+.hist{margin:12px 0 0}
+.hist .r{display:grid;grid-template-columns:84px 1fr auto;gap:10px;align-items:center;padding:2px 0;color:var(--ink-3);font-size:10px;font-family:var(--mono);white-space:nowrap}
+.ev{display:grid;grid-template-columns:1fr auto auto auto auto;gap:14px;align-items:center;white-space:nowrap}
+.ev .t{overflow:hidden;text-overflow:ellipsis}
+.ev .c{color:var(--ink-2);font-size:11px}
+.ev .c.n{font-family:var(--mono);min-width:5ch;text-align:right}
+.ev .pill{min-width:76px;text-align:center}
+.hist .r .mb{height:5px;border-radius:3px;display:flex;overflow:hidden;background:var(--line)}
+.hist .r .mb i{display:block;height:100%}
+.link{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.link path{fill:none;stroke:var(--accent);stroke-width:1.5;stroke-dasharray:3 4}
+.link circle{fill:var(--accent)}
+.alt .ev.sel{background:var(--paper)}
+.inline{margin:0 0 6px;border:1px solid var(--accent);border-top:0;border-radius:0 0 8px 8px;background:var(--accent-bg);padding:8px 10px;display:grid;gap:5px;margin-top:-7px;padding-top:12px}
+.alt .ev.sel{border-bottom-left-radius:0;border-bottom-right-radius:0;z-index:1}
+@media (max-width:760px){ .s1{grid-template-columns:1fr} .s1 .main{border-right:0;border-bottom:1px solid var(--line)} .run{grid-template-columns:1fr} .hist .r{grid-template-columns:72px 1fr} .hist .r > :nth-child(3){display:none} .link{display:none} .ev{grid-template-columns:1fr auto auto;white-space:normal} .ev .c:nth-child(3){display:none} }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Stream, assembled</h1>
+    <p class="lede">Funnel beside the run, three earlier runs under it, one line per event, the event detail under Searches and tied to the selected card by a dotted line.</p>
+  </header>
+
+  <section>
+    <div class="head"><span class="num">01</span><h2>Dotted tie</h2><p class="stance">The selected card and the detail share one contour and one tint; a dotted line runs from the card to the detail. Nothing else on the page uses that blue.</p></div>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i> sail-event / stream</div>
+      <div class="s1" id="screen">
+        <div class="main">
+          <div class="prompt"><span>jazz tonight in Berlin</span><span class="row"><span class="btn">Edit</span><span class="btn p">Search again</span></span></div>
+          <div class="run">
+            <div class="tl">
+              <p class="dim mono">21 Oct 20:07 · automatic run · 1 min 40 s</p>
+              <p>Searched the web, 20 pages</p>
+              <p>Read 20 pages, found 31 events</p>
+              <p>Set aside 9 before judging</p>
+              <p>Judged 22 · 2 in calendar, 1 to review, 19 rejected</p>
+            </div>
+            <svg class="funnel" viewBox="0 0 300 172" role="img" aria-label="Funnel of the 31 events found: 2 in calendar, 1 to review, 19 rejected, 9 set aside">
+              <title>Where the 31 events went</title>
+              <rect x="12" y="10" width="18" height="124" fill="var(--line-2)"></rect>
+              <text x="12" y="150" class="k">31 found</text>
+              <text x="12" y="162">on 20 pages</text>
+              <path d="M30 10 C140 10 140 6 212 6 L212 14 C140 14 140 18 30 18 Z" fill="var(--ok)" opacity=".55"></path>
+              <path d="M30 18 C140 18 140 20 212 20 L212 24 C140 24 140 22 30 22 Z" fill="var(--warn)" opacity=".6"></path>
+              <path d="M30 22 C140 22 140 30 212 30 L212 106 C140 106 140 98 30 98 Z" fill="var(--bad)" opacity=".35"></path>
+              <path d="M30 98 C140 98 140 112 212 112 L212 148 C140 148 140 134 30 134 Z" fill="var(--ink-3)" opacity=".35"></path>
+              <rect x="212" y="6" width="8" height="8" fill="var(--ok)"></rect>
+              <rect x="212" y="20" width="8" height="4" fill="var(--warn)"></rect>
+              <rect x="212" y="30" width="8" height="76" fill="var(--bad)"></rect>
+              <rect x="212" y="112" width="8" height="36" fill="var(--ink-3)"></rect>
+              <text x="226" y="13" class="k">2 in calendar</text>
+              <text x="226" y="25" class="k">1 to review</text>
+              <text x="226" y="66" class="k">19 rejected</text>
+              <text x="226" y="77">16 wrong date</text>
+              <text x="226" y="87">3 off topic</text>
+              <text x="226" y="128" class="k">9 set aside</text>
+              <text x="226" y="139">4 past · 2 place · 3 dup</text>
+            </svg>
+          </div>
+          <div class="hist">
+            <p class="lbl">Earlier runs</p>
+            <div class="r"><span>21 Oct 19:07</span><div class="mb"><i style="width:6.9%;background:var(--ok)"></i><i style="width:65.5%;background:var(--bad);opacity:.5"></i></div><span>29 found · 2 / 0 / 19</span></div>
+            <div class="r"><span>21 Oct 18:07</span><div class="mb"><i style="width:4%;background:var(--warn)"></i><i style="width:60%;background:var(--bad);opacity:.5"></i></div><span>25 found · 0 / 1 / 15</span></div>
+            <div class="r"><span>21 Oct 17:07</span><div class="mb"><i style="width:3.6%;background:var(--ok)"></i><i style="width:3.6%;background:var(--warn)"></i><i style="width:57%;background:var(--bad);opacity:.5"></i></div><span>28 found · 1 / 1 / 16</span></div>
+            <div class="r"><span>earlier ›</span><div></div><span>13 runs</span></div>
+          </div>
+          <p class="day">Tonight · Tue 21 Oct</p>
+          <div class="ev"><span class="t">Julia Hülsmann Trio</span><span class="c">21:00</span><span class="c">A-Trane, Berlin</span><span class="c n">95%</span><span class="pill ok">In calendar</span></div>
+          <div class="ev"><span class="t">Late Night Jam Session</span><span class="c">23:30</span><span class="c">Zig Zag Jazz Club</span><span class="c n">92%</span><span class="pill ok">In calendar</span></div>
+          <div class="ev sel" id="card"><span class="t">Jazz &amp; Wine Evening</span><span class="c">time unknown</span><span class="c">Weinbar Rutz, Berlin</span><span class="c n">64%</span><span class="pill warn">To review</span></div>
+          <div class="ev"><span class="t">Open Mic Jazz</span><span class="c">20:00</span><span class="c">Kreuzberg</span><span class="c n">58%</span><span class="pill warn">To review</span></div>
+          <p class="dim" style="margin:8px 0 0">19 rejected, mostly other dates · show</p>
+        </div>
+        <div class="rail">
+          <div><p class="lbl">October</p>
+            <div class="cal"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span class="has now">21</span><span>22</span><span>23</span><span class="has">24</span><span>25</span><span>26</span><span class="has">27</span><span>28</span><span>29</span><span>30</span><span>31</span><span></span><span></span></div></div>
+          <div><p class="lbl">Calendar feed</p><p class="mono dim">webcal://…/f/8a1c · Copy</p></div>
+          <div><p class="lbl">Searches</p><p>jazz tonight in Berlin</p><p class="dim">regatta near Valencia</p><p class="dim">+ new search</p></div>
+          <div class="detail" id="detail">
+            <p class="hd" style="font-size:14px">Jazz &amp; Wine Evening</p>
+            <p class="mut">Tue 21 Oct · time unknown · Weinbar Rutz, Berlin</p>
+            <div class="row"><span class="btn p">Add to calendar</span><span class="btn">Reject</span></div>
+            <p class="mut">Score 64%</p>
+            <div class="sb"><i style="width:64%"></i></div>
+            <p>Tonight in Berlin, but no start time on the page, and it reads more like a wine tasting with background music than a jazz concert.</p>
+            <p class="dim">Source · weinbar-rutz.de/events ↗</p>
+          </div>
+        </div>
+        <svg class="link" id="link" aria-hidden="true"><path id="lp" d=""></path><circle id="lc1" r="2.5"></circle><circle id="lc2" r="2.5"></circle></svg>
+      </div>
+    </div>
+    <div class="notes">
+      <p><b>Rows</b> One line per event: title, time, place, score, status; columns align across rows; a long title is cut with an ellipsis.</p>
+      <p><b>History</b> Three runs, newest first, same colours as the funnel; "earlier ›" opens the rest.</p>
+    </div>
+  </section>
+
+  <section class="alt" hidden>
+    <div class="head"><span class="num">alt</span><h2>Detail opens under the card</h2><p class="stance">No tie needed: the detail drops out of the selected card itself. The rail stays short. The trade: the list below shifts down while one is open.</p></div>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i> sail-event / stream</div>
+      <div class="s1" style="min-height:0">
+        <div class="main">
+          <p class="day" style="margin-top:0">Tonight · Tue 21 Oct</p>
+          <div class="ev"><div class="row"><span class="t">Julia Hülsmann Trio</span><span class="pill ok">In calendar</span></div><div class="mut">21:00 · A-Trane, Berlin · Score 95%</div></div>
+          <div class="ev"><div class="row"><span class="t">Late Night Jam Session</span><span class="pill ok">In calendar</span></div><div class="mut">23:30 · Zig Zag Jazz Club · Score 92%</div></div>
+          <div class="ev sel"><div class="row"><span class="t">Jazz &amp; Wine Evening</span><span class="pill warn">To review</span></div><div class="mut">time unknown · Berlin · Score 64%</div></div>
+          <div class="inline">
+            <div class="row"><span class="btn p">Add to calendar</span><span class="btn">Reject</span><span class="dim" style="margin-left:auto">Weinbar Rutz, Berlin</span></div>
+            <div class="sb"><i style="width:64%"></i></div>
+            <p style="margin:0">Tonight in Berlin, but no start time on the page, and it reads more like a wine tasting with background music than a jazz concert.</p>
+            <p class="dim" style="margin:0">Source · weinbar-rutz.de/events ↗</p>
+          </div>
+          <div class="ev"><div class="row"><span class="t">Open Mic Jazz</span><span class="pill warn">To review</span></div><div class="mut">20:00 · Kreuzberg · Score 58%</div></div>
+        </div>
+        <div class="rail">
+          <div><p class="lbl">Searches</p><p>jazz tonight in Berlin</p><p class="dim">regatta near Valencia</p><p class="dim">+ new search</p></div>
+          <div><p class="lbl">Calendar feed</p><p class="mono dim">webcal://…/f/8a1c · Copy</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+(function(){
+  var s=document.getElementById('screen'),c=document.getElementById('card'),d=document.getElementById('detail');
+  var p=document.getElementById('lp'),c1=document.getElementById('lc1'),c2=document.getElementById('lc2');
+  function draw(){
+    var S=s.getBoundingClientRect(),C=c.getBoundingClientRect(),D=d.getBoundingClientRect();
+    var x1=C.right-S.left, y1=C.top-S.top+C.height/2, x2=D.left-S.left, y2=D.top-S.top+D.height/2;
+    var xm=x1+(x2-x1)/2;
+    p.setAttribute('d','M'+x1+' '+y1+' H'+xm+' V'+y2+' H'+x2);
+    c1.setAttribute('cx',x1);c1.setAttribute('cy',y1);c2.setAttribute('cx',x2);c2.setAttribute('cy',y2);
+  }
+  draw(); window.addEventListener('resize',draw); if(document.fonts&&document.fonts.ready){document.fonts.ready.then(draw);}
+})();
+</script>

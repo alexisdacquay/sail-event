@@ -1,0 +1,312 @@
+<title>Sail-event UI directions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: five full-width mockup frames stacked, each a desktop screen at reduced scale; notes beside each. */
+:root{
+  --bg:#f6f7f9; --paper:#ffffff; --ink:#15181d; --ink-2:#5b6472; --ink-3:#9aa3b0;
+  --line:#e3e6eb; --line-2:#cfd4db;
+  --accent:#1f5eff; --accent-bg:#e8efff;
+  --ok:#157f4b; --ok-bg:#e3f4ea; --warn:#9a6b00; --warn-bg:#fff3cf; --bad:#b4332c; --bad-bg:#fbe6e4;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --body:"Figtree", "Helvetica Neue", Arial, sans-serif;
+  --mono:"JetBrains Mono", "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0f1115; --paper:#171a20; --ink:#eef0f3; --ink-2:#a7afbb; --ink-3:#6b7482;
+  --line:#262b34; --line-2:#343b46; --accent:#7aa2ff; --accent-bg:#1b2742;
+  --ok:#5fd095; --ok-bg:#133425; --warn:#f0c454; --warn-bg:#3a2e0d; --bad:#ff8a80; --bad-bg:#44201d;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0f1115; --paper:#171a20; --ink:#eef0f3; --ink-2:#a7afbb; --ink-3:#6b7482;
+  --line:#262b34; --line-2:#343b46; --accent:#7aa2ff; --accent-bg:#1b2742;
+  --ok:#5fd095; --ok-bg:#133425; --warn:#f0c454; --warn-bg:#3a2e0d; --bad:#ff8a80; --bad-bg:#44201d;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;
+  padding-block:32px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1040px;margin:0 auto;display:grid;gap:56px}
+h1{font-family:var(--display);font-weight:700;font-size:34px;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.lede{color:var(--ink-2);max-width:62ch;margin:6px 0 0}
+section{display:grid;gap:14px}
+.head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.num{font-family:var(--mono);font-size:12px;color:var(--ink-3);letter-spacing:.08em}
+h2{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:-.015em;margin:0}
+.stance{color:var(--ink-2);margin:0;font-size:15px}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 24px;font-size:14px;color:var(--ink-2)}
+.notes b{color:var(--ink);font-weight:600}
+.frame{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:12px;line-height:1.4}
+.bar{height:26px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:0 10px;color:var(--ink-3);font-family:var(--mono);font-size:10px}
+.bar i{width:8px;height:8px;border-radius:50%;background:var(--line-2);display:inline-block}
+.scr{min-height:380px}
+.mut{color:var(--ink-2)} .dim{color:var(--ink-3)}
+.pill{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:500}
+.ok{background:var(--ok-bg);color:var(--ok)} .warn{background:var(--warn-bg);color:var(--warn)} .bad{background:var(--bad-bg);color:var(--bad)} .acc{background:var(--accent-bg);color:var(--accent)}
+.btn{display:inline-block;border:1px solid var(--line-2);border-radius:6px;padding:3px 9px;font-size:11px;font-weight:500;color:var(--ink)}
+.btn.p{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.mono{font-family:var(--mono);font-size:11px}
+.t{font-weight:600;color:var(--ink)}
+.ev{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.ev + .ev{margin-top:6px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sb{height:5px;border-radius:3px;background:var(--line);position:relative;overflow:hidden}
+.sb i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:3px}
+.gh{border:1px dashed var(--line-2);background:transparent}
+.hd{font-family:var(--display);font-weight:700;letter-spacing:-.01em}
+/* 1 stream */
+.s1{display:grid;grid-template-columns:1fr 220px;min-height:380px}
+.s1 .main{padding:18px 22px;border-right:1px solid var(--line)}
+.s1 .rail{padding:16px}
+.prompt{border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;font-size:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.tl{margin:14px 0 0;padding-left:14px;border-left:2px solid var(--line)}
+.tl p{margin:0 0 6px;position:relative}
+.tl p::before{content:"";position:absolute;left:-19px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--line-2)}
+.tl p.live::before{background:var(--accent)}
+.day{margin:14px 0 6px;font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-family:var(--mono);font-size:10px;text-align:center}
+.cal span{padding:3px 0;border-radius:4px;color:var(--ink-2)}
+.cal .has{background:var(--accent-bg);color:var(--accent);font-weight:500}
+.cal .now{outline:1px solid var(--ink);color:var(--ink)}
+/* 2 agenda */
+.s2{display:grid;grid-template-columns:150px 1fr;min-height:380px}
+.s2 .side{border-right:1px solid var(--line);padding:14px 12px}
+.s2 .side p{margin:0 0 8px}
+.wk{display:grid;grid-template-columns:repeat(5,1fr);border-left:1px solid var(--line)}
+.wk .col{border-right:1px solid var(--line);min-height:330px;padding:8px 6px;position:relative}
+.wk .col h4{margin:0 0 8px;font-weight:600;font-size:11px;color:var(--ink-2)}
+.wk .col h4 b{display:block;font-family:var(--display);font-size:18px;color:var(--ink);font-weight:700}
+.blk{border-radius:6px;padding:6px 7px;font-size:11px;margin-bottom:6px;line-height:1.3}
+.blk.solid{background:var(--accent-bg);color:var(--ink);border-left:3px solid var(--accent)}
+.blk.ghost{border:1px dashed var(--line-2);color:var(--ink-2)}
+.blk .tm{font-family:var(--mono);font-size:10px;color:var(--ink-3)}
+/* 3 inbox */
+.s3{display:grid;grid-template-columns:170px 1fr 260px;min-height:380px}
+.s3 > div{padding:12px}
+.s3 > div + div{border-left:1px solid var(--line)}
+.srch{padding:7px 8px;border-radius:6px;margin-bottom:4px}
+.srch.on{background:var(--accent-bg)}
+.srch small{display:block;color:var(--ink-3);font-family:var(--mono);font-size:10px}
+.li{display:grid;grid-template-columns:34px 1fr auto;gap:8px;padding:7px 6px;border-bottom:1px solid var(--line);align-items:center}
+.li.sel{background:var(--accent-bg);border-radius:6px}
+.sc{font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink-2)}
+.kb{font-family:var(--mono);font-size:10px;color:var(--ink-3);border:1px solid var(--line-2);border-radius:3px;padding:0 4px}
+/* 4 spotlight */
+.s4{min-height:380px;padding:40px 60px 24px;display:grid;gap:18px;align-content:start}
+.big{font-family:var(--display);font-size:24px;font-weight:500;border-bottom:2px solid var(--ink);padding:6px 2px;display:flex;justify-content:space-between;align-items:baseline}
+.big .hint{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.lad{display:grid;gap:7px}
+.lad .r{display:grid;grid-template-columns:40px 1fr 110px 90px;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.lad .n{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+/* 5 board */
+.s5{min-height:380px;padding:12px 14px;display:grid;grid-template-rows:auto 1fr;gap:12px}
+.tabs{display:flex;gap:14px;border-bottom:1px solid var(--line);padding-bottom:6px;font-size:12px}
+.tabs .on{color:var(--ink);font-weight:600;border-bottom:2px solid var(--ink);margin-bottom:-7px;padding-bottom:6px}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.colb{background:var(--bg);border-radius:8px;padding:8px}
+.colb h4{margin:0 0 8px;font-size:11px;font-weight:600;display:flex;justify-content:space-between}
+.card5{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:7px 8px;margin-bottom:6px;font-size:11px}
+.card5 .t{display:block}
+.card5 .m{color:var(--ink-3);font-family:var(--mono);font-size:10px}
+.prog{display:flex;gap:6px;align-items:center;font-size:12px}
+.prog .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+@media (max-width:760px){
+  .s1,.s2,.s3{grid-template-columns:1fr}
+  .s1 .main,.s2 .side,.s3 > div + div{border-right:0;border-left:0;border-bottom:1px solid var(--line)}
+  .wk{grid-template-columns:repeat(3,1fr)} .wk .col:nth-child(n+4){display:none}
+  .s4{padding:24px 16px} .lad .r{grid-template-columns:32px 1fr 70px}
+  .lad .r > :nth-child(4){display:none}
+  .cols{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion: no-preference){ .prog .dot{animation:b 1.2s infinite alternate} @keyframes b{to{opacity:.3}} }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Five ways to lay out Sail-event</h1>
+    <p class="lede">Same data every time: one saved search, a run in progress, three events found tonight, the calendar feed. Each direction decides what the page is <em>about</em>. Pick one, or point at parts of two.</p>
+  </header>
+
+  <!-- 1 -->
+  <section>
+    <div class="head"><span class="num">01</span><h2>Stream</h2><p class="stance">The page is a log of what the search did for you, newest at the bottom, like a thread you keep.</p></div>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i> sail-event / stream</div>
+      <div class="scr s1">
+        <div class="main">
+          <div class="prompt"><span>jazz tonight in Berlin</span><span class="row"><span class="btn">Edit</span><span class="btn p">Search again</span></span></div>
+          <div class="tl">
+            <p class="dim mono">21 Oct 20:07 · automatic run</p>
+            <p>Searched the web, 20 pages</p>
+            <p>Read 20 pages, found 31 events</p>
+            <p class="live"><span class="prog"><span class="dot"></span>Judging 12 of 31</span></p>
+          </div>
+          <p class="day">Tonight · Tue 21 Oct</p>
+          <div class="ev"><div class="row"><span class="t">Julia Hülsmann Trio</span><span class="pill ok">In calendar</span></div><div class="mut">21:00 · A-Trane, Berlin · Score 95%</div></div>
+          <div class="ev"><div class="row"><span class="t">Late Night Jam Session</span><span class="pill ok">In calendar</span></div><div class="mut">23:30 · Zig Zag Jazz Club · Score 92%</div></div>
+          <div class="ev"><div class="row"><span class="t">Jazz &amp; Wine Evening</span><span class="pill warn">To review</span><span class="btn">Add</span><span class="btn">Skip</span></div><div class="mut">time unknown · Berlin · Score 64%</div></div>
+          <p class="dim" style="margin:8px 0 0">22 rejected, mostly other dates · show</p>
+        </div>
+        <div class="rail">
+          <p class="hd" style="margin:0 0 8px">October</p>
+          <div class="cal">
+            <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+            <span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span>
+            <span>20</span><span class="has now">21</span><span>22</span><span>23</span><span class="has">24</span><span>25</span><span>26</span>
+            <span class="has">27</span><span>28</span><span>29</span><span>30</span><span>31</span><span></span><span></span>
+          </div>
+          <p class="mut" style="margin:12px 0 4px">Calendar feed</p>
+          <p class="mono dim" style="margin:0">webcal://…/f/8a1c · Copy</p>
+          <p class="mut" style="margin:14px 0 4px">Searches</p>
+          <p style="margin:0 0 3px">jazz tonight in Berlin</p>
+          <p class="dim" style="margin:0 0 3px">regatta near Valencia</p>
+          <p class="dim" style="margin:0">+ new search</p>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <p><b>What it is for</b> One search at a time, read top to bottom. The run and its results are one story.</p>
+      <p><b>Strong</b> Progress is never hidden; nothing moves to another page. Works on a phone unchanged.</p>
+      <p><b>Risk</b> Long threads. Needs a "collapse older runs" rule after a week.</p>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <div class="head"><span class="num">02</span><h2>Agenda</h2><p class="stance">The calendar is the product. Found events appear as dashed proposals in the week; accepting them makes them solid.</p></div>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i> sail-event / week</div>
+      <div class="scr s2">
+        <div class="side">
+          <p class="hd">This week</p>
+          <p class="mut">jazz tonight in Berlin</p>
+          <p class="prog"><span class="dot"></span>Judging 12 of 31</p>
+          <p class="dim" style="margin-top:14px">regatta near Valencia</p>
+          <p class="dim">kids workshops Sevilla</p>
+          <p class="dim" style="margin-top:14px">+ new search</p>
+          <p class="dim" style="margin-top:28px">3 proposals waiting</p>
+          <p class="dim">Feed · Copy link</p>
+        </div>
+        <div class="wk">
+          <div class="col"><h4>Mon <b>20</b></h4></div>
+          <div class="col"><h4>Tue <b>21</b></h4>
+            <div class="blk solid"><span class="tm">21:00</span><br>Julia Hülsmann Trio<br><span class="dim">A-Trane</span></div>
+            <div class="blk solid"><span class="tm">23:30</span><br>Late Night Jam<br><span class="dim">Zig Zag</span></div>
+            <div class="blk ghost"><span class="tm">time?</span><br>Jazz &amp; Wine Evening<br><span class="row" style="margin-top:4px"><span class="btn">Add</span><span class="btn">Skip</span></span></div>
+          </div>
+          <div class="col"><h4>Wed <b>22</b></h4></div>
+          <div class="col"><h4>Thu <b>23</b></h4><div class="blk ghost"><span class="tm">19:30</span><br>Jazz Night at Donau115<br><span class="dim">Score 71%</span></div></div>
+          <div class="col"><h4>Fri <b>24</b></h4><div class="blk solid"><span class="tm">20:00</span><br>Omer Klein Trio<br><span class="dim">Zig Zag</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <p><b>What it is for</b> People who think in days. The question "what's on tonight" is answered by looking, not reading.</p>
+      <p><b>Strong</b> Date mistakes are obvious at once (a 27 Oct event sits in the wrong column). Several searches merge into one week naturally.</p>
+      <p><b>Risk</b> Events without a time or with "date only" need a slot; rejected events have no home and go to a side list.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <div class="head"><span class="num">03</span><h2>Inbox</h2><p class="stance">Three panes like a mail client: your searches, the queue, the open event. Built for fast triage with the keyboard.</p></div>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i> sail-event / inbox</div>
+      <div class="scr s3">
+        <div>
+          <p class="hd" style="margin:0 0 8px">Searches</p>
+          <div class="srch on">jazz tonight in Berlin<small>3 to review · judging…</small></div>
+          <div class="srch">regatta near Valencia<small>0 to review · 2 in calendar</small></div>
+          <div class="srch">kids workshops Sevilla<small>5 to review</small></div>
+          <p class="dim" style="margin:10px 0 0">+ new search</p>
+          <p class="dim" style="margin:28px 0 0">Calendar feed<br><span class="mono">webcal://…/8a1c</span></p>
+        </div>
+        <div>
+          <div class="row" style="justify-content:space-between;margin-bottom:6px"><span class="hd">To review · 3</span><span class="dim"><span class="kb">J</span> <span class="kb">K</span> move · <span class="kb">A</span> add · <span class="kb">R</span> reject</span></div>
+          <div class="li sel"><span class="sc">64</span><span><span class="t">Jazz &amp; Wine Evening</span><br><span class="mut">Tue 21 Oct · time unknown · Berlin</span></span><span class="pill warn">review</span></div>
+          <div class="li"><span class="sc">71</span><span><span class="t">Jazz Night at Donau115</span><br><span class="mut">Thu 23 Oct · 19:30 · Neukölln</span></span><span class="pill warn">review</span></div>
+          <div class="li"><span class="sc">58</span><span><span class="t">Open Mic Jazz</span><br><span class="mut">Tue 21 Oct · 20:00 · Kreuzberg</span></span><span class="pill warn">review</span></div>
+          <p class="dim" style="margin:12px 0 4px">In calendar · 2</p>
+          <div class="li"><span class="sc">95</span><span><span class="t">Julia Hülsmann Trio</span><br><span class="mut">Tue 21 Oct · 21:00 · A-Trane</span></span><span class="pill ok">added</span></div>
+          <div class="li"><span class="sc">92</span><span><span class="t">Late Night Jam Session</span><br><span class="mut">Tue 21 Oct · 23:30 · Zig Zag</span></span><span class="pill ok">added</span></div>
+          <p class="dim" style="margin:12px 0 0">Rejected · 22 · show</p>
+        </div>
+        <div>
+          <p class="hd" style="margin:0;font-size:14px">Jazz &amp; Wine Evening</p>
+          <p class="mut" style="margin:2px 0 10px">Tue 21 Oct · time unknown · Weinbar Rutz, Berlin</p>
+          <div class="row" style="margin-bottom:12px"><span class="btn p">Add to calendar</span><span class="btn">Reject</span></div>
+          <p class="mut" style="margin:0 0 4px">Score 64%</p>
+          <div class="sb"><i style="width:64%"></i></div>
+          <p style="margin:10px 0 0">Tonight in Berlin, but no start time on the page, and it reads more like a wine tasting with background music than a jazz concert.</p>
+          <p class="dim" style="margin:12px 0 0">Source · weinbar-rutz.de/events ↗</p>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <p><b>What it is for</b> Users with several searches and many results a day; power users.</p>
+      <p><b>Strong</b> Everything on one screen, no tabs; the judge's sentence is always in view for the selected event; fastest triage.</p>
+      <p><b>Risk</b> Dense. On a phone it collapses to three stacked screens, which is today's problem in a new coat.</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <div class="head"><span class="num">04</span><h2>Spotlight</h2><p class="stance">Almost nothing on the page but the sentence you typed and a ranked ladder of answers. The score is the layout.</p></div>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i> sail-event</div>
+      <div class="scr s4">
+        <div class="big"><span>jazz tonight in Berlin</span><span class="hint">judging 12 / 31 · 20:07</span></div>
+        <div class="lad">
+          <div class="r"><span class="n">95</span><span><span class="t">Julia Hülsmann Trio</span> <span class="mut">· 21:00 · A-Trane</span></span><div class="sb"><i style="width:95%"></i></div><span class="pill ok">in calendar</span></div>
+          <div class="r"><span class="n">92</span><span><span class="t">Late Night Jam Session</span> <span class="mut">· 23:30 · Zig Zag</span></span><div class="sb"><i style="width:92%"></i></div><span class="pill ok">in calendar</span></div>
+          <div class="r"><span class="n">71</span><span><span class="t">Jazz Night at Donau115</span> <span class="mut">· Thu 23 · 19:30</span></span><div class="sb"><i style="width:71%"></i></div><span class="row"><span class="btn">Add</span><span class="btn">Skip</span></span></div>
+          <div class="r"><span class="n">64</span><span><span class="t">Jazz &amp; Wine Evening</span> <span class="mut">· time unknown</span></span><div class="sb"><i style="width:64%"></i></div><span class="row"><span class="btn">Add</span><span class="btn">Skip</span></span></div>
+          <div class="r" style="color:var(--ink-3)"><span class="n">8</span><span>Jazzfest opening night <span class="dim">· Tue 27 Oct · wrong date</span></span><div class="sb"><i style="width:8%;background:var(--line-2)"></i></div><span class="dim">+ 21 more</span></div>
+        </div>
+        <p class="dim mono" style="margin:0">the line at 90 adds to your calendar · at 40 rejects · drag to change</p>
+        <p class="dim" style="margin:0">Feed · Searches (3) · Account</p>
+      </div>
+    </div>
+    <div class="notes">
+      <p><b>What it is for</b> One question, one answer list. The thresholds become a visible line on the ladder instead of a settings slider.</p>
+      <p><b>Strong</b> Radically simple; the number explains itself; nothing to learn.</p>
+      <p><b>Risk</b> Dates and places are secondary to the score, so a user scanning for "Saturday" works harder; several searches need a switcher.</p>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <div class="head"><span class="num">05</span><h2>Board</h2><p class="stance">Three columns, left to right: what came in, what you kept, what you passed on. Drag or click to move.</p></div>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i> sail-event / board</div>
+      <div class="scr s5">
+        <div class="row" style="justify-content:space-between">
+          <div class="tabs"><span class="on">jazz tonight in Berlin</span><span class="mut">regatta near Valencia</span><span class="mut">kids workshops Sevilla</span><span class="dim">+</span></div>
+          <span class="prog"><span class="dot"></span>Judging 12 of 31 · <span class="btn">Search now</span></span>
+        </div>
+        <div class="cols">
+          <div class="colb"><h4><span>To review</span><span class="dim">3</span></h4>
+            <div class="card5"><span class="t">Jazz &amp; Wine Evening</span><span class="m">Tue 21 · time? · 64%</span></div>
+            <div class="card5"><span class="t">Jazz Night at Donau115</span><span class="m">Thu 23 · 19:30 · 71%</span></div>
+            <div class="card5"><span class="t">Open Mic Jazz</span><span class="m">Tue 21 · 20:00 · 58%</span></div>
+          </div>
+          <div class="colb"><h4><span>In calendar</span><span class="dim">2 · feed ↗</span></h4>
+            <div class="card5"><span class="t">Julia Hülsmann Trio</span><span class="m">Tue 21 · 21:00 · 95%</span></div>
+            <div class="card5"><span class="t">Late Night Jam Session</span><span class="m">Tue 21 · 23:30 · 92%</span></div>
+          </div>
+          <div class="colb"><h4><span>Passed</span><span class="dim">22 · clear</span></h4>
+            <div class="card5" style="opacity:.7"><span class="t">Jazzfest opening night</span><span class="m">Tue 27 · wrong date · 8%</span></div>
+            <div class="card5" style="opacity:.7"><span class="t">Jazz Brunch Prenzlauer Berg</span><span class="m">Sun 26 · wrong date · 12%</span></div>
+            <p class="dim" style="margin:0;font-size:11px">+ 20 more</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <p><b>What it is for</b> People who like to sort. State is position; counts are column headers.</p>
+      <p><b>Strong</b> Undo is just dragging back; "Clear all" is the Passed column's own button; each search is a tab.</p>
+      <p><b>Risk</b> Three columns do not fit a phone; it becomes a segmented list there. The reason sentence needs a hover or expand.</p>
+    </div>
+  </section>
+</div>

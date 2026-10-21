@@ -6,6 +6,7 @@ Documents
 - `_docs/plan.md` - what the product does
 - `_docs/architecture.md` - how it is built
 - `_docs/process.md` - how work is organised
+- `_docs/ui-design.md` - UI decisions (what, why, where); mockups in `_docs/ui/`
 - `_docs/team/` - role files: `pm.md`, `software-engineer.md`, `qa-engineer.md`
 - `docs/` - deployment, testing, api, release-process
 - `work/` - state logs, batch results, design reviews

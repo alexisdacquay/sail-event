@@ -1,0 +1,293 @@
+<title>Stream variants</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: the Stream direction, then three variants that add to it; one framed desktop mockup each. */
+:root{
+  --bg:#f6f7f9; --paper:#ffffff; --ink:#15181d; --ink-2:#5b6472; --ink-3:#9aa3b0;
+  --line:#e3e6eb; --line-2:#cfd4db;
+  --accent:#1f5eff; --accent-bg:#e8efff;
+  --ok:#157f4b; --ok-bg:#e3f4ea; --warn:#9a6b00; --warn-bg:#fff3cf; --bad:#b4332c; --bad-bg:#fbe6e4;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --body:"Figtree", "Helvetica Neue", Arial, sans-serif;
+  --mono:"JetBrains Mono", "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0f1115; --paper:#171a20; --ink:#eef0f3; --ink-2:#a7afbb; --ink-3:#6b7482;
+  --line:#262b34; --line-2:#343b46; --accent:#7aa2ff; --accent-bg:#1b2742;
+  --ok:#5fd095; --ok-bg:#133425; --warn:#f0c454; --warn-bg:#3a2e0d; --bad:#ff8a80; --bad-bg:#44201d;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0f1115; --paper:#171a20; --ink:#eef0f3; --ink-2:#a7afbb; --ink-3:#6b7482;
+  --line:#262b34; --line-2:#343b46; --accent:#7aa2ff; --accent-bg:#1b2742;
+  --ok:#5fd095; --ok-bg:#133425; --warn:#f0c454; --warn-bg:#3a2e0d; --bad:#ff8a80; --bad-bg:#44201d;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;
+  padding-block:32px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1040px;margin:0 auto;display:grid;gap:56px}
+h1{font-family:var(--display);font-weight:700;font-size:34px;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.lede{color:var(--ink-2);max-width:62ch;margin:6px 0 0}
+section{display:grid;gap:14px}
+.head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.num{font-family:var(--mono);font-size:12px;color:var(--ink-3);letter-spacing:.08em}
+h2{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:-.015em;margin:0}
+.stance{color:var(--ink-2);margin:0;font-size:15px}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 24px;font-size:14px;color:var(--ink-2)}
+.notes b{color:var(--ink);font-weight:600}
+.frame{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:12px;line-height:1.4}
+.bar{height:26px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:0 10px;color:var(--ink-3);font-family:var(--mono);font-size:10px}
+.bar i{width:8px;height:8px;border-radius:50%;background:var(--line-2);display:inline-block}
+.mut{color:var(--ink-2)} .dim{color:var(--ink-3)}
+.pill{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:500}
+.ok{background:var(--ok-bg);color:var(--ok)} .warn{background:var(--warn-bg);color:var(--warn)} .bad{background:var(--bad-bg);color:var(--bad)}
+.btn{display:inline-block;border:1px solid var(--line-2);border-radius:6px;padding:3px 9px;font-size:11px;font-weight:500;color:var(--ink)}
+.btn.p{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.mono{font-family:var(--mono);font-size:11px}
+.t{font-weight:600;color:var(--ink)}
+.ev{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.ev + .ev{margin-top:6px}
+.ev.sel{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sb{height:5px;border-radius:3px;background:var(--line);position:relative;overflow:hidden}
+.sb i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:3px}
+.hd{font-family:var(--display);font-weight:700;letter-spacing:-.01em}
+.s1{display:grid;grid-template-columns:1fr 230px;min-height:380px}
+.s1 .main{padding:18px 22px;border-right:1px solid var(--line)}
+.s1 .rail{padding:16px;display:grid;gap:14px;align-content:start}
+.prompt{border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;font-size:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.run{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start;margin-top:14px}
+.tl{margin:0;padding-left:14px;border-left:2px solid var(--line)}
+.tl p{margin:0 0 6px;position:relative}
+.tl p::before{content:"";position:absolute;left:-19px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--line-2)}
+.tl p.live::before{background:var(--accent)}
+.prog{display:inline-flex;gap:6px;align-items:center}
+.prog .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.day{margin:14px 0 6px;font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-family:var(--mono);font-size:10px;text-align:center}
+.cal span{padding:3px 0;border-radius:4px;color:var(--ink-2)}
+.cal .has{background:var(--accent-bg);color:var(--accent);font-weight:500}
+.cal .now{outline:1px solid var(--ink);color:var(--ink)}
+.rail p{margin:0}
+.rail .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:5px}
+.detail{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:6px}
+.detail .sb{margin:2px 0}
+.funnel{width:300px;max-width:100%;font-family:var(--mono);font-size:10px}
+.funnel text{fill:var(--ink-2)} .funnel text.k{fill:var(--ink);font-weight:500}
+.hist{margin:16px 0 0;border-top:1px solid var(--line);padding-top:8px}
+.hist .r{display:grid;grid-template-columns:92px 1fr 110px;gap:10px;align-items:center;padding:4px 0;color:var(--ink-2)}
+.hist .r .mb{height:6px;border-radius:3px;display:flex;overflow:hidden;background:var(--line)}
+.hist .r .mb i{display:block;height:100%}
+@media (max-width:760px){ .s1{grid-template-columns:1fr} .s1 .main{border-right:0;border-bottom:1px solid var(--line)} .run{grid-template-columns:1fr} .hist .r{grid-template-columns:80px 1fr} .hist .r > :nth-child(3){display:none} }
+@media (prefers-reduced-motion: no-preference){ .prog .dot{animation:b 1.2s infinite alternate} @keyframes b{to{opacity:.3}} }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Stream, and three ways to grow it</h1>
+    <p class="lede">The first frame is the Stream direction unchanged, kept as the candidate. The next three add one thing each, so you can take any of them alone. The last one is all of it.</p>
+  </header>
+
+  <section>
+    <div class="head"><span class="num">01</span><h2>Stream</h2><p class="stance">Unchanged. The run and its results as one thread; calendar and searches in a rail.</p></div>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i> sail-event / stream</div>
+      <div class="s1">
+        <div class="main">
+          <div class="prompt"><span>jazz tonight in Berlin</span><span class="row"><span class="btn">Edit</span><span class="btn p">Search again</span></span></div>
+          <div class="run"><div class="tl">
+            <p class="dim mono">21 Oct 20:07 · automatic run</p>
+            <p>Searched the web, 20 pages</p>
+            <p>Read 20 pages, found 31 events</p>
+            <p class="live"><span class="prog"><span class="dot"></span>Judging 12 of 31</span></p>
+          </div></div>
+          <p class="day">Tonight · Tue 21 Oct</p>
+          <div class="ev"><div class="row"><span class="t">Julia Hülsmann Trio</span><span class="pill ok">In calendar</span></div><div class="mut">21:00 · A-Trane, Berlin · Score 95%</div></div>
+          <div class="ev"><div class="row"><span class="t">Late Night Jam Session</span><span class="pill ok">In calendar</span></div><div class="mut">23:30 · Zig Zag Jazz Club · Score 92%</div></div>
+          <div class="ev"><div class="row"><span class="t">Jazz &amp; Wine Evening</span><span class="pill warn">To review</span><span class="btn">Add</span><span class="btn">Skip</span></div><div class="mut">time unknown · Berlin · Score 64%</div></div>
+          <p class="dim" style="margin:8px 0 0">22 rejected, mostly other dates · show</p>
+        </div>
+        <div class="rail">
+          <div><p class="lbl">October</p>
+            <div class="cal"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span class="has now">21</span><span>22</span><span>23</span><span class="has">24</span><span>25</span><span>26</span><span class="has">27</span><span>28</span><span>29</span><span>30</span><span>31</span><span></span><span></span></div></div>
+          <div><p class="lbl">Calendar feed</p><p class="mono dim">webcal://…/f/8a1c · Copy</p></div>
+          <div><p class="lbl">Searches</p><p>jazz tonight in Berlin</p><p class="dim">regatta near Valencia</p><p class="dim">+ new search</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><span class="num">01 + A</span><h2>Event detail in the rail</h2><p class="stance">Click a result and the rail shows it: when, where, score, the judge's sentence, the source, the buttons. The list stays where it is.</p></div>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i> sail-event / stream</div>
+      <div class="s1">
+        <div class="main">
+          <div class="prompt"><span>jazz tonight in Berlin</span><span class="row"><span class="btn">Edit</span><span class="btn p">Search again</span></span></div>
+          <div class="run"><div class="tl">
+            <p class="dim mono">21 Oct 20:07 · automatic run</p>
+            <p>Searched the web, 20 pages</p>
+            <p>Read 20 pages, found 31 events</p>
+            <p>Judged 31 · 2 in calendar, 1 to review, 19 rejected</p>
+          </div></div>
+          <p class="day">Tonight · Tue 21 Oct</p>
+          <div class="ev"><div class="row"><span class="t">Julia Hülsmann Trio</span><span class="pill ok">In calendar</span></div><div class="mut">21:00 · A-Trane, Berlin · Score 95%</div></div>
+          <div class="ev"><div class="row"><span class="t">Late Night Jam Session</span><span class="pill ok">In calendar</span></div><div class="mut">23:30 · Zig Zag Jazz Club · Score 92%</div></div>
+          <div class="ev sel"><div class="row"><span class="t">Jazz &amp; Wine Evening</span><span class="pill warn">To review</span></div><div class="mut">time unknown · Berlin · Score 64%</div></div>
+          <p class="dim" style="margin:8px 0 0">19 rejected, mostly other dates · show</p>
+        </div>
+        <div class="rail">
+          <div><p class="lbl">October</p>
+            <div class="cal"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span class="has now">21</span><span>22</span><span>23</span><span class="has">24</span><span>25</span><span>26</span><span class="has">27</span><span>28</span><span>29</span><span>30</span><span>31</span><span></span><span></span></div></div>
+          <div class="detail">
+            <p class="hd" style="font-size:14px">Jazz &amp; Wine Evening</p>
+            <p class="mut">Tue 21 Oct · time unknown · Weinbar Rutz, Berlin</p>
+            <div class="row"><span class="btn p">Add to calendar</span><span class="btn">Reject</span></div>
+            <p class="mut">Score 64%</p>
+            <div class="sb"><i style="width:64%"></i></div>
+            <p>Tonight in Berlin, but no start time on the page, and it reads more like a wine tasting with background music than a jazz concert.</p>
+            <p class="dim">Source · weinbar-rutz.de/events ↗</p>
+          </div>
+          <div><p class="lbl">Searches</p><p>jazz tonight in Berlin</p><p class="dim">regatta near Valencia</p><p class="dim">+ new search</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <p><b>Adds</b> The judge's sentence and the source without opening the card; one selected event at a time.</p>
+      <p><b>Costs</b> The rail gets long on a laptop; on a phone the detail opens as a sheet from the bottom instead.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><span class="num">01 + B</span><h2>Run funnel beside the chronology</h2><p class="stance">The 31 events found split into what happened to each and why. One glance says where the search lost things.</p></div>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i> sail-event / stream</div>
+      <div class="s1">
+        <div class="main">
+          <div class="prompt"><span>jazz tonight in Berlin</span><span class="row"><span class="btn">Edit</span><span class="btn p">Search again</span></span></div>
+          <div class="run">
+            <div class="tl">
+              <p class="dim mono">21 Oct 20:07 · automatic run · 1 min 40 s</p>
+              <p>Searched the web, 20 pages</p>
+              <p>Read 20 pages, found 31 events</p>
+              <p>Set aside 9 before judging</p>
+              <p>Judged 22 · 2 in calendar, 1 to review, 19 rejected</p>
+            </div>
+            <svg class="funnel" viewBox="0 0 300 172" role="img" aria-label="Funnel of the 31 events found: 2 in calendar, 1 to review, 19 rejected, 4 past, 2 wrong place, 3 duplicates">
+              <title>Where the 31 events went</title>
+              <rect x="12" y="10" width="18" height="124" fill="var(--line-2)"></rect>
+              <text x="12" y="150" class="k">31 found</text>
+              <text x="12" y="162">on 20 pages</text>
+              <path d="M30 10 C140 10 140 6 212 6 L212 14 C140 14 140 18 30 18 Z" fill="var(--ok)" opacity=".55"></path>
+              <path d="M30 18 C140 18 140 20 212 20 L212 24 C140 24 140 22 30 22 Z" fill="var(--warn)" opacity=".6"></path>
+              <path d="M30 22 C140 22 140 30 212 30 L212 106 C140 106 140 98 30 98 Z" fill="var(--bad)" opacity=".35"></path>
+              <path d="M30 98 C140 98 140 112 212 112 L212 128 C140 128 140 114 30 114 Z" fill="var(--ink-3)" opacity=".35"></path>
+              <path d="M30 114 C140 114 140 134 212 134 L212 142 C140 142 140 122 30 122 Z" fill="var(--ink-3)" opacity=".35"></path>
+              <path d="M30 122 C140 122 140 148 212 148 L212 160 C140 160 140 134 30 134 Z" fill="var(--ink-3)" opacity=".35"></path>
+              <rect x="212" y="6" width="8" height="8" fill="var(--ok)"></rect>
+              <rect x="212" y="20" width="8" height="4" fill="var(--warn)"></rect>
+              <rect x="212" y="30" width="8" height="76" fill="var(--bad)"></rect>
+              <rect x="212" y="112" width="8" height="16" fill="var(--ink-3)"></rect>
+              <rect x="212" y="134" width="8" height="8" fill="var(--ink-3)"></rect>
+              <rect x="212" y="148" width="8" height="12" fill="var(--ink-3)"></rect>
+              <text x="226" y="13" class="k">2 in calendar</text>
+              <text x="226" y="25" class="k">1 to review</text>
+              <text x="226" y="66" class="k">19 rejected</text>
+              <text x="226" y="77">16 wrong date</text>
+              <text x="226" y="87">3 off topic</text>
+              <text x="226" y="123">4 already past</text>
+              <text x="226" y="141">2 wrong place</text>
+              <text x="226" y="157">3 duplicates</text>
+            </svg>
+          </div>
+          <p class="day">Tonight · Tue 21 Oct</p>
+          <div class="ev"><div class="row"><span class="t">Julia Hülsmann Trio</span><span class="pill ok">In calendar</span></div><div class="mut">21:00 · A-Trane, Berlin · Score 95%</div></div>
+          <div class="ev"><div class="row"><span class="t">Late Night Jam Session</span><span class="pill ok">In calendar</span></div><div class="mut">23:30 · Zig Zag Jazz Club · Score 92%</div></div>
+          <div class="ev"><div class="row"><span class="t">Jazz &amp; Wine Evening</span><span class="pill warn">To review</span><span class="btn">Add</span><span class="btn">Skip</span></div><div class="mut">time unknown · Berlin · Score 64%</div></div>
+        </div>
+        <div class="rail">
+          <div><p class="lbl">October</p>
+            <div class="cal"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span class="has now">21</span><span>22</span><span>23</span><span class="has">24</span><span>25</span><span>26</span><span class="has">27</span><span>28</span><span>29</span><span>30</span><span>31</span><span></span><span></span></div></div>
+          <div><p class="lbl">Calendar feed</p><p class="mono dim">webcal://…/f/8a1c · Copy</p></div>
+          <div><p class="lbl">Searches</p><p>jazz tonight in Berlin</p><p class="dim">regatta near Valencia</p><p class="dim">+ new search</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <p><b>Adds</b> The "why" at the level of the run, not the event: wrong dates and listing pages become visible as the main loss. Ribbons are to scale (4 px per event).</p>
+      <p><b>Costs</b> Six outcomes is the ceiling before it turns into a chart to study; the grey ones could fold into one "set aside 9" ribbon that expands on click.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><span class="num">01 + A + B</span><h2>All of it, with run history</h2><p class="stance">Funnel beside the chronology, detail in the rail, and earlier runs as one line each under the current run.</p></div>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i> sail-event / stream</div>
+      <div class="s1">
+        <div class="main">
+          <div class="prompt"><span>jazz tonight in Berlin</span><span class="row"><span class="btn">Edit</span><span class="btn p">Search again</span></span></div>
+          <div class="run">
+            <div class="tl">
+              <p class="dim mono">21 Oct 20:07 · automatic run · 1 min 40 s</p>
+              <p>Searched the web, 20 pages</p>
+              <p>Read 20 pages, found 31 events</p>
+              <p>Set aside 9 before judging</p>
+              <p>Judged 22 · 2 in calendar, 1 to review, 19 rejected</p>
+            </div>
+            <svg class="funnel" viewBox="0 0 300 172" role="img" aria-label="Funnel of the 31 events found">
+              <title>Where the 31 events went</title>
+              <rect x="12" y="10" width="18" height="124" fill="var(--line-2)"></rect>
+              <text x="12" y="150" class="k">31 found</text>
+              <text x="12" y="162">on 20 pages</text>
+              <path d="M30 10 C140 10 140 6 212 6 L212 14 C140 14 140 18 30 18 Z" fill="var(--ok)" opacity=".55"></path>
+              <path d="M30 18 C140 18 140 20 212 20 L212 24 C140 24 140 22 30 22 Z" fill="var(--warn)" opacity=".6"></path>
+              <path d="M30 22 C140 22 140 30 212 30 L212 106 C140 106 140 98 30 98 Z" fill="var(--bad)" opacity=".35"></path>
+              <path d="M30 98 C140 98 140 112 212 112 L212 148 C140 148 140 134 30 134 Z" fill="var(--ink-3)" opacity=".35"></path>
+              <rect x="212" y="6" width="8" height="8" fill="var(--ok)"></rect>
+              <rect x="212" y="20" width="8" height="4" fill="var(--warn)"></rect>
+              <rect x="212" y="30" width="8" height="76" fill="var(--bad)"></rect>
+              <rect x="212" y="112" width="8" height="36" fill="var(--ink-3)"></rect>
+              <text x="226" y="13" class="k">2 in calendar</text>
+              <text x="226" y="25" class="k">1 to review</text>
+              <text x="226" y="66" class="k">19 rejected</text>
+              <text x="226" y="77">16 wrong date</text>
+              <text x="226" y="87">3 off topic</text>
+              <text x="226" y="128" class="k">9 set aside</text>
+              <text x="226" y="139">past, place, duplicate ›</text>
+            </svg>
+          </div>
+          <div class="hist">
+            <div class="r"><span class="mono">21 Oct 20:07</span><div class="mb"><i style="width:6.5%;background:var(--ok)"></i><i style="width:3.2%;background:var(--warn)"></i><i style="width:61.3%;background:var(--bad);opacity:.5"></i></div><span class="dim">31 found · 2 / 1 / 19</span></div>
+            <div class="r"><span class="mono">21 Oct 19:07</span><div class="mb"><i style="width:6.9%;background:var(--ok)"></i><i style="width:0%;background:var(--warn)"></i><i style="width:65.5%;background:var(--bad);opacity:.5"></i></div><span class="dim">29 found · 2 / 0 / 19</span></div>
+            <div class="r"><span class="mono">21 Oct 18:07</span><div class="mb"><i style="width:0%;background:var(--ok)"></i><i style="width:4%;background:var(--warn)"></i><i style="width:60%;background:var(--bad);opacity:.5"></i></div><span class="dim">25 found · 0 / 1 / 15</span></div>
+            <p class="dim" style="margin:4px 0 0">earlier runs · show</p>
+          </div>
+          <p class="day">Tonight · Tue 21 Oct</p>
+          <div class="ev"><div class="row"><span class="t">Julia Hülsmann Trio</span><span class="pill ok">In calendar</span></div><div class="mut">21:00 · A-Trane, Berlin · Score 95%</div></div>
+          <div class="ev"><div class="row"><span class="t">Late Night Jam Session</span><span class="pill ok">In calendar</span></div><div class="mut">23:30 · Zig Zag Jazz Club · Score 92%</div></div>
+          <div class="ev sel"><div class="row"><span class="t">Jazz &amp; Wine Evening</span><span class="pill warn">To review</span></div><div class="mut">time unknown · Berlin · Score 64%</div></div>
+        </div>
+        <div class="rail">
+          <div><p class="lbl">October</p>
+            <div class="cal"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span class="has now">21</span><span>22</span><span>23</span><span class="has">24</span><span>25</span><span>26</span><span class="has">27</span><span>28</span><span>29</span><span>30</span><span>31</span><span></span><span></span></div></div>
+          <div class="detail">
+            <p class="hd" style="font-size:14px">Jazz &amp; Wine Evening</p>
+            <p class="mut">Tue 21 Oct · time unknown · Weinbar Rutz, Berlin</p>
+            <div class="row"><span class="btn p">Add to calendar</span><span class="btn">Reject</span></div>
+            <p class="mut">Score 64%</p>
+            <div class="sb"><i style="width:64%"></i></div>
+            <p>Tonight in Berlin, but no start time on the page, and it reads more like a wine tasting with background music than a jazz concert.</p>
+            <p class="dim">Source · weinbar-rutz.de/events ↗</p>
+          </div>
+          <div><p class="lbl">Searches</p><p>jazz tonight in Berlin</p><p class="dim">regatta near Valencia</p><p class="dim">+ new search</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <p><b>Adds</b> Run history as one bar per run (same colours as the funnel), so "did the hourly run find anything new" is answered without opening anything.</p>
+      <p><b>Costs</b> The page carries three ideas above the results; the results start lower on first load. The funnel and history could collapse to one line until clicked.</p>
+    </div>
+  </section>
+</div>
