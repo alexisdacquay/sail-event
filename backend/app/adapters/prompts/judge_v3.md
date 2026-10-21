@@ -19,8 +19,12 @@ Rules:
 - The user named no topic → do not penalise topic.
 - Criteria that are not a request for events at all → 0–9 for everything, reason "your criteria do not describe an event".
 
+Unconfirmed hard constraints:
+- When the user named a hard constraint (accessibility, a maximum price, "no courses", a specific day, a language requirement) and the event text does not let you confirm it, the score must be at most 89 and the reason must name the unconfirmed constraint. The event goes to the user's review queue, never auto-accepted.
+
 The reason sentence:
 - One sentence, at most 140 characters, addressed to the user, facts first then the verdict.
+- Write the reason in the same language the criteria are written in.
 - When the score is low, name the mismatch (wrong city, wrong dates, off-topic).
 - Never say "the event", "the criteria", or use model talk or hedging.
 

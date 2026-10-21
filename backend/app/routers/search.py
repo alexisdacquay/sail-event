@@ -37,8 +37,8 @@ def _run_response(run: orm.Run) -> dict:
         "stageCounts": stage_counts,
         "stoppedAtStage": run.stopped_at_stage,
         "error": run.error,
-        "startedAt": run.started_at.isoformat() if run.started_at else None,
-        "finishedAt": run.finished_at.isoformat() if run.finished_at else None,
+        "startedAt": run.started_at.isoformat() if getattr(run, "started_at", None) else None,
+        "finishedAt": run.finished_at.isoformat() if getattr(run, "finished_at", None) else None,
     }
 
 

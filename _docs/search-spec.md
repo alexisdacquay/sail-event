@@ -158,6 +158,8 @@ Rubric the judge applies:
 | 10–39 | Place and date fit but the topic does not; or topic fits but a stated constraint fails |
 | 0–9 | Not an event, or two or more facets fail |
 
+Unconfirmed hard constraints: when the user named a hard constraint (accessibility, a maximum price, "no courses", a specific day) and the event text does not let you confirm it, the score is at most 89 and the reason names the unconfirmed constraint. The event goes to the user's review queue, never auto-accepted.
+
 Caps enforced in code from the flags, whatever the judge's number:
 
 | Flag | Cap |

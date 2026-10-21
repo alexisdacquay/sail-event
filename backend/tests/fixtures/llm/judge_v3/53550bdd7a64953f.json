@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 90,
+    "reason": "Jazz event in Berlin on 20 Oct fits your dates and topic.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 700,
+    "completion_tokens": 40
+  },
+  "recorded_at": "2026-10-21T10:00:00+00:00",
+  "model": "fake:hand",
+  "recorded": "hand"
+}
