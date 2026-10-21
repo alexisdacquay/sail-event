@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import App from './App'
 import * as mock from './services/mock'
@@ -212,14 +212,9 @@ describe('Tab bar and queue count', () => {
     // Accept evt-2
     const card = screen.getByTestId('event-card-evt-2')
     const acceptButton = card.querySelector('button')!
-    fireEvent.click(acceptButton)
+    await act(async () => { fireEvent.click(acceptButton) })
 
-    // Event leaves the queue
-    await waitFor(() => {
-      expect(screen.queryByText('Jazz in the Park')).not.toBeInTheDocument()
-    })
-
-    // Queue count decrements to 1
+    // Queue count decrements to 1 (immediately on decision, before undo window expires)
     await waitFor(() => {
       expect(nav).toHaveTextContent('(1)')
     })

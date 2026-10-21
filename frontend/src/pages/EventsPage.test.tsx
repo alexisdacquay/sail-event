@@ -46,7 +46,7 @@ describe('EventsPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('Remove from calendar flips badge to Rejected by you', async () => {
+  it('Remove from calendar moves event back to review', async () => {
     render(<EventsPage />)
 
     await screen.findByText('React London Meetup')
@@ -59,11 +59,26 @@ describe('EventsPage', () => {
 
     const acceptedCard = screen.getByTestId('event-card-evt-1')
     await waitFor(() => {
-      expect(acceptedCard).toHaveTextContent('Rejected by you')
+      expect(acceptedCard).toHaveTextContent('To review')
     })
     expect(
       screen.queryByRole('button', { name: 'Remove from calendar' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('Put back to review on rejected events', async () => {
+    render(<EventsPage />)
+
+    await screen.findByText('Pottery Workshop for Beginners')
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Put back to review' }),
+    )
+
+    const rejectedCard = screen.getByTestId('event-card-evt-4')
+    await waitFor(() => {
+      expect(rejectedCard).toHaveTextContent('To review')
+    })
   })
 
   it('shows empty state when no events', async () => {

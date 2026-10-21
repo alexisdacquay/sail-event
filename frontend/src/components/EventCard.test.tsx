@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { EventCard, formatWhen, getBrowserTz } from './EventCard'
 import type { Event } from '@/services/api'
@@ -178,17 +178,18 @@ describe('EventCard', () => {
   })
 
   it('queue variant shows 5-second undo bar after accept', async () => {
-    vi.useFakeTimers()
     const onDecide = vi.fn().mockResolvedValue(undefined)
     render(<EventCard event={event} variant="queue" onDecide={onDecide} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Accept' }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Accept' }))
+    })
+
     await waitFor(() => {
       expect(screen.getByTestId('undo-bar')).toBeInTheDocument()
       expect(screen.getByText('Accepted.')).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument()
     })
-    vi.useRealTimers()
   })
 
   it('all variant shows Put back to review for rejected events', () => {
