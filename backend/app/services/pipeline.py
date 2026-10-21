@@ -167,7 +167,7 @@ def run_pipeline(
                 orm.Event.status == "new",
             ).all()
             if leftover:
-                llm_c, tok_in, tok_out, j_err = _judge_and_triage(
+                llm_c, tok_in, tok_out, j_err, _qnp = _judge_and_triage(
                     leftover, criteria_row, criteria_text, user_tz, user, model, db,
                 )
                 llm_calls += llm_c
@@ -461,7 +461,7 @@ def run_pipeline(
                     orm.Event.run_id == run.id,
                 ).all()
 
-                llm_c, tok_in, tok_out, j_err = _judge_and_triage(
+                llm_c, tok_in, tok_out, j_err, qnp = _judge_and_triage(
                     inserted, criteria_row, criteria_text, user_tz, user, model, db,
                 )
                 llm_calls += llm_c
@@ -469,6 +469,7 @@ def run_pipeline(
                 llm_tokens_out += tok_out
                 judge_errs = counts.get("judge_errors", 0) + j_err
                 counts["judge_errors"] = judge_errs
+                counts["queued_no_place"] = qnp
                 if j_err and not error_detail:
                     error_detail = f"judge: errors on {j_err} event(s)"
                 db.commit()
@@ -519,17 +520,22 @@ def _judge_and_triage(
     user: orm.User,
     model,
     db: Session,
-) -> tuple[int, int, int, int]:
-    """Judge events and triage.  Returns (llm_calls, tokens_in, tokens_out, judge_errors)."""
+) -> tuple[int, int, int, int, int]:
+    """Judge events and triage.  Returns (llm_calls, tokens_in, tokens_out, judge_errors, queued_no_place)."""
     facets = json.loads(criteria_row.facets_json) if criteria_row and criteria_row.facets_json else {}
     date_facets = facets.get("date", {}) or {}
 
     window = resolve(date_facets, user_tz)
 
+    # Issue 101: no place in criteria → never auto-accept
+    place = facets.get("place") or {}
+    has_place = bool(place.get("city") or place.get("country"))
+
     llm_calls = 0
     tokens_in = 0
     tokens_out = 0
     judge_errors = 0
+    queued_no_place = 0
 
     from ..services.extract import ExtractedEvent
 
@@ -612,15 +618,20 @@ def _judge_and_triage(
             if evt.status == "rejected" and evt.decided_by == "auto":
                 continue  # already handled (non-event)
             if evt.score >= user.upper_threshold:
-                evt.status = "accepted"
-                evt.decided_by = "auto"
+                if has_place:
+                    evt.status = "accepted"
+                    evt.decided_by = "auto"
+                else:
+                    # Issue 101: no place → queue, never auto-accept
+                    evt.status = "queued"
+                    queued_no_place += 1
             elif evt.score <= user.lower_threshold:
                 evt.status = "rejected"
                 evt.decided_by = "auto"
             else:
                 evt.status = "queued"
 
-    return llm_calls, tokens_in, tokens_out, judge_errors
+    return llm_calls, tokens_in, tokens_out, judge_errors, queued_no_place
 
 
 def _finalise_run(

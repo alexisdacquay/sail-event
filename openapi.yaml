@@ -389,7 +389,10 @@ components:
           type:
             - object
             - 'null'
-          description: Per-stage item counts from the run
+          description: >-
+            Per-stage item counts from the run.
+            Includes queued_no_place when the criteria name no place
+            and high-scoring events were queued instead of auto-accepted.
         stoppedAtStage:
           type:
             - string

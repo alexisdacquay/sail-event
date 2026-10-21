@@ -202,6 +202,38 @@ describe('MainPage search card', () => {
     vi.restoreAllMocks()
   })
 
+  it('shows no-place warning when queued_no_place > 0', async () => {
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'runSearch').mockResolvedValueOnce({
+      runId: 'run-np',
+      eventsFound: 5,
+      eventsNew: 3,
+      stageCounts: {
+        queries_planned: 1,
+        results_fetched: 10,
+        events_extracted: 5,
+        events_judged: 3,
+        accepted: 0,
+        queued: 2,
+        rejected: 1,
+        queued_no_place: 2,
+      },
+      stoppedAtStage: null,
+      error: null,
+    })
+
+    const onSearchComplete = vi.fn().mockResolvedValue(2)
+    renderMainPage(onSearchComplete)
+    await screen.findByLabelText("What I'm looking for")
+
+    fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
+    const result = await screen.findByTestId('search-result')
+    expect(result).toHaveTextContent(
+      'No place in your criteria: 2 high-scoring events wait in review.',
+    )
+    vi.restoreAllMocks()
+  })
+
   it('shows stopped-at stage and error in run report', async () => {
     const api = await import('@/services/api')
     vi.spyOn(api, 'runSearch').mockResolvedValueOnce({

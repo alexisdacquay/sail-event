@@ -76,6 +76,13 @@ function buildRunReport(result: SearchResult): string[] {
     lines.push(`Filtered: ${details.join(', ')}.`)
   }
 
+  const queuedNoPlace = c.queued_no_place ?? 0
+  if (queuedNoPlace > 0) {
+    lines.push(
+      `No place in your criteria: ${queuedNoPlace} high-scoring ${queuedNoPlace === 1 ? 'event waits' : 'events wait'} in review.`,
+    )
+  }
+
   if (result.stoppedAtStage) {
     lines.push(
       `Stopped at ${result.stoppedAtStage}${result.error ? `: ${result.error}` : ''}.`,
