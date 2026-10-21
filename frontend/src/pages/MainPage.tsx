@@ -20,7 +20,7 @@ import {
   getCalendarUrl,
   rotateCalendarUrl,
 } from '@/services/api'
-import type { Event, SearchResult, ThresholdsSaveResult } from '@/services/api'
+import type { Event, SearchResult } from '@/services/api'
 
 const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
 

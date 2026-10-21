@@ -160,7 +160,6 @@ export async function getThresholds(): Promise<Thresholds> {
 export async function saveThresholds(
   thresholds: Thresholds,
 ): Promise<ThresholdsSaveResult> {
-  const old = { ...mockThresholds }
   mockThresholds = { ...thresholds }
   // Re-apply to auto-decided mock events
   let moved = 0
