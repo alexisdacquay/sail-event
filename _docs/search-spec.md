@@ -3,6 +3,7 @@
 What the search must deliver. The how is in `search-design.md`.
 
 Revision 2026-10-18 (owner): the user's criteria text is the search query, sent to the engine as written; the code adds nothing, translates nothing, and never stops a run for a missing city or country. The extractor records title, description, start with time zone, city, country, link; no price. The judge scores topic, place and dates against the criteria; there is no price or budget rule and no budget cap. Rows below that say otherwise (place "run stops", query strategy bullets, price rows, C3/C10 "run stops") are superseded.
+Revision 2026-10-21 (owner): when the criteria text names no place (no city, no country), nothing is accepted automatically, whatever the user's thresholds: events scoring at or above the upper threshold go to the review queue with their score unchanged; the lower threshold still rejects. The code never asks the user for a place and never adds one to the query.
 Reference case throughout: criteria `jazz in Berlin (Germany) next week (19-21st October 2026)`, run on 2026-10-18 in `Europe/Berlin`.
 
 First fact: the deployed result ("Outdoor Photography Meetup", Portland) is a configuration state, not a scoring defect. Prod has no keys, so `SEARCH_PROVIDER` and `SCORER` fell back to the canned fixture list and the `md5(title)` scorer; the Berlin text never reached a search engine or a model. This spec makes that state impossible to miss (§9: a run on fixture or fake adapters in production is recorded as refused) and then defines quality once real adapters run.
