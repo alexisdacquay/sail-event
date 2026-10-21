@@ -350,6 +350,10 @@ def run_pipeline(
                 target_country = place.get("country") or ""
                 language = facets.get("language")
 
+                def _on_page_done(ec):
+                    counts["pages_content_pass"] = ec.pages_content_pass
+                    _update_run_stage(run, db, "extract", counts)
+
                 extracted, extract_counts = extract_events(
                     all_results,
                     window_start=window.start_utc,
@@ -359,6 +363,7 @@ def run_pipeline(
                     language=language,
                     user_tz=user_tz,
                     model=model,
+                    on_page_done=_on_page_done,
                 )
                 # Count LLM calls from extraction: 1 for pass-1 (if results) + pages_content_pass for pass-2
                 if all_results:
@@ -475,8 +480,13 @@ def run_pipeline(
                     orm.Event.run_id == run.id,
                 ).all()
 
+                def _on_event_done(judged_so_far):
+                    counts["events_judged"] = judged_so_far
+                    _update_run_stage(run, db, "judge", counts)
+
                 llm_c, tok_in, tok_out, j_err = _judge_and_triage(
                     inserted, criteria_row, criteria_text, user_tz, user, model, db,
+                    on_event_done=_on_event_done,
                 )
                 llm_calls += llm_c
                 llm_tokens_in += tok_in
@@ -533,6 +543,7 @@ def _judge_and_triage(
     user: orm.User,
     model,
     db: Session,
+    on_event_done=None,
 ) -> tuple[int, int, int, int]:
     """Judge events and triage.  Returns (llm_calls, tokens_in, tokens_out, judge_errors)."""
     facets = json.loads(criteria_row.facets_json) if criteria_row and criteria_row.facets_json else {}
@@ -595,6 +606,8 @@ def _judge_and_triage(
                 if isinstance(result, JudgeError):
                     judge_errors += 1
                     logger.warning("judge error: %s", result.error)
+                    if on_event_done:
+                        on_event_done(llm_calls)
                     # event stays `new`
                     continue
 
@@ -617,6 +630,8 @@ def _judge_and_triage(
                         evt.score_reason = result.reason
                     evt.judge_model = model.model_id if hasattr(model, "model_id") else None
                     evt.judge_version = "judge_v3"
+                if on_event_done:
+                    on_event_done(llm_calls)
 
     # Triage
     with tracer.start_as_current_span("triage"):
