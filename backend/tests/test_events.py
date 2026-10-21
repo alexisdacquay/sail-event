@@ -499,3 +499,66 @@ def test_past_events_hidden_from_ics_feed(client, _db_session):
     assert "Past ICS event" not in body
     # Future accepted events should still be present
     assert "Jazz Trio at A-Trane" in body
+
+
+# --- #94: alembic migration for criteria_hash ---
+
+
+def test_migrated_schema_has_criteria_hash(_db_session, client, auth_headers):
+    """events.criteria_hash column exists and /api/events returns 200."""
+    from sqlalchemy import inspect
+    insp = inspect(_db_session.bind)
+    columns = {c["name"] for c in insp.get_columns("events")}
+    assert "criteria_hash" in columns
+
+    h = auth_headers("demo", "demo")
+    r = client.get("/api/events", headers=h)
+    assert r.status_code == 200
+    # Events should include criteriaStale field
+    events = r.json()
+    assert len(events) > 0
+    assert "criteriaStale" in events[0]
+
+
+# --- #94: criteria hash stored at judge time, criteriaStale marker ---
+
+
+def test_criteria_hash_stored_at_judge_time(client, auth_headers, _db_session):
+    """After a search, judged events carry criteria_hash."""
+    h = auth_headers("demo", "demo")
+    client.post("/api/search", headers=h)
+    from app.orm import User, Event as OrmEvent
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    events = _db_session.query(OrmEvent).filter(
+        OrmEvent.user_id == user.id,
+        OrmEvent.score.isnot(None),
+        OrmEvent.criteria_hash.isnot(None),
+    ).all()
+    assert len(events) > 0, "at least one judged event should have criteria_hash"
+
+
+def test_criteria_stale_false_when_same(client, auth_headers, _db_session):
+    """criteriaStale=false when the event was scored with the current criteria."""
+    h = auth_headers("demo", "demo")
+    client.post("/api/search", headers=h)
+    events = client.get("/api/events", headers=h).json()
+    for e in events:
+        if e.get("criteriaStale") is not None:
+            assert e["criteriaStale"] is False, f"event {e['id']} should not be stale"
+
+
+def test_criteria_stale_true_after_change(client, auth_headers, _db_session):
+    """criteriaStale=true after the user changes criteria text."""
+    h = auth_headers("demo", "demo")
+    # Run search with current criteria
+    client.post("/api/search", headers=h)
+
+    # Change criteria text
+    client.put("/api/criteria", headers=h, json={
+        "text": "classical concerts in Vienna, under 30 EUR, 1-15 Nov 2026",
+    })
+
+    events = client.get("/api/events", headers=h).json()
+    # Events scored under the old criteria should now be stale
+    stale = [e for e in events if e.get("criteriaStale") is True]
+    assert len(stale) > 0, "after criteria change, old events should be marked stale"
