@@ -150,10 +150,9 @@ QA caught real defects before they shipped: an invalid decision crashing with 50
 make test              # backend unit + frontend unit + responder unit, one exit code (installs frontend deps on first run)
 make test-integration  # starts compose, runs the API against real Postgres, tears down
 make test-e2e          # starts compose, runs Playwright journeys in Chromium, tears down
-# Both bind TEST_HOST_PORT (default 8030) under compose project TEST_COMPOSE_PROJECT (default sail-test)
-# and tear that project down afterward. Override to avoid port clashes:
-#   TEST_HOST_PORT=8031 make test-integration
 ```
+
+Both `test-integration` and `test-e2e` bind `TEST_HOST_PORT` (default 8030) under compose project `TEST_COMPOSE_PROJECT` (default `sail-test`) and tear down afterward. Override to avoid port clashes: `TEST_HOST_PORT=8031 make test-integration`.
 
 One-time setup before `make test-e2e` (downloads Chromium):
 
@@ -192,7 +191,7 @@ export RESPONDER_WEBHOOK_SECRET=any-string   # shared by Grafana's webhook and t
 make up-all                                  # app + Postgres + the whole observability stack (6 containers, ~2 GB RAM)
 ```
 
-Grafana is at <http://localhost:3001> (anonymous access with the Admin role, login form disabled; local only, not exposed on Render), dashboard "Sail-event, Search Run Journey". Run a search or two first and give it a minute: metrics are exported every 60 seconds, so the panels say "No data" until then.
+Grafana is at <http://localhost:3001> (anonymous Admin access; the Sign in button can be ignored; local only, not exposed on Render), dashboard "Sail-event, Search Run Journey". Run a search or two first and give it a minute: metrics are exported every 60 seconds, so the panels say "No data" until then.
 
 ![grafana](docs/images/05-grafana.png)
 
@@ -237,17 +236,15 @@ Two alerts fire on user impact, not CPU: **SearchRunFailures** (two or more runs
                  incident/<id>, never main                                      evidence.md
 ```
 
-It ran for real: a deliberate fault made every search run fail; the alert fired, the agent read the evidence, found the injected `raise`, fixed it on branch `incident/20261017-052050-SearchRunFailures` and left a verdict (`fix.diff` included). A second run on 2026-10-20 proves the chain up to the agent launch on the current code (the CLI could not reach the API from the host at that time; the real stderr is in `agent.log`). Both recorded incidents are in [`incident-response/incidents/`](incident-response/incidents/). Reproduce it with:
+It ran for real: a deliberate fault made every search run fail; the alert fired, the agent read the evidence, found the injected `raise`, fixed it on branch `incident/20261017-052050-SearchRunFailures` and left a verdict (`fix.diff` included). The recorded incident is in [`incident-response/incidents/`](incident-response/incidents/). Reproduce it with:
 
 ```bash
 # prerequisite: `claude` CLI installed and signed in (claude --version);
 # run from a normal terminal, not from inside a Claude Code session
-export RESPONDER_WEBHOOK_SECRET=any-string   # same value in both terminals
-make responder                               # terminal 1
-incident-response/test-incident.sh           # terminal 2: injects the fault, fires the alert
+RESPONDER_WEBHOOK_SECRET=any-string incident-response/test-incident.sh
 ```
 
-Ports default to the values in `make up-all`; override with `HOST_PORT`, `GRAFANA_PORT`, `RESPONDER_PORT`, `COMPOSE_PROJECT_NAME`, etc. The full list is in [`incident-response/README.md`](incident-response/README.md). If you do not have the `claude` CLI, the recorded incidents above show the full run.
+The script starts the full stack and the responder itself; one terminal is enough. Add `--dry-run` to prove the alert-to-evidence chain without the Anthropic API (verdict is `dry-run`; it proves alert &rarr; webhook &rarr; evidence &rarr; worktree and nothing more). Ports default to the values in `make up-all`; override with `HOST_PORT`, `GRAFANA_PORT`, `RESPONDER_PORT`, `COMPOSE_PROJECT_NAME`, etc. The full list is in [`incident-response/README.md`](incident-response/README.md). If you do not have the `claude` CLI, the recorded incident above shows the full run.
 
 Policy, prompt and limits: [`incident-response/`](incident-response/). Security audit and the data policy for AI tools: [docs/operations-and-security-report.md](docs/operations-and-security-report.md).
 

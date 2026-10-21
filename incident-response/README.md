@@ -29,13 +29,6 @@ branch `incident/20261017-052050-SearchRunFailures`, and committed
 `dae24e9`.  All five files are present: `alert.json`, `evidence.md`,
 `agent.log`, `verdict.json`, `fix.diff`.
 
-**2026-10-20 (`20261020-231500-SearchRunFailures`)** -- proves the chain
-up to the agent launch on the current code.  The alert fired, the
-responder created the incident directory, collected evidence, created a
-git worktree, and launched the headless Claude CLI.  The CLI could not
-reach the Anthropic API from this host at that time (ENOTFOUND); the real
-CLI stderr is in `agent.log` and the verdict records the error.
-
 ## Reproduce the full loop (test-incident.sh)
 
 Prerequisites:
@@ -46,36 +39,49 @@ Prerequisites:
   allowlist strips; the CLI must use its own OAuth store)
 - No VPN that blocks `api.anthropic.com`
 - Docker running
-- The observability + app stack already up (`make up-all`)
-- The responder already listening in another terminal (`make responder`)
-- `RESPONDER_WEBHOOK_SECRET` set to the same value in both terminals
 
-The script injects a fault into the search provider (`fixture.py`), rebuilds
-the app container, and waits for the SearchRunFailures alert to fire.  The
-responder picks up the alert, collects evidence, and launches a headless
-Claude Code agent in a git worktree to investigate and fix.
-
-All ports come from env with safe defaults:
+The script starts the full stack (observability + app) and the responder
+itself, injects a fault into the search provider (`fixture.py`), drives
+failing searches, and waits for Grafana's SearchRunFailures alert to fire.
+Grafana's own webhook delivers the alert to the responder.  One terminal
+is enough:
 
 ```sh
-export RESPONDER_WEBHOOK_SECRET=any-string   # same value in both terminals
-
-# terminal 1 -- responder
-RESPONDER_PORT=8071 make responder
-
-# terminal 2 -- stack + test
-export COMPOSE_PROJECT_NAME=exam3
-export HOST_PORT=8070
-export GRAFANA_PORT=3071
-export PROMETHEUS_PORT=9071
-export LOKI_PORT=3171
-export TEMPO_PORT=3271
-export OTEL_COLLECTOR_PORT=4371
-export OTEL_COLLECTOR_METRICS_PORT=8871
-export RESPONDER_PORT=8071
-
-make up-all
-incident-response/test-incident.sh
+RESPONDER_WEBHOOK_SECRET=any-string incident-response/test-incident.sh
 ```
 
+All ports come from env with safe defaults.  Override to avoid clashes:
+
+```sh
+COMPOSE_PROJECT_NAME=exam3 HOST_PORT=8070 GRAFANA_PORT=3071 \
+  PROMETHEUS_PORT=9071 LOKI_PORT=3171 TEMPO_PORT=3271 \
+  OTEL_COLLECTOR_PORT=4371 OTEL_COLLECTOR_METRICS_PORT=8871 \
+  SAIL_OBS_NETWORK=exam3-obs RESPONDER_PORT=8071 \
+  RESPONDER_WEBHOOK_SECRET=any-string \
+  incident-response/test-incident.sh
+```
+
+### `--dry-run` mode
+
+Add `--dry-run` to prove the alert-to-evidence chain without the
+Anthropic API:
+
+```sh
+RESPONDER_WEBHOOK_SECRET=any-string incident-response/test-incident.sh --dry-run
+```
+
+Dry-run proves: alert &rarr; webhook &rarr; evidence collection &rarr;
+worktree creation, and nothing more.  The verdict is `"dry-run"`, the
+agent is never launched, and no fix is attempted.
+
+### Expected output
+
 Incidents are written to `incident-response/incidents/<timestamp>-<alertname>/`.
+Each folder contains:
+
+| File | Contents |
+|------|----------|
+| `alert.json` | Raw Grafana alert payload |
+| `evidence.md` | Prometheus metrics, Loki error logs, app health, recent commits |
+| `agent.log` | Claude CLI output (or `"dry-run: agent not launched"` in dry-run) |
+| `verdict.json` | `{"verdict": "fix"|"dry-run"|...}` with summary, files, commit |

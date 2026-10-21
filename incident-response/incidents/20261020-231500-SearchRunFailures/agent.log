@@ -1,6 +1,0 @@
-Permission allow rule (/Users/ad/.claude/settings.json): Write(//Users/ad/.claude/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(//Users/ad/.claude/**) instead (Edit rules cover all file-editing tools).
-Permission allow rule (/Users/ad/.claude/settings.json): Write(//private/tmp/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(//private/tmp/**) instead (Edit rules cover all file-editing tools).
-Permission allow rule (/Users/ad/.claude/settings.json): Write(//tmp/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(//tmp/**) instead (Edit rules cover all file-editing tools).
-Permission allow rule (/Users/ad/.claude/settings.json): Write(//Users/ad/Downloads/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(//Users/ad/Downloads/**) instead (Edit rules cover all file-editing tools).
-Permission deny rule (/Users/ad/.claude/settings.json): Write(/Users/ad/Library/CloudStorage/*) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/ad/Library/CloudStorage/*) instead (Edit rules cover all file-editing tools).
-API Error: Can't reach the API server — check your internet or DNS (ENOTFOUND)
