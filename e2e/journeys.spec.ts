@@ -66,31 +66,30 @@ test.describe("Journey 1: full user flow", () => {
     await page.getByRole("button", { name: /To review/ }).click();
     await expect(page.getByRole("heading", { name: "To review" })).toBeVisible();
 
-    // Accept first event, reject second
-    const acceptButtons = page.getByRole("button", { name: "Accept" });
+    // Add first event to calendar, reject second
+    const addButtons = page.getByRole("button", { name: "Add to calendar" });
     const rejectButtons = page.getByRole("button", { name: "Reject" });
 
     // Wait for at least two queue items
-    await expect(acceptButtons.first()).toBeVisible({ timeout: 5_000 });
+    await expect(addButtons.first()).toBeVisible({ timeout: 5_000 });
 
-    await acceptButtons.first().click();
-    // After accepting, the next item becomes first
+    await addButtons.first().click();
+    // After adding, the next item becomes first
     await rejectButtons.first().click();
 
     // Go to All events page
     await page.getByRole("button", { name: "All events" }).click();
     await expect(page.getByRole("heading", { name: "All events" })).toBeVisible();
 
-    // Verify statuses are shown with provenance
-    await expect(page.getByText("Accepted by you").first()).toBeVisible();
-    await expect(page.getByText("Rejected by you").first()).toBeVisible();
+    // Verify an accepted event shows Remove from calendar
+    await expect(page.getByRole("button", { name: "Remove from calendar" }).first()).toBeVisible();
 
-    // Remove from calendar: find the accepted card's button, click it, confirm
+    // Remove from calendar: click it, confirm
     await page.getByRole("button", { name: "Remove from calendar" }).first().click();
     await page.getByRole("button", { name: "Remove", exact: true }).click();
 
-    // After removal the card's badge should flip to Rejected by you
-    await expect(page.getByText("Rejected by you").first()).toBeVisible();
+    // After removal the card shows Add to calendar (status flipped to rejected)
+    await expect(page.getByRole("button", { name: "Add to calendar" }).first()).toBeVisible();
   });
 });
 
@@ -120,7 +119,7 @@ test.describe("Journey 2: user isolation", () => {
 
     // Confirm user 1 has events
     await page1.getByRole("button", { name: "All events" }).click();
-    await expect(page1.getByText(/Score \d+%/).first()).toBeVisible();
+    await expect(page1.getByText(/Score: \d+%/).first()).toBeVisible();
     await ctx1.close();
 
     // --- User 2: register, go straight to events ---
