@@ -1,13 +1,16 @@
 import { cn } from 'cn'
 
+/** One definition shared with the chronology: found = accepted + queued + rejected + setAside;
+ *  pages that were not events (filtered_non_event) are not in the funnel. */
 export function funnelNumbers(counts: Record<string, number>) {
   const past = counts.filtered_past ?? 0
+  const date = counts.filtered_date ?? 0
   const place = counts.filtered_place ?? 0
   const duplicate = counts.filtered_duplicate ?? 0
-  const nonEvent = counts.filtered_non_event ?? 0
   return {
     found: counts.events_extracted ?? 0,
-    pages: counts.results_fetched ?? 0,
+    pages: counts.pages_content_pass ?? 0,
+    nonEvent: counts.filtered_non_event ?? 0,
     accepted: counts.accepted ?? 0,
     queued: counts.queued ?? 0,
     rejected: counts.rejected ?? 0,
@@ -15,10 +18,10 @@ export function funnelNumbers(counts: Record<string, number>) {
     rejectedOffTopic: counts.rejected_off_topic ?? 0,
     rejectedOther: counts.rejected_other ?? 0,
     past,
+    date,
     place,
     duplicate,
-    nonEvent,
-    setAside: past + place + duplicate + nonEvent,
+    setAside: past + date + place + duplicate,
   }
 }
 
@@ -28,7 +31,8 @@ const SUB = { fill: 'var(--muted-foreground)' }
 export function Funnel({ counts, className }: { counts: Record<string, number>; className?: string }) {
   const n = funnelNumbers(counts)
   if (n.found === 0) return null
-  const s = 124 / n.found
+  // the ribbons never overrun the bar, even when the backend's parts do not sum to found
+  const s = 124 / Math.max(n.found, n.accepted + n.queued + n.rejected + n.setAside)
   const ribbons = [
     { count: n.accepted, color: 'var(--zone-calendar)', opacity: 0.55, label: `${n.accepted} in calendar`, subs: [] as string[] },
     { count: n.queued, color: 'var(--zone-decide)', opacity: 0.9, label: `${n.queued} to review`, subs: [] },
@@ -43,7 +47,7 @@ export function Funnel({ counts, className }: { counts: Record<string, number>; 
     {
       count: n.setAside, color: 'var(--muted-foreground)', opacity: 0.35, label: `${n.setAside} set aside`,
       // only the non-zero parts: the full list overflows the 352 px viewBox
-      subs: [[[n.past, 'past'], [n.place, 'place'], [n.duplicate, 'dup'], [n.nonEvent, 'non-event']]
+      subs: [[[n.past, 'past'], [n.date, 'date'], [n.place, 'place'], [n.duplicate, 'dup']]
         .filter(([c]) => (c as number) > 0).map(([c, w]) => `${c} ${w}`).join(' · ')],
     },
   ].filter((r) => r.count > 0)
@@ -79,7 +83,7 @@ export function Funnel({ counts, className }: { counts: Record<string, number>; 
       <title>Where the {n.found} events went</title>
       <rect x={12} y={10} width={18} height={124} fill="var(--border)" />
       <text x={12} y={150} style={MAIN}>{n.found} found</text>
-      <text x={12} y={162} style={SUB}>on {n.pages} pages</text>
+      <text x={12} y={162} style={SUB}>on {n.pages} pages read</text>
       {parts.map((p) => (
         <g key={p.label}>
           <path

@@ -77,15 +77,16 @@ const STAGES = ['search', 'extract', 'filter', 'judge']
 export function stageLines(run: SearchResult): string[] {
   const c = run.stageCounts ?? {}
   const n = funnelNumbers(c)
+  // one entry per stage; found = set aside + judged, non-events are pages, not events
   const done = [
-    `Searched the web, ${n.pages} pages`,
-    `Read ${c.pages_content_pass ?? 0} pages, found ${n.found} events`,
-    `Set aside ${n.setAside} before judging`,
-    `Judged ${c.events_judged ?? 0} · ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} rejected`,
+    [`Searched the web, ${c.results_fetched ?? 0} pages`],
+    [`Read ${n.pages} pages, found ${n.found} events`, ...(n.nonEvent > 0 ? [`Skipped ${n.nonEvent} pages that were not events`] : [])],
+    [`Set aside ${n.setAside} before judging`],
+    [`Judged ${c.events_judged ?? 0} · ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} rejected`],
   ]
   const stage = run.currentStage ?? run.stoppedAtStage
   const at = stage ? STAGES.indexOf(stage) : run.finishedAt ? STAGES.length : 0
-  const lines = done.slice(0, Math.max(0, at))
+  const lines = done.slice(0, Math.max(0, at)).flat()
   if (run.currentStage) lines.push(stageText(run))
   if (run.stoppedAtStage) lines.push(`Stopped at ${run.stoppedAtStage}${run.error ? `: ${run.error}` : ''}.`)
   return lines

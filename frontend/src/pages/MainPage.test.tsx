@@ -46,7 +46,8 @@ describe('Stream page from mock data', () => {
     expect(tl).toHaveTextContent('your run · 1 min 30 s')
     expect(tl).toHaveTextContent('Searched the web, 31 pages')
     expect(tl).toHaveTextContent('Read 0 pages, found 12 events')
-    expect(tl).toHaveTextContent('Set aside 5 before judging')
+    expect(tl).toHaveTextContent('Skipped 2 pages that were not events')
+    expect(tl).toHaveTextContent('Set aside 3 before judging')
     expect(tl).toHaveTextContent('Judged 7 · 2 in calendar, 3 to review, 2 rejected')
     expect(screen.getByRole('button', { name: 'Search again' })).toBeInTheDocument()
     expect(screen.getByTestId('funnel')).toHaveTextContent('12 found')
@@ -253,6 +254,25 @@ describe('stageLines', () => {
       'Set aside 9 before judging',
       'Judged 22 · 2 in calendar, 1 to review, 19 rejected',
     ])
+  })
+
+  it('found = set aside + judged, and non-events are a separate line', () => {
+    const real = {
+      results_fetched: 22, pages_content_pass: 22, events_extracted: 10, filtered_non_event: 12,
+      filtered_past: 1, filtered_date: 1, filtered_place: 0, filtered_duplicate: 1, events_judged: 7,
+      accepted: 3, queued: 1, rejected: 3,
+    }
+    const lines = stageLines({ ...finished, stageCounts: real })
+    expect(lines).toEqual([
+      'Searched the web, 22 pages',
+      'Read 22 pages, found 10 events',
+      'Skipped 12 pages that were not events',
+      'Set aside 3 before judging',
+      'Judged 7 · 3 in calendar, 1 to review, 3 rejected',
+    ])
+    const num = (re: RegExp) => Number(lines.join('\n').match(re)![1])
+    expect(num(/found (\d+) events/)).toBe(num(/Set aside (\d+)/) + num(/Judged (\d+)/))
+    expect(num(/Judged (\d+)/)).toBe(num(/(\d+) in calendar/) + num(/(\d+) to review/) + num(/(\d+) rejected/))
   })
 
   it('shows the finished stages then the live line while judging', () => {
