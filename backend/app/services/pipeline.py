@@ -380,6 +380,7 @@ def run_pipeline(
                         "title": e.title,
                         "status": e.status,
                         "page_kind": e.page_kind,
+                        "city": e.city,
                     }
                     for e in stored_events_raw
                 ]

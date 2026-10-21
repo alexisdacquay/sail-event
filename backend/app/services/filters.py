@@ -228,17 +228,17 @@ def filter_events(
 
     # Build stored lookup structures
     stored_links: set[tuple[str, str]] = set()  # (canonical_link, calendar_date)
-    stored_title_date: list[tuple[frozenset[str], str, str]] = []  # (key, cal_date, status)
+    stored_title_date: list[tuple[frozenset[str], str, str, str]] = []  # (key, cal_date, city_lower, status)
     for se in stored:
         link = se.get("link", "")
         dt = se.get("date_time", "")
         cal_date = dt[:10] if dt else ""
         stored_links.add((canonical_url(link), cal_date))
-        stored_title_date.append((title_key(se.get("title", "")), cal_date, se.get("status", "")))
+        stored_title_date.append((title_key(se.get("title", "")), cal_date, (se.get("city") or "").lower(), se.get("status", "")))
 
     # In-run dedup tracking
     run_links: set[tuple[str, str]] = set()
-    run_title_date: list[tuple[frozenset[str], str]] = []
+    run_title_date: list[tuple[frozenset[str], str, str]] = []  # (key, cal_date, city_lower)
 
     kept: list[ExtractedEvent] = []
 
@@ -272,18 +272,19 @@ def filter_events(
             counts.filtered_duplicate += 1
             continue
 
-        # 6. Near-match by title+date
+        # 6. Near-match by title+city+date
         ev_key = title_key(ev.title)
+        ev_city = (ev.city or "").lower()
         is_dup = False
 
-        for s_key, s_date, s_status in stored_title_date:
-            if s_date == cal_date and is_near_match(ev_key, s_key):
+        for s_key, s_date, s_city, s_status in stored_title_date:
+            if s_date == cal_date and s_city == ev_city and is_near_match(ev_key, s_key):
                 is_dup = True
                 break
 
         if not is_dup:
-            for r_key, r_date in run_title_date:
-                if r_date == cal_date and is_near_match(ev_key, r_key):
+            for r_key, r_date, r_city in run_title_date:
+                if r_date == cal_date and r_city == ev_city and is_near_match(ev_key, r_key):
                     is_dup = True
                     break
 
@@ -293,7 +294,7 @@ def filter_events(
 
         # Event passes all filters
         run_links.add((canon, cal_date))
-        run_title_date.append((ev_key, cal_date))
+        run_title_date.append((ev_key, cal_date, ev_city))
         kept.append(ev)
 
     return kept, counts
