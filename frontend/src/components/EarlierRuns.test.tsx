@@ -23,7 +23,8 @@ describe('EarlierRuns', () => {
   it('shows three rows and expands on click', () => {
     render(<EarlierRuns runs={[run(0), run(1), run(2), run(3)]} />)
     expect(screen.getAllByTestId('earlier-run')).toHaveLength(3)
-    expect(screen.getByText('4 runs')).toBeInTheDocument()
+    // the count is the hidden runs, not the three shown
+    expect(screen.getByText('1 more')).toBeInTheDocument()
     expect(screen.getAllByTestId('earlier-run')[0]).toHaveTextContent('29 found')
     fireEvent.click(screen.getByTestId('earlier-runs-more'))
     expect(screen.getAllByTestId('earlier-run')).toHaveLength(4)

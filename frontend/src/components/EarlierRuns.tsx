@@ -58,7 +58,7 @@ export function EarlierRuns({ runs }: { runs: RunSummary[] }) {
             earlier ›
           </button>
           <div />
-          <span className="hidden md:inline">{runs.length} runs</span>
+          <span className="hidden md:inline">{runs.length - 3} more</span>
         </div>
       )}
     </div>
