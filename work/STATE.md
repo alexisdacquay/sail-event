@@ -1,6 +1,15 @@
 # ProjectOne — work state (resumable)
 
-## PAUSE 2026-10-21 ~11:00 (context compression) — RESUME HERE
+## PAUSE 2026-10-21 11:40 (owner stopped the chain) — RESUME HERE
+Owner rule 11:25: no new PRs or fix rounds without the owner's pick; present the ranked list, wait. Agents stopped gracefully, cron cancelled.
+- PR 97 (#95, fix-usertests-2 @ 9124468): CI green 3/3; QA agent was still running at the pause (verdict lands as a comment on issue 95 / PR 97). Mergeable when the owner says so.
+- PR 98 (#94, fix-usertests-1 @ 6325f49 "WIP, owner paused, tests 3 failed / 416 passed"): QA FAIL fixes done for items 1 (criteria_hash migration e4f5a6b7c8d9), 2 (last-run tests), 3 (criteriaStale tests); half-done item 4 (E23 added to fixtures.json changed the extraction hash → ~8 judge fixtures to re-record, 3 pipeline tests red, dead fixtures not cleaned); untouched item 5 (e2e, integration CI red). Needs ~1 engineer hour, then QA again.
+- PR 103 (#101, fix-no-place-no-auto-accept @ 2ea2c87): no place in criteria → queued never accepted, threshold-relative, 5 tests, 411/85 green locally; not QA'd, CI not checked. Issue 99 (field test I3, filed by the owner's other session) is the same defect.
+- Decisions: 1 (ask Where?) refused, 3 (drop old auto-accepts) refused, 4 (Brave) refused; owner's idea = issue 102 (bulk-remove auto-accepted, keep hand-accepted), not scheduled.
+- Owner test account suggested for prod: owner_oct21 (owner registers it). URLs: prod sail-event.onrender.com (571b751), dev sail-event-dev.onrender.com (main).
+- Open: 96, 100, 102, 99(dup of 101), parked 72 74 75 78.
+
+## (previous) PAUSE 2026-10-21 ~11:00 (context compression)
 Update 11:00 (just before compression)
 - #95: PR 97 open (branch fix-usertests-2, 4 commits, issue comment with AC table). Frontend CI failed on two unused symbols (MainPage.tsx ThresholdsSaveResult, mock.ts `old`); the engineer was sent back to fix and push. Then: QA, merge, promote.
 - #94: engineer still running; branch fix-usertests-1 has 8 commits on origin (last 954e328 "reload persistence"), no PR yet. Told it DeepSeek is reachable again (VPN off) for any live re-recording.
