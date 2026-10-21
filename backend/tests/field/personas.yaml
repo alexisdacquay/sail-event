@@ -16,6 +16,10 @@
   tz: Europe/Lisbon
   lang: en
   country: PT
+  want:
+    - {title: "Fado in Chiado", date: "2026-10-24", source: "https://fadoinchiado.com/"}
+    - {title: "Jungle", date: "2026-10-24", source: "https://arena.meo.pt/agenda-completa"}
+    - {title: "Festa da Burra", date: "2026-10-24", source: "https://coliseulisboa.com/eventos/festa-da-burra-no-coliseu/"}
 
 - id: valencia_regatta_es
   text: "regatas de vela cerca de Valencia en noviembre de 2026, no cursos ni escuelas"
@@ -23,12 +27,18 @@
   lang: es
   country: ES
   exclude: [curso, course, escuela]
+  want:
+    - {title: "Winter Series J80", date: "2026-11-14", source: "https://www.fvcv.es/es/calendario-13?ini=1"}
+    - {title: "Liga Clubes", date: "2026-11-08", source: "https://www.fvcv.es/es/calendario-13?ini=1"}
 
 - id: sevilla_kids_es
   text: "planes baratos para niños el fin de semana en Sevilla, uno va en silla de ruedas, acceso sin escaleras"
   tz: Europe/Madrid
   lang: es
   country: ES
+  want:  # caixaforum.org blocks fetches; confirmed through search results only
+    - {title: "Pequeñas historias orquestadas", date: "2026-10-24", source: "https://caixaforum.org/es/sevilla/p/pequenos-cinefilos-sevilla"}
+    - {title: "MacroFractales", date: "2026-10-24", source: "https://caixaforum.org/es/sevilla/familia"}
 
 - id: valencia_ceramics_es
   text: "talleres de cerámica para adultos en Valencia (España) en noviembre"
@@ -52,24 +62,39 @@
   tz: Europe/Berlin
   lang: en
   country: DE
+  want:
+    - {title: "Courvoisier", date: "2026-10-24", source: "https://www.zigzag-jazzclub.berlin/programmneu"}
+    - {title: "Kurt Rosenwinkel", date: "2026-10-25", source: "https://www.zigzag-jazzclub.berlin/programmneu"}
+    - {title: "Bill Frisell", date: "2026-10-28", source: "https://www.zigzag-jazzclub.berlin/programmneu"}
 
 - id: tokyo_jazz_ja
   text: "東京 ジャズ 11月"
   tz: Asia/Tokyo
   lang: ja
   country: JP
+  want:
+    - {title: "JAZZ-FUSION SUMMIT", date: "2026-11-01", source: "https://www.bluenote.co.jp/jp/lp/jazz-fusion-summit-2026/"}
+    - {title: "MET JAZZ TOKYO", date: "2026-11-29", source: "https://www.bunkamura.co.jp/orchard/lineup/26_mjt.html"}
 
 - id: paris_kids_fr
   text: "ateliers ou spectacles pour enfants à Paris ce week-end"
   tz: Europe/Paris
   lang: fr
   country: FR
+  want:
+    - {title: "Origami", date: "2026-10-24", source: "https://www.guimet.fr/agenda/"}
+    - {title: "Jeux d'Asie", date: "2026-10-25", source: "https://www.guimet.fr/agenda/"}
+    - {title: "Festival du Film coréen", date: "2026-10-25", source: "https://www.guimet.fr/agenda/"}
 
 - id: munich_markets_de
   text: "Weihnachtsmärkte und Konzerte in München im Dezember 2026"
   tz: Europe/Berlin
   lang: de
   country: DE
+  want:
+    - {title: "Christkindlmarkt", date: "2026-11-20", source: "https://www.muenchen.de/en/events/munich-christkindlmarkt-info-about-christmas-market"}
+    - {title: "Tollwood Winterfestival", date: "2026-11-24", source: "https://www.tollwood.de/tollwood-winterfestival/"}
+    - {title: "Magical Christmas Tour", date: "2026-12-04", source: "https://www.gregorian.de/dates/"}
 
 - id: med_regattas_region_en
   text: "sailing regattas in the Mediterranean in July 2027"
@@ -81,6 +106,10 @@
   tz: Europe/Vienna
   lang: en
   country: AT
+  want:  # a ticket seller's page, not the venue's; owner to confirm
+    - {title: "Wiener Kammersymphonie", date: "2026-12-02", source: "https://viennaticketing.com/en/adventkonzerte-in-der-minoritenkirche.html"}
+    - {title: "Les Orpheistes", date: "2026-12-04", source: "https://viennaticketing.com/en/adventkonzerte-in-der-minoritenkirche.html"}
+    - {title: "Il Concerto Viennese", date: "2026-12-10", source: "https://viennaticketing.com/en/adventkonzerte-in-der-minoritenkirche.html"}
 
 - id: manchester_exclusion_en
   text: "live rock concerts in Manchester in November 2026, no tribute bands"
@@ -88,12 +117,20 @@
   lang: en
   country: GB
   exclude: [tribute]
+  want:
+    - {title: "SOiL", date: "2026-11-07", source: "https://www.academymusicgroup.com/o2ritzmanchester/"}
+    - {title: "Puscifer", date: "2026-11-08", source: "https://www.manchesteracademy.net/"}
+    - {title: "Shinedown", date: "2026-11-20", source: "https://www.livenation.co.uk/event/shinedown-dance-kid-dance-act-ii-manchester-tickets-edp1650272"}
 
 - id: porto_weekend_pt
   text: "concertos ou feiras no Porto este fim de semana"
   tz: Europe/Lisbon
   lang: pt
   country: PT
+  want:
+    - {title: "Daniel Casares", date: "2026-10-24", source: "https://casadamusica.com/agenda/"}
+    - {title: "Rita Redshoes", date: "2026-10-24", source: "https://casadamusica.com/agenda/"}
+    - {title: "Remix Ensemble", date: "2026-10-25", source: "https://casadamusica.com/agenda/"}
 
 - id: nonevent_bike
   text: "buy a bike"
