@@ -1,5 +1,9 @@
 # ProjectOne — work state (resumable)
 
+## 2026-10-21 10:00 — real incident recorded on current main; final examiner pass running
+- The headless agent fails from this Mac unless the corporate VPN is on: `~/.claude/settings.json` routes the CLI through `ai-proxy.infra.corp.arista.io` (NXDOMAIN off-VPN); with the VPN on, `test-incident.sh` run through the app's Terminal panel (owner's shell) completed the whole loop: Grafana-fired alert → responder → real `claude -p` → verdict fix, commit 8d2f839 on `incident/20261021-074150-SearchRunFailures` (pushed), folder committed with fix.diff (571b751). PR #93 merged (responder passes an operator-set ANTHROPIC_BASE_URL). Prod promoting 571b751.
+- Final examiner pass (Fable, 60-min cap, notes in scratchpad/examiner4-notes.md) launched 10:00. If 24/24: submit. Open parked issues unchanged (#72 #74 #75 #78).
+
 ## 2026-10-21 04:40 — examiner 22/24; last PR merged (92); waiting on the owner's terminal for the +1
 - Examiner re-run 2 (Fable): 22/24 on 3261359; all at max except criterion 12 (on-call agent 1/2): the 2026-10-20 folder had a synthetic alert payload (test-incident.sh posted it) and an examiner inside an agent session cannot run the reproduction. PR #92 (merged, promoted a348152): test-incident.sh waits for Grafana's real webhook, responder `--dry-run` (proves alert → webhook → evidence → worktree; verdict "dry-run"), the 10-20 folder deleted, alert loop selects the rule by name, Postgres healthcheck `-d sail_event`, README wording. Dry-run proven by the engineer (alert fired at 435 s, real 3.8 KB Grafana payload).
 - OWNER STEP for the last point: normal Terminal, VPN off, claude CLI signed in, repo root: `git pull && RESPONDER_WEBHOOK_SECRET=any-string ./incident-response/test-incident.sh` (~10 min); then tell the orchestrator "incident recorded" → commit the new folder under incident-response/incidents/, push, promote, final examiner pass, submit.
