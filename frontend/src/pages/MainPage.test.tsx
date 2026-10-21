@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { MainPage } from './MainPage'
-import type { Event } from '@/services/api'
+import { MainPage, stageText } from './MainPage'
+import type { Event, SearchResult } from '@/services/api'
 
 const emptyQueue: Event[] = []
 
@@ -23,6 +23,10 @@ function renderMainPage(
     </AuthProvider>,
   )
 }
+
+beforeEach(() => {
+  vi.restoreAllMocks()
+})
 
 describe('MainPage cards', () => {
   it('renders all four card testids', async () => {
@@ -186,7 +190,6 @@ describe('MainPage search card', () => {
   })
 
   it('shows 429 rate-limit message with minutes from Retry-After', async () => {
-    const { runSearch: _orig } = await import('@/services/api')
     const api = await import('@/services/api')
     const err = new Error('Too many requests') as Error & { status: number; retryAfter: number }
     err.status = 429
@@ -199,7 +202,6 @@ describe('MainPage search card', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
     const result = await screen.findByTestId('search-result')
     expect(result).toHaveTextContent('Search limit reached, try again in 5 minutes')
-    vi.restoreAllMocks()
   })
 
   it('shows stopped-at stage and error in run report', async () => {
@@ -212,8 +214,11 @@ describe('MainPage search card', () => {
         queries_planned: 2,
         results_fetched: 0,
       },
+      currentStage: null,
       stoppedAtStage: 'search',
       error: 'budget: search',
+      startedAt: '2026-10-18T10:00:00+00:00',
+      finishedAt: '2026-10-18T10:00:05+00:00',
     })
 
     const onSearchComplete = vi.fn().mockResolvedValue(0)
@@ -223,7 +228,6 @@ describe('MainPage search card', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
     const result = await screen.findByTestId('search-result')
     expect(result).toHaveTextContent('Stopped at search: budget: search.')
-    vi.restoreAllMocks()
   })
 })
 
@@ -260,5 +264,138 @@ describe('MainPage right column', () => {
     renderMainPage()
     await screen.findByTestId('criteria-card')
     expect(screen.queryByTestId('review-sidebar')).not.toBeInTheDocument()
+  })
+})
+
+// --- #104: live progress ---
+
+describe('stageText', () => {
+  it('shows stage-appropriate text for search stage', () => {
+    const run: SearchResult = {
+      runId: 'r1', eventsFound: 0, eventsNew: 0,
+      stageCounts: { results_fetched: 10 },
+      currentStage: 'search',
+      stoppedAtStage: null, error: null,
+      startedAt: '2026-10-18T10:00:00+00:00', finishedAt: null,
+    }
+    expect(stageText(run)).toBe('Searching the web…')
+  })
+
+  it('shows reading pages with counts for extract stage', () => {
+    const run: SearchResult = {
+      runId: 'r1', eventsFound: 0, eventsNew: 0,
+      stageCounts: { results_fetched: 20, pages_content_pass: 7 },
+      currentStage: 'extract',
+      stoppedAtStage: null, error: null,
+      startedAt: '2026-10-18T10:00:00+00:00', finishedAt: null,
+    }
+    expect(stageText(run)).toBe('Reading pages 7 of 20…')
+  })
+
+  it('shows judging with counts for judge stage', () => {
+    const run: SearchResult = {
+      runId: 'r1', eventsFound: 5, eventsNew: 5,
+      stageCounts: { events_judged: 3 },
+      currentStage: 'judge',
+      stoppedAtStage: null, error: null,
+      startedAt: '2026-10-18T10:00:00+00:00', finishedAt: null,
+    }
+    expect(stageText(run)).toBe('Judging 3 of 5 events…')
+  })
+
+  it('shows done summary when finished', () => {
+    const run: SearchResult = {
+      runId: 'r1', eventsFound: 30, eventsNew: 10,
+      stageCounts: { accepted: 3, queued: 5, rejected: 22 },
+      currentStage: null,
+      stoppedAtStage: null, error: null,
+      startedAt: '2026-10-18T10:00:00+00:00', finishedAt: '2026-10-18T10:01:30+00:00',
+    }
+    expect(stageText(run)).toBe('Done: 3 added to your calendar, 5 to review, 22 rejected')
+  })
+})
+
+// --- #104: results section ---
+
+describe('MainPage results section', () => {
+  it('shows accepted and queued groups from fetched events', async () => {
+    const api = await import('@/services/api')
+    const accepted: Event[] = [{
+      id: 'a1', title: 'Accepted Gig', dateTime: '2026-10-20T20:00:00+02:00',
+      place: 'Berlin', link: 'https://example.com/a1', description: 'desc',
+      startTz: 'Europe/Berlin', endTime: null, city: 'Berlin', country: 'DE',
+      sourceUrl: null, band: 'fits', score: 95, scoreReason: 'Great match',
+      status: 'accepted', decidedBy: 'auto',
+    }]
+    const queued: Event[] = [{
+      id: 'q1', title: 'Maybe Gig', dateTime: '2026-10-21T18:00:00+02:00',
+      place: 'Berlin', link: 'https://example.com/q1', description: 'desc',
+      startTz: 'Europe/Berlin', endTime: null, city: 'Berlin', country: 'DE',
+      sourceUrl: null, band: 'open question', score: 55, scoreReason: 'Moderate',
+      status: 'queued', decidedBy: null,
+    }]
+    const rejected: Event[] = [{
+      id: 'r1', title: 'Bad Gig', dateTime: '2026-10-22T20:00:00+02:00',
+      place: 'Berlin', link: 'https://example.com/r1', description: 'desc',
+      startTz: 'Europe/Berlin', endTime: null, city: 'Berlin', country: 'DE',
+      sourceUrl: null, band: 'off topic', score: 10, scoreReason: 'No match',
+      status: 'rejected', decidedBy: 'auto',
+    }]
+
+    vi.spyOn(api, 'listEvents').mockImplementation(async (status) => {
+      if (status === 'accepted') return accepted
+      if (status === 'queued') return queued
+      if (status === 'rejected') return rejected
+      return [...accepted, ...queued, ...rejected]
+    })
+
+    renderMainPage()
+    await screen.findByTestId('results-section')
+    expect(screen.getByTestId('results-accepted')).toBeInTheDocument()
+    expect(screen.getByText('Added to your calendar (1)')).toBeInTheDocument()
+    expect(screen.getByText('Accepted Gig')).toBeInTheDocument()
+    expect(screen.getByTestId('results-queued')).toBeInTheDocument()
+    expect(screen.getByText('To review (1)')).toBeInTheDocument()
+    expect(screen.getByText('Maybe Gig')).toBeInTheDocument()
+    expect(screen.getByTestId('results-rejected')).toBeInTheDocument()
+    expect(screen.getByText(/1 rejected/)).toBeInTheDocument()
+  })
+
+  it('shows Clear all button that empties events after confirm', async () => {
+    const api = await import('@/services/api')
+    const accepted: Event[] = [{
+      id: 'a1', title: 'Accepted Gig', dateTime: '2026-10-20T20:00:00+02:00',
+      place: 'Berlin', link: 'https://example.com/a1', description: 'desc',
+      startTz: 'Europe/Berlin', endTime: null, city: 'Berlin', country: 'DE',
+      sourceUrl: null, band: 'fits', score: 95, scoreReason: 'Great match',
+      status: 'accepted', decidedBy: 'auto',
+    }]
+
+    vi.spyOn(api, 'listEvents').mockImplementation(async (status) => {
+      if (status === 'accepted') return accepted
+      if (status === 'queued') return []
+      if (status === 'rejected') return []
+      return accepted
+    })
+    vi.spyOn(api, 'deleteAllEvents').mockResolvedValue({ deleted: 1 })
+
+    const onSearchComplete = vi.fn().mockResolvedValue(0)
+    renderMainPage(onSearchComplete)
+
+    await screen.findByTestId('results-section')
+    // Click Clear all -> shows confirmation
+    fireEvent.click(screen.getByTestId('clear-all'))
+    expect(screen.getByTestId('clear-all-confirm')).toBeInTheDocument()
+    expect(screen.getByText('Delete all your events? This cannot be undone.')).toBeInTheDocument()
+
+    // Confirm
+    fireEvent.click(screen.getByTestId('clear-all-confirm-yes'))
+    await waitFor(() => {
+      expect(api.deleteAllEvents).toHaveBeenCalled()
+    })
+    // Results section should be gone after clear
+    await waitFor(() => {
+      expect(screen.queryByTestId('results-section')).not.toBeInTheDocument()
+    })
   })
 })

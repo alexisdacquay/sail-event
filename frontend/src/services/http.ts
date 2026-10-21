@@ -4,6 +4,7 @@ import type {
   Criteria,
   Thresholds,
   SearchResult,
+  LastRunResponse,
   Event,
   EventStatus,
 } from './api'
@@ -121,6 +122,14 @@ export async function decideEvent(
     method: 'POST',
     body: JSON.stringify({ decision }),
   })
+}
+
+export async function getLastRun(): Promise<LastRunResponse> {
+  return request<LastRunResponse>('/api/search/last-run')
+}
+
+export async function deleteAllEvents(): Promise<{ deleted: number }> {
+  return request<{ deleted: number }>('/api/events', { method: 'DELETE' })
 }
 
 export async function getCalendarUrl(): Promise<{ url: string }> {

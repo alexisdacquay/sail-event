@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -11,12 +11,17 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { ConfirmAction } from '@/components/ConfirmAction'
+import { EventCard } from '@/components/EventCard'
 import {
   getCriteria,
   saveCriteria,
   getThresholds,
   saveThresholds,
   runSearch,
+  getLastRun,
+  listEvents,
+  decideEvent,
+  deleteAllEvents,
   getCalendarUrl,
   rotateCalendarUrl,
 } from '@/services/api'
@@ -28,6 +33,47 @@ type MainPageProps = {
   onSearchComplete: () => Promise<number>
   queuedEvents: Event[]
   onNavigateQueue: () => void
+  onNavigateEvents?: () => void
+}
+
+/** Human-readable progress text from a run's currentStage and stageCounts. */
+export function stageText(run: SearchResult): string {
+  const stage = run.currentStage
+  const c = run.stageCounts ?? {}
+
+  if (!stage && run.finishedAt) {
+    const accepted = c.accepted ?? 0
+    const queued = c.queued ?? 0
+    const rejected = c.rejected ?? 0
+    return `Done: ${accepted} added to your calendar, ${queued} to review, ${rejected} rejected`
+  }
+
+  switch (stage) {
+    case 'adapters':
+    case 'criteria':
+    case 'window':
+      return 'Starting up…'
+    case 'search':
+      return 'Searching the web…'
+    case 'extract': {
+      const done = c.pages_content_pass ?? 0
+      const total = c.results_fetched ?? 0
+      return total > 0
+        ? `Reading pages ${done} of ${total}…`
+        : 'Reading pages…'
+    }
+    case 'filter':
+      return 'Filtering events…'
+    case 'judge': {
+      const judged = c.events_judged ?? 0
+      const total = run.eventsNew || 0
+      return total > 0
+        ? `Judging ${judged} of ${total} events…`
+        : 'Judging events…'
+    }
+    default:
+      return 'Working…'
+  }
 }
 
 /** Build the run-report lines from a SearchResult (spec §8). */
@@ -85,7 +131,7 @@ function buildRunReport(result: SearchResult): string[] {
   return lines
 }
 
-export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: MainPageProps) {
+export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue, onNavigateEvents }: MainPageProps) {
   const [criteriaText, setCriteriaText] = useState('')
   const [criteriaSaved, setCriteriaSaved] = useState(false)
   const [criteriaError, setCriteriaError] = useState('')
@@ -98,6 +144,7 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
   const [scoringSaving, setScoringSaving] = useState(false)
 
   const [searching, setSearching] = useState(false)
+  const [progressText, setProgressText] = useState('')
   const [searchReport, setSearchReport] = useState<{ lines: string[]; queued: number } | null>(null)
   const [searchIsError, setSearchIsError] = useState(false)
   const [searchErrorText, setSearchErrorText] = useState('')
@@ -107,7 +154,31 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
 
   const [userTimeZone, setUserTimeZone] = useState('UTC')
 
+  // Results section state
+  const [acceptedEvents, setAcceptedEvents] = useState<Event[]>([])
+  const [queuedResultEvents, setQueuedResultEvents] = useState<Event[]>([])
+  const [rejectedCount, setRejectedCount] = useState(0)
+
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   const thresholdInvalid = !(lower >= 0 && lower < upper && upper <= 100)
+
+  const refreshResults = useCallback(async () => {
+    try {
+      const [accepted, queued, rejected] = await Promise.all([
+        listEvents('accepted'),
+        listEvents('queued'),
+        listEvents('rejected'),
+      ])
+      accepted.sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
+      queued.sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
+      setAcceptedEvents(accepted)
+      setQueuedResultEvents(queued)
+      setRejectedCount(rejected.length)
+    } catch {
+      // silent — results section is supplementary
+    }
+  }, [])
 
   useEffect(() => {
     getCriteria().then((c) => {
@@ -119,7 +190,51 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
       setUpper(t.upperThreshold)
     })
     getCalendarUrl().then((r) => setCalendarUrl(r.url))
+    refreshResults()
+
+    // Reload persistence: check if a run is in progress
+    getLastRun().then((resp) => {
+      if (resp.run && resp.run.currentStage) {
+        // Run is in progress — show progress and start polling
+        setSearching(true)
+        setProgressText(stageText(resp.run))
+        startPolling()
+      }
+    }).catch(() => { /* no-op */ })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Clean up polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+    }
+  }, [])
+
+  function startPolling() {
+    if (pollRef.current) clearInterval(pollRef.current)
+    pollRef.current = setInterval(async () => {
+      try {
+        const resp = await getLastRun()
+        if (!resp.run) return
+        setProgressText(stageText(resp.run))
+        // Refresh results during the run to show events as they appear
+        refreshResults()
+        if (!resp.run.currentStage && resp.run.finishedAt) {
+          // Run finished — stop polling
+          if (pollRef.current) clearInterval(pollRef.current)
+          pollRef.current = null
+          setSearching(false)
+          const queueCount = await onSearchComplete()
+          setSearchReport({ lines: buildRunReport(resp.run), queued: queueCount })
+          setProgressText('')
+          refreshResults()
+        }
+      } catch {
+        // polling error — ignore
+      }
+    }, 3000)
+  }
 
   function showCriteriaSaved() {
     setCriteriaSaved(true)
@@ -168,6 +283,7 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
     setSearchReport(null)
     setSearchIsError(false)
     setSearchErrorText('')
+    setProgressText('Starting up…')
 
     // Save criteria draft first (decision 11)
     setCriteriaSaved(false)
@@ -180,11 +296,18 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
     } catch {
       setCriteriaError("Couldn't save. Try again.")
       setSearching(false)
+      setProgressText('')
       return
     }
 
+    // Start polling for live progress
+    startPolling()
+
     try {
       const result = await runSearch()
+      // Stop polling — we have the final result
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+      setProgressText('')
       const queueCount = await onSearchComplete()
 
       if (result.eventsFound === 0 && !result.stageCounts) {
@@ -192,7 +315,10 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
       } else {
         setSearchReport({ lines: buildRunReport(result), queued: queueCount })
       }
+      await refreshResults()
     } catch (err: unknown) {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+      setProgressText('')
       const e = err as Error & { status?: number; retryAfter?: number }
       if (e.status === 429) {
         const minutes = e.retryAfter ? Math.ceil(e.retryAfter / 60) : 60
@@ -206,6 +332,20 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
     }
   }
 
+  async function handleDecide(id: string, decision: 'accepted' | 'rejected') {
+    await decideEvent(id, decision)
+    onSearchComplete()
+    refreshResults()
+  }
+
+  async function handleClearAll() {
+    await deleteAllEvents()
+    setAcceptedEvents([])
+    setQueuedResultEvents([])
+    setRejectedCount(0)
+    onSearchComplete()
+  }
+
   async function handleCopyCalendarUrl() {
     try {
       await navigator.clipboard.writeText(calendarUrl)
@@ -215,6 +355,8 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
       // clipboard API unavailable (e.g. test environments)
     }
   }
+
+  const hasResults = acceptedEvents.length > 0 || queuedResultEvents.length > 0 || rejectedCount > 0
 
   const cards = (
     <div className="flex flex-col gap-4 sm:gap-6 max-w-2xl">
@@ -309,8 +451,13 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
             aria-busy={searching ? true : undefined}
             onClick={handleSearch}
           >
-            {searching ? 'Searching… (one to two minutes)' : 'Search now'}
+            {searching ? 'Searching…' : 'Search now'}
           </Button>
+          {searching && progressText && (
+            <p data-testid="search-progress" role="status" className="text-sm text-muted-foreground animate-in fade-in-0 duration-200">
+              {progressText}
+            </p>
+          )}
           {searchReport && (
             <div data-testid="search-result" role="status" className="text-sm animate-in fade-in-0 slide-in-from-top-1 duration-200">
               {searchReport.lines.map((line, i) => (
@@ -339,6 +486,71 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
           )}
         </CardContent>
       </Card>
+
+      {/* Results section */}
+      {hasResults && (
+        <section data-testid="results-section">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-heading text-2xl font-bold tracking-tight">Results</h2>
+            <ConfirmAction
+              label="Clear all"
+              prompt="Delete all your events? This cannot be undone."
+              confirmLabel="Delete all"
+              confirmingLabel="Deleting…"
+              errorText="Couldn't delete events. Try again."
+              onConfirm={handleClearAll}
+              testId="clear-all"
+              confirmTestId="clear-all-confirm"
+            />
+          </div>
+          {acceptedEvents.length > 0 && (
+            <div data-testid="results-accepted" className="mb-4">
+              <h3 className="font-heading text-lg font-semibold tracking-tight mb-2">
+                Added to your calendar ({acceptedEvents.length})
+              </h3>
+              <div className="flex flex-col gap-3">
+                {acceptedEvents.map((evt) => (
+                  <EventCard
+                    key={evt.id}
+                    event={evt}
+                    variant="all"
+                    onDecide={handleDecide}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          {queuedResultEvents.length > 0 && (
+            <div data-testid="results-queued" className="mb-4">
+              <h3 className="font-heading text-lg font-semibold tracking-tight mb-2">
+                To review ({queuedResultEvents.length})
+              </h3>
+              <div className="flex flex-col gap-3">
+                {queuedResultEvents.map((evt) => (
+                  <EventCard
+                    key={evt.id}
+                    event={evt}
+                    variant="queue"
+                    onDecide={handleDecide}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          {rejectedCount > 0 && (
+            <p data-testid="results-rejected" className="text-sm text-muted-foreground">
+              {rejectedCount} rejected.{' '}
+              <button
+                className="underline underline-offset-2 hover:text-foreground"
+                onClick={onNavigateEvents ?? onNavigateQueue}
+                data-testid="rejected-link"
+              >
+                See all events
+              </button>
+            </p>
+          )}
+        </section>
+      )}
 
       {/* Calendar card */}
       {calendarUrl && (
