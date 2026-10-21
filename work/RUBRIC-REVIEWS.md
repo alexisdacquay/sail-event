@@ -23,3 +23,6 @@ risks (A): observability local-only (README line added), staged incident (alread
 failed commands (C): `make up-all` when port 4318 is busy → `OTEL_COLLECTOR_PORT` override added to observability/docker-compose.yml.
 lost (B): nowhere; fastest convincer: the recorded incident folder.
 issues filed: none (no point at stake); the three fixes landed in the same commit as this log.
+
+## 2026-10-21 571b751 — ruthless examiner (Fable): 17 → 22 → 24/24
+Three literal, run-everything passes over two days drove the fixes in PRs 88-93 and the real recorded incident. Full tables in work/EXAMINER-2026-10-20.md.
