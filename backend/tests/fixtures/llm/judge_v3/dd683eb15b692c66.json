@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 3,
+    "reason": "Jazz concert in Bern, Switzerland on 20 October 2026, not in Berlin, Germany as you asked.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 837,
+    "completion_tokens": 111
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

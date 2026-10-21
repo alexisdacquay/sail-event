@@ -1,8 +1,9 @@
-"""Golden set B — 22 candidates → extract → filter expectations.
+"""Golden set B — 23 candidates → extract → filter → judge expectations.
 
 Runs with FAKE_NOW=2026-10-18T12:00:00+02:00 and the fake model.
 Place and date-window filters removed — only past, incomplete, dedup
-filters remain in code. The judge (not tested here) decides place/date fit.
+filters remain in code. The judge scores each kept event; entries with
+expected_band are asserted.
 """
 
 from __future__ import annotations
@@ -34,15 +35,17 @@ def _load_fixtures():
 
 @pytest.fixture(scope="module")
 def extraction_result():
-    """Run extraction + filtering on all 22 fixture candidates."""
+    """Run extraction + filtering on all fixture candidates."""
     from app.adapters.factory import get_language_model
     from app.adapters.search import SearchResult
     from app.services import clock
     from app.services.extract import extract_events
     from app.services.filters import filter_events
+    from app.services.judge import judge_event, Verdict
 
     model = get_language_model()
     fixtures = _load_fixtures()
+    golden = _load_golden()
 
     results = [
         SearchResult(**{k: v for k, v in entry.items() if k != "id"})
@@ -79,12 +82,30 @@ def extraction_result():
         user_tz="Europe/Berlin",
     )
 
+    # Judge each kept event against C1 criteria
+    c1_text = golden["criteria"]["text"]
+    c1_facets = golden["criteria"]["facets"]
+    judged: dict[str, int] = {}  # source_url -> score
+    for ev in kept:
+        result = judge_event(
+            ev,
+            criteria_text=c1_text,
+            facets=c1_facets,
+            window_start=window_start,
+            window_end=window_end,
+            user_tz="Europe/Berlin",
+            model=model,
+        )
+        if isinstance(result, Verdict):
+            judged[ev.source_url] = result.score
+
     return {
         "all_events": events,
         "kept": kept,
         "extract_counts": extract_counts,
         "filter_counts": filter_counts,
         "fixtures": fixtures,
+        "judged": judged,
     }
 
 
@@ -124,6 +145,31 @@ def test_kept_events_have_required_fields(extraction_result):
         assert ev.city, f"Kept event {ev.title} must have a city"
         assert ev.country, f"Kept event {ev.title} must have a country"
         assert ev.start_local, f"Kept event {ev.title} must have a start"
+
+
+def test_expected_bands(extraction_result):
+    """Entries with expected_band have their score in range after judging."""
+    golden = _load_golden()
+    fixtures = extraction_result["fixtures"]
+    judged = extraction_result["judged"]
+
+    for entry in golden["entries"]:
+        band = entry.get("expected_band")
+        if band is None:
+            continue
+        eid = entry["id"]
+        # Skip E1 (few-shot example, excluded from CI check)
+        if "excluded from CI" in entry.get("note", ""):
+            continue
+        url = _fixture_url(fixtures, eid)
+        score = judged.get(url)
+        if score is None:
+            # Event was filtered or judge errored; skip (tested elsewhere)
+            continue
+        lo, hi = band
+        assert lo <= score <= hi, (
+            f"{eid}: score {score} outside expected band [{lo}, {hi}]"
+        )
 
 
 def test_no_past_events_in_kept(extraction_result):

@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 15,
+    "reason": "Techno night at Berghain in Berlin on 20 October matches your dates and city, but the genre is techno, not jazz.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 850,
+    "completion_tokens": 74
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

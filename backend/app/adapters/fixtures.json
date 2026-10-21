@@ -196,5 +196,14 @@
     "raw_content": null,
     "published_at": "2026-09-20",
     "provider": "tavily"
+  },
+  {
+    "id": "E23",
+    "url": "https://www.konzerthaus-wien.at/en/programme/chamber-music-nov7",
+    "title": "Chamber Music Evening, Konzerthaus Vienna",
+    "snippet": "Chamber music evening at Konzerthaus Vienna. 7 November 2026, 19:00. An evening of classical quartets and trios.",
+    "raw_content": null,
+    "published_at": "2026-10-01",
+    "provider": "tavily"
   }
 ]

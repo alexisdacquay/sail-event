@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 3,
+    "reason": "Jazz concert on 20 October is in Bern, Switzerland, not in Berlin, Germany as you asked.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 838,
+    "completion_tokens": 92
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}
