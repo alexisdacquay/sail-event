@@ -12,9 +12,30 @@ export type SearchResult = {
   error: string | null
   startedAt: string | null
   finishedAt: string | null
+  // #108: always sent by the backend; optional so existing test literals in MainPage.test.tsx still type-check
+  durationSeconds?: number | null
+  trigger?: RunTrigger
 }
 
 export type LastRunResponse = { run: SearchResult | null }
+
+export type RunTrigger = 'manual' | 'scheduled'
+
+export type RunSummary = {
+  runId: string
+  startedAt: string
+  finishedAt: string | null
+  durationSeconds: number | null
+  trigger: RunTrigger
+  eventsFound: number
+  accepted: number
+  queued: number
+  rejected: number
+  setAside: number
+  error: string | null
+}
+
+export type RunsResponse = { runs: RunSummary[] }
 
 export type EventStatus = 'new' | 'accepted' | 'rejected' | 'queued'
 

@@ -5,6 +5,8 @@ import type {
   Thresholds,
   SearchResult,
   LastRunResponse,
+  RunSummary,
+  RunsResponse,
   Event,
   EventStatus,
 } from './api'
@@ -180,17 +182,68 @@ export async function runSearch(): Promise<SearchResult> {
       accepted: 2,
       queued: 3,
       rejected: 2,
+      rejected_date_place: 1,
+      rejected_off_topic: 1,
+      rejected_other: 0,
     },
     currentStage: null,
     stoppedAtStage: null,
     error: null,
     startedAt: '2026-10-18T10:00:00+00:00',
     finishedAt: '2026-10-18T10:01:30+00:00',
+    durationSeconds: 90,
+    trigger: 'manual',
   }
 }
 
 export async function getLastRun(): Promise<LastRunResponse> {
   return { run: null }
+}
+
+const mockRuns: RunSummary[] = [
+  {
+    runId: 'run-003',
+    startedAt: '2026-10-18T10:00:00+00:00',
+    finishedAt: '2026-10-18T10:01:30+00:00',
+    durationSeconds: 90,
+    trigger: 'manual',
+    eventsFound: 12,
+    accepted: 2,
+    queued: 3,
+    rejected: 2,
+    setAside: 5,
+    error: null,
+  },
+  {
+    runId: 'run-002',
+    startedAt: '2026-10-18T09:00:00+00:00',
+    finishedAt: '2026-10-18T09:00:42+00:00',
+    durationSeconds: 42,
+    trigger: 'scheduled',
+    eventsFound: 9,
+    accepted: 0,
+    queued: 1,
+    rejected: 4,
+    setAside: 4,
+    error: null,
+  },
+  {
+    runId: 'run-001',
+    startedAt: '2026-10-18T08:00:00+00:00',
+    finishedAt: '2026-10-18T08:00:03+00:00',
+    durationSeconds: 3,
+    trigger: 'scheduled',
+    eventsFound: 0,
+    accepted: 0,
+    queued: 0,
+    rejected: 0,
+    setAside: 0,
+    error: 'TimeoutError: search provider timed out',
+  },
+]
+
+export async function getRuns(limit = 20): Promise<RunsResponse> {
+  return { runs: mockRuns.slice(0, limit).map((r) => ({ ...r })) }
 }
 
 export async function deleteAllEvents(): Promise<{ deleted: number }> {
