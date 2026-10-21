@@ -673,6 +673,9 @@ def _finalise_run(
 ) -> orm.Run:
     """Write final fields on the run row and commit.  Returns the attached row."""
     run = db.merge(run)
+    # #108: the funnel reads the bands on every finished run, also when nothing was judged
+    for k in ("rejected_date_place", "rejected_off_topic", "rejected_other"):
+        counts.setdefault(k, 0)
     run.finished_at = datetime.now(UTC)
     run.events_found = events_found
     run.events_new = events_new

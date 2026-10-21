@@ -27,11 +27,13 @@ export type RunSummary = {
   finishedAt: string | null
   durationSeconds: number | null
   trigger: RunTrigger
-  eventsFound: number
+  eventsFound: number // events_extracted; accepted + queued + rejected + setAside == eventsFound
   accepted: number
   queued: number
   rejected: number
-  setAside: number
+  setAside: number // filtered_past + filtered_date + filtered_place + filtered_duplicate
+  pagesRead: number // results_fetched
+  pagesSkipped: number // filtered_non_event
   error: string | null
 }
 

@@ -21,8 +21,8 @@
 | `rotateCalendarUrl` | `rotateCalendarUrl` | POST | `/api/calendar/rotate`    |
 | —                 | `getCalendarFeed`| GET    | `/api/calendar/{ics_token}` |
 
-Run fields (`/api/search/last-run`, `/api/search`): `durationSeconds` is `finishedAt - startedAt`, null while running; `trigger` is `manual` or `scheduled`. `stageCounts` holds, after triage, `rejected_date_place` (score 0-9: wrong city/country or dates), `rejected_off_topic` (10-39) and `rejected_other` (40 up to the lower threshold); the three sum to `rejected`.
+Run fields (`/api/search/last-run`, `/api/search`): `durationSeconds` is `finishedAt - startedAt`, null while running; `trigger` is `manual` or `scheduled`. `stageCounts` holds, after triage, `rejected_date_place` (score 0-9: wrong city/country or dates), `rejected_off_topic` (10-39) and `rejected_other` (40 up to the lower threshold); the three sum to `rejected` and are present (0) on every finished run.
 
-`GET /api/search/runs?limit=20` returns `{"runs": [RunSummary]}`, the caller's runs newest first, `limit` 1-100. `RunSummary` = `{runId, startedAt, finishedAt, durationSeconds, trigger, eventsFound, accepted, queued, rejected, setAside, error}` where `setAside = filtered_past + filtered_place + filtered_duplicate + filtered_non_event`.
+`GET /api/search/runs?limit=20` returns `{"runs": [RunSummary]}`, the caller's runs newest first, `limit` 1-100. `RunSummary` = `{runId, startedAt, finishedAt, durationSeconds, trigger, eventsFound, accepted, queued, rejected, setAside, pagesRead, pagesSkipped, error}`. Event-level: `eventsFound = events_extracted`, `setAside = filtered_past + filtered_date + filtered_place + filtered_duplicate`, so `accepted + queued + rejected + setAside == eventsFound`. Page-level: `pagesRead = results_fetched`, `pagesSkipped = filtered_non_event`.
 
 Event fields beyond the obvious: `decidedBy` is `auto` (triaged by the pipeline), `user` (decided in the queue) or null (still to review); `scoreReason` is the one-line reason shown under the title.

@@ -64,14 +64,18 @@ def _run_summary(run: orm.Run) -> dict:
         "finishedAt": run.finished_at.isoformat() if run.finished_at else None,
         "durationSeconds": _duration_seconds(run),
         "trigger": run.trigger,
-        "eventsFound": run.events_found,
+        # event-level only, so accepted + queued + rejected + setAside == eventsFound
+        "eventsFound": sc.get("events_extracted", 0),
         "accepted": sc.get("accepted", 0),
         "queued": sc.get("queued", 0),
         "rejected": sc.get("rejected", 0),
         "setAside": sum(
             sc.get(k, 0)
-            for k in ("filtered_past", "filtered_place", "filtered_duplicate", "filtered_non_event")
+            for k in ("filtered_past", "filtered_date", "filtered_place", "filtered_duplicate")
         ),
+        # page-level
+        "pagesRead": sc.get("results_fetched", 0),
+        "pagesSkipped": sc.get("filtered_non_event", 0),
         "error": run.error,
     }
 

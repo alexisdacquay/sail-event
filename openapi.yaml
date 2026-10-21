@@ -469,7 +469,8 @@ components:
           description: >-
             Per-stage item counts from the run. After triage also holds
             rejected_date_place (score 0-9), rejected_off_topic (10-39) and
-            rejected_other (40 up to the lower threshold); they sum to rejected.
+            rejected_other (40 up to the lower threshold); they sum to rejected
+            and are 0, never absent, on every finished run.
         currentStage:
           type:
             - string
@@ -517,6 +518,8 @@ components:
         - queued
         - rejected
         - setAside
+        - pagesRead
+        - pagesSkipped
         - error
       properties:
         runId:
@@ -539,6 +542,8 @@ components:
             - scheduled
         eventsFound:
           type: integer
+          description: >-
+            events_extracted; accepted + queued + rejected + setAside == eventsFound
         accepted:
           type: integer
         queued:
@@ -547,7 +552,13 @@ components:
           type: integer
         setAside:
           type: integer
-          description: filtered_past + filtered_place + filtered_duplicate + filtered_non_event
+          description: filtered_past + filtered_date + filtered_place + filtered_duplicate (events)
+        pagesRead:
+          type: integer
+          description: results_fetched (pages)
+        pagesSkipped:
+          type: integer
+          description: filtered_non_event (pages that were not events)
         error:
           type:
             - string

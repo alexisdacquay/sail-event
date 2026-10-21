@@ -212,6 +212,8 @@ const mockRuns: RunSummary[] = [
     queued: 3,
     rejected: 2,
     setAside: 5,
+    pagesRead: 31,
+    pagesSkipped: 14,
     error: null,
   },
   {
@@ -225,6 +227,8 @@ const mockRuns: RunSummary[] = [
     queued: 1,
     rejected: 4,
     setAside: 4,
+    pagesRead: 20,
+    pagesSkipped: 9,
     error: null,
   },
   {
@@ -238,6 +242,8 @@ const mockRuns: RunSummary[] = [
     queued: 0,
     rejected: 0,
     setAside: 0,
+    pagesRead: 0,
+    pagesSkipped: 0,
     error: 'TimeoutError: search provider timed out',
   },
 ]

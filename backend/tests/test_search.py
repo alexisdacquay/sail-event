@@ -345,7 +345,7 @@ def test_last_run_no_auth_returns_401(client):
 
 _RUN_SUMMARY_KEYS = {
     "runId", "startedAt", "finishedAt", "durationSeconds", "trigger",
-    "eventsFound", "accepted", "queued", "rejected", "setAside", "error",
+    "eventsFound", "accepted", "queued", "rejected", "setAside", "pagesRead", "pagesSkipped", "error",
 }
 
 
@@ -395,15 +395,37 @@ def test_runs_summary_fields_and_set_aside(client, auth_headers):
     assert summary["runId"] == body["runId"]
     assert summary["trigger"] == "manual"
     assert summary["durationSeconds"] == body["durationSeconds"]
-    assert summary["eventsFound"] == body["eventsFound"]
+    assert summary["eventsFound"] == sc["events_extracted"]
     assert summary["accepted"] == sc["accepted"]
     assert summary["queued"] == sc["queued"]
     assert summary["rejected"] == sc["rejected"]
     assert summary["setAside"] == (
-        sc["filtered_past"] + sc["filtered_place"] + sc["filtered_duplicate"] + sc["filtered_non_event"]
+        sc["filtered_past"] + sc["filtered_date"] + sc["filtered_place"] + sc["filtered_duplicate"]
     )
     assert summary["setAside"] > 0
+    assert summary["pagesRead"] == sc["results_fetched"]
+    assert summary["pagesSkipped"] == sc["filtered_non_event"]
     assert summary["error"] is None
+    # the funnel invariant: every extracted event lands in exactly one bar
+    assert summary["accepted"] + summary["queued"] + summary["rejected"] + summary["setAside"] == summary["eventsFound"]
+
+
+def test_runs_invariant_holds_for_every_finished_run(client, auth_headers):
+    """Manual run, repeat run with nothing new, and an error run (no criteria)."""
+    h = auth_headers("demo", "demo")
+    client.post("/api/search", headers=h)
+    client.post("/api/search", headers=h)
+    h_fresh = auth_headers("fresh", "freshpw")
+    client.post("/api/search", headers=h_fresh)
+    for hdr in (h, h_fresh):
+        runs = client.get("/api/search/runs", headers=hdr).json()["runs"]
+        assert runs
+        for s in runs:
+            assert s["finishedAt"] is not None
+            assert s["accepted"] + s["queued"] + s["rejected"] + s["setAside"] == s["eventsFound"]
+        last = client.get("/api/search/last-run", headers=hdr).json()["run"]
+        sc = last["stageCounts"]
+        assert (sc["rejected_date_place"], sc["rejected_off_topic"], sc["rejected_other"]) == (0, 0, 0)
 
 
 def test_runs_limit_validated(client, auth_headers):
