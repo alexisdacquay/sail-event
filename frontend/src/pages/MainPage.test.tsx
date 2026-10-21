@@ -352,13 +352,15 @@ describe('MainPage results section', () => {
     renderMainPage()
     await screen.findByTestId('results-section')
     expect(screen.getByTestId('results-accepted')).toBeInTheDocument()
-    expect(screen.getByText('Added to your calendar (1)')).toBeInTheDocument()
+    expect(screen.getByText('In your calendar (1)')).toBeInTheDocument()
     expect(screen.getByText('Accepted Gig')).toBeInTheDocument()
     expect(screen.getByTestId('results-queued')).toBeInTheDocument()
     expect(screen.getByText('To review (1)')).toBeInTheDocument()
     expect(screen.getByText('Maybe Gig')).toBeInTheDocument()
     expect(screen.getByTestId('results-rejected')).toBeInTheDocument()
-    expect(screen.getByText(/1 rejected/)).toBeInTheDocument()
+    expect(screen.getByText(/Rejected \(1\)/)).toBeInTheDocument()
+    // Summary line
+    expect(screen.getByTestId('results-summary')).toHaveTextContent('1 in your calendar · 1 to review · 1 rejected')
   })
 
   it('shows Clear all button that empties events after confirm', async () => {

@@ -80,7 +80,6 @@ function AuthenticatedLayout() {
             onSearchComplete={refreshQueueCount}
             queuedEvents={queuedEvents}
             onNavigateQueue={() => handleTabClick('queue')}
-            onNavigateEvents={() => handleTabClick('events')}
           />
         )}
         {page === 'events' && <EventsPage />}

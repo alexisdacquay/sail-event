@@ -33,7 +33,6 @@ type MainPageProps = {
   onSearchComplete: () => Promise<number>
   queuedEvents: Event[]
   onNavigateQueue: () => void
-  onNavigateEvents?: () => void
 }
 
 /** Human-readable progress text from a run's currentStage and stageCounts. */
@@ -131,7 +130,7 @@ function buildRunReport(result: SearchResult): string[] {
   return lines
 }
 
-export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue, onNavigateEvents }: MainPageProps) {
+export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: MainPageProps) {
   const [criteriaText, setCriteriaText] = useState('')
   const [criteriaSaved, setCriteriaSaved] = useState(false)
   const [criteriaError, setCriteriaError] = useState('')
@@ -157,7 +156,8 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue, onNa
   // Results section state
   const [acceptedEvents, setAcceptedEvents] = useState<Event[]>([])
   const [queuedResultEvents, setQueuedResultEvents] = useState<Event[]>([])
-  const [rejectedCount, setRejectedCount] = useState(0)
+  const [rejectedEvents, setRejectedEvents] = useState<Event[]>([])
+  const [showRejected, setShowRejected] = useState(false)
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -172,9 +172,10 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue, onNa
       ])
       accepted.sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
       queued.sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
+      rejected.sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
       setAcceptedEvents(accepted)
       setQueuedResultEvents(queued)
-      setRejectedCount(rejected.length)
+      setRejectedEvents(rejected)
     } catch {
       // silent — results section is supplementary
     }
@@ -342,7 +343,8 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue, onNa
     await deleteAllEvents()
     setAcceptedEvents([])
     setQueuedResultEvents([])
-    setRejectedCount(0)
+    setRejectedEvents([])
+    setShowRejected(false)
     onSearchComplete()
   }
 
@@ -356,7 +358,7 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue, onNa
     }
   }
 
-  const hasResults = acceptedEvents.length > 0 || queuedResultEvents.length > 0 || rejectedCount > 0
+  const hasResults = acceptedEvents.length > 0 || queuedResultEvents.length > 0 || rejectedEvents.length > 0
 
   const cards = (
     <div className="flex flex-col gap-4 sm:gap-6 max-w-2xl">
@@ -490,7 +492,7 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue, onNa
       {/* Results section */}
       {hasResults && (
         <section data-testid="results-section">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <h2 className="font-heading text-2xl font-bold tracking-tight">Results</h2>
             <ConfirmAction
               label="Clear all"
@@ -503,10 +505,13 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue, onNa
               confirmTestId="clear-all-confirm"
             />
           </div>
+          <p data-testid="results-summary" className="text-sm text-muted-foreground mb-4">
+            {acceptedEvents.length} in your calendar · {queuedResultEvents.length} to review · {rejectedEvents.length} rejected
+          </p>
           {acceptedEvents.length > 0 && (
             <div data-testid="results-accepted" className="mb-4">
               <h3 className="font-heading text-lg font-semibold tracking-tight mb-2">
-                Added to your calendar ({acceptedEvents.length})
+                In your calendar ({acceptedEvents.length})
               </h3>
               <div className="flex flex-col gap-3">
                 {acceptedEvents.map((evt) => (
@@ -537,17 +542,32 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue, onNa
               </div>
             </div>
           )}
-          {rejectedCount > 0 && (
-            <p data-testid="results-rejected" className="text-sm text-muted-foreground">
-              {rejectedCount} rejected.{' '}
-              <button
-                className="underline underline-offset-2 hover:text-foreground"
-                onClick={onNavigateEvents ?? onNavigateQueue}
-                data-testid="rejected-link"
-              >
-                See the full list
-              </button>
-            </p>
+          {rejectedEvents.length > 0 && (
+            <div data-testid="results-rejected" className="mb-4">
+              <h3 className="font-heading text-lg font-semibold tracking-tight mb-2">
+                Rejected ({rejectedEvents.length})
+                {' · '}
+                <button
+                  className="text-sm font-normal text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                  onClick={() => setShowRejected(!showRejected)}
+                  data-testid="rejected-toggle"
+                >
+                  {showRejected ? 'hide' : 'show all'}
+                </button>
+              </h3>
+              {showRejected && (
+                <div className="flex flex-col gap-3">
+                  {rejectedEvents.map((evt) => (
+                    <EventCard
+                      key={evt.id}
+                      event={evt}
+                      variant="all"
+                      onDecide={handleDecide}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </section>
       )}

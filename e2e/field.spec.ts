@@ -48,7 +48,7 @@ test("U2 the result line matches the badge and the cards", async ({ page }) => {
   if (n === 0) return;
   await review.click();
   await expect(page.getByRole("heading", { name: "To review" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Accept" })).toHaveCount(n);
+  await expect(page.getByRole("button", { name: "Add to calendar" })).toHaveCount(n);
 });
 
 test("U3 slider knobs equal the boxes", async ({ page }) => {
