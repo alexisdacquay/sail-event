@@ -11,6 +11,8 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
 from ..auth import create_token, hash_password, verify_password
 from ..db import get_db
 from ..models import RegisterRequest, LoginRequest
@@ -94,11 +96,19 @@ def register(
             content={"detail": f"Username '{body.username}' is already taken"},
         )
 
+    tz = "UTC"
+    if body.timeZone:
+        try:
+            ZoneInfo(body.timeZone)
+            tz = body.timeZone
+        except (ZoneInfoNotFoundError, KeyError):
+            pass  # ignore invalid, default UTC
     user = orm.User(
         username=body.username,
         password_hash=hash_password(body.password),
         upper_threshold=90,
         lower_threshold=40,
+        time_zone=tz,
     )
     db.add(user)
     db.flush()
@@ -163,6 +173,13 @@ def login(
         )
 
     _login_failures.pop(key, None)
+    if body.timeZone:
+        try:
+            ZoneInfo(body.timeZone)
+            user.time_zone = body.timeZone
+            db.commit()
+        except (ZoneInfoNotFoundError, KeyError):
+            pass
     token = create_token(user.id)
     return JSONResponse(
         content={"token": token, "username": user.username},

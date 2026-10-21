@@ -62,7 +62,7 @@ export async function register(
   password: string,
   registrationCode?: string,
 ): Promise<AuthResponse> {
-  const payload: Record<string, string> = { username, password }
+  const payload: Record<string, string> = { username, password, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }
   if (registrationCode) payload.registrationCode = registrationCode
   return request<AuthResponse>('/api/auth/register', {
     method: 'POST',
@@ -76,7 +76,7 @@ export async function login(
 ): Promise<AuthResponse> {
   return request<AuthResponse>('/api/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ username, password, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
   })
 }
 

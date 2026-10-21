@@ -79,6 +79,7 @@ class RegisterRequest(BaseModel):
     username: str = Field(max_length=150)
     password: str = Field(max_length=72)
     registrationCode: str | None = None
+    timeZone: str | None = None
 
     @field_validator("password")
     @classmethod
@@ -91,6 +92,7 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     username: str = Field(max_length=150)
     password: str = Field(max_length=72)
+    timeZone: str | None = None
 
     @field_validator("password")
     @classmethod
