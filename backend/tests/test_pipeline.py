@@ -283,6 +283,165 @@ def test_triage_uses_ge_le_cutoffs(client, auth_headers, _db_session):
             assert e.status == "queued"
 
 
+# ---------- Issue 101: no place in criteria → queued, never auto-accepted ----------
+
+
+def _setup_no_place_user(client, auth_headers, _db_session, username="noplace"):
+    """Register a user whose criteria have no place facet (e.g. 'jazz')."""
+    import hashlib
+    h = auth_headers(username, username)
+    text = "jazz"
+    client.put("/api/criteria", headers=h, json={"text": text})
+    user = _db_session.query(User).filter(User.username == username).first()
+    crit = _db_session.query(Criteria).filter(Criteria.user_id == user.id).first()
+    crit.facets_json = json.dumps({
+        "place": {"city": None, "country": None, "online": False},
+        "date": {},
+        "topics": ["jazz"],
+        "language": None,
+        "input_language": "en",
+    })
+    crit.facets_version = "criteria_v2"
+    crit.facets_text_sha = hashlib.sha256(text.encode()).hexdigest()
+    _db_session.commit()
+    return h, user
+
+
+def _make_verdict(score):
+    """Build a mock Verdict with the given score."""
+    from app.services.judge import Verdict
+    return Verdict(
+        score=score,
+        reason=f"test event in Berlin on 20 Oct, score {score}",
+        fit={"place": "yes", "date": "yes", "topic": "yes", "budget": "unknown"},
+        is_event=True,
+        capped=False,
+    )
+
+
+def _make_extracted_event():
+    from app.services.extract import ExtractedEvent, ExtractionCounts
+    ev = ExtractedEvent(
+        title="Jazz Night",
+        start_local="2026-10-20T21:00",
+        start_tz="Europe/Berlin",
+        end_local=None,
+        venue="Club",
+        city="Berlin",
+        country="DE",
+        link="https://example.com/jazz-night-noplace",
+        description="a jazz night",
+        confidence=0.9,
+        source_url="https://example.com/jazz-night-noplace",
+        page_kind="single_event",
+    )
+    counts = ExtractionCounts(
+        pages_content_pass=0, extract_truncated=0, events_extracted=1,
+        extract_errors=0, filtered_non_event=0,
+    )
+    return ev, counts
+
+
+def test_no_place_score_95_queued(client, auth_headers, _db_session):
+    """Criteria without place + score 95 → queued (not accepted)."""
+    h, user = _setup_no_place_user(client, auth_headers, _db_session, "np95")
+    ev, ec = _make_extracted_event()
+
+    with (
+        patch("app.services.pipeline.extract_events", return_value=([ev], ec)),
+        patch("app.services.pipeline.judge_event", return_value=_make_verdict(95)),
+    ):
+        body = client.post("/api/search", headers=h).json()
+
+    run_id = body["runId"]
+    events = _db_session.query(Event).filter(Event.run_id == run_id).all()
+    scored = [e for e in events if e.score is not None]
+    assert len(scored) == 1
+    assert scored[0].score == 95
+    assert scored[0].status == "queued"
+    assert scored[0].decided_by is None
+
+    sc = body["stageCounts"]
+    assert sc["queued_no_place"] == 1
+    assert sc["accepted"] == 0
+    assert sc["queued"] == 1
+
+
+def test_with_city_score_95_accepted(client, auth_headers, _db_session):
+    """Criteria with a city + score 95 → accepted (normal path)."""
+    import hashlib
+    h = auth_headers("wc95", "wc95")
+    text = "jazz in Berlin"
+    client.put("/api/criteria", headers=h, json={"text": text})
+    user = _db_session.query(User).filter(User.username == "wc95").first()
+    crit = _db_session.query(Criteria).filter(Criteria.user_id == user.id).first()
+    crit.facets_json = json.dumps({
+        "place": {"city": "Berlin", "country": "DE", "online": False},
+        "date": {},
+        "topics": ["jazz"],
+        "language": "de",
+        "input_language": "en",
+    })
+    crit.facets_version = "criteria_v2"
+    crit.facets_text_sha = hashlib.sha256(text.encode()).hexdigest()
+    _db_session.commit()
+
+    ev, ec = _make_extracted_event()
+    with (
+        patch("app.services.pipeline.extract_events", return_value=([ev], ec)),
+        patch("app.services.pipeline.judge_event", return_value=_make_verdict(95)),
+    ):
+        body = client.post("/api/search", headers=h).json()
+
+    run_id = body["runId"]
+    events = _db_session.query(Event).filter(Event.run_id == run_id).all()
+    scored = [e for e in events if e.score is not None]
+    assert len(scored) == 1
+    assert scored[0].score == 95
+    assert scored[0].status == "accepted"
+    assert scored[0].decided_by == "auto"
+
+    sc = body["stageCounts"]
+    assert sc.get("queued_no_place", 0) == 0
+    assert sc["accepted"] == 1
+
+
+def test_no_place_score_20_rejected(client, auth_headers, _db_session):
+    """Criteria without place + score 20 → rejected (lower threshold still applies)."""
+    h, user = _setup_no_place_user(client, auth_headers, _db_session, "np20")
+    ev, ec = _make_extracted_event()
+
+    with (
+        patch("app.services.pipeline.extract_events", return_value=([ev], ec)),
+        patch("app.services.pipeline.judge_event", return_value=_make_verdict(20)),
+    ):
+        body = client.post("/api/search", headers=h).json()
+
+    run_id = body["runId"]
+    events = _db_session.query(Event).filter(Event.run_id == run_id).all()
+    scored = [e for e in events if e.score is not None]
+    assert len(scored) == 1
+    assert scored[0].score == 20
+    assert scored[0].status == "rejected"
+    assert scored[0].decided_by == "auto"
+
+
+def test_no_place_queued_no_place_in_result_line(client, auth_headers, _db_session):
+    """The UI result line includes queued_no_place in stage_counts."""
+    h, user = _setup_no_place_user(client, auth_headers, _db_session, "nprl")
+    ev, ec = _make_extracted_event()
+
+    with (
+        patch("app.services.pipeline.extract_events", return_value=([ev], ec)),
+        patch("app.services.pipeline.judge_event", return_value=_make_verdict(95)),
+    ):
+        body = client.post("/api/search", headers=h).json()
+
+    sc = body["stageCounts"]
+    assert "queued_no_place" in sc
+    assert sc["queued_no_place"] == 1
+
+
 # ---------- search/all trigger (now 202 + background) ----------
 
 
