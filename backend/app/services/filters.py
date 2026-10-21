@@ -205,11 +205,15 @@ def is_event_past(date_time: str, start_tz: str | None, country: str | None,
 
     Timed events: past when start < now.
     Date-only events: past when the whole day is over (23:59:59 local).
+    Unparseable dates are not considered past (keep showing them).
     """
     if not date_time:
         return False
     if _is_date_only(date_time):
-        d = date.fromisoformat(date_time)
+        try:
+            d = date.fromisoformat(date_time)
+        except ValueError:
+            return False
         zone = _resolve_zone(start_tz, country, user_tz)
         eod = datetime.combine(d, time(23, 59, 59), tzinfo=zone)
         return eod.astimezone(timezone.utc) < now_utc
