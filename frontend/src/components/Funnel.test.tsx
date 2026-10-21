@@ -67,10 +67,15 @@ describe('Funnel', () => {
     expect(screen.queryByText(/non-event/)).not.toBeInTheDocument()
   })
 
-  it('never lets the ribbons overrun the bar when the parts exceed found', () => {
-    const { container } = render(<Funnel counts={{ events_extracted: 10, accepted: 3, rejected: 6, filtered_past: 12 }} />)
+  it('counts incomplete and judge errors as set aside: ribbons equal the bar exactly', () => {
+    const { container } = render(
+      <Funnel counts={{ events_extracted: 10, accepted: 3, queued: 1, rejected: 4, filtered_incomplete: 1, judge_errors: 1 }} />,
+    )
     const { bar, sum } = squareHeights(container)
-    expect(sum).toBeLessThanOrEqual(bar + 0.01)
+    expect(bar).toBe(124)
+    expect(sum).toBeCloseTo(124, 6)
+    expect(screen.getByText('2 set aside')).toBeInTheDocument()
+    expect(screen.getByText('1 incomplete · 1 errors')).toBeInTheDocument()
   })
 
   it('renders nothing with no events', () => {

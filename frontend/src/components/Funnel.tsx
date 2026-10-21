@@ -1,15 +1,18 @@
 import { cn } from 'cn'
 
-/** One definition shared with the chronology: found = accepted + queued + rejected + setAside;
- *  pages that were not events (filtered_non_event) are not in the funnel. */
+/** One definition shared with the chronology and the backend (PR 110): found = accepted + queued +
+ *  rejected + setAside, setAside = the seven counts below; filtered_non_event are pages, not events. */
 export function funnelNumbers(counts: Record<string, number>) {
   const past = counts.filtered_past ?? 0
   const date = counts.filtered_date ?? 0
   const place = counts.filtered_place ?? 0
   const duplicate = counts.filtered_duplicate ?? 0
+  const incomplete = counts.filtered_incomplete ?? 0
+  const capped = counts.events_capped ?? 0
+  const judgeErrors = counts.judge_errors ?? 0
   return {
     found: counts.events_extracted ?? 0,
-    pages: counts.pages_content_pass ?? 0,
+    pages: counts.results_fetched ?? 0,
     nonEvent: counts.filtered_non_event ?? 0,
     accepted: counts.accepted ?? 0,
     queued: counts.queued ?? 0,
@@ -21,7 +24,10 @@ export function funnelNumbers(counts: Record<string, number>) {
     date,
     place,
     duplicate,
-    setAside: past + date + place + duplicate,
+    incomplete,
+    capped,
+    judgeErrors,
+    setAside: incomplete + past + date + place + duplicate + capped + judgeErrors,
   }
 }
 
@@ -47,7 +53,8 @@ export function Funnel({ counts, className }: { counts: Record<string, number>; 
     {
       count: n.setAside, color: 'var(--muted-foreground)', opacity: 0.35, label: `${n.setAside} set aside`,
       // only the non-zero parts: the full list overflows the 352 px viewBox
-      subs: [[[n.past, 'past'], [n.date, 'date'], [n.place, 'place'], [n.duplicate, 'dup']]
+      subs: [[[n.past, 'past'], [n.date, 'date'], [n.place, 'place'], [n.duplicate, 'dup'],
+        [n.incomplete, 'incomplete'], [n.capped, 'capped'], [n.judgeErrors, 'errors']]
         .filter(([c]) => (c as number) > 0).map(([c, w]) => `${c} ${w}`).join(' · ')],
     },
   ].filter((r) => r.count > 0)
