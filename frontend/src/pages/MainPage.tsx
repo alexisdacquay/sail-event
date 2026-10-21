@@ -17,6 +17,7 @@ import {
   getThresholds,
   saveThresholds,
   runSearch,
+  getLastRun,
   getCalendarUrl,
   rotateCalendarUrl,
 } from '@/services/api'
@@ -125,6 +126,38 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
       setUpper(t.upperThreshold)
     })
     getCalendarUrl().then((r) => setCalendarUrl(r.url))
+    // Reload persistence: check if a search is running or show the last result
+    getLastRun().then(({ run }) => {
+      if (!run) return
+      if (run.startedAt && !run.finishedAt) {
+        // Search is still running — show "Searching…" and poll
+        setSearching(true)
+        const poll = setInterval(async () => {
+          try {
+            const { run: latest } = await getLastRun()
+            if (latest && latest.finishedAt) {
+              clearInterval(poll)
+              setSearching(false)
+              const queueCount = await onSearchComplete()
+              const sc = latest.stageCounts
+              const totalJudged = (sc?.events_judged ?? 0) + (sc?.recovered_judged ?? 0)
+              setSearchReport({ lines: buildRunReport(latest), queued: queueCount, judged: totalJudged })
+            }
+          } catch {
+            clearInterval(poll)
+            setSearching(false)
+          }
+        }, 5000)
+        return () => clearInterval(poll)
+      } else if (run.finishedAt) {
+        // Show the last run's result line
+        const sc = run.stageCounts
+        const totalJudged = (sc?.events_judged ?? 0) + (sc?.recovered_judged ?? 0)
+        onSearchComplete().then((queueCount) => {
+          setSearchReport({ lines: buildRunReport(run), queued: queueCount, judged: totalJudged })
+        })
+      }
+    })
   }, [])
 
   function showCriteriaSaved() {

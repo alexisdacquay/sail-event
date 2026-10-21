@@ -108,6 +108,10 @@ export async function runSearch(): Promise<SearchResult> {
   return request<SearchResult>('/api/search', { method: 'POST' })
 }
 
+export async function getLastRun(): Promise<{ run: SearchResult | null }> {
+  return request<{ run: SearchResult | null }>('/api/search/last-run')
+}
+
 export async function listEvents(status?: EventStatus): Promise<Event[]> {
   const qs = status ? `?status=${status}` : ''
   return request<Event[]>(`/api/events${qs}`)

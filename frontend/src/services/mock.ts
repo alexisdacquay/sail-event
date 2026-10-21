@@ -168,6 +168,10 @@ export async function saveThresholds(
   return { ...mockThresholds }
 }
 
+export async function getLastRun(): Promise<{ run: SearchResult | null }> {
+  return { run: null }
+}
+
 export async function runSearch(): Promise<SearchResult> {
   return {
     runId: 'run-001',
