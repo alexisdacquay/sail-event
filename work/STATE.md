@@ -1,6 +1,12 @@
 # ProjectOne — work state (resumable)
 
 ## PAUSE 2026-10-21 ~12:30 (context compression) — RESUME HERE
+Update 13:10 (just before compression)
+- #95: PR 97 open (branch fix-usertests-2, 4 commits, issue comment with AC table). Frontend CI failed on two unused symbols (MainPage.tsx ThresholdsSaveResult, mock.ts `old`); the engineer was sent back to fix and push. Then: QA, merge, promote.
+- #94: engineer still running; branch fix-usertests-1 has 8 commits on origin (last 954e328 "reload persistence"), no PR yet. Told it DeepSeek is reachable again (VPN off) for any live re-recording.
+- Owner rule (13:00): VPN stays OFF (DeepSeek works; the headless claude CLI then fails with ENOTFOUND and must not be used). Never run test-incident.sh / `make responder` with a real agent from this Mac; the recorded incident 20261021-074150 is the evidence, `--dry-run` proves the chain. Memory file: project-vpn-network-rules.md.
+- Field-test proposal written, NOT built, awaiting the owner's yes: work/FIELD-TEST-PLAN.md, .claude/skills/field-test/invariants.md, backend/scripts/field_sweep.sql (committed as a proposal).
+- Compression handover prompt must list: work/STATE.md (this block), work/USER-TESTS-2026-10-21.md, work/EXAMINER-2026-10-20.md, work/SEARCH-BATCHES.md, work/RUBRIC-REVIEWS.md, work/DESIGN-REVIEW-2026-10-20.md, work/FIELD-TEST-PLAN.md, _docs/search-spec.md + _docs/search-design.md revision blocks, skills status-update + rubric-review, issues #94 #95 #96, PR 97.
 Where we are
 - Rubric: final ruthless examiner pass 24/24 on 571b751 (work/EXAMINER-2026-10-20.md). Prod = 571b751, dev follows main. Submission-ready on the rubric; the owner then asked for naive-user functional tests, not rubric-driven.
 - Naive user tests on prod (work/USER-TESTS-2026-10-21.md): A Lisbon, B Valencia (es), C one-word searches, D Valencia retired teacher (unscripted), E Sevilla kids (unscripted); all five reports and a cross-user summary are in the file. Verdicts: A, B, C, D would not come back; E would keep the account. Batch 3 of fixes filed as issue #96 (friendly errors, 429 after tab switch, tabs in URL, case-insensitive username, title before reason), to run after #94/#95. Root findings: (1) recall: one verbatim query, 20 results, mostly listicle pages → Saturday fado in Lisbon and regattas near Valencia never appear; (2) place-less searches ("jazz", "running") auto-accept dozens of US events, reasons say "no place given so location is fine" at 95%; (3) counters/wait/reload/stale-reasons/undo/time-unknown/webcal/login-pitch defects.
@@ -15,7 +21,7 @@ Decisions waiting for the owner (asked in the last wrap-up; no answer yet)
 Housekeeping
 - Prod has ~35 throwaway accounts (examiner*, peer*, reviewer*, batch_*, dana_, tomas_, priya_, carmen.sevilla.x7, smoke_*) with criteria; the hourly run searches them all (daily budgets cap the spend). Delete via SQL on the prod DB or leave; mention to the owner.
 - Parked issues: #72 rollback doc, #74 page_kind, #75 token cost, #78 low.
-- Machine: VPN must be ON for the headless claude CLI (settings.json routes it via ai-proxy.infra.corp.arista.io) and OFF for api.deepseek.com from a plain shell; DeepSeek recordings by engineers worked with the VPN on today (split tunnel), so try first. RENDER_API_KEY in backend/.env.local; copy_env.sh/set_health.sh in the session scratchpad (recreate if the scratchpad is gone: Render API v1, PUT /services/{id}/env-vars/{key}).
+- Machine: VPN OFF from now on (owner 13:00); DeepSeek works, the headless claude CLI does not and is not to be used (see update above). RENDER_API_KEY in backend/.env.local; copy_env.sh/set_health.sh in the session scratchpad (recreate if the scratchpad is gone: Render API v1, PUT /services/{id}/env-vars/{key}).
 - Process rules the owner set: parallel engineers + QA before merge; status as the ASCII block (`/status-update`, cron every 5 min while agents run); asks as instruction sheets (URL, table, command); never push to main while an examiner runs; never ship invented evidence; stop opening issues unless a user test or reviewer finds a user-visible defect.
 Resume procedure
 1. `git status --short` empty on main; `git worktree list` shows wt-94 and wt-95 (or recreate from the pushed branches).
