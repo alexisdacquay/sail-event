@@ -63,6 +63,57 @@ def test_run_search_no_auth_returns_401(client):
     assert r.status_code == 401
 
 
+# --- #94: GET /api/search/last-run ---
+
+
+def test_last_run_returns_null_when_no_runs(client, auth_headers):
+    """New user with no runs gets run=null."""
+    h = auth_headers("norun", "norun")
+    r = client.get("/api/search/last-run", headers=h)
+    assert r.status_code == 200
+    assert r.json()["run"] is None
+
+
+def test_last_run_returns_finished_run(client, auth_headers):
+    """After a search, last-run returns the finished run with startedAt and finishedAt."""
+    h = auth_headers("demo", "demo")
+    client.post("/api/search", headers=h)
+    r = client.get("/api/search/last-run", headers=h)
+    assert r.status_code == 200
+    run = r.json()["run"]
+    assert run is not None
+    assert run["startedAt"] is not None
+    assert run["finishedAt"] is not None
+    assert "runId" in run
+    assert "stageCounts" in run
+
+
+def test_last_run_shows_in_progress(_db_session, client, auth_headers):
+    """An unfinished run shows startedAt set and finishedAt null."""
+    from datetime import datetime, UTC
+    from app.orm import Run, User
+
+    h = auth_headers("demo", "demo")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    # Insert an unfinished run
+    _db_session.add(Run(
+        user_id=user.id, started_at=datetime.now(UTC), trigger="manual",
+    ))
+    _db_session.commit()
+
+    r = client.get("/api/search/last-run", headers=h)
+    assert r.status_code == 200
+    run = r.json()["run"]
+    assert run is not None
+    assert run["startedAt"] is not None
+    assert run["finishedAt"] is None
+
+
+def test_last_run_no_auth_returns_401(client):
+    r = client.get("/api/search/last-run")
+    assert r.status_code == 401
+
+
 def test_search_all_max_scheduled_users(client, auth_headers, _db_session, monkeypatch):
     import hashlib
     import json
