@@ -51,7 +51,7 @@ class SearchResult(BaseModel):
 class DecisionRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    decision: Literal["accepted", "rejected"]
+    decision: Literal["accepted", "rejected", "queued"]
 
 
 class Event(BaseModel):
