@@ -323,6 +323,9 @@ describe('runHeader', () => {
   it('falls back to the started/finished stamps for the duration', () => {
     expect(runHeader(finished)).toMatch(/^18 Oct \d\d:\d\d · 1 min 40 s$/)
     expect(runHeader({ ...finished, trigger: 'scheduled', durationSeconds: 45 })).toMatch(/automatic run · 45 s$/)
+    // whole seconds: the backend sends a float
+    expect(runHeader({ ...finished, durationSeconds: 100.3 })).toMatch(/1 min 40 s$/)
+    expect(runHeader({ ...finished, durationSeconds: 119.6 })).toMatch(/2 min 0 s$/)
     expect(runHeader({ ...finished, trigger: 'manual', finishedAt: null, currentStage: 'search' })).toMatch(/your run · running…$/)
   })
 })

@@ -97,10 +97,13 @@ export function runHeader(run: SearchResult): string {
   const parts: string[] = []
   if (run.startedAt) parts.push(fmtStamp(run.startedAt))
   if (run.trigger) parts.push(run.trigger === 'scheduled' ? 'automatic run' : 'your run')
-  const secs = run.durationSeconds
-    ?? (run.startedAt && run.finishedAt ? Math.round((Date.parse(run.finishedAt) - Date.parse(run.startedAt)) / 1000) : null)
-  if (secs == null) parts.push('running…')
-  else parts.push(secs >= 60 ? `${Math.floor(secs / 60)} min ${secs % 60} s` : `${secs} s`)
+  const raw = run.durationSeconds
+    ?? (run.startedAt && run.finishedAt ? (Date.parse(run.finishedAt) - Date.parse(run.startedAt)) / 1000 : null)
+  if (raw == null) parts.push('running…')
+  else {
+    const secs = Math.round(raw)
+    parts.push(secs >= 60 ? `${Math.floor(secs / 60)} min ${secs % 60} s` : `${secs} s`)
+  }
   return parts.join(' · ')
 }
 
