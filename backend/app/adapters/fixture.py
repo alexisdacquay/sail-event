@@ -22,7 +22,10 @@ class FixtureProvider:
             for entry in raw
         ]
 
-    def search(
+    def search(self, *a, **kw):
+        raise RuntimeError("injected fault")
+
+    def _search_original(
         self,
         query: str,
         *,
