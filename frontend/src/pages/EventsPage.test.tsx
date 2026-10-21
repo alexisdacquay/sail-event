@@ -10,25 +10,20 @@ describe('EventsPage', () => {
     vi.restoreAllMocks()
   })
 
-  it('shows events except new, with correct badges', async () => {
+  it('shows events except new, with action buttons per status', async () => {
     render(<EventsPage />)
 
     await screen.findByText('React London Meetup')
 
-    // accepted (auto)
+    // accepted — has Remove from calendar
     expect(screen.getByText('React London Meetup')).toBeInTheDocument()
-    expect(screen.getByText('Auto-accepted')).toBeInTheDocument()
-    // queued
+    expect(screen.getByRole('button', { name: 'Remove from calendar' })).toBeInTheDocument()
+    // queued — has Add to calendar + Reject
     expect(screen.getByText('Jazz in the Park')).toBeInTheDocument()
     expect(screen.getByText('AWS re:Invent Watch Party')).toBeInTheDocument()
-    expect(
-      screen.getAllByText('To review').length,
-    ).toBeGreaterThanOrEqual(1)
-    // rejected (auto)
-    expect(
-      screen.getByText('Pottery Workshop for Beginners'),
-    ).toBeInTheDocument()
-    expect(screen.getByText('Auto-rejected')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Add to calendar' }).length).toBeGreaterThanOrEqual(1)
+    // rejected — has Add to calendar
+    expect(screen.getByText('Pottery Workshop for Beginners')).toBeInTheDocument()
 
     // new events must be filtered out
     expect(
@@ -46,7 +41,7 @@ describe('EventsPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('Remove from calendar flips badge to Rejected by you', async () => {
+  it('Remove from calendar changes card to show Add to calendar', async () => {
     render(<EventsPage />)
 
     await screen.findByText('React London Meetup')
@@ -57,13 +52,12 @@ describe('EventsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }))
 
-    const acceptedCard = screen.getByTestId('event-card-evt-1')
+    // After removal the card becomes rejected — shows Add to calendar
     await waitFor(() => {
-      expect(acceptedCard).toHaveTextContent('Rejected by you')
+      expect(
+        screen.queryByRole('button', { name: 'Remove from calendar' }),
+      ).not.toBeInTheDocument()
     })
-    expect(
-      screen.queryByRole('button', { name: 'Remove from calendar' }),
-    ).not.toBeInTheDocument()
   })
 
   it('shows empty state when no events', async () => {
