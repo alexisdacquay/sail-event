@@ -82,6 +82,10 @@ h2{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:-.01
 .ev .pill{min-width:76px;text-align:center}
 .hist .r .mb{height:5px;border-radius:3px;display:flex;overflow:hidden;background:var(--line)}
 .hist .r .mb i{display:block;height:100%}
+.d{display:inline-block;width:6px;height:6px;border-radius:50%;margin:0 3px 0 6px;vertical-align:1px}
+.d.ok{background:var(--ok)} .d.warn{background:var(--warn)} .d.bad{background:var(--bad);opacity:.6}
+.hist .lbl{display:flex;justify-content:space-between;align-items:baseline}
+.hist .lbl small{font-family:var(--mono);font-size:10px;letter-spacing:0;text-transform:none;font-weight:400}
 .link{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .link path{fill:none;stroke:var(--accent);stroke-width:1.5;stroke-dasharray:3 4}
 .link circle{fill:var(--accent)}
@@ -135,10 +139,10 @@ h2{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:-.01
             </svg>
           </div>
           <div class="hist">
-            <p class="lbl">Earlier runs</p>
-            <div class="r"><span>21 Oct 19:07</span><div class="mb"><i style="width:6.9%;background:var(--ok)"></i><i style="width:65.5%;background:var(--bad);opacity:.5"></i></div><span>29 found · 2 / 0 / 19</span></div>
-            <div class="r"><span>21 Oct 18:07</span><div class="mb"><i style="width:4%;background:var(--warn)"></i><i style="width:60%;background:var(--bad);opacity:.5"></i></div><span>25 found · 0 / 1 / 15</span></div>
-            <div class="r"><span>21 Oct 17:07</span><div class="mb"><i style="width:3.6%;background:var(--ok)"></i><i style="width:3.6%;background:var(--warn)"></i><i style="width:57%;background:var(--bad);opacity:.5"></i></div><span>28 found · 1 / 1 / 16</span></div>
+            <p class="lbl">Earlier runs <small><i class="d ok"></i>in calendar <i class="d warn"></i>to review <i class="d bad"></i>rejected</small></p>
+            <div class="r"><span>21 Oct 19:07</span><div class="mb"><i style="width:6.9%;background:var(--ok)"></i><i style="width:65.5%;background:var(--bad);opacity:.5"></i></div><span>29 found<i class="d ok"></i>2<i class="d warn"></i>0<i class="d bad"></i>19</span></div>
+            <div class="r"><span>21 Oct 18:07</span><div class="mb"><i style="width:4%;background:var(--warn)"></i><i style="width:60%;background:var(--bad);opacity:.5"></i></div><span>25 found<i class="d ok"></i>0<i class="d warn"></i>1<i class="d bad"></i>15</span></div>
+            <div class="r"><span>21 Oct 17:07</span><div class="mb"><i style="width:3.6%;background:var(--ok)"></i><i style="width:3.6%;background:var(--warn)"></i><i style="width:57%;background:var(--bad);opacity:.5"></i></div><span>28 found<i class="d ok"></i>1<i class="d warn"></i>1<i class="d bad"></i>16</span></div>
             <div class="r"><span>earlier ›</span><div></div><span>13 runs</span></div>
           </div>
           <p class="day">Tonight · Tue 21 Oct</p>
