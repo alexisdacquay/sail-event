@@ -40,9 +40,9 @@ T=$(curl -s -X POST $B/api/auth/login -H 'Content-Type: application/json' \
 while true; do
   curl -s -X POST $B/api/search -H "Authorization: Bearer $T" | head -1
   STATE=$(curl -s http://localhost:${GRAFANA_PORT:-3001}/api/prometheus/grafana/api/v1/rules \
-    | grep -o '"state":"[a-z]*"' | head -1)
-  echo "  SearchRunFailures $STATE"
-  [ "$STATE" = '"state":"firing"' ] && break
+    | python3 -c 'import sys,json;d=json.load(sys.stdin);print(next((r["state"] for g in d["data"]["groups"] for r in g["rules"] if r["name"]=="SearchRunFailures"),"inactive"))')
+  echo "  SearchRunFailures state=$STATE"
+  [ "$STATE" = "firing" ] && break
   sleep 30
 done
 

@@ -113,6 +113,12 @@ class TestBuildPrompt(unittest.TestCase):
         self.assertIn("20261017-test", prompt)
 
 
+class TestDryRunFlag(unittest.TestCase):
+    def test_default_false(self):
+        """DRY_RUN module variable exists and defaults to False."""
+        self.assertFalse(responder.DRY_RUN)
+
+
 class TestHTTPEndpoint(unittest.TestCase):
     """Integration-style tests against a real HTTPServer."""
 

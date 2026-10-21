@@ -2,6 +2,7 @@
 collects evidence, launches a headless Claude Code agent, and records a verdict.
 """
 
+import argparse
 import hmac
 import json
 import os
@@ -20,6 +21,8 @@ CLAUDE_BIN = os.environ.get("CLAUDE_BIN", "claude")
 PORT = int(os.environ.get("RESPONDER_PORT", "8001"))
 
 _ALERTNAME_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+
+DRY_RUN = False
 
 ALLOWED_TOOLS = [
     "Read", "Edit",
@@ -126,37 +129,49 @@ def _handle_alert(alert: dict) -> None:
         check=True,
     )
 
-    # Launch claude agent in the worktree
-    _log(f"launching agent for {incident_id}")
-    agent_log = incident_dir / "agent.log"
-    agent_env = build_agent_env()
-    try:
-        with open(agent_log, "w") as log_fh:
-            subprocess.run(
-                [
-                    CLAUDE_BIN, "-p",
-                    "--model", "sonnet",
-                    "--allowedTools", *ALLOWED_TOOLS,
-                    "--max-budget-usd", "1",
-                    prompt,
-                ],
-                cwd=str(worktree_path),
-                env=agent_env,
-                stdout=log_fh,
-                stderr=subprocess.STDOUT,
-                timeout=300,
-            )
-    except subprocess.TimeoutExpired:
-        _log(f"agent timed out for {incident_id}")
-
-    # Copy verdict
-    verdict_src = worktree_path / "verdict.json"
-    if verdict_src.exists():
-        verdict_text = verdict_src.read_text()
-        (incident_dir / "verdict.json").write_text(verdict_text)
-        _log(f"agent finished with verdict: {incident_id}")
+    if DRY_RUN:
+        _log(f"dry-run: skipping agent for {incident_id}")
+        (incident_dir / "agent.log").write_text("dry-run: agent not launched\n")
+        (incident_dir / "verdict.json").write_text(json.dumps({
+            "verdict": "dry-run",
+            "summary": "dry-run mode: alert received, evidence collected, "
+                       "worktree created, agent not launched",
+            "files_changed": [],
+            "tests_run": [],
+            "commit": ""
+        }, indent=2) + "\n")
     else:
-        _log(f"no verdict.json produced for {incident_id}")
+        # Launch claude agent in the worktree
+        _log(f"launching agent for {incident_id}")
+        agent_log = incident_dir / "agent.log"
+        agent_env = build_agent_env()
+        try:
+            with open(agent_log, "w") as log_fh:
+                subprocess.run(
+                    [
+                        CLAUDE_BIN, "-p",
+                        "--model", "sonnet",
+                        "--allowedTools", *ALLOWED_TOOLS,
+                        "--max-budget-usd", "1",
+                        prompt,
+                    ],
+                    cwd=str(worktree_path),
+                    env=agent_env,
+                    stdout=log_fh,
+                    stderr=subprocess.STDOUT,
+                    timeout=300,
+                )
+        except subprocess.TimeoutExpired:
+            _log(f"agent timed out for {incident_id}")
+
+        # Copy verdict
+        verdict_src = worktree_path / "verdict.json"
+        if verdict_src.exists():
+            verdict_text = verdict_src.read_text()
+            (incident_dir / "verdict.json").write_text(verdict_text)
+            _log(f"agent finished with verdict: {incident_id}")
+        else:
+            _log(f"no verdict.json produced for {incident_id}")
 
     # Clean up worktree but leave the branch
     _log(f"removing worktree for {incident_id}")
@@ -240,6 +255,16 @@ class AlertHandler(BaseHTTPRequestHandler):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="On-call responder for Grafana alert webhooks")
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="Collect evidence and create worktree but skip agent launch")
+    args = parser.parse_args()
+
+    global DRY_RUN
+    DRY_RUN = args.dry_run
+
     secret = os.environ.get("RESPONDER_WEBHOOK_SECRET", "")
     if not secret:
         print("RESPONDER_WEBHOOK_SECRET must be set and non-empty", file=sys.stderr)
@@ -248,7 +273,8 @@ def main():
     INCIDENTS_DIR.mkdir(parents=True, exist_ok=True)
     server = HTTPServer(("", PORT), AlertHandler)
     server.webhook_secret = secret
-    _log(f"listening on :{PORT}")
+    mode = "dry-run" if DRY_RUN else "live"
+    _log(f"listening on :{PORT} ({mode})")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
