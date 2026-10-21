@@ -168,7 +168,7 @@ describe('MainPage search card', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
     const result = await screen.findByTestId('search-result')
     // Run report includes the pipeline line
-    expect(result).toHaveTextContent(/6 queries → 31 results/)
+    expect(result).toHaveTextContent(/6 queries → 31 results → 12 events → 9 passed filters → 7 judged/)
     expect(result).toHaveTextContent(/2 accepted, 3 queued, 2 rejected/)
     expect(screen.getByRole('button', { name: /Review 5 events/ })).toBeInTheDocument()
     expect(onSearchComplete).toHaveBeenCalled()

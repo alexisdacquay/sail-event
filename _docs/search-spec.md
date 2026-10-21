@@ -206,7 +206,7 @@ Queue card:
 
 Run report (after "Search now" and on the last scheduled run):
 
-- `6 queries → 31 results → 12 events → 7 passed filters → 7 judged → 2 accepted, 3 queued, 2 rejected`.
+- `6 queries → 31 results → 12 events → 9 passed filters → 9 judged → 2 accepted, 3 queued, 2 rejected`. When recovered `new` events from a prior crashed run are judged in this run, the line reads `9 judged (2 recovered)`. `passed filters` counts events_extracted minus the filter drops; `judged` = passed + recovered; the filter detail line sums to events_extracted − passed. "0 judged" never appears next to "Review N events".
 - What the filters removed, by count.
 - When the run stopped early: at which stage and why (budget, provider error, adapters refused in production). Every early stop sets `stopped_at_stage` and writes zero `stage_counts` so the UI shows the reason.
 - "Search now" beyond 6 in an hour: `Search limit reached, try again in N minutes` (HTTP 429 with `Retry-After`).
