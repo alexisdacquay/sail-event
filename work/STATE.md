@@ -1,5 +1,28 @@
 # ProjectOne — work state (resumable)
 
+## PAUSE 2026-10-21 ~12:30 (context compression) — RESUME HERE
+Where we are
+- Rubric: final ruthless examiner pass 24/24 on 571b751 (work/EXAMINER-2026-10-20.md). Prod = 571b751, dev follows main. Submission-ready on the rubric; the owner then asked for naive-user functional tests, not rubric-driven.
+- Naive user tests on prod (work/USER-TESTS-2026-10-21.md): A Lisbon, B Valencia (es), C one-word searches, E Sevilla kids (unscripted); D (unscripted, friend's link) was still running at the pause: if its report is not in the file, it is lost; rerun it only if wanted. Verdicts: A, B, C would not come back; E would keep the account. Root findings: (1) recall: one verbatim query, 20 results, mostly listicle pages → Saturday fado in Lisbon and regattas near Valencia never appear; (2) place-less searches ("jazz", "running") auto-accept dozens of US events, reasons say "no place given so location is fine" at 95%; (3) counters/wait/reload/stale-reasons/undo/time-unknown/webcal/login-pitch defects.
+In flight (engineers in worktrees; their branches are pushed when they finish; if the PR is missing, the branch holds the WIP)
+- Issue #94 → branch `fix-usertests-1`, worktree scratchpad/wt-94: result line consistent, reload keeps search state, "scored against earlier criteria" label (criteria hash on the event, migration), past events hidden at date-time granularity, legend clip, zone sent at register/login (UTC notice gone), judge reason in the criteria language + hard-constraint-unconfirmed cap ≤89, series dates = first occurrence on/after today, dedup across pages. Needs: PR, QA, merge, promote.
+- Issue #95 → branch `fix-usertests-2`, worktree scratchpad/wt-95: undo / put back to review (decision `queued`), "Remove from calendar" → review, 5-s undo, time or "time unknown"/"all day" on cards, thresholds re-applied to auto-decided events, slider knobs = boxes, webcal link + subscribe steps + Copied, login one-line pitch, "Next automatic search HH:MM", title opens the link, viewer zone shown as "your time". Rebase on #94 when it merges. Needs: PR, QA, merge, promote.
+Decisions waiting for the owner (asked in the last wrap-up; no answer yet)
+1. No place in the criteria → the UI asks "Where?" prefilled with the city from the browser clock (the user chooses, code adds nothing to the query).
+2. No place → never auto-accept (judge cap ≤89 → review).
+3. Criteria change → offer to drop the previous criteria's auto-accepted events from the calendar (user-accepted stay).
+4. Recall → Brave as a second engine on the same verbatim text (needs a Brave key) + deeper reading of each page (pass 2 on every page, up to 30 events/page). A fifth option the owner may refuse: one added word ("agenda") as a second query.
+Housekeeping
+- Prod has ~35 throwaway accounts (examiner*, peer*, reviewer*, batch_*, dana_, tomas_, priya_, carmen.sevilla.x7, smoke_*) with criteria; the hourly run searches them all (daily budgets cap the spend). Delete via SQL on the prod DB or leave; mention to the owner.
+- Parked issues: #72 rollback doc, #74 page_kind, #75 token cost, #78 low.
+- Machine: VPN must be ON for the headless claude CLI (settings.json routes it via ai-proxy.infra.corp.arista.io) and OFF for api.deepseek.com from a plain shell; DeepSeek recordings by engineers worked with the VPN on today (split tunnel), so try first. RENDER_API_KEY in backend/.env.local; copy_env.sh/set_health.sh in the session scratchpad (recreate if the scratchpad is gone: Render API v1, PUT /services/{id}/env-vars/{key}).
+- Process rules the owner set: parallel engineers + QA before merge; status as the ASCII block (`/status-update`, cron every 5 min while agents run); asks as instruction sheets (URL, table, command); never push to main while an examiner runs; never ship invented evidence; stop opening issues unless a user test or reviewer finds a user-visible defect.
+Resume procedure
+1. `git status --short` empty on main; `git worktree list` shows wt-94 and wt-95 (or recreate from the pushed branches).
+2. Check PRs for #94/#95 (`gh pr list`); if none, inspect the branch tips and either finish them with a fresh engineer (brief = the issue + the pause note) or QA what is there.
+3. QA each (qa-engineer agent, detached worktree), merge, promote with promote.yml, rerun `python3 backend/scripts/remote_batch.py` on dev and prod, and rerun user C's scenario (one-word searches) and user A's (Lisbon Saturday) to see the effect.
+4. Get the owner's answer on the four decisions, then build them (spec/design one-sentence updates first: _docs/search-spec.md revision block, _docs/search-design.md §5/§11).
+
 ## 2026-10-21 10:00 — real incident recorded on current main; final examiner pass running
 - The headless agent fails from this Mac unless the corporate VPN is on: `~/.claude/settings.json` routes the CLI through `ai-proxy.infra.corp.arista.io` (NXDOMAIN off-VPN); with the VPN on, `test-incident.sh` run through the app's Terminal panel (owner's shell) completed the whole loop: Grafana-fired alert → responder → real `claude -p` → verdict fix, commit 8d2f839 on `incident/20261021-074150-SearchRunFailures` (pushed), folder committed with fix.diff (571b751). PR #93 merged (responder passes an operator-set ANTHROPIC_BASE_URL). Prod promoting 571b751.
 - Final examiner pass (Fable, 60-min cap, notes in scratchpad/examiner4-notes.md) launched 10:00. If 24/24: submit. Open parked issues unchanged (#72 #74 #75 #78).
