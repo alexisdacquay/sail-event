@@ -19,6 +19,9 @@ Orchestrator
 
 The main session is the orchestrator. It launches the PM, the engineer
 and QA as subagents. It does not groom, implement or test itself.
+Engineers and QA may launch their own subagents for independent parts
+(one test suite, one file, one scenario each) whenever that saves
+wall-clock time; one writer per file.
 
 Lifecycle
 
