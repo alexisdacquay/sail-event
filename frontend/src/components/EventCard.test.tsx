@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { EventCard, formatWhen } from './EventCard'
+import { EventCard, EventRow, formatDay, formatTime, formatWhen } from './EventCard'
 import type { Event } from '@/services/api'
 
 const event: Event = {
@@ -252,5 +252,64 @@ describe('formatWhen — tz suffix', () => {
     const noTz: Event = { ...event, startTz: null }
     const text = formatWhen(noTz, 'Europe/Berlin')
     expect(text).not.toContain('(')
+  })
+})
+
+// --- EventRow ---
+
+describe('EventRow', () => {
+  it('renders the five columns and the title link', () => {
+    render(<EventRow event={event} selected={false} onSelect={() => {}} />)
+    for (const id of ['row-time', 'row-place', 'row-score', 'row-status']) {
+      expect(screen.getByTestId(id)).toBeInTheDocument()
+    }
+    expect(screen.getByRole('link', { name: 'Test Conference 2026' })).toHaveAttribute(
+      'href',
+      'https://example.com/conf',
+    )
+    expect(screen.getByTestId('row-score')).toHaveTextContent('85%')
+  })
+
+  it('shows time unknown for a date-only event', () => {
+    render(<EventRow event={{ ...event, dateTime: '2026-10-20', startTz: null }} selected={false} onSelect={() => {}} />)
+    expect(screen.getByTestId('row-time')).toHaveTextContent('time unknown')
+  })
+
+  it('Enter calls onSelect with the id', () => {
+    const onSelect = vi.fn()
+    render(<EventRow event={event} selected={false} onSelect={onSelect} />)
+    fireEvent.keyDown(screen.getByTestId('event-row-evt-test'), { key: 'Enter' })
+    expect(onSelect).toHaveBeenCalledWith('evt-test')
+  })
+
+  it('aria-pressed reflects selection', () => {
+    render(<EventRow event={event} selected onSelect={() => {}} />)
+    expect(screen.getByTestId('event-row-evt-test')).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it.each([
+    ['accepted', 'In calendar'],
+    ['queued', 'To review'],
+    ['rejected', 'Rejected'],
+    ['new', 'New'],
+  ] as const)('status pill for %s reads %s', (status, text) => {
+    render(<EventRow event={{ ...event, status }} selected={false} onSelect={() => {}} />)
+    expect(screen.getByTestId('row-status')).toHaveTextContent(text)
+  })
+})
+
+describe('formatTime / formatDay', () => {
+  it('time unknown for a date-only event', () => {
+    expect(formatTime({ ...event, dateTime: '2026-10-20', startTz: null })).toBe('time unknown')
+  })
+
+  it('day is weekday day month', () => {
+    expect(formatDay({ ...event, dateTime: '2026-10-20', startTz: null })).toBe('Tue 20 Oct')
+    expect(formatDay(tokyoEvent)).toBe('Tue 20 Oct')
+  })
+
+  it('time carries the zone only when it differs from the viewer', () => {
+    expect(formatTime(tokyoEvent, 'Europe/Berlin')).toBe('20:00 (Asia/Tokyo)')
+    expect(formatTime(tokyoEvent, 'Asia/Tokyo')).toBe('20:00')
   })
 })
