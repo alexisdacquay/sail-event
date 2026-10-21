@@ -2,6 +2,7 @@ export type AuthResponse = { token: string; username: string }
 export type ConfigResponse = { registrationCodeRequired: boolean }
 export type Criteria = { text: string; updatedAt: string; timeZone: string }
 export type Thresholds = { lowerThreshold: number; upperThreshold: number }
+export type RunTrigger = 'manual' | 'scheduled'
 export type SearchResult = {
   runId: string
   eventsFound: number
@@ -12,9 +13,28 @@ export type SearchResult = {
   error: string | null
   startedAt: string | null
   finishedAt: string | null
+  // issue 108 adds these; optional until that PR merges
+  durationSeconds?: number | null
+  trigger?: RunTrigger
 }
 
 export type LastRunResponse = { run: SearchResult | null }
+
+export type RunSummary = {
+  runId: string
+  startedAt: string
+  finishedAt: string | null
+  durationSeconds: number | null
+  trigger: RunTrigger
+  eventsFound: number
+  accepted: number
+  queued: number
+  rejected: number
+  setAside: number
+  error: string | null
+}
+
+export type RunsResponse = { runs: RunSummary[] }
 
 export type EventStatus = 'new' | 'accepted' | 'rejected' | 'queued'
 
@@ -54,6 +74,7 @@ export const runSearch = mod.runSearch
 export const listEvents = mod.listEvents
 export const decideEvent = mod.decideEvent
 export const getLastRun = mod.getLastRun
+export const getRuns = mod.getRuns
 export const deleteAllEvents = mod.deleteAllEvents
 export const getCalendarUrl = mod.getCalendarUrl
 export const rotateCalendarUrl = mod.rotateCalendarUrl

@@ -5,6 +5,8 @@ import type {
   Thresholds,
   SearchResult,
   LastRunResponse,
+  RunSummary,
+  RunsResponse,
   Event,
   EventStatus,
 } from './api'
@@ -164,33 +166,65 @@ export async function saveThresholds(
   return { ...mockThresholds }
 }
 
+const LAST_RUN: SearchResult = {
+  runId: 'run-004',
+  eventsFound: 12,
+  eventsNew: 4,
+  stageCounts: {
+    queries_planned: 6,
+    results_fetched: 31,
+    pages_content_pass: 20,
+    events_extracted: 12,
+    filtered_past: 2,
+    filtered_place: 1,
+    filtered_non_event: 1,
+    filtered_duplicate: 1,
+    events_judged: 7,
+    accepted: 2,
+    queued: 3,
+    rejected: 2,
+    rejected_date_place: 1,
+    rejected_off_topic: 1,
+    rejected_other: 0,
+  },
+  currentStage: null,
+  stoppedAtStage: null,
+  error: null,
+  startedAt: '2026-10-18T10:00:00+00:00',
+  finishedAt: '2026-10-18T10:01:30+00:00',
+  durationSeconds: 90,
+  trigger: 'manual',
+}
+
+const RUNS: RunSummary[] = [
+  {
+    runId: 'run-004', startedAt: '2026-10-18T10:00:00+00:00', finishedAt: '2026-10-18T10:01:30+00:00',
+    durationSeconds: 90, trigger: 'manual', eventsFound: 12, accepted: 2, queued: 3, rejected: 2, setAside: 5, error: null,
+  },
+  {
+    runId: 'run-003', startedAt: '2026-10-18T09:00:00+00:00', finishedAt: '2026-10-18T09:01:40+00:00',
+    durationSeconds: 100, trigger: 'scheduled', eventsFound: 29, accepted: 2, queued: 0, rejected: 19, setAside: 8, error: null,
+  },
+  {
+    runId: 'run-002', startedAt: '2026-10-18T08:00:00+00:00', finishedAt: '2026-10-18T08:01:12+00:00',
+    durationSeconds: 72, trigger: 'scheduled', eventsFound: 25, accepted: 0, queued: 1, rejected: 15, setAside: 9, error: null,
+  },
+  {
+    runId: 'run-001', startedAt: '2026-10-18T07:00:00+00:00', finishedAt: '2026-10-18T07:01:55+00:00',
+    durationSeconds: 115, trigger: 'scheduled', eventsFound: 28, accepted: 1, queued: 1, rejected: 16, setAside: 10, error: null,
+  },
+]
+
 export async function runSearch(): Promise<SearchResult> {
-  return {
-    runId: 'run-001',
-    eventsFound: 12,
-    eventsNew: 4,
-    stageCounts: {
-      queries_planned: 6,
-      results_fetched: 31,
-      events_extracted: 12,
-      filtered_past: 2,
-      filtered_place: 1,
-      filtered_non_event: 2,
-      events_judged: 7,
-      accepted: 2,
-      queued: 3,
-      rejected: 2,
-    },
-    currentStage: null,
-    stoppedAtStage: null,
-    error: null,
-    startedAt: '2026-10-18T10:00:00+00:00',
-    finishedAt: '2026-10-18T10:01:30+00:00',
-  }
+  return { ...LAST_RUN, stageCounts: { ...LAST_RUN.stageCounts } }
 }
 
 export async function getLastRun(): Promise<LastRunResponse> {
-  return { run: null }
+  return { run: { ...LAST_RUN, stageCounts: { ...LAST_RUN.stageCounts } } }
+}
+
+export async function getRuns(limit = 20): Promise<RunsResponse> {
+  return { runs: RUNS.slice(0, limit).map((r) => ({ ...r })) }
 }
 
 export async function deleteAllEvents(): Promise<{ deleted: number }> {
