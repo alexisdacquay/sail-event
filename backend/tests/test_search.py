@@ -400,7 +400,8 @@ def test_runs_summary_fields_and_set_aside(client, auth_headers):
     assert summary["queued"] == sc["queued"]
     assert summary["rejected"] == sc["rejected"]
     assert summary["setAside"] == (
-        sc["filtered_past"] + sc["filtered_date"] + sc["filtered_place"] + sc["filtered_duplicate"]
+        sc["filtered_incomplete"] + sc["filtered_past"] + sc["filtered_date"] + sc["filtered_place"]
+        + sc["filtered_duplicate"] + sc["events_capped"] + sc["judge_errors"]
     )
     assert summary["setAside"] > 0
     assert summary["pagesRead"] == sc["results_fetched"]
@@ -426,6 +427,50 @@ def test_runs_invariant_holds_for_every_finished_run(client, auth_headers):
         last = client.get("/api/search/last-run", headers=hdr).json()["run"]
         sc = last["stageCounts"]
         assert (sc["rejected_date_place"], sc["rejected_off_topic"], sc["rejected_other"]) == (0, 0, 0)
+
+
+def test_runs_invariant_holds_with_incomplete_capped_and_unjudged(client, auth_headers, monkeypatch):
+    """One incomplete extracted event, MAX_EVENTS_PER_RUN=3 and one judge error: all set aside, none lost."""
+    from unittest.mock import patch
+    from app.services import pipeline as pipeline_mod
+    from app.services.extract import ExtractedEvent
+    from app.services.judge import JudgeError, Verdict
+
+    real_extract = pipeline_mod.extract_events
+
+    def extract_plus_incomplete(results, **kw):
+        events, counts = real_extract(results, **kw)
+        events.append(ExtractedEvent(
+            title="No city", start_local="2026-10-20T20:00:00", start_tz="Europe/Berlin", end_local=None,
+            venue=None, city=None, country="DE", link="https://x.example.com/no-city", description="d",
+            confidence=0.9, source_url="https://x.example.com/no-city", page_kind="single_event",
+        ))
+        counts.events_extracted += 1
+        return events, counts
+
+    calls = []
+
+    def judge_fails_once(event, **kwargs):
+        calls.append(1)
+        if len(calls) == 1:
+            return JudgeError(event=event, error="forced")
+        return Verdict(score=95, reason="t", fit={}, is_event=True, capped=False)
+
+    monkeypatch.setenv("MAX_EVENTS_PER_RUN", "3")
+    h = auth_headers("demo", "demo")
+    with patch("app.services.pipeline.extract_events", side_effect=extract_plus_incomplete), \
+            patch("app.services.pipeline.judge_event", side_effect=judge_fails_once):
+        sc = client.post("/api/search", headers=h).json()["stageCounts"]
+    monkeypatch.delenv("MAX_EVENTS_PER_RUN")
+
+    assert sc["filtered_incomplete"] == 1
+    assert sc["events_capped"] == 5  # 8 kept by the fixture run, 3 judged
+    assert sc["judge_errors"] == 1
+    assert sc["accepted"] == 2
+    s = client.get("/api/search/runs", headers=h).json()["runs"][0]
+    assert s["eventsFound"] == sc["events_extracted"] == 11
+    assert s["setAside"] == 1 + 2 + 5 + 1  # incomplete, duplicates, capped, unjudged
+    assert s["accepted"] + s["queued"] + s["rejected"] + s["setAside"] == s["eventsFound"]
 
 
 def test_runs_limit_validated(client, auth_headers):

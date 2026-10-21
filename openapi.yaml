@@ -470,7 +470,8 @@ components:
             Per-stage item counts from the run. After triage also holds
             rejected_date_place (score 0-9), rejected_off_topic (10-39) and
             rejected_other (40 up to the lower threshold); they sum to rejected
-            and are 0, never absent, on every finished run.
+            and are 0, never absent, on every finished run. events_capped counts
+            kept events dropped by MAX_EVENTS_PER_RUN.
         currentStage:
           type:
             - string
@@ -552,7 +553,10 @@ components:
           type: integer
         setAside:
           type: integer
-          description: filtered_past + filtered_date + filtered_place + filtered_duplicate (events)
+          description: >-
+            Extracted events that got no verdict: filtered_incomplete + filtered_past
+            + filtered_date + filtered_place + filtered_duplicate + events_capped
+            (over MAX_EVENTS_PER_RUN) + judge_errors
         pagesRead:
           type: integer
           description: results_fetched (pages)

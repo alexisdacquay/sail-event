@@ -71,7 +71,10 @@ def _run_summary(run: orm.Run) -> dict:
         "rejected": sc.get("rejected", 0),
         "setAside": sum(
             sc.get(k, 0)
-            for k in ("filtered_past", "filtered_date", "filtered_place", "filtered_duplicate")
+            for k in (
+                "filtered_incomplete", "filtered_past", "filtered_date", "filtered_place",
+                "filtered_duplicate", "events_capped", "judge_errors",
+            )
         ),
         # page-level
         "pagesRead": sc.get("results_fetched", 0),
