@@ -7,3 +7,10 @@
 - Bugs: result counter inconsistent (18 events → 0 passed → 6 judged; 18+19 ≠ 20); slider legend clipped ("ı your cale"); stale reasons from the previous criteria stay on All events; "right city and weekend" for a Friday; listicle pages as sources (piedalies.lv, concerts50.com).
 - Confusions: sign-in page says nothing about what the app does; "Times shown in UTC until you save your criteria"; "queued" wording; no accept/override on All events; Berlin time shown next to Lisbon time; "searches every hour" with no idea what will happen.
 - Asks: actually find Saturday-in-Lisbon events (fado houses, jazz clubs, markets exist weekly); "I'd go anyway" on rejected cards and a near-miss section ("Wednesday fado — want it anyway?"); plain-words result line ("Looked at 20 pages, found 6 events, none on Sat 24 Oct").
+
+## B — Tomás, Valencia, regatas en noviembre, writes Spanish (scripted persona)
+- 3 searches, 33 min: found two real regattas, both at his own club (RCN Valencia); nothing from Alicante, Dénia, Castellón, Murcia, Balearics although he wrote "cerca de Valencia".
+- Verdict: would not come back. Whole UI in English; reasons alternate Spanish/English; the placeholder says "jazz or folk concerts near Paris".
+- Bugs: Search button vanishes while searching; reload mid-search loses the status and the result line (pressed again); result line contradicts cards (5 passed → 6 judged; "0 judged" next to "Review 3 events"); series event dated at its first date 3 Oct (past) and exported so to the .ics; proaclara.com events all at 15:31 (scrape artefact); past events shown (March/May 2026); the same windsurf festival twice with 30% and 62%; a course scored 74% and sent to review although he excluded courses in words.
+- Wrong results: Germany, Croatia, Paris, Dubai, France, basketball, MotoGP, marathons, fishing.
+- Asks: answer in the user's language everywhere; search the regional regatta calendars, "near Valencia" = the region; show progress and keep it after reload; result line must match the cards; a series shows its dates in the asked month.
