@@ -47,7 +47,10 @@ export function LoginPage({
   return (
     <div className="min-h-screen flex flex-col items-center justify-center">
       <SailMark className="size-10 mb-3" aria-hidden="true" />
-      <p className="font-heading text-[28px] font-bold tracking-tight text-center mb-6">Sail Event</p>
+      <p className="font-heading text-[28px] font-bold tracking-tight text-center mb-2">Sail Event</p>
+      <p className="text-sm text-muted-foreground text-center mb-6 max-w-xs" data-testid="login-pitch">
+        Describe what you want to do, and we find events that match — scored, filtered, and on your calendar.
+      </p>
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle as="h2">Sign in</CardTitle>

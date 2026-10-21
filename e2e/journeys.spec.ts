@@ -73,9 +73,24 @@ test.describe("Journey 1: full user flow", () => {
     // Wait for at least two queue items
     await expect(acceptButtons.first()).toBeVisible({ timeout: 5_000 });
 
+    // Accept first event and wait for the undo bar (proves the API call completed)
     await acceptButtons.first().click();
-    // After accepting, the next item becomes first
+    await expect(page.getByText("Accepted.").first()).toBeVisible();
+
+    // The undo bar replaced Accept/Reject on the first card, so
+    // rejectButtons.first() now targets the second card.
     await rejectButtons.first().click();
+    await expect(page.getByText("Rejected.").first()).toBeVisible();
+
+    // Assert the undo path: click Undo on the rejected card
+    const undoButtons = page.getByRole("button", { name: "Undo" });
+    await undoButtons.last().click();
+    // After undo the card's Accept/Reject buttons reappear
+    await expect(rejectButtons.first()).toBeVisible();
+
+    // Re-reject so the assertion on All events still holds
+    await rejectButtons.first().click();
+    await expect(page.getByText("Rejected.").first()).toBeVisible();
 
     // Go to All events page
     await page.getByRole("button", { name: "All events" }).click();
@@ -89,8 +104,8 @@ test.describe("Journey 1: full user flow", () => {
     await page.getByRole("button", { name: "Remove from calendar" }).first().click();
     await page.getByRole("button", { name: "Remove", exact: true }).click();
 
-    // After removal the card's badge should flip to Rejected by you
-    await expect(page.getByText("Rejected by you").first()).toBeVisible();
+    // #95: Remove from calendar now moves the event to review (queued), not rejected
+    await expect(page.getByText("To review").first()).toBeVisible();
   });
 });
 

@@ -94,4 +94,24 @@ describe('ScoreScale', () => {
     expect(screen.getAllByText('You decide').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText('On your calendar').length).toBeGreaterThanOrEqual(1)
   })
+
+  it('hides thumb labels when values are crossed (invalid)', () => {
+    const { container } = render(<ScoreScale lower={80} upper={50} onChange={vi.fn()} />)
+    // Thumb value labels should not be present when invalid
+    const labelRow = container.querySelector('.relative.h-4')
+    expect(labelRow).toBeNull()
+  })
+
+  it('slider and inputs show same values at 30/70', () => {
+    renderScale(30, 70)
+    const thumb0 = screen.getByRole('slider', { name: 'Auto-reject below' })
+    const input0 = screen.getByRole('spinbutton', { name: 'Auto-reject below' })
+    expect(thumb0).toHaveValue('30')
+    expect(input0).toHaveValue(30)
+
+    const thumb1 = screen.getByRole('slider', { name: 'Auto-accept above' })
+    const input1 = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
+    expect(thumb1).toHaveValue('70')
+    expect(input1).toHaveValue(70)
+  })
 })

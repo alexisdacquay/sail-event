@@ -89,46 +89,48 @@ export function ScoreScale({ lower, upper, onChange }: ScoreScaleProps) {
         </Slider.Control>
       </Slider.Root>
 
-      {/* Thumb value labels */}
-      <div className="relative h-4 text-xs font-semibold tabular-nums text-foreground">
-        <span
-          aria-hidden="true"
-          className="absolute -translate-x-1/2"
-          style={{ left: `${l}%` }}
-        >
-          {l}
-        </span>
-        <span
-          aria-hidden="true"
-          className="absolute -translate-x-1/2"
-          style={{ left: `${u}%` }}
-        >
-          {u}
-        </span>
-      </div>
+      {/* Thumb value labels — hidden when values are invalid or too close to overlap */}
+      {!invalid && (u - l) >= 8 && (
+        <div className="relative h-4 text-xs font-semibold tabular-nums text-foreground">
+          <span
+            aria-hidden="true"
+            className="absolute -translate-x-1/2"
+            style={{ left: `${l}%` }}
+          >
+            {l}
+          </span>
+          <span
+            aria-hidden="true"
+            className="absolute -translate-x-1/2"
+            style={{ left: `${u}%` }}
+          >
+            {u}
+          </span>
+        </div>
+      )}
 
       {/* Zone legend — desktop: labels sized to their zone */}
       <div className="hidden sm:flex text-[13px] font-medium">
         <span
           style={{ flexBasis: `${l}%` }}
-          className="flex items-center justify-center gap-1 truncate"
+          className="flex items-center justify-center gap-1 min-w-0 truncate"
         >
           <span className="size-2 rounded-full bg-zone-rejected shrink-0" aria-hidden="true" />
-          Rejected
+          {l >= 15 && 'Rejected'}
         </span>
         <span
           style={{ flexBasis: `${u - l}%` }}
-          className="flex items-center justify-center gap-1 truncate"
+          className="flex items-center justify-center gap-1 min-w-0 truncate"
         >
           <span className="size-2 rounded-full bg-zone-decide shrink-0" aria-hidden="true" />
-          You decide
+          {(u - l) >= 15 && 'You decide'}
         </span>
         <span
           style={{ flexBasis: `${100 - u}%` }}
-          className="flex items-center justify-center gap-1 truncate"
+          className="flex items-center justify-center gap-1 min-w-0 truncate"
         >
           <span className="size-2 rounded-full bg-zone-calendar shrink-0" aria-hidden="true" />
-          On your calendar
+          {(100 - u) >= 15 && 'On your calendar'}
         </span>
       </div>
 

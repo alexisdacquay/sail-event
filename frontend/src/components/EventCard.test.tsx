@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { EventCard, formatWhen, getBrowserTz } from './EventCard'
 import type { Event } from '@/services/api'
@@ -59,12 +59,12 @@ describe('EventCard', () => {
     expect(screen.getByText('place unknown')).toBeInTheDocument()
   })
 
-  it('renders date only when no T in dateTime', () => {
+  it('renders date only with all day label', () => {
     const dateOnly = { ...event, dateTime: '2026-10-20', startTz: null }
     render(<EventCard event={dateOnly} variant="queue" />)
     const dt = screen.getByTestId('event-datetime')
-    // Should contain a date but no time (HH:MM)
     expect(dt.textContent).toMatch(/Oct 2026/)
+    expect(dt.textContent).toContain('all day')
     expect(dt.textContent).not.toMatch(/\d{2}:\d{2}/)
   })
 
@@ -157,6 +157,12 @@ describe('EventCard', () => {
     expect(link).toHaveAttribute('href', 'https://example.com/conf')
   })
 
+  it('card title is a clickable link to the event', () => {
+    render(<EventCard event={event} variant="queue" />)
+    const titleLink = screen.getByRole('link', { name: 'Test Conference 2026' })
+    expect(titleLink).toHaveAttribute('href', 'https://example.com/conf')
+  })
+
   it('Accept and Reject disable both buttons while deciding', async () => {
     const onDecide = vi.fn(
       () => new Promise<void>(() => {}), // never resolves
@@ -169,6 +175,30 @@ describe('EventCard', () => {
       expect(screen.getByRole('button', { name: 'Accepting…' })).toBeDisabled()
       expect(screen.getByRole('button', { name: 'Reject' })).toBeDisabled()
     })
+  })
+
+  it('queue variant shows 5-second undo bar after accept', async () => {
+    const onDecide = vi.fn().mockResolvedValue(undefined)
+    render(<EventCard event={event} variant="queue" onDecide={onDecide} />)
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Accept' }))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('undo-bar')).toBeInTheDocument()
+      expect(screen.getByText('Accepted.')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument()
+    })
+  })
+
+  it('all variant shows Put back to review for rejected events', () => {
+    const rejected = { ...event, status: 'rejected' as const, decidedBy: 'auto' as const }
+    const onDecide = vi.fn()
+    render(<EventCard event={rejected} variant="all" onDecide={onDecide} />)
+    expect(
+      screen.getByRole('button', { name: 'Put back to review' }),
+    ).toBeInTheDocument()
   })
 
   it('queue variant does not show Why: label', () => {
@@ -204,10 +234,11 @@ describe('formatWhen — offset-aware (#71)', () => {
     expect(text).toMatch(/Tue 20 Oct 2026/)
   })
 
-  it('Tokyo event viewed from Europe/Berlin shows Berlin annotation', () => {
+  it('Tokyo event viewed from Europe/Berlin shows viewer annotation', () => {
     const text = formatWhen(tokyoEvent, 'Europe/Berlin')
     expect(text).toContain('(Asia/Tokyo)')
     expect(text).toContain('13:00')  // 20:00 JST = 13:00 CEST
+    expect(text).toContain('your time:')
     expect(text).toContain('(Europe/Berlin)')
   })
 
@@ -215,14 +246,32 @@ describe('formatWhen — offset-aware (#71)', () => {
     const text = formatWhen(tokyoEvent, 'America/New_York')
     expect(text).toContain('(Asia/Tokyo)')
     expect(text).toContain('07:00')  // 20:00 JST = 07:00 EDT
+    expect(text).toContain('your time:')
     expect(text).toContain('(America/New_York)')
   })
 
-  it('date-only event shows correct date from any timezone', () => {
+  it('date-only event shows all day', () => {
     const dateOnly: Event = { ...event, dateTime: '2026-10-20', startTz: null }
-    // Pass a western timezone to prove the date doesn't roll back
     const text = formatWhen(dateOnly, 'America/New_York')
     expect(text).toMatch(/Tue 20 Oct 2026/)
+    expect(text).toContain('all day')
     expect(text).not.toMatch(/\d{2}:\d{2}/)
+  })
+
+  it('viewer timezone hidden when same as event timezone', () => {
+    const berlinEvent: Event = { ...event, dateTime: '2026-10-20T20:00:00+02:00', startTz: 'Europe/Berlin' }
+    const text = formatWhen(berlinEvent, 'Europe/Berlin')
+    expect(text).toContain('(Europe/Berlin)')
+    // Should not contain "your time:" since zones match
+    expect(text).not.toContain('your time:')
+    // Only one occurrence of Europe/Berlin
+    const matches = text.match(/Europe\/Berlin/g)
+    expect(matches).toHaveLength(1)
+  })
+
+  it('shows time unknown for empty dateTime', () => {
+    const noDate: Event = { ...event, dateTime: '' }
+    const text = formatWhen(noDate)
+    expect(text).toBe('time unknown')
   })
 })

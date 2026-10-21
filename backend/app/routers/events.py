@@ -77,14 +77,15 @@ def decide_event(
     if event is None:
         return JSONResponse(status_code=404, content={"detail": "Event not found"})
 
-    if event.status not in (EventStatus.queued.value, EventStatus.accepted.value):
+    allowed = (EventStatus.queued.value, EventStatus.accepted.value, EventStatus.rejected.value)
+    if event.status not in allowed:
         return JSONResponse(
             status_code=400,
-            content={"detail": "Only queued and accepted events can be decided"},
+            content={"detail": "Only queued, accepted and rejected events can be decided"},
         )
 
     event.status = body.decision
-    event.decided_by = "user"
+    event.decided_by = "user" if body.decision != "queued" else None
     db.commit()
 
     return JSONResponse(content=_event_dict(event))

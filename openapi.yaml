@@ -117,6 +117,10 @@ paths:
     put:
       operationId: saveThresholds
       summary: Replace the current user's score thresholds
+      description: >-
+        Saves the new thresholds and re-applies them to auto-decided events
+        (events where decidedBy is "auto" or null). User decisions are untouched.
+        The response includes the count of events whose status changed.
       security:
         - bearerAuth: []
       requestBody:
@@ -127,11 +131,11 @@ paths:
               $ref: '#/components/schemas/Thresholds'
       responses:
         '200':
-          description: Thresholds saved
+          description: Thresholds saved and re-applied
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Thresholds'
+                $ref: '#/components/schemas/ThresholdsSaveResult'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -180,7 +184,7 @@ paths:
   /api/events/{id}/decision:
     post:
       operationId: decideEvent
-      summary: Accept or reject an event
+      summary: Accept, reject, or put an event back to review
       security:
         - bearerAuth: []
       parameters:
@@ -372,6 +376,21 @@ components:
         upperThreshold:
           type: number
 
+    ThresholdsSaveResult:
+      type: object
+      required:
+        - lowerThreshold
+        - upperThreshold
+        - eventsMoved
+      properties:
+        lowerThreshold:
+          type: number
+        upperThreshold:
+          type: number
+        eventsMoved:
+          type: integer
+          description: Number of auto-decided events whose status changed
+
     SearchResult:
       type: object
       required:
@@ -531,6 +550,10 @@ components:
           enum:
             - accepted
             - rejected
+            - queued
+          description: >-
+            "accepted" or "rejected" for normal decisions;
+            "queued" to undo a decision (put back to review)
 
     CalendarUrlResponse:
       type: object

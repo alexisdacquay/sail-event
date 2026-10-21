@@ -34,7 +34,7 @@ export function EventsPage() {
 
   async function handleDecide(
     id: string,
-    decision: 'accepted' | 'rejected',
+    decision: 'accepted' | 'rejected' | 'queued',
   ) {
     const updated = await decideEvent(id, decision)
     setEvents((prev) => prev.map((e) => (e.id === id ? updated : e)))

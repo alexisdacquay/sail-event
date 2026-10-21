@@ -19,3 +19,7 @@
 | —                 | `getCalendarFeed`| GET    | `/api/calendar/{ics_token}` |
 
 Event fields beyond the obvious: `decidedBy` is `auto` (triaged by the pipeline), `user` (decided in the queue) or null (still to review); `scoreReason` is the one-line reason shown under the title.
+
+Changes in #95:
+- `decideEvent` now accepts `decision: "queued"` to undo a decision (put back to review). Rejected events can now be decided (was 400).
+- `saveThresholds` response now includes `eventsMoved: int` — the count of auto-decided events whose status changed to match the new thresholds.

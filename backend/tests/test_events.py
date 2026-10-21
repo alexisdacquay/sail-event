@@ -70,16 +70,17 @@ def test_decide_event_accept_already_accepted_is_noop(client, auth_headers):
     assert r.json()["status"] == "accepted"
 
 
-def test_decide_event_rejected_returns_400(client, auth_headers):
+def test_decide_rejected_event_can_be_requeued(client, auth_headers):
+    """Rejected events can be put back to queued (undo) but not directly accepted."""
     h = auth_headers("demo", "demo")
-    # First, reject a queued event
     queued = client.get("/api/events?status=queued", headers=h).json()
     eid = queued[0]["id"]
     client.post(f"/api/events/{eid}/decision", json={"decision": "rejected"}, headers=h)
 
-    # Now try to change it
-    r = client.post(f"/api/events/{eid}/decision", json={"decision": "accepted"}, headers=h)
-    assert r.status_code == 400
+    # Re-queue works
+    r = client.post(f"/api/events/{eid}/decision", json={"decision": "queued"}, headers=h)
+    assert r.status_code == 200
+    assert r.json()["status"] == "queued"
 
 
 def test_decide_event_not_found_returns_404(client, auth_headers):
@@ -145,6 +146,34 @@ def test_triage_exact_boundaries(_db_session):
             OrmEvent.link == f"https://example.com/boundary-{score_val}",
         ).first()
         assert evt.status == expected_status, f"score={score_val}: expected {expected_status}"
+
+
+def test_decide_queued_puts_rejected_back_to_review(client, auth_headers):
+    """A rejected event can be moved back to queued (undo)."""
+    h = auth_headers("demo", "demo")
+    queued = client.get("/api/events?status=queued", headers=h).json()
+    eid = queued[0]["id"]
+    # Reject it first
+    client.post(f"/api/events/{eid}/decision", json={"decision": "rejected"}, headers=h)
+    assert client.get(f"/api/events?status=rejected", headers=h).json()
+
+    # Now put it back to review
+    r = client.post(f"/api/events/{eid}/decision", json={"decision": "queued"}, headers=h)
+    assert r.status_code == 200
+    assert r.json()["status"] == "queued"
+    assert r.json()["decidedBy"] is None
+
+
+def test_decide_queued_puts_accepted_back_to_review(client, auth_headers):
+    """An accepted event can be moved back to queued (remove from calendar → review)."""
+    h = auth_headers("demo", "demo")
+    accepted = client.get("/api/events?status=accepted", headers=h).json()
+    eid = accepted[0]["id"]
+
+    r = client.post(f"/api/events/{eid}/decision", json={"decision": "queued"}, headers=h)
+    assert r.status_code == 200
+    assert r.json()["status"] == "queued"
+    assert r.json()["decidedBy"] is None
 
 
 def test_rejected_event_survives_later_search(client, auth_headers):

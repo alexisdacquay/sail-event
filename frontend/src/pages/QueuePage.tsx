@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { listEvents, decideEvent } from '@/services/api'
 import type { Event } from '@/services/api'
 import { EventCard } from '@/components/EventCard'
@@ -12,6 +12,7 @@ export function QueuePage({ onQueueChange }: QueuePageProps) {
   const [queuedEvents, setQueuedEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
+  const removalTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
   async function fetchQueue() {
     setLoading(true)
@@ -32,15 +33,27 @@ export function QueuePage({ onQueueChange }: QueuePageProps) {
 
   useEffect(() => {
     fetchQueue()
+    return () => { removalTimers.current.forEach(clearTimeout) }
   }, [])
 
   async function handleDecide(
     id: string,
-    decision: 'accepted' | 'rejected',
+    decision: 'accepted' | 'rejected' | 'queued',
   ) {
     await decideEvent(id, decision)
     onQueueChange?.()
-    setTimeout(() => setQueuedEvents((prev) => prev.filter((e) => e.id !== id)), 200)
+    if (decision === 'queued') {
+      // Undo: cancel pending removal
+      const existing = removalTimers.current.get(id)
+      if (existing) { clearTimeout(existing); removalTimers.current.delete(id) }
+    } else {
+      // Remove card after 5s undo window + 200ms animation
+      const timer = setTimeout(() => {
+        setQueuedEvents((prev) => prev.filter((e) => e.id !== id))
+        removalTimers.current.delete(id)
+      }, 5200)
+      removalTimers.current.set(id, timer)
+    }
   }
 
   return (

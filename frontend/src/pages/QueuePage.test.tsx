@@ -3,6 +3,7 @@ import {
   screen,
   fireEvent,
   waitFor,
+  act,
 } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { QueuePage } from './QueuePage'
@@ -29,25 +30,28 @@ describe('QueuePage', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('Accept moves event to accepted and out of queue', async () => {
+  it('Accept moves event to accepted and shows undo', async () => {
     render(<QueuePage />)
 
     await screen.findByText('Jazz in the Park')
 
     const jazzCard = screen.getByTestId('event-card-evt-2')
     const acceptButton = jazzCard.querySelector('button')!
-    fireEvent.click(acceptButton)
+    await act(async () => { fireEvent.click(acceptButton) })
 
+    // Undo bar should appear
     await waitFor(() => {
-      expect(screen.queryByText('Jazz in the Park')).not.toBeInTheDocument()
+      expect(screen.getByText('Accepted.')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument()
     })
 
+    // Mock state should reflect the accept
     const events = await mock.listEvents()
     const jazz = events.find((e: Event) => e.id === 'evt-2')
     expect(jazz?.status).toBe('accepted')
   })
 
-  it('Reject moves event to rejected and out of queue', async () => {
+  it('Reject moves event to rejected and shows undo', async () => {
     render(<QueuePage />)
 
     await screen.findByText('AWS re:Invent Watch Party')
@@ -55,12 +59,11 @@ describe('QueuePage', () => {
     const awsCard = screen.getByTestId('event-card-evt-3')
     const buttons = awsCard.querySelectorAll('button')
     const rejectButton = buttons[1]
-    fireEvent.click(rejectButton)
+    await act(async () => { fireEvent.click(rejectButton) })
 
+    // Undo bar should appear
     await waitFor(() => {
-      expect(
-        screen.queryByText('AWS re:Invent Watch Party'),
-      ).not.toBeInTheDocument()
+      expect(screen.getByText('Rejected.')).toBeInTheDocument()
     })
 
     const events = await mock.listEvents()
@@ -68,29 +71,22 @@ describe('QueuePage', () => {
     expect(aws?.status).toBe('rejected')
   })
 
-  it('rejected event stays out of queue across remounts', async () => {
-    const { unmount } = render(<QueuePage />)
+  it('rejected event stays rejected in mock state', async () => {
+    render(<QueuePage />)
 
     await screen.findByText('Jazz in the Park')
 
     const card = screen.getByTestId('event-card-evt-2')
     const buttons = card.querySelectorAll('button')
-    fireEvent.click(buttons[1]) // Reject
+    await act(async () => { fireEvent.click(buttons[1]) }) // Reject
 
-    await waitFor(() => {
-      expect(screen.queryByText('Jazz in the Park')).not.toBeInTheDocument()
-    })
-
-    unmount()
-
-    render(<QueuePage />)
-
-    await screen.findByText('AWS re:Invent Watch Party')
-
-    expect(screen.queryByText('Jazz in the Park')).not.toBeInTheDocument()
-
+    // Verify mock state
     const queued = await mock.listEvents('queued')
     expect(queued.find((e: Event) => e.id === 'evt-2')).toBeUndefined()
+
+    const all = await mock.listEvents()
+    const jazz = all.find((e: Event) => e.id === 'evt-2')
+    expect(jazz?.status).toBe('rejected')
   })
 
   it('disables both buttons while a decision is in flight', async () => {
