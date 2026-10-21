@@ -390,3 +390,49 @@ def test_factory_runtime_error_reported(client, auth_headers, _db_session):
 
     assert body["error"] == "RuntimeError: bad config"
     assert body["stoppedAtStage"] == "adapters"
+
+
+# ---------- #104: per-stage run updates ----------
+
+
+def test_per_stage_updates_written_during_pipeline(_db_session):
+    """Pipeline writes current_stage per stage; finished run clears it."""
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    stages_seen: list[str] = []
+
+    original_update = __import__("app.services.pipeline", fromlist=["_update_run_stage"])._update_run_stage
+
+    def _spy(run, db, stage, counts):
+        stages_seen.append(stage)
+        original_update(run, db, stage, counts)
+
+    with patch("app.services.pipeline._update_run_stage", side_effect=_spy):
+        run = run_pipeline(user, _db_session, trigger="manual")
+
+    # At least adapters, criteria, search stages were hit
+    assert "adapters" in stages_seen
+    assert "criteria" in stages_seen
+    assert "search" in stages_seen
+    # Finished run has current_stage cleared
+    assert run.current_stage is None
+    assert run.finished_at is not None
+
+
+def test_per_stage_update_commits_to_db(_db_session):
+    """Each _update_run_stage call is visible in the DB (committed)."""
+    from app.services.pipeline import _update_run_stage
+
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    run = Run(user_id=user.id, started_at=__import__("datetime").datetime.now(__import__("datetime").UTC), trigger="manual")
+    _db_session.add(run)
+    _db_session.flush()
+    run_id = run.id
+
+    _update_run_stage(run, _db_session, "search", {"results_fetched": 5})
+
+    # Re-query: committed data should be there
+    _db_session.expire_all()
+    refreshed = _db_session.query(Run).filter(Run.id == run_id).first()
+    assert refreshed.current_stage == "search"
+    sc = json.loads(refreshed.stage_counts)
+    assert sc["results_fetched"] == 5

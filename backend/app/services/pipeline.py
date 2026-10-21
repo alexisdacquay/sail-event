@@ -82,6 +82,13 @@ def _compute_cost(search_calls: int, llm_tokens_in: int, llm_tokens_out: int) ->
     )
 
 
+def _update_run_stage(run: orm.Run, db: Session, stage: str, counts: dict[str, int]) -> None:
+    """Write current_stage and stage_counts to the run row (one UPDATE per stage)."""
+    run.current_stage = stage
+    run.stage_counts = json.dumps(counts)
+    db.commit()
+
+
 def run_pipeline(
     user: orm.User, db: Session, *, trigger: str, run_id: str | None = None,
 ) -> orm.Run:
@@ -127,6 +134,7 @@ def run_pipeline(
         try:
             # --- get adapters (may fail in prod with fixture/fake) ---
             current_stage = "adapters"
+            _update_run_stage(run, db, current_stage, counts)
             try:
                 provider = get_search_provider()
                 model = get_language_model()
@@ -178,6 +186,7 @@ def run_pipeline(
 
             # --- Stage 1: understand criteria ---
             current_stage = "criteria"
+            _update_run_stage(run, db, current_stage, counts)
             if not criteria_text:
                 error_msg = "no criteria text"
                 stopped_at_stage = "criteria"
@@ -222,12 +231,14 @@ def run_pipeline(
 
             # --- Stage 2: resolve window ---
             current_stage = "window"
+            _update_run_stage(run, db, current_stage, counts)
             with tracer.start_as_current_span("window"):
                 date_facets = facets.get("date", {}) or {}
                 window = resolve(date_facets, user_tz)
 
             # --- Stage 3: search (verbatim query, no planner) ---
             current_stage = "search"
+            _update_run_stage(run, db, current_stage, counts)
             # Depth selection: scheduled runs default to basic (cheap)
             if trigger == "scheduled":
                 search_depth = os.environ.get("TAVILY_SEARCH_DEPTH_SCHEDULED", "basic")
@@ -317,6 +328,7 @@ def run_pipeline(
 
             # --- Stage 5: extract ---
             current_stage = "extract"
+            _update_run_stage(run, db, current_stage, counts)
             with tracer.start_as_current_span("extract"):
                 # Budget check before extract LLM calls
                 budget_stop = check_llm_budget(db)
@@ -367,6 +379,7 @@ def run_pipeline(
 
             # --- Stage 6: filter ---
             current_stage = "filter"
+            _update_run_stage(run, db, current_stage, counts)
             with tracer.start_as_current_span("filter"):
                 now_utc = clock.now()
                 # Stored events for dedup
@@ -438,6 +451,7 @@ def run_pipeline(
 
             # --- Stage 7 + 8: judge and triage ---
             current_stage = "judge"
+            _update_run_stage(run, db, current_stage, counts)
             if events_new > 0:
                 # Budget check before judge LLM calls
                 budget_stop = check_llm_budget(db)
@@ -649,6 +663,7 @@ def _finalise_run(
     run.llm_tokens_in = llm_tokens_in
     run.llm_tokens_out = llm_tokens_out
     run.cost_usd = _compute_cost(search_calls, llm_tokens_in, llm_tokens_out)
+    run.current_stage = None  # run is done
     run.stopped_at_stage = stopped_at_stage
     run.error_detail = error_detail
 
