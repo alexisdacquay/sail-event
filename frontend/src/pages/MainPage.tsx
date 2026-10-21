@@ -330,7 +330,13 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
   // Dotted tie from the selected row's right edge to the detail's left edge, from real positions
   const drawTie = useCallback(() => {
     const s = screenRef.current, c = rowRef.current, d = detailRef.current, svg = tieRef.current
-    if (!s || !c || !d || !svg) return
+    if (!s || !svg) return
+    if (!c || !d) {
+      // no selected row on screen: erase the line rather than leave it pointing at the old spot
+      svg.querySelector('path')!.setAttribute('d', '')
+      svg.querySelectorAll('circle').forEach((k) => k.removeAttribute('cx'))
+      return
+    }
     const S = s.getBoundingClientRect(), C = c.getBoundingClientRect(), D = d.getBoundingClientRect()
     const x1 = C.right - S.left, y1 = C.top - S.top + C.height / 2
     const x2 = D.left - S.left, y2 = D.top - S.top + D.height / 2
@@ -351,7 +357,11 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
   const accepted = events.filter((e) => e.status === 'accepted')
   const rejected = events.filter((e) => e.status === 'rejected')
   const shown = events.filter((e) => e.status === 'accepted' || e.status === 'queued' || (showRejected && e.status === 'rejected'))
-  const selectedEvent = events.find((e) => e.id === selectedId) ?? null
+  // the selection follows the rows on screen: a row that leaves (decided, cleared, folded) deselects
+  const selectedEvent = shown.find((e) => e.id === selectedId) ?? null
+  useEffect(() => {
+    if (selectedId && !selectedEvent) setSelectedId(null)
+  }, [selectedId, selectedEvent])
   const todayKey = formatDay({ dateTime: new Date().toISOString(), startTz: null } as Event)
   const reason = lastRun?.stageCounts ? mostlyReason(lastRun.stageCounts) : ''
   const earlier = runs.filter((r) => r.runId !== lastRun?.runId)
@@ -534,13 +544,11 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
           </div>
         )}
       </aside>
-      {selectedEvent && (
-        <svg ref={tieRef} data-testid="tie" aria-hidden="true" className="pointer-events-none absolute inset-0 hidden h-full w-full overflow-visible md:block">
-          <path fill="none" stroke="var(--ring)" strokeWidth="1.5" strokeDasharray="3 4" />
-          <circle r="2.5" fill="var(--ring)" />
-          <circle r="2.5" fill="var(--ring)" />
-        </svg>
-      )}
+      <svg ref={tieRef} data-testid="tie" aria-hidden="true" className="pointer-events-none absolute inset-0 hidden h-full w-full overflow-visible md:block">
+        <path d="" fill="none" stroke="var(--ring)" strokeWidth="1.5" strokeDasharray="3 4" />
+        <circle r="2.5" fill="var(--ring)" />
+        <circle r="2.5" fill="var(--ring)" />
+      </svg>
     </div>
   )
 }

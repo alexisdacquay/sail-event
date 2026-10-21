@@ -26,6 +26,8 @@ const sameDay: Event = { ...base, id: 'q1', title: 'Maybe Gig', dateTime: '2026-
 const nextDay: Event = { ...base, id: 'q2', title: 'Other Gig', dateTime: '2026-10-21', startTz: null, score: 58, status: 'queued', decidedBy: null }
 const rejected: Event = { ...base, id: 'r1', title: 'Bad Gig', dateTime: '2026-10-22T20:00:00+02:00', score: 10, scoreReason: 'No match', status: 'rejected' }
 
+const tiePath = () => screen.getByTestId('tie').querySelector('path')!.getAttribute('d')
+
 async function mockEvents(events: Event[]) {
   const api = await import('@/services/api')
   vi.spyOn(api, 'listEvents').mockImplementation(async (status) => events.filter((e) => !status || e.status === status))
@@ -131,7 +133,7 @@ describe('Stream page results', () => {
     expect(detail).toHaveTextContent('Score 55%')
     expect(detail).toHaveTextContent('Moderate')
     expect(screen.getByTestId('event-row-q1')).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByTestId('tie')).toBeInTheDocument()
+    expect(tiePath()).toMatch(/^M/)
 
     // keyboard: Enter on another row moves the selection
     fireEvent.keyDown(screen.getByTestId('event-row-a1'), { key: 'Enter' })
@@ -146,7 +148,30 @@ describe('Stream page results', () => {
 
     fireEvent.click(within(screen.getByTestId('event-detail')).getByRole('button', { name: 'Close' }))
     expect(screen.queryByTestId('event-detail')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('tie')).not.toBeInTheDocument()
+    expect(tiePath()).toBe('')
+  })
+
+  it('clears the selection, the detail and the tie when the selected row leaves the list', async () => {
+    const list = [accepted, sameDay]
+    const api = await mockEvents(list)
+    // deciding from the detail flips the row to rejected, which is folded away: the row disappears
+    vi.spyOn(api, 'decideEvent').mockImplementation(async (id, decision) => {
+      const e = list.find((x) => x.id === id)!
+      e.status = decision
+      return e
+    })
+    renderMainPage()
+    await screen.findByTestId('results-section')
+    fireEvent.click(screen.getByTestId('event-row-q1'))
+    expect(screen.getByTestId('event-detail')).toHaveTextContent('Maybe Gig')
+    expect(tiePath()).toMatch(/^M/)
+
+    fireEvent.click(within(screen.getByTestId('event-detail')).getByRole('button', { name: 'Reject' }))
+    await waitFor(() => expect(screen.queryByTestId('event-row-q1')).not.toBeInTheDocument())
+    expect(screen.queryByTestId('event-detail')).not.toBeInTheDocument()
+    expect(screen.queryAllByTestId(/^event-row-/).filter((r) => r.getAttribute('aria-pressed') === 'true')).toHaveLength(0)
+    expect(tiePath()).toBe('')
+    expect(screen.getByText(/1 rejected/)).toBeInTheDocument()
   })
 
   it('Clear all empties the events after confirm', async () => {
