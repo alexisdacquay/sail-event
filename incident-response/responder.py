@@ -53,7 +53,8 @@ def build_agent_env() -> dict:
     ANTHROPIC_* or CLAUDE_* vars from a parent session (they point it at
     the wrong endpoint or model).  We pass only OS-level vars the CLI
     needs to run on macOS: PATH, HOME, TMPDIR, USER, LANG, SHELL, plus
-    SKIP_HOOK_TESTS and (when set) ANTHROPIC_API_KEY.
+    SKIP_HOOK_TESTS and, only when the operator set them, ANTHROPIC_API_KEY
+    and ANTHROPIC_BASE_URL.
     """
     env = {
         "PATH": os.environ.get("PATH", ""),
@@ -64,9 +65,12 @@ def build_agent_env() -> dict:
         val = os.environ.get(var)
         if val:
             env[var] = val
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if api_key:
-        env["ANTHROPIC_API_KEY"] = api_key
+    # Operator-set only: an explicit endpoint beats a ~/.claude/settings.json
+    # proxy that may not resolve on the current network.
+    for var in ("ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL"):
+        val = os.environ.get(var)
+        if val:
+            env[var] = val
     return env
 
 

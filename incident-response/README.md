@@ -38,6 +38,11 @@ Prerequisites:
   (the session exports `ANTHROPIC_*` and `CLAUDE_*` vars that the
   allowlist strips; the CLI must use its own OAuth store)
 - No VPN that blocks `api.anthropic.com`
+- If your `~/.claude/settings.json` routes the CLI through a corporate proxy
+  that does not resolve on your current network (the agent log then ends
+  with `ENOTFOUND`), prefix the command with
+  `ANTHROPIC_BASE_URL=https://api.anthropic.com`; the responder passes that
+  variable through when you set it explicitly
 - Docker running
 
 The script starts the full stack (observability + app) and the responder

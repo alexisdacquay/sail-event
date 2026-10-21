@@ -71,7 +71,8 @@ class TestBuildAgentEnv(unittest.TestCase):
             self.assertEqual(env["SKIP_HOOK_TESTS"], "1")
             self.assertNotIn("DATABASE_URL", env)
             self.assertNotIn("AWS_SECRET_ACCESS_KEY", env)
-            self.assertNotIn("ANTHROPIC_BASE_URL", env)
+            # operator-set endpoint passes through (proxy that does not resolve)
+            self.assertEqual(env["ANTHROPIC_BASE_URL"], "https://wrong")
             self.assertNotIn("CLAUDE_CODE_ENTRYPOINT", env)
         finally:
             os.environ.clear()
