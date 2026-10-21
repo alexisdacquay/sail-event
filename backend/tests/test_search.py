@@ -339,3 +339,83 @@ def test_last_run_returns_most_recent(client, auth_headers):
 def test_last_run_no_auth_returns_401(client):
     r = client.get("/api/search/last-run")
     assert r.status_code == 401
+
+
+# ---------- #108: durationSeconds, trigger, GET /api/search/runs ----------
+
+_RUN_SUMMARY_KEYS = {
+    "runId", "startedAt", "finishedAt", "durationSeconds", "trigger",
+    "eventsFound", "accepted", "queued", "rejected", "setAside", "error",
+}
+
+
+def test_last_run_has_duration_and_trigger(client, auth_headers):
+    h = auth_headers("demo", "demo")
+    client.post("/api/search", headers=h)
+    run = client.get("/api/search/last-run", headers=h).json()["run"]
+    assert run["trigger"] == "manual"
+    assert isinstance(run["durationSeconds"], float)
+    assert run["durationSeconds"] >= 0
+
+
+def test_last_run_duration_null_while_running(client, auth_headers, _db_session):
+    from datetime import UTC, datetime
+    from app.orm import Run, User
+
+    h = auth_headers("demo", "demo")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    _db_session.add(Run(user_id=user.id, started_at=datetime.now(UTC), trigger="scheduled",
+                        current_stage="search"))
+    _db_session.commit()
+    run = client.get("/api/search/last-run", headers=h).json()["run"]
+    assert run["durationSeconds"] is None
+    assert run["trigger"] == "scheduled"
+
+
+def test_runs_newest_first_and_own_only(client, auth_headers):
+    h_demo = auth_headers("demo", "demo")
+    h_alice = auth_headers("alice", "alicepw")
+    first = client.post("/api/search", headers=h_demo).json()["runId"]
+    second = client.post("/api/search", headers=h_demo).json()["runId"]
+    alice_run = client.post("/api/search", headers=h_alice).json()["runId"]
+
+    runs = client.get("/api/search/runs", headers=h_demo).json()["runs"]
+    assert [r["runId"] for r in runs] == [second, first]
+
+    alice_runs = client.get("/api/search/runs", headers=h_alice).json()["runs"]
+    assert [r["runId"] for r in alice_runs] == [alice_run]
+
+
+def test_runs_summary_fields_and_set_aside(client, auth_headers):
+    h = auth_headers("demo", "demo")
+    body = client.post("/api/search", headers=h).json()
+    sc = body["stageCounts"]
+    summary = client.get("/api/search/runs", headers=h).json()["runs"][0]
+    assert set(summary) == _RUN_SUMMARY_KEYS
+    assert summary["runId"] == body["runId"]
+    assert summary["trigger"] == "manual"
+    assert summary["durationSeconds"] == body["durationSeconds"]
+    assert summary["eventsFound"] == body["eventsFound"]
+    assert summary["accepted"] == sc["accepted"]
+    assert summary["queued"] == sc["queued"]
+    assert summary["rejected"] == sc["rejected"]
+    assert summary["setAside"] == (
+        sc["filtered_past"] + sc["filtered_place"] + sc["filtered_duplicate"] + sc["filtered_non_event"]
+    )
+    assert summary["setAside"] > 0
+    assert summary["error"] is None
+
+
+def test_runs_limit_validated(client, auth_headers):
+    h = auth_headers("demo", "demo")
+    client.post("/api/search", headers=h)
+    client.post("/api/search", headers=h)
+    assert client.get("/api/search/runs?limit=0", headers=h).status_code == 400
+    assert client.get("/api/search/runs?limit=101", headers=h).status_code == 400
+    assert client.get("/api/search/runs?limit=x", headers=h).status_code == 400
+    assert len(client.get("/api/search/runs?limit=1", headers=h).json()["runs"]) == 1
+    assert len(client.get("/api/search/runs", headers=h).json()["runs"]) == 2
+
+
+def test_runs_no_auth_returns_401(client):
+    assert client.get("/api/search/runs").status_code == 401
