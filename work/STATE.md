@@ -2,7 +2,7 @@
 
 ## PAUSE 2026-10-21 11:40 (owner stopped the chain) — RESUME HERE
 Owner rule 11:25: no new PRs or fix rounds without the owner's pick; present the ranked list, wait. Agents stopped gracefully, cron cancelled.
-- PR 97 (#95, fix-usertests-2 @ 9124468): CI green 3/3; QA agent was still running at the pause (verdict lands as a comment on issue 95 / PR 97). Mergeable when the owner says so.
+- PR 97 (#95, fix-usertests-2 @ 9124468): CI green 3/3 but QA FAIL 4/8 (issue 95 comment 6312793090): threshold re-apply moves nothing for undecided events (`decided_by IN ('auto', NULL)` never matches NULL → must be `== 'auto' OR IS NULL`, real prod bug); viewer zone still the browser's, not the user's saved zone; no tests for the login pitch and "next automatic search". PASS: undo, time unknown/all day, slider labels, title link. Needs one engineer round, then QA.
 - PR 98 (#94, fix-usertests-1 @ 6325f49 "WIP, owner paused, tests 3 failed / 416 passed"): QA FAIL fixes done for items 1 (criteria_hash migration e4f5a6b7c8d9), 2 (last-run tests), 3 (criteriaStale tests); half-done item 4 (E23 added to fixtures.json changed the extraction hash → ~8 judge fixtures to re-record, 3 pipeline tests red, dead fixtures not cleaned); untouched item 5 (e2e, integration CI red). Needs ~1 engineer hour, then QA again.
 - PR 103 (#101, fix-no-place-no-auto-accept @ 2ea2c87): no place in criteria → queued never accepted, threshold-relative, 5 tests, 411/85 green locally; not QA'd, CI not checked. Issue 99 (field test I3, filed by the owner's other session) is the same defect.
 - Decisions: 1 (ask Where?) refused, 3 (drop old auto-accepts) refused, 4 (Brave) refused; owner's idea = issue 102 (bulk-remove auto-accepted, keep hand-accepted), not scheduled.
