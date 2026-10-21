@@ -374,3 +374,128 @@ def test_api_country_zone_gets_offset(client, auth_headers, _db_session):
     assert len(match) == 1
     # October 22 in Europe/Berlin is CEST (+02:00)
     assert match[0]["dateTime"] == "2026-10-22T19:00:00+02:00"
+
+
+# --- #94: past events hidden from list and ICS feed ---
+
+
+def test_past_timed_event_hidden(client, auth_headers, _db_session):
+    """A timed event whose start is before now is hidden from the API."""
+    from app.orm import User, Event as OrmEvent
+
+    h = auth_headers("demo", "demo")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    # FAKE_NOW is 2026-10-18T12:00 CEST → 10:00 UTC
+    # This event started at 08:00 CEST → already past at 12:00 CEST
+    past = OrmEvent(
+        user_id=user.id,
+        title="Morning conference",
+        date_time="2026-10-18T08:00",
+        place="Berlin",
+        link="https://example.com/past-timed",
+        description="Past timed event",
+        score=92,
+        score_reason="Fits well",
+        status="accepted",
+        decided_by="auto",
+        start_tz="Europe/Berlin",
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(past)
+    _db_session.commit()
+
+    events = client.get("/api/events", headers=h).json()
+    titles = [e["title"] for e in events]
+    assert "Morning conference" not in titles
+
+
+def test_past_dateonly_event_hidden(client, auth_headers, _db_session):
+    """A date-only event whose whole day is over is hidden."""
+    from app.orm import User, Event as OrmEvent
+
+    h = auth_headers("demo", "demo")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    # FAKE_NOW is 2026-10-18 → date 2026-10-17 is yesterday
+    past = OrmEvent(
+        user_id=user.id,
+        title="Yesterday festival",
+        date_time="2026-10-17",
+        place="Berlin",
+        link="https://example.com/past-dateonly",
+        description="Past date-only event",
+        score=88,
+        score_reason="Fits",
+        status="accepted",
+        decided_by="auto",
+        start_tz="Europe/Berlin",
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(past)
+    _db_session.commit()
+
+    events = client.get("/api/events", headers=h).json()
+    titles = [e["title"] for e in events]
+    assert "Yesterday festival" not in titles
+
+
+def test_today_timed_event_in_future_shown(client, auth_headers, _db_session):
+    """A timed event later today is still shown."""
+    from app.orm import User, Event as OrmEvent
+
+    h = auth_headers("demo", "demo")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    # FAKE_NOW is 2026-10-18T12:00 CEST → this event at 14:00 is still future
+    future = OrmEvent(
+        user_id=user.id,
+        title="Afternoon concert",
+        date_time="2026-10-18T14:00",
+        place="Berlin",
+        link="https://example.com/today-future",
+        description="Today but future",
+        score=95,
+        score_reason="Fits perfectly",
+        status="accepted",
+        decided_by="auto",
+        start_tz="Europe/Berlin",
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(future)
+    _db_session.commit()
+
+    events = client.get("/api/events", headers=h).json()
+    titles = [e["title"] for e in events]
+    assert "Afternoon concert" in titles
+
+
+def test_past_events_hidden_from_ics_feed(client, _db_session):
+    """Past events are excluded from the ICS calendar feed."""
+    from app.orm import User, Event as OrmEvent
+
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    past = OrmEvent(
+        user_id=user.id,
+        title="Past ICS event",
+        date_time="2026-10-10T20:00",
+        place="Berlin",
+        link="https://example.com/past-ics",
+        description="Past event for ICS",
+        score=92,
+        score_reason="OK",
+        status="accepted",
+        decided_by="auto",
+        start_tz="Europe/Berlin",
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(past)
+    _db_session.commit()
+
+    r = client.get(f"/api/calendar/{user.ics_token}")
+    assert r.status_code == 200
+    body = r.text
+    assert "Past ICS event" not in body
+    # Future accepted events should still be present
+    assert "Jazz Trio at A-Trane" in body

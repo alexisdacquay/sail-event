@@ -13,7 +13,8 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..deps import get_current_user
-from ..services.filters import attach_offset, resolve_iana_zone
+from ..services import clock
+from ..services.filters import attach_offset, is_event_past, resolve_iana_zone
 from .. import orm
 
 logger = logging.getLogger(__name__)
@@ -106,11 +107,19 @@ def get_calendar_feed(
     if user is None:
         return JSONResponse(status_code=404, content={"detail": "Not found"})
 
-    accepted = (
+    all_accepted = (
         db.query(orm.Event)
         .filter(orm.Event.user_id == user.id, orm.Event.status == "accepted")
         .all()
     )
+    user_tz = user.time_zone or "UTC"
+    now_utc = clock.now()
+    accepted = [
+        e for e in all_accepted
+        if not is_event_past(e.date_time, e.start_tz,
+                             e.country if getattr(e, "country", "ZZ") != "ZZ" else None,
+                             user_tz, now_utc)
+    ]
 
     body = _build_calendar(user, accepted)
     return Response(content=body, media_type="text/calendar; charset=utf-8")

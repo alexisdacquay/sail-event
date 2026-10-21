@@ -11,7 +11,8 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..deps import get_current_user
 from ..models import DecisionRequest, EventStatus
-from ..services.filters import attach_offset
+from ..services import clock
+from ..services.filters import attach_offset, is_event_past
 from ..services.judge import band_word
 from .. import orm
 
@@ -60,7 +61,14 @@ def list_events(
             )
         query = query.filter(orm.Event.status == status)
     events = query.all()
-    return [_event_dict(e) for e in events]
+    user_tz = user.time_zone or "UTC"
+    now_utc = clock.now()
+    return [
+        _event_dict(e) for e in events
+        if not is_event_past(e.date_time, e.start_tz,
+                             e.country if e.country != "ZZ" else None,
+                             user_tz, now_utc)
+    ]
 
 
 @router.post("/api/events/{id}/decision", operation_id="decideEvent")

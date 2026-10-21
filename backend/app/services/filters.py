@@ -199,6 +199,26 @@ def is_near_match(key_a: frozenset[str], key_b: frozenset[str]) -> bool:
     return False
 
 
+def is_event_past(date_time: str, start_tz: str | None, country: str | None,
+                  user_tz: str, now_utc: datetime) -> bool:
+    """Return True when a stored event's date has passed.
+
+    Timed events: past when start < now.
+    Date-only events: past when the whole day is over (23:59:59 local).
+    """
+    if not date_time:
+        return False
+    if _is_date_only(date_time):
+        d = date.fromisoformat(date_time)
+        zone = _resolve_zone(start_tz, country, user_tz)
+        eod = datetime.combine(d, time(23, 59, 59), tzinfo=zone)
+        return eod.astimezone(timezone.utc) < now_utc
+    dt = _parse_event_dt(date_time, start_tz, country, user_tz)
+    if dt is None:
+        return False
+    return dt.astimezone(timezone.utc) < now_utc
+
+
 def _event_calendar_date(ev: ExtractedEvent) -> str | None:
     """Extract the calendar date (YYYY-MM-DD) from start_local."""
     if not ev.start_local:
