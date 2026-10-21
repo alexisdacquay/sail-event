@@ -432,3 +432,17 @@ def test_delete_all_events_other_user_untouched(client, auth_headers, _db_sessio
 def test_delete_all_events_no_auth_returns_401(client):
     r = client.delete("/api/events")
     assert r.status_code == 401
+
+
+def test_delete_events_cors_preflight(client):
+    """OPTIONS preflight for DELETE /api/events from dev origin returns 200."""
+    r = client.options(
+        "/api/events",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "DELETE",
+            "Access-Control-Request-Headers": "Authorization",
+        },
+    )
+    assert r.status_code == 200
+    assert "DELETE" in r.headers.get("access-control-allow-methods", "")
