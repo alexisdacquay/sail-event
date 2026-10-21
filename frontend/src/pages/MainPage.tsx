@@ -33,7 +33,6 @@ type MainPageProps = {
   onSearchComplete: () => Promise<number>
   queuedEvents: Event[]
   onNavigateQueue: () => void
-  onNavigateEvents?: () => void
 }
 
 /** Human-readable progress text from a run's currentStage and stageCounts. */
@@ -131,7 +130,7 @@ function buildRunReport(result: SearchResult): string[] {
   return lines
 }
 
-export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue, onNavigateEvents }: MainPageProps) {
+export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: MainPageProps) {
   const [criteriaText, setCriteriaText] = useState('')
   const [criteriaSaved, setCriteriaSaved] = useState(false)
   const [criteriaError, setCriteriaError] = useState('')
