@@ -12,14 +12,15 @@ async function signUp(page: Page) {
   await page.getByLabel("Password").fill("testpass1");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
+  // a new user has no saved search, so the editor is open
   await page.getByLabel("What I'm looking for").fill("jazz in Berlin (Germany) next week (19-21st October 2026)");
   await page.getByRole("button", { name: "Save criteria" }).click();
   await expect(page.getByText("Saved.")).toBeVisible();
 }
 
 async function searchNow(page: Page) {
-  await page.getByRole("button", { name: "Search now" }).click();
-  await expect(page.getByTestId("search-result")).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("button", { name: /Search (now|again)/ }).click();
+  await expect(page.getByTestId("run-chronology")).toContainText(/Judged \d+ ·/, { timeout: 15_000 });
 }
 
 test("U1 reload keeps the page", async ({ page }) => {
@@ -32,27 +33,29 @@ test("U1 reload keeps the page", async ({ page }) => {
 });
 
 test("U1 reload keeps the search result", async ({ page }) => {
-  test.fail(true, "search state is lost on reload (#94)");
   await signUp(page);
   await searchNow(page);
   await page.reload();
-  await expect(page.getByTestId("search-result")).toBeVisible();
+  await expect(page.getByTestId("run-chronology")).toContainText(/Judged \d+ ·/);
 });
 
-test("U2 the result line matches the badge and the cards", async ({ page }) => {
+test("U2 the Judged line matches the badge and the rows", async ({ page }) => {
   await signUp(page);
   await searchNow(page);
-  const review = page.getByTestId("search-result").getByRole("button", { name: /Review \d+ events/ });
-  const n = (await review.count()) ? Number((await review.textContent())!.match(/\d+/)![0]) : 0;
-  await expect(page.getByTestId("queue-count")).toHaveText(`(${n})`);
-  if (n === 0) return;
-  await review.click();
-  await expect(page.getByRole("heading", { name: "To review" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Add to calendar" })).toHaveCount(n);
+  const line = (await page.getByTestId("run-chronology").textContent())!;
+  const n = Number(line.match(/(\d+) to review/)![1]);
+  const nav = page.getByRole("navigation", { name: "Main navigation" });
+  if (n === 0) {
+    await expect(nav.getByTestId("queue-count")).toHaveCount(0);
+    return;
+  }
+  await expect(nav.getByTestId("queue-count")).toHaveText(`(${n})`);
+  await expect(page.getByTestId("row-status").filter({ hasText: "To review" })).toHaveCount(n);
 });
 
 test("U3 slider knobs equal the boxes", async ({ page }) => {
   await signUp(page);
+  await page.getByText("Scoring", { exact: true }).click();
   for (const name of ["Auto-reject below", "Auto-accept above"]) {
     const box = await page.getByRole("spinbutton", { name }).inputValue();
     await expect(page.getByRole("slider", { name })).toHaveAttribute("aria-valuenow", box);
@@ -63,6 +66,7 @@ test("U3 the zone legend is not clipped on a narrow desktop", async ({ page }) =
   test.fail(true, "legend clipped: 'ı your cale' (#94)");
   await page.setViewportSize({ width: 700, height: 900 });
   await signUp(page);
+  await page.getByText("Scoring", { exact: true }).click();
   const clipped = await page
     .getByTestId("scoring-card")
     .locator("*")

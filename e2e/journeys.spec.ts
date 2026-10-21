@@ -1,39 +1,51 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, Page } from "@playwright/test";
 
 function uid() {
   return `e2e_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+const CRITERIA = "jazz in Berlin (Germany) next week (19-21st October 2026)";
+
+async function register(page: Page, user: string, pw: string) {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Create one" }).click();
+  await page.getByLabel("Username").fill(user);
+  await page.getByLabel("Password").fill(pw);
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
+}
+
+// A new user has no saved search, so the Stream page opens with the editor.
+async function saveCriteria(page: Page) {
+  await page.getByLabel("What I'm looking for").fill(CRITERIA);
+  await page.getByRole("button", { name: "Save criteria" }).click();
+  await expect(page.getByText("Saved.")).toBeVisible();
+  await expect(page.getByTestId("criteria-text")).toHaveText(CRITERIA);
+}
+
+async function search(page: Page) {
+  await page.getByRole("button", { name: /Search (now|again)/ }).click();
+  await expect(page.getByTestId("run-chronology")).toContainText(/Judged \d+ ·/, { timeout: 15_000 });
+}
+
 test.describe("Journey 1: full user flow", () => {
-  test("register, criteria, scoring, search, queue decisions, events page", async ({
+  test("register, criteria, scoring, search, stream decisions, queue, events page", async ({
     page,
   }) => {
     const user = uid();
     const pw = "testpass1";
 
-    // Register
-    await page.goto("/");
-    await page.getByRole("button", { name: "Create one" }).click();
-    await page.getByLabel("Username").fill(user);
-    await page.getByLabel("Password").fill(pw);
-    await page.getByRole("button", { name: "Create account" }).click();
+    await register(page, user, pw);
+    await saveCriteria(page);
 
-    // Wait for authenticated layout
-    await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
-
-    // Set criteria
-    await page.getByLabel("What I'm looking for").fill("jazz in Berlin (Germany) next week (19-21st October 2026)");
-    await page.getByRole("button", { name: "Save criteria" }).click();
-    await expect(page.getByText("Saved.")).toBeVisible();
-
-    // Adjust scoring scale: raise Auto-accept above by 6 (90 → 96) so
-    // more events land in the queue for the accept/reject test below
+    // Scoring lives in the rail, folded: open it, raise Auto-accept above by 6 (90 → 96)
+    // so more events land in the queue for the accept/reject test below
+    await page.getByText("Scoring", { exact: true }).click();
     const slider = page.getByRole("slider", { name: "Auto-accept above" });
     await slider.focus();
     for (let i = 0; i < 6; i++) {
       await slider.press("ArrowRight");
     }
-    // the key presses must have reached the shared state before saving
     await expect(
       page.getByRole("spinbutton", { name: "Auto-accept above" })
     ).toHaveValue("96");
@@ -51,34 +63,39 @@ test.describe("Journey 1: full user flow", () => {
     // Reload and verify the value persisted
     await page.reload();
     await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
+    await page.getByText("Scoring", { exact: true }).click();
     await expect(
       page.getByRole("spinbutton", { name: "Auto-accept above" })
     ).toHaveValue("96");
 
-    // Search — run report shows pipeline line or fallback "Found N events"
-    await page.getByRole("button", { name: "Search now" }).click();
-    await expect(page.getByTestId("search-result")).toBeVisible({ timeout: 15_000 });
+    // Search — the chronology ends with the Judged line and the funnel shows the found count
+    await search(page);
+    await expect(page.getByTestId("funnel")).toBeVisible();
+    await expect(page.getByTestId("funnel")).toContainText(/\d+ found/);
 
-    // Assert To review badge with count is visible in the header before clicking
-    await expect(page.getByRole("button", { name: /To review \(\d+\)/ })).toBeVisible();
+    // Results: rows grouped by day; select a To review row and decide from the detail
+    await expect(page.getByTestId("day-heading").first()).toBeVisible();
+    const firstQueued = page.getByTestId(/^event-row-/).filter({ hasText: "To review" }).first();
+    await expect(firstQueued).toBeVisible();
+    // pin the row by id: the filtered locator would re-resolve to the next queued row after the decision
+    const queuedRow = page.getByTestId((await firstQueued.getAttribute("data-testid"))!);
+    await queuedRow.click();
+    await expect(page.getByTestId("event-detail")).toBeVisible();
+    await expect(page.getByTestId("tie")).toBeVisible();
+    await page.getByTestId("event-detail").getByRole("button", { name: "Add to calendar" }).click();
+    await expect(queuedRow.getByTestId("row-status")).toHaveText("In calendar");
 
-    // Go to To review
-    await page.getByRole("button", { name: /To review/ }).click();
+    // The To review badge counts the rest
+    const nav = page.getByRole("navigation", { name: "Main navigation" });
+    await expect(nav.getByRole("button", { name: /To review \(\d+\)/ })).toBeVisible();
+    await nav.getByRole("button", { name: /To review/ }).click();
     await expect(page.getByRole("heading", { name: "To review" })).toBeVisible();
-
-    // Add first event to calendar, reject second
-    const addButtons = page.getByRole("button", { name: "Add to calendar" });
     const rejectButtons = page.getByRole("button", { name: "Reject" });
-
-    // Wait for at least two queue items
-    await expect(addButtons.first()).toBeVisible({ timeout: 5_000 });
-
-    await addButtons.first().click();
-    // After adding, the next item becomes first
+    await expect(rejectButtons.first()).toBeVisible({ timeout: 5_000 });
     await rejectButtons.first().click();
 
     // Go to All events page
-    await page.getByRole("button", { name: "All events" }).click();
+    await nav.getByRole("button", { name: "All events" }).click();
     await expect(page.getByRole("heading", { name: "All events" })).toBeVisible();
 
     // Verify an accepted event shows Remove from calendar
@@ -91,6 +108,42 @@ test.describe("Journey 1: full user flow", () => {
     // After removal the card shows Add to calendar (status flipped to rejected)
     await expect(page.getByRole("button", { name: "Add to calendar" }).first()).toBeVisible();
   });
+
+  test("phone: single column, funnel hidden, place hidden, detail as a bottom sheet", async ({ page }) => {
+    await page.setViewportSize({ width: 400, height: 800 });
+    await register(page, uid(), "testpass1");
+    await saveCriteria(page);
+    await search(page);
+    await expect(page.getByTestId("funnel")).toBeHidden();
+    await expect(page.getByTestId("row-place").first()).toBeHidden();
+    const row = page.getByTestId(/^event-row-/).first();
+    await row.click();
+    const detail = page.getByTestId("event-detail");
+    await expect(detail).toBeVisible();
+    await expect(page.getByTestId("tie")).toBeHidden();
+    const box = (await detail.boundingBox())!;
+    expect(box.y + box.height).toBeLessThanOrEqual(800 + 1);
+    expect(box.y).toBeGreaterThan(400);
+    await detail.getByRole("button", { name: "Close" }).click();
+    await expect(detail).toBeHidden();
+    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(scrollWidth).toBeLessThanOrEqual(400);
+    await page.screenshot({ path: "test-results/stream-400.png", fullPage: true });
+  });
+
+  test("screenshots: desktop light and dark", async ({ browser }) => {
+    for (const colorScheme of ["light", "dark"] as const) {
+      const ctx = await browser.newContext({ colorScheme, viewport: { width: 1280, height: 900 } });
+      const page = await ctx.newPage();
+      await register(page, uid(), "testpass1");
+      await saveCriteria(page);
+      await search(page);
+      await page.getByTestId(/^event-row-/).first().click();
+      await expect(page.getByTestId("event-detail")).toBeVisible();
+      await page.screenshot({ path: `test-results/stream-desktop-${colorScheme}.png`, fullPage: true });
+      await ctx.close();
+    }
+  });
 });
 
 test.describe("Journey 2: user isolation", () => {
@@ -102,20 +155,9 @@ test.describe("Journey 2: user isolation", () => {
     // --- User 1: register, criteria, search ---
     const ctx1 = await browser.newContext();
     const page1 = await ctx1.newPage();
-    await page1.goto("/");
-    await page1.getByRole("button", { name: "Create one" }).click();
-    await page1.getByLabel("Username").fill(user1);
-    await page1.getByLabel("Password").fill(pw);
-    await page1.getByRole("button", { name: "Create account" }).click();
-    await expect(
-      page1.getByRole("heading", { name: "Sail Event" })
-    ).toBeVisible();
-    await page1.getByLabel("What I'm looking for").fill("jazz in Berlin (Germany) next week (19-21st October 2026)");
-    await page1.getByRole("button", { name: "Save criteria" }).click();
-    await page1.getByRole("button", { name: "Search now" }).click();
-    await expect(page1.getByTestId("search-result")).toBeVisible({
-      timeout: 15_000,
-    });
+    await register(page1, user1, pw);
+    await saveCriteria(page1);
+    await search(page1);
 
     // Confirm user 1 has events
     await page1.getByRole("button", { name: "All events" }).click();
@@ -125,14 +167,8 @@ test.describe("Journey 2: user isolation", () => {
     // --- User 2: register, go straight to events ---
     const ctx2 = await browser.newContext();
     const page2 = await ctx2.newPage();
-    await page2.goto("/");
-    await page2.getByRole("button", { name: "Create one" }).click();
-    await page2.getByLabel("Username").fill(user2);
-    await page2.getByLabel("Password").fill(pw);
-    await page2.getByRole("button", { name: "Create account" }).click();
-    await expect(
-      page2.getByRole("heading", { name: "Sail Event" })
-    ).toBeVisible();
+    await register(page2, user2, pw);
+    await expect(page2.getByTestId("results-section")).toBeHidden();
     await page2.getByRole("button", { name: "All events" }).click();
     await expect(page2.getByRole("heading", { name: "All events" })).toBeVisible();
     await expect(page2.getByText("No events yet.")).toBeVisible();
