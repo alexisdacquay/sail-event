@@ -1,0 +1,11 @@
+Permission allow rule (../../.claude/settings.json): Write(//Users/ad/.claude/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(//Users/ad/.claude/**) instead (Edit rules cover all file-editing tools).
+Permission allow rule (../../.claude/settings.json): Write(//private/tmp/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(//private/tmp/**) instead (Edit rules cover all file-editing tools).
+Permission allow rule (../../.claude/settings.json): Write(//tmp/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(//tmp/**) instead (Edit rules cover all file-editing tools).
+Permission allow rule (../../.claude/settings.json): Write(//Users/ad/Downloads/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(//Users/ad/Downloads/**) instead (Edit rules cover all file-editing tools).
+Permission deny rule (../../.claude/settings.json): Write(/Users/ad/Library/CloudStorage/*) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/ad/Library/CloudStorage/*) instead (Edit rules cover all file-editing tools).
+**Root cause:** commit `3d9f6b8` ("test: inject search-provider fault") left a `RuntimeError("injected fault")` stub in `FixtureProvider.search`, replacing the real implementation which was renamed to `_search_original`. Every search pipeline run hit this, producing the ~28 errors/min Prometheus saw.
+
+**Fix:** two-line removal restoring `search` to the original signature. All 84 frontend + backend tests + 20 incident-responder tests pass.
+
+---
+Skipped: I didn't check whether the background pytest run (b9jls82hn) completed cleanly — `make test` exit-0 is sufficient. Risk: if this incident branch needs a PR to merge, the fault commit history stays visible; squash-merge or note it in the PR body.

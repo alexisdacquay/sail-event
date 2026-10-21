@@ -1,0 +1,7 @@
+{
+  "verdict": "fix",
+  "summary": "Commit 3d9f6b8 replaced FixtureProvider.search with a stub that always raises RuntimeError('injected fault'), causing all pipeline runs to error; fix restores the original method.",
+  "files_changed": ["backend/app/adapters/fixture.py"],
+  "tests_run": ["make test"],
+  "commit": "8d2f839"
+}

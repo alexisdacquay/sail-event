@@ -1,0 +1,47 @@
+{
+  "status": "firing",
+  "labels": {
+    "alertname": "SearchRunFailures",
+    "deployment_environment": "dev",
+    "environment": "dev",
+    "exported_instance": "8d89592d-f738-43f4-8c74-4f6166cc16a5",
+    "exported_job": "sail-event-backend",
+    "grafana_folder": "Sail-event Alerts",
+    "instance": "otel-collector:8889",
+    "job": "otel-collector",
+    "otel_scope_name": "sail-event.pipeline",
+    "outcome": "error",
+    "owner": "alexisdacquay",
+    "service": "sail-event-backend",
+    "service_instance_id": "8d89592d-f738-43f4-8c74-4f6166cc16a5",
+    "service_name": "sail-event-backend",
+    "service_version": "dev",
+    "severity": "critical",
+    "telemetry_sdk_language": "python",
+    "telemetry_sdk_name": "opentelemetry",
+    "telemetry_sdk_version": "1.45.1",
+    "trigger": "manual",
+    "version": "dev"
+  },
+  "annotations": {
+    "dashboard_url": "http://localhost:3001/d/sail-event-overview",
+    "description": "Observed 24 failed run(s) in a 10-minute window",
+    "runbook": "TODO",
+    "summary": "Two or more search runs failed in the last 10 minutes"
+  },
+  "startsAt": "2026-10-21T07:41:20Z",
+  "endsAt": "0001-01-01T00:00:00Z",
+  "generatorURL": "http://localhost:3000/alerting/grafana/search-run-failures/view?orgId=1",
+  "fingerprint": "e97bf414370b8ee7",
+  "silenceURL": "http://localhost:3000/alerting/silence/new?alertmanager=grafana&matcher=__alert_rule_uid__%3Dsearch-run-failures&matcher=deployment_environment%3Ddev&matcher=environment%3Ddev&matcher=exported_instance%3D8d89592d-f738-43f4-8c74-4f6166cc16a5&matcher=exported_job%3Dsail-event-backend&matcher=instance%3Dotel-collector%3A8889&matcher=job%3Dotel-collector&matcher=otel_scope_name%3Dsail-event.pipeline&matcher=outcome%3Derror&matcher=owner%3Dalexisdacquay&matcher=service%3Dsail-event-backend&matcher=service_instance_id%3D8d89592d-f738-43f4-8c74-4f6166cc16a5&matcher=service_name%3Dsail-event-backend&matcher=service_version%3Ddev&matcher=severity%3Dcritical&matcher=telemetry_sdk_language%3Dpython&matcher=telemetry_sdk_name%3Dopentelemetry&matcher=telemetry_sdk_version%3D1.45.1&matcher=trigger%3Dmanual&matcher=version%3Ddev&orgId=1",
+  "dashboardURL": "",
+  "panelURL": "",
+  "ruleUID": "search-run-failures",
+  "values": {
+    "A": 23.932434535759953,
+    "B": 23.932434535759953,
+    "C": 1
+  },
+  "valueString": "[ var='A' labels={deployment_environment=dev, exported_instance=8d89592d-f738-43f4-8c74-4f6166cc16a5, exported_job=sail-event-backend, instance=otel-collector:8889, job=otel-collector, otel_scope_name=sail-event.pipeline, outcome=error, service_instance_id=8d89592d-f738-43f4-8c74-4f6166cc16a5, service_name=sail-event-backend, service_version=dev, telemetry_sdk_language=python, telemetry_sdk_name=opentelemetry, telemetry_sdk_version=1.45.1, trigger=manual} type='query' value=23.932434535759953 ], [ var='B' labels={deployment_environment=dev, exported_instance=8d89592d-f738-43f4-8c74-4f6166cc16a5, exported_job=sail-event-backend, instance=otel-collector:8889, job=otel-collector, otel_scope_name=sail-event.pipeline, outcome=error, service_instance_id=8d89592d-f738-43f4-8c74-4f6166cc16a5, service_name=sail-event-backend, service_version=dev, telemetry_sdk_language=python, telemetry_sdk_name=opentelemetry, telemetry_sdk_version=1.45.1, trigger=manual} type='reduce' value=23.932434535759953 ], [ var='C' labels={deployment_environment=dev, exported_instance=8d89592d-f738-43f4-8c74-4f6166cc16a5, exported_job=sail-event-backend, instance=otel-collector:8889, job=otel-collector, otel_scope_name=sail-event.pipeline, outcome=error, service_instance_id=8d89592d-f738-43f4-8c74-4f6166cc16a5, service_name=sail-event-backend, service_version=dev, telemetry_sdk_language=python, telemetry_sdk_name=opentelemetry, telemetry_sdk_version=1.45.1, trigger=manual} type='threshold' value=1 ]",
+  "orgId": 1
+}

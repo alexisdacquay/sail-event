@@ -29,6 +29,16 @@ branch `incident/20261017-052050-SearchRunFailures`, and committed
 `dae24e9`.  All five files are present: `alert.json`, `evidence.md`,
 `agent.log`, `verdict.json`, `fix.diff`.
 
+**2026-10-21 (`20261021-074150-SearchRunFailures`)** -- the same loop on
+the current code, produced by `test-incident.sh` from the owner's terminal:
+Grafana's own webhook payload in `alert.json` (status `firing`, rule labels),
+Prometheus/Loki evidence, the agent's own log, verdict `fix`, commit
+`8d2f839` on branch `incident/20261021-074150-SearchRunFailures`, `fix.diff`.
+Note for operators: the agent needs the API reachable from a plain shell;
+on this machine that means the corporate VPN on (the CLI is configured to
+use a corporate proxy) or `ANTHROPIC_BASE_URL=https://api.anthropic.com`
+with the VPN off.
+
 ## Reproduce the full loop (test-incident.sh)
 
 Prerequisites:

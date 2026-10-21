@@ -236,7 +236,7 @@ Two alerts fire on user impact, not CPU: **SearchRunFailures** (two or more runs
                  incident/<id>, never main                                      evidence.md
 ```
 
-It ran for real: a deliberate fault made every search run fail; the alert fired, the agent read the evidence, found the injected `raise`, fixed it on branch `incident/20261017-052050-SearchRunFailures` and left a verdict (`fix.diff` included). The recorded incident is in [`incident-response/incidents/`](incident-response/incidents/). Reproduce it with:
+It ran for real, twice: a deliberate fault made every search run fail; Grafana's alert fired, its webhook reached the responder, the agent read the evidence, found the injected `raise`, fixed it on an `incident/...` branch and left a verdict (`fix.diff` included). The 2026-10-17 run is on the first code base, the 2026-10-21 run (`20261021-074150-SearchRunFailures`, fix commit `8d2f839` on branch `incident/20261021-074150-SearchRunFailures`) on the current one. Both are in [`incident-response/incidents/`](incident-response/incidents/). Reproduce it with:
 
 ```bash
 # prerequisite: `claude` CLI installed and signed in (claude --version);

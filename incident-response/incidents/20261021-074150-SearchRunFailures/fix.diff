@@ -1,0 +1,16 @@
+diff --git a/backend/app/adapters/fixture.py b/backend/app/adapters/fixture.py
+index 30cd3e5..9ed5be5 100644
+--- a/backend/app/adapters/fixture.py
++++ b/backend/app/adapters/fixture.py
+@@ -22,10 +22,7 @@ class FixtureProvider:
+             for entry in raw
+         ]
+ 
+-    def search(self, *a, **kw):
+-        raise RuntimeError("injected fault")
+-
+-    def _search_original(
++    def search(
+         self,
+         query: str,
+         *,
