@@ -307,3 +307,35 @@ def test_scheduled_user_real_pipeline_single_row(client, _db_session, monkeypatc
         assert run.stage_counts is not None
     finally:
         search_mod._session_factory = old_factory
+
+
+# ---------- #104: GET /api/search/last-run ----------
+
+
+def test_last_run_returns_null_when_no_runs(client, auth_headers):
+    h = auth_headers("fresh", "fresh")
+    r = client.get("/api/search/last-run", headers=h)
+    assert r.status_code == 200
+    assert r.json()["run"] is None
+
+
+def test_last_run_returns_most_recent(client, auth_headers):
+    h = auth_headers("demo", "demo")
+    # Run a search first so there is a run
+    client.post("/api/search", headers=h)
+    r = client.get("/api/search/last-run", headers=h)
+    assert r.status_code == 200
+    run = r.json()["run"]
+    assert run is not None
+    assert "runId" in run
+    assert "currentStage" in run
+    assert "startedAt" in run
+    assert "finishedAt" in run
+    # Finished run has currentStage null
+    assert run["currentStage"] is None
+    assert run["finishedAt"] is not None
+
+
+def test_last_run_no_auth_returns_401(client):
+    r = client.get("/api/search/last-run")
+    assert r.status_code == 401
