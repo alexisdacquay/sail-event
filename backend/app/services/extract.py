@@ -148,6 +148,7 @@ def extract_events(
     language: str | None,
     user_tz: str,
     model,
+    on_page_done=None,
 ) -> tuple[list[ExtractedEvent], ExtractionCounts]:
     """Run extraction over a list of search results. Returns (events, counts)."""
     counts = ExtractionCounts()
@@ -238,6 +239,8 @@ def extract_events(
                 counts.extract_errors += 1
                 pspan.set_attribute("page_kind", "error")
                 pspan.set_attribute("event_count", 0)
+            if on_page_done:
+                on_page_done(counts)
 
     return all_events, counts
 

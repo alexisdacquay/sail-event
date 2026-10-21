@@ -7,9 +7,14 @@ export type SearchResult = {
   eventsFound: number
   eventsNew: number
   stageCounts: Record<string, number> | null
+  currentStage: string | null
   stoppedAtStage: string | null
   error: string | null
+  startedAt: string | null
+  finishedAt: string | null
 }
+
+export type LastRunResponse = { run: SearchResult | null }
 
 export type EventStatus = 'new' | 'accepted' | 'rejected' | 'queued'
 
@@ -48,5 +53,7 @@ export const saveThresholds = mod.saveThresholds
 export const runSearch = mod.runSearch
 export const listEvents = mod.listEvents
 export const decideEvent = mod.decideEvent
+export const getLastRun = mod.getLastRun
+export const deleteAllEvents = mod.deleteAllEvents
 export const getCalendarUrl = mod.getCalendarUrl
 export const rotateCalendarUrl = mod.rotateCalendarUrl

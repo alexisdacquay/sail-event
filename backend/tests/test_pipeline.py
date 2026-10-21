@@ -390,3 +390,86 @@ def test_factory_runtime_error_reported(client, auth_headers, _db_session):
 
     assert body["error"] == "RuntimeError: bad config"
     assert body["stoppedAtStage"] == "adapters"
+
+
+# ---------- #104: per-stage run updates ----------
+
+
+def test_per_stage_updates_written_during_pipeline(_db_session):
+    """Pipeline writes current_stage per stage; finished run clears it."""
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    stages_seen: list[str] = []
+
+    original_update = __import__("app.services.pipeline", fromlist=["_update_run_stage"])._update_run_stage
+
+    def _spy(run, db, stage, counts):
+        stages_seen.append(stage)
+        original_update(run, db, stage, counts)
+
+    with patch("app.services.pipeline._update_run_stage", side_effect=_spy):
+        run = run_pipeline(user, _db_session, trigger="manual")
+
+    # At least adapters, criteria, search stages were hit
+    assert "adapters" in stages_seen
+    assert "criteria" in stages_seen
+    assert "search" in stages_seen
+    # Finished run has current_stage cleared
+    assert run.current_stage is None
+    assert run.finished_at is not None
+
+
+def test_per_stage_update_commits_to_db(_db_session):
+    """Each _update_run_stage call is visible in the DB (committed)."""
+    from app.services.pipeline import _update_run_stage
+
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    run = Run(user_id=user.id, started_at=__import__("datetime").datetime.now(__import__("datetime").UTC), trigger="manual")
+    _db_session.add(run)
+    _db_session.flush()
+    run_id = run.id
+
+    _update_run_stage(run, _db_session, "search", {"results_fetched": 5})
+
+    # Re-query: committed data should be there
+    _db_session.expire_all()
+    refreshed = _db_session.query(Run).filter(Run.id == run_id).first()
+    assert refreshed.current_stage == "search"
+    sc = json.loads(refreshed.stage_counts)
+    assert sc["results_fetched"] == 5
+
+
+def test_extract_and_judge_write_intermediate_counts(_db_session):
+    """During extract and judge, stage_counts climbs with each page/event."""
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    from app.services.pipeline import _update_run_stage
+    snapshots: list[tuple[str, dict]] = []
+
+    original_update = _update_run_stage
+
+    def _spy(run, db, stage, counts):
+        snapshots.append((stage, dict(counts)))
+        original_update(run, db, stage, counts)
+
+    with patch("app.services.pipeline._update_run_stage", side_effect=_spy):
+        run = run_pipeline(user, _db_session, trigger="manual")
+
+    # Extract stage: pages_content_pass should climb from 0 toward the total
+    extract_snaps = [(s, c) for s, c in snapshots if s == "extract"]
+    pages_values = [c.get("pages_content_pass", 0) for _, c in extract_snaps]
+    final_pages = json.loads(run.stage_counts).get("pages_content_pass", 0)
+    if final_pages > 0:
+        # Must see at least one intermediate value between 0 and the total
+        intermediates = [v for v in pages_values if 0 < v <= final_pages]
+        assert len(intermediates) >= 1, (
+            f"expected intermediate pages_content_pass, got {pages_values}"
+        )
+
+    # Judge stage: events_judged should climb from 0 toward the total
+    judge_snaps = [(s, c) for s, c in snapshots if s == "judge"]
+    judged_values = [c.get("events_judged", 0) for _, c in judge_snaps]
+    final_judged = json.loads(run.stage_counts).get("events_judged", 0)
+    if final_judged > 0:
+        intermediates = [v for v in judged_values if 0 < v <= final_judged]
+        assert len(intermediates) >= 1, (
+            f"expected intermediate events_judged, got {judged_values}"
+        )

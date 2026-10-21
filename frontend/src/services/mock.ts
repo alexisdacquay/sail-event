@@ -4,6 +4,7 @@ import type {
   Criteria,
   Thresholds,
   SearchResult,
+  LastRunResponse,
   Event,
   EventStatus,
 } from './api'
@@ -180,9 +181,22 @@ export async function runSearch(): Promise<SearchResult> {
       queued: 3,
       rejected: 2,
     },
+    currentStage: null,
     stoppedAtStage: null,
     error: null,
+    startedAt: '2026-10-18T10:00:00+00:00',
+    finishedAt: '2026-10-18T10:01:30+00:00',
   }
+}
+
+export async function getLastRun(): Promise<LastRunResponse> {
+  return { run: null }
+}
+
+export async function deleteAllEvents(): Promise<{ deleted: number }> {
+  const count = mockEvents.length
+  mockEvents = []
+  return { deleted: count }
 }
 
 export async function listEvents(status?: EventStatus): Promise<Event[]> {

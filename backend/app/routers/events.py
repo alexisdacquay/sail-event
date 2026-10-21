@@ -88,3 +88,14 @@ def decide_event(
     db.commit()
 
     return JSONResponse(content=_event_dict(event))
+
+
+@router.delete("/api/events", operation_id="deleteAllEvents")
+def delete_all_events(
+    user: orm.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> JSONResponse:
+    """Delete every event belonging to the current user (all statuses)."""
+    count = db.query(orm.Event).filter(orm.Event.user_id == user.id).delete()
+    db.commit()
+    return JSONResponse(content={"deleted": count})

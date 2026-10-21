@@ -111,5 +111,6 @@ class Run(Base):
     llm_tokens_in: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0", default=0)
     llm_tokens_out: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0", default=0)
     cost_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
+    current_stage: Mapped[str | None] = mapped_column(String(16), nullable=True)
     stopped_at_stage: Mapped[str | None] = mapped_column(String(16), nullable=True)
     error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)

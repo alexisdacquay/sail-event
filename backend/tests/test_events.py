@@ -374,3 +374,75 @@ def test_api_country_zone_gets_offset(client, auth_headers, _db_session):
     assert len(match) == 1
     # October 22 in Europe/Berlin is CEST (+02:00)
     assert match[0]["dateTime"] == "2026-10-22T19:00:00+02:00"
+
+
+# --- #104: DELETE /api/events ---
+
+
+def test_delete_all_events_removes_own(client, auth_headers):
+    """DELETE /api/events removes all events for the current user."""
+    h = auth_headers("demo", "demo")
+    before = client.get("/api/events", headers=h).json()
+    assert len(before) > 0
+
+    r = client.delete("/api/events", headers=h)
+    assert r.status_code == 200
+    assert r.json()["deleted"] == len(before)
+
+    after = client.get("/api/events", headers=h).json()
+    assert after == []
+
+
+def test_delete_all_events_other_user_untouched(client, auth_headers, _db_session):
+    """DELETE /api/events for user A does not touch user B's events."""
+    from app.orm import User, Event as OrmEvent
+
+    h_a = auth_headers("delA", "pw")
+    h_b = auth_headers("delB", "pw")
+
+    # Seed an event for user B
+    user_b = _db_session.query(User).filter(User.username == "delB").first()
+    evt = OrmEvent(
+        user_id=user_b.id,
+        title="B's event",
+        date_time="2026-10-20T20:00:00",
+        place="Berlin",
+        link="https://example.com/del-b-event",
+        description="User B event",
+        score=60,
+        score_reason="Test event",
+        status="queued",
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(evt)
+    _db_session.commit()
+
+    # Delete A's events (A has none, but the call should not touch B)
+    r = client.delete("/api/events", headers=h_a)
+    assert r.status_code == 200
+    assert r.json()["deleted"] == 0
+
+    # B's event is still there
+    b_events = client.get("/api/events", headers=h_b).json()
+    assert len(b_events) == 1
+    assert b_events[0]["title"] == "B's event"
+
+
+def test_delete_all_events_no_auth_returns_401(client):
+    r = client.delete("/api/events")
+    assert r.status_code == 401
+
+
+def test_delete_events_cors_preflight(client):
+    """OPTIONS preflight for DELETE /api/events from dev origin returns 200."""
+    r = client.options(
+        "/api/events",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "DELETE",
+            "Access-Control-Request-Headers": "Authorization",
+        },
+    )
+    assert r.status_code == 200
+    assert "DELETE" in r.headers.get("access-control-allow-methods", "")
