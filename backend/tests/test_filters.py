@@ -270,7 +270,8 @@ class TestFilterPipeline:
         ev = _make_event(title="Jazz Trio at A-Trane")
         stored = [
             {"link": "https://other.com/atrane", "date_time": "2026-10-20T21:00",
-             "title": "A-Trane: Jazz Trio", "status": "rejected", "page_kind": "single_event"},
+             "title": "A-Trane: Jazz Trio", "status": "rejected", "page_kind": "single_event",
+             "city": "Berlin"},
         ]
         kept, counts = filter_events(
             [ev],
@@ -285,12 +286,52 @@ class TestFilterPipeline:
         assert len(kept) == 0
         assert counts.filtered_duplicate == 1
 
+    def test_near_match_same_title_different_city_kept(self):
+        """Same title + same date but different city: NOT a duplicate."""
+        ev1 = _make_event(title="Windsurf Festival", city="Valencia", country="ES",
+                          start_tz="Europe/Madrid")
+        ev2 = _make_event(title="Windsurf Festival", city="Barcelona", country="ES",
+                          start_tz="Europe/Madrid",
+                          link="https://example.com/event2")
+        kept, counts = filter_events(
+            [ev1, ev2],
+            now_utc=_NOW,
+            window_start_utc=_WS,
+            window_end_utc=_WE,
+            target_city="Valencia",
+            target_country="ES",
+            user_tz="Europe/Madrid",
+        )
+        assert len(kept) == 2
+        assert counts.filtered_duplicate == 0
+
+    def test_near_match_same_title_same_city_collapsed(self):
+        """Same title + same date + same city from different URLs: duplicate."""
+        ev1 = _make_event(title="Festival de Windsurf Valencia",
+                          city="Valencia", country="ES", start_tz="Europe/Madrid",
+                          link="https://site-a.com/windsurf")
+        ev2 = _make_event(title="Valencia Windsurf Festival",
+                          city="Valencia", country="ES", start_tz="Europe/Madrid",
+                          link="https://site-b.com/windsurf")
+        kept, counts = filter_events(
+            [ev1, ev2],
+            now_utc=_NOW,
+            window_start_utc=_WS,
+            window_end_utc=_WE,
+            target_city="Valencia",
+            target_country="ES",
+            user_tz="Europe/Madrid",
+        )
+        assert len(kept) == 1
+        assert counts.filtered_duplicate == 1
+
     def test_listing_stored_occurrences_deduped_new_kept(self):
         """A listing page's stored occurrences are deduped, new ones kept."""
         # Stored: one occurrence from a previous run
         stored = [
             {"link": "https://venue.com/programme", "date_time": "2026-10-19T21:00",
-             "title": "Jazz Monday", "status": "accepted", "page_kind": "listing"},
+             "title": "Jazz Monday", "status": "accepted", "page_kind": "listing",
+             "city": "Berlin"},
         ]
         # Run 2: same occurrence + a new one
         ev_old = _make_event(

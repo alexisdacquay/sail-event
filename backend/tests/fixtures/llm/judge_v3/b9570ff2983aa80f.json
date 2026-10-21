@@ -1,0 +1,13 @@
+{
+  "response": {
+    "score": 82,
+    "reason": "Jazz club jam session in Berlin on 21 October, inside your 19\u201321 window, though it's an open jam rather than a concert."
+  },
+  "usage": {
+    "prompt_tokens": 851,
+    "completion_tokens": 139
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

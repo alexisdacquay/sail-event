@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "Jazz in Berlin fits, but 5 November 2026 falls outside your 19\u201321 October dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 847,
+    "completion_tokens": 69
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

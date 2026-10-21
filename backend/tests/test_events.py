@@ -374,3 +374,191 @@ def test_api_country_zone_gets_offset(client, auth_headers, _db_session):
     assert len(match) == 1
     # October 22 in Europe/Berlin is CEST (+02:00)
     assert match[0]["dateTime"] == "2026-10-22T19:00:00+02:00"
+
+
+# --- #94: past events hidden from list and ICS feed ---
+
+
+def test_past_timed_event_hidden(client, auth_headers, _db_session):
+    """A timed event whose start is before now is hidden from the API."""
+    from app.orm import User, Event as OrmEvent
+
+    h = auth_headers("demo", "demo")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    # FAKE_NOW is 2026-10-18T12:00 CEST → 10:00 UTC
+    # This event started at 08:00 CEST → already past at 12:00 CEST
+    past = OrmEvent(
+        user_id=user.id,
+        title="Morning conference",
+        date_time="2026-10-18T08:00",
+        place="Berlin",
+        link="https://example.com/past-timed",
+        description="Past timed event",
+        score=92,
+        score_reason="Fits well",
+        status="accepted",
+        decided_by="auto",
+        start_tz="Europe/Berlin",
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(past)
+    _db_session.commit()
+
+    events = client.get("/api/events", headers=h).json()
+    titles = [e["title"] for e in events]
+    assert "Morning conference" not in titles
+
+
+def test_past_dateonly_event_hidden(client, auth_headers, _db_session):
+    """A date-only event whose whole day is over is hidden."""
+    from app.orm import User, Event as OrmEvent
+
+    h = auth_headers("demo", "demo")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    # FAKE_NOW is 2026-10-18 → date 2026-10-17 is yesterday
+    past = OrmEvent(
+        user_id=user.id,
+        title="Yesterday festival",
+        date_time="2026-10-17",
+        place="Berlin",
+        link="https://example.com/past-dateonly",
+        description="Past date-only event",
+        score=88,
+        score_reason="Fits",
+        status="accepted",
+        decided_by="auto",
+        start_tz="Europe/Berlin",
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(past)
+    _db_session.commit()
+
+    events = client.get("/api/events", headers=h).json()
+    titles = [e["title"] for e in events]
+    assert "Yesterday festival" not in titles
+
+
+def test_today_timed_event_in_future_shown(client, auth_headers, _db_session):
+    """A timed event later today is still shown."""
+    from app.orm import User, Event as OrmEvent
+
+    h = auth_headers("demo", "demo")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    # FAKE_NOW is 2026-10-18T12:00 CEST → this event at 14:00 is still future
+    future = OrmEvent(
+        user_id=user.id,
+        title="Afternoon concert",
+        date_time="2026-10-18T14:00",
+        place="Berlin",
+        link="https://example.com/today-future",
+        description="Today but future",
+        score=95,
+        score_reason="Fits perfectly",
+        status="accepted",
+        decided_by="auto",
+        start_tz="Europe/Berlin",
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(future)
+    _db_session.commit()
+
+    events = client.get("/api/events", headers=h).json()
+    titles = [e["title"] for e in events]
+    assert "Afternoon concert" in titles
+
+
+def test_past_events_hidden_from_ics_feed(client, _db_session):
+    """Past events are excluded from the ICS calendar feed."""
+    from app.orm import User, Event as OrmEvent
+
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    past = OrmEvent(
+        user_id=user.id,
+        title="Past ICS event",
+        date_time="2026-10-10T20:00",
+        place="Berlin",
+        link="https://example.com/past-ics",
+        description="Past event for ICS",
+        score=92,
+        score_reason="OK",
+        status="accepted",
+        decided_by="auto",
+        start_tz="Europe/Berlin",
+        city="Berlin",
+        country="DE",
+    )
+    _db_session.add(past)
+    _db_session.commit()
+
+    r = client.get(f"/api/calendar/{user.ics_token}")
+    assert r.status_code == 200
+    body = r.text
+    assert "Past ICS event" not in body
+    # Future accepted events should still be present
+    assert "Jazz Trio at A-Trane" in body
+
+
+# --- #94: alembic migration for criteria_hash ---
+
+
+def test_migrated_schema_has_criteria_hash(_db_session, client, auth_headers):
+    """events.criteria_hash column exists and /api/events returns 200."""
+    from sqlalchemy import inspect
+    insp = inspect(_db_session.bind)
+    columns = {c["name"] for c in insp.get_columns("events")}
+    assert "criteria_hash" in columns
+
+    h = auth_headers("demo", "demo")
+    r = client.get("/api/events", headers=h)
+    assert r.status_code == 200
+    # Events should include criteriaStale field
+    events = r.json()
+    assert len(events) > 0
+    assert "criteriaStale" in events[0]
+
+
+# --- #94: criteria hash stored at judge time, criteriaStale marker ---
+
+
+def test_criteria_hash_stored_at_judge_time(client, auth_headers, _db_session):
+    """After a search, judged events carry criteria_hash."""
+    h = auth_headers("demo", "demo")
+    client.post("/api/search", headers=h)
+    from app.orm import User, Event as OrmEvent
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    events = _db_session.query(OrmEvent).filter(
+        OrmEvent.user_id == user.id,
+        OrmEvent.score.isnot(None),
+        OrmEvent.criteria_hash.isnot(None),
+    ).all()
+    assert len(events) > 0, "at least one judged event should have criteria_hash"
+
+
+def test_criteria_stale_false_when_same(client, auth_headers, _db_session):
+    """criteriaStale=false when the event was scored with the current criteria."""
+    h = auth_headers("demo", "demo")
+    client.post("/api/search", headers=h)
+    events = client.get("/api/events", headers=h).json()
+    for e in events:
+        if e.get("criteriaStale") is not None:
+            assert e["criteriaStale"] is False, f"event {e['id']} should not be stale"
+
+
+def test_criteria_stale_true_after_change(client, auth_headers, _db_session):
+    """criteriaStale=true after the user changes criteria text."""
+    h = auth_headers("demo", "demo")
+    # Run search with current criteria
+    client.post("/api/search", headers=h)
+
+    # Change criteria text
+    client.put("/api/criteria", headers=h, json={
+        "text": "classical concerts in Vienna, under 30 EUR, 1-15 Nov 2026",
+    })
+
+    events = client.get("/api/events", headers=h).json()
+    # Events scored under the old criteria should now be stale
+    stale = [e for e in events if e.get("criteriaStale") is True]
+    assert len(stale) > 0, "after criteria change, old events should be marked stale"

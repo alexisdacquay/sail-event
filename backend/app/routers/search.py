@@ -37,7 +37,26 @@ def _run_response(run: orm.Run) -> dict:
         "stageCounts": stage_counts,
         "stoppedAtStage": run.stopped_at_stage,
         "error": run.error,
+        "startedAt": run.started_at.isoformat() if getattr(run, "started_at", None) else None,
+        "finishedAt": run.finished_at.isoformat() if getattr(run, "finished_at", None) else None,
     }
+
+
+@router.get("/api/search/last-run", operation_id="getLastRun")
+def get_last_run(
+    user: orm.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return the user's most recent run (for reload persistence)."""
+    run = (
+        db.query(orm.Run)
+        .filter(orm.Run.user_id == user.id)
+        .order_by(orm.Run.started_at.desc())
+        .first()
+    )
+    if run is None:
+        return JSONResponse(content={"run": None})
+    return JSONResponse(content={"run": _run_response(run)})
 
 
 @router.post("/api/search", operation_id="runSearch")

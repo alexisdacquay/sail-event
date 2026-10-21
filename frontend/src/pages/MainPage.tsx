@@ -17,6 +17,7 @@ import {
   getThresholds,
   saveThresholds,
   runSearch,
+  getLastRun,
   getCalendarUrl,
   rotateCalendarUrl,
 } from '@/services/api'
@@ -46,6 +47,7 @@ function buildRunReport(result: SearchResult): string[] {
   const results = c.results_fetched ?? 0
   const events = c.events_extracted ?? 0
   const judged = c.events_judged ?? 0
+  const recovered = c.recovered_judged ?? 0
   const accepted = c.accepted ?? 0
   const queued = c.queued ?? 0
   const rejected = c.rejected ?? 0
@@ -56,9 +58,14 @@ function buildRunReport(result: SearchResult): string[] {
   ] as const
   const totalFiltered = filterKeys.reduce((sum, k) => sum + (c[k] ?? 0), 0)
   const passed = Math.max(0, events - totalFiltered)
+  const totalJudged = judged + recovered
+
+  const judgedLabel = recovered > 0
+    ? `${totalJudged} judged (${recovered} recovered)`
+    : `${totalJudged} judged`
 
   lines.push(
-    `${queries} queries → ${results} results → ${events} events → ${passed} passed filters → ${judged} judged → ${accepted} accepted, ${queued} queued, ${rejected} rejected`,
+    `${queries} queries → ${results} results → ${events} events → ${passed} passed filters → ${judgedLabel} → ${accepted} accepted, ${queued} queued, ${rejected} rejected`,
   )
 
   const filterLabels: Record<string, string> = {
@@ -98,7 +105,7 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
   const [scoringSaving, setScoringSaving] = useState(false)
 
   const [searching, setSearching] = useState(false)
-  const [searchReport, setSearchReport] = useState<{ lines: string[]; queued: number } | null>(null)
+  const [searchReport, setSearchReport] = useState<{ lines: string[]; queued: number; judged: number } | null>(null)
   const [searchIsError, setSearchIsError] = useState(false)
   const [searchErrorText, setSearchErrorText] = useState('')
 
@@ -119,6 +126,38 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
       setUpper(t.upperThreshold)
     })
     getCalendarUrl().then((r) => setCalendarUrl(r.url))
+    // Reload persistence: check if a search is running or show the last result
+    getLastRun().then(({ run }) => {
+      if (!run) return
+      if (run.startedAt && !run.finishedAt) {
+        // Search is still running — show "Searching…" and poll
+        setSearching(true)
+        const poll = setInterval(async () => {
+          try {
+            const { run: latest } = await getLastRun()
+            if (latest && latest.finishedAt) {
+              clearInterval(poll)
+              setSearching(false)
+              const queueCount = await onSearchComplete()
+              const sc = latest.stageCounts
+              const totalJudged = (sc?.events_judged ?? 0) + (sc?.recovered_judged ?? 0)
+              setSearchReport({ lines: buildRunReport(latest), queued: queueCount, judged: totalJudged })
+            }
+          } catch {
+            clearInterval(poll)
+            setSearching(false)
+          }
+        }, 5000)
+        return () => clearInterval(poll)
+      } else if (run.finishedAt) {
+        // Show the last run's result line
+        const sc = run.stageCounts
+        const totalJudged = (sc?.events_judged ?? 0) + (sc?.recovered_judged ?? 0)
+        onSearchComplete().then((queueCount) => {
+          setSearchReport({ lines: buildRunReport(run), queued: queueCount, judged: totalJudged })
+        })
+      }
+    })
   }, [])
 
   function showCriteriaSaved() {
@@ -190,7 +229,9 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
       if (result.eventsFound === 0 && !result.stageCounts) {
         setSearchErrorText('Found no events. Try broader criteria.')
       } else {
-        setSearchReport({ lines: buildRunReport(result), queued: queueCount })
+        const sc = result.stageCounts
+        const totalJudged = (sc?.events_judged ?? 0) + (sc?.recovered_judged ?? 0)
+        setSearchReport({ lines: buildRunReport(result), queued: queueCount, judged: totalJudged })
       }
     } catch (err: unknown) {
       const e = err as Error & { status?: number; retryAfter?: number }
@@ -316,7 +357,7 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
               {searchReport.lines.map((line, i) => (
                 <p key={i}>{line}</p>
               ))}
-              {searchReport.queued > 0 && (
+              {searchReport.queued > 0 && searchReport.judged > 0 && (
                 <Button
                   variant="default"
                   size="sm"

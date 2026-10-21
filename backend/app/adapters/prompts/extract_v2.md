@@ -6,7 +6,7 @@ From a programme page with many events, return at most 10, preferring those betw
 
 Field rules:
 - title: the event's own name, not the page title when they differ. Required.
-- start_local: local date-time as "YYYY-MM-DD" (date only) or "YYYY-MM-DDTHH:MM" (with time). A missing date means this is not an event. Required.
+- start_local: local date-time as "YYYY-MM-DD" (date only) or "YYYY-MM-DDTHH:MM" (with time). A missing date means this is not an event. For a series or multi-date event, start_local is the first occurrence on or after today, not the series' original start date. Required.
 - start_tz: IANA time zone (e.g. "Europe/Berlin", "America/Chicago"). Derive it from the city when the page does not state it explicitly. Required.
 - end_local: same format as start_local, or null.
 - venue: the venue name, or null.

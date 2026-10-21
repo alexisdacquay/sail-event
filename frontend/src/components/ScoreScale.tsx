@@ -111,24 +111,24 @@ export function ScoreScale({ lower, upper, onChange }: ScoreScaleProps) {
       <div className="hidden sm:flex text-[13px] font-medium">
         <span
           style={{ flexBasis: `${l}%` }}
-          className="flex items-center justify-center gap-1 truncate"
+          className="flex items-center justify-center gap-1 min-w-0 truncate"
         >
           <span className="size-2 rounded-full bg-zone-rejected shrink-0" aria-hidden="true" />
-          Rejected
+          <span className="truncate">Rejected</span>
         </span>
         <span
           style={{ flexBasis: `${u - l}%` }}
-          className="flex items-center justify-center gap-1 truncate"
+          className="flex items-center justify-center gap-1 min-w-0 truncate"
         >
           <span className="size-2 rounded-full bg-zone-decide shrink-0" aria-hidden="true" />
-          You decide
+          <span className="truncate">You decide</span>
         </span>
         <span
           style={{ flexBasis: `${100 - u}%` }}
-          className="flex items-center justify-center gap-1 truncate"
+          className="flex items-center justify-center gap-1 min-w-0"
         >
           <span className="size-2 rounded-full bg-zone-calendar shrink-0" aria-hidden="true" />
-          On your calendar
+          <span className="whitespace-nowrap">On your calendar</span>
         </span>
       </div>
 

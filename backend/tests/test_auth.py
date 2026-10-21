@@ -569,3 +569,37 @@ def test_trusted_proxy_uses_rightmost_xff(client, monkeypatch):
         headers={"X-Forwarded-For": "spoofed-99, 10.0.0.1"},
     )
     assert r.status_code == 201
+
+
+# --- #94: browser timezone sent at registration and login ---
+
+
+def test_register_sets_timezone(client, _db_session):
+    r = client.post("/api/auth/register", json={
+        "username": "tzuser", "password": "pw", "timeZone": "America/New_York",
+    })
+    assert r.status_code == 201
+    token = r.json()["token"]
+    r2 = client.get("/api/criteria", headers={"Authorization": f"Bearer {token}"})
+    assert r2.json()["timeZone"] == "America/New_York"
+
+
+def test_login_updates_timezone(client, _db_session):
+    client.post("/api/auth/register", json={"username": "tzlogin", "password": "pw"})
+    r = client.post("/api/auth/login", json={
+        "username": "tzlogin", "password": "pw", "timeZone": "Asia/Tokyo",
+    })
+    assert r.status_code == 200
+    token = r.json()["token"]
+    r2 = client.get("/api/criteria", headers={"Authorization": f"Bearer {token}"})
+    assert r2.json()["timeZone"] == "Asia/Tokyo"
+
+
+def test_register_invalid_timezone_defaults_utc(client, _db_session):
+    r = client.post("/api/auth/register", json={
+        "username": "tzinvalid", "password": "pw", "timeZone": "Not/A/Zone",
+    })
+    assert r.status_code == 201
+    token = r.json()["token"]
+    r2 = client.get("/api/criteria", headers={"Authorization": f"Bearer {token}"})
+    assert r2.json()["timeZone"] == "UTC"

@@ -1,0 +1,13 @@
+{
+  "response": {
+    "score": 87,
+    "reason": "Late-night jazz jam session at Zig Zag Jazz Club in Berlin on 21 October, within your 19\u201321 October window \u2014 jazz, right city, right dates, though it's an open jam rather than a concert."
+  },
+  "usage": {
+    "prompt_tokens": 844,
+    "completion_tokens": 189
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

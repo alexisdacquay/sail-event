@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 15,
+    "reason": "Outdoor Photography Meetup in Berlin on 20 October falls within your dates, but it's a photography walk, not jazz.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 850,
+    "completion_tokens": 80
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

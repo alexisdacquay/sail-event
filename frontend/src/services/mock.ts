@@ -27,6 +27,7 @@ const INITIAL_EVENTS: Event[] = [
     scoreReason: 'Strong match: tech meetup, aligns with frontend interest.',
     status: 'accepted',
     decidedBy: 'auto',
+    criteriaStale: false,
   },
   {
     id: 'evt-2',
@@ -46,6 +47,7 @@ const INITIAL_EVENTS: Event[] = [
     scoreReason: 'Entertainment event, but not a tech or professional event.',
     status: 'queued',
     decidedBy: null,
+    criteriaStale: false,
   },
   {
     id: 'evt-3',
@@ -65,6 +67,7 @@ const INITIAL_EVENTS: Event[] = [
     scoreReason: 'Cloud computing event with professional networking.',
     status: 'queued',
     decidedBy: null,
+    criteriaStale: false,
   },
   {
     id: 'evt-4',
@@ -84,6 +87,7 @@ const INITIAL_EVENTS: Event[] = [
     scoreReason: 'Arts and crafts, no professional or tech angle.',
     status: 'rejected',
     decidedBy: 'auto',
+    criteriaStale: false,
   },
   {
     id: 'evt-5',
@@ -103,6 +107,7 @@ const INITIAL_EVENTS: Event[] = [
     scoreReason: 'Core technology conference, excellent match.',
     status: 'new',
     decidedBy: null,
+    criteriaStale: false,
   },
 ]
 
@@ -163,6 +168,10 @@ export async function saveThresholds(
   return { ...mockThresholds }
 }
 
+export async function getLastRun(): Promise<{ run: SearchResult | null }> {
+  return { run: null }
+}
+
 export async function runSearch(): Promise<SearchResult> {
   return {
     runId: 'run-001',
@@ -174,8 +183,10 @@ export async function runSearch(): Promise<SearchResult> {
       events_extracted: 12,
       filtered_past: 2,
       filtered_place: 1,
-      filtered_non_event: 2,
+      filtered_non_event: 0,
+      extract_non_event: 2,
       events_judged: 7,
+      recovered_judged: 0,
       accepted: 2,
       queued: 3,
       rejected: 2,

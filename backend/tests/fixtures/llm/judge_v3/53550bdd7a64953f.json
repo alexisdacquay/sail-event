@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 92,
+    "reason": "Jazz event in Berlin on 20 October 2026, inside your 19\u201321 October window \u2014 matches genre, city and dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 814,
+    "completion_tokens": 127
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

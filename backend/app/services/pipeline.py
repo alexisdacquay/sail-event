@@ -174,6 +174,7 @@ def run_pipeline(
                 llm_tokens_in += tok_in
                 llm_tokens_out += tok_out
                 counts["judge_errors"] = counts.get("judge_errors", 0) + j_err
+                counts["recovered_judged"] = sum(1 for e in leftover if e.score is not None)
                 db.commit()
 
             # --- Stage 1: understand criteria ---
@@ -362,8 +363,10 @@ def run_pipeline(
                 counts["extract_errors"] = extract_counts.extract_errors
                 if extract_counts.extract_errors > 0 and not error_detail:
                     error_detail = f"extract: {extract_counts.extract_errors} error(s)"
-                # Non-event count from extraction
-                counts["filtered_non_event"] = extract_counts.filtered_non_event
+                # Non-event from extraction (pages that yielded no events or
+                # confidence < 0.5).  Tracked separately because events_extracted
+                # already excludes them.
+                counts["extract_non_event"] = extract_counts.filtered_non_event
 
             # --- Stage 6: filter ---
             current_stage = "filter"
@@ -380,6 +383,7 @@ def run_pipeline(
                         "title": e.title,
                         "status": e.status,
                         "page_kind": e.page_kind,
+                        "city": e.city,
                     }
                     for e in stored_events_raw
                 ]
@@ -398,7 +402,7 @@ def run_pipeline(
                 counts["filtered_past"] = filter_counts.filtered_past
                 counts["filtered_date"] = filter_counts.filtered_date
                 counts["filtered_place"] = filter_counts.filtered_place
-                counts["filtered_non_event"] = counts.get("filtered_non_event", 0) + filter_counts.filtered_non_event
+                counts["filtered_non_event"] = filter_counts.filtered_non_event
                 counts["filtered_duplicate"] = filter_counts.filtered_duplicate
 
                 # §9 stage_items metrics
@@ -521,6 +525,8 @@ def _judge_and_triage(
     db: Session,
 ) -> tuple[int, int, int, int]:
     """Judge events and triage.  Returns (llm_calls, tokens_in, tokens_out, judge_errors)."""
+    import hashlib
+    crit_hash = hashlib.sha256(criteria_text.encode()).hexdigest()[:16] if criteria_text else None
     facets = json.loads(criteria_row.facets_json) if criteria_row and criteria_row.facets_json else {}
     date_facets = facets.get("date", {}) or {}
 
@@ -603,6 +609,7 @@ def _judge_and_triage(
                         evt.score_reason = result.reason
                     evt.judge_model = model.model_id if hasattr(model, "model_id") else None
                     evt.judge_version = "judge_v3"
+                    evt.criteria_hash = crit_hash
 
     # Triage
     with tracer.start_as_current_span("triage"):

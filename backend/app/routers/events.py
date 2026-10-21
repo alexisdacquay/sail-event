@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from typing import Optional
 
 from fastapi import APIRouter, Depends
@@ -11,17 +12,23 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..deps import get_current_user
 from ..models import DecisionRequest, EventStatus
-from ..services.filters import attach_offset
+from ..services import clock
+from ..services.filters import attach_offset, is_event_past
 from ..services.judge import band_word
 from .. import orm
 
 router = APIRouter()
 
 
-def _event_dict(e: orm.Event) -> dict:
+def _event_dict(e: orm.Event, current_criteria_hash: str | None = None) -> dict:
     # On-read fallback: attach offset to naive datetimes from pre-#71 rows
     dt = attach_offset(e.date_time, e.start_tz, e.country if e.country != "ZZ" else None)
     et = attach_offset(e.end_time, e.start_tz, e.country if e.country != "ZZ" else None) if e.end_time else None
+    stale = (
+        e.criteria_hash is not None
+        and current_criteria_hash is not None
+        and e.criteria_hash != current_criteria_hash
+    )
     return {
         "id": e.id,
         "title": e.title,
@@ -39,6 +46,7 @@ def _event_dict(e: orm.Event) -> dict:
         "scoreReason": e.score_reason,
         "status": e.status,
         "decidedBy": e.decided_by,
+        "criteriaStale": stale,
     }
 
 
@@ -60,7 +68,16 @@ def list_events(
             )
         query = query.filter(orm.Event.status == status)
     events = query.all()
-    return [_event_dict(e) for e in events]
+    user_tz = user.time_zone or "UTC"
+    now_utc = clock.now()
+    criteria_row = db.query(orm.Criteria).filter(orm.Criteria.user_id == user.id).first()
+    crit_hash = hashlib.sha256(criteria_row.text.encode()).hexdigest()[:16] if criteria_row and criteria_row.text else None
+    return [
+        _event_dict(e, crit_hash) for e in events
+        if not is_event_past(e.date_time, e.start_tz,
+                             e.country if e.country != "ZZ" else None,
+                             user_tz, now_utc)
+    ]
 
 
 @router.post("/api/events/{id}/decision", operation_id="decideEvent")

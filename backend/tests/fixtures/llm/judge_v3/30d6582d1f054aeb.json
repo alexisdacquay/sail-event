@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 95,
+    "reason": "Jazz-Trio im A-Trane Berlin am 20. Oktober 2026 \u2013 passt zu Jazz, Berlin und dem Zeitraum 19.\u201321. Oktober.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 853,
+    "completion_tokens": 79
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

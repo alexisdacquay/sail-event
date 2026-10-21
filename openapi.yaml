@@ -137,6 +137,27 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/search/last-run:
+    get:
+      operationId: getLastRun
+      summary: Get the user's most recent run (for reload persistence)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Last run or null
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  run:
+                    oneOf:
+                      - $ref: '#/components/schemas/SearchResult'
+                      - type: 'null'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /api/search:
     post:
       operationId: runSearch
@@ -480,6 +501,9 @@ components:
             - user
             - null
           description: Who triaged this event — auto (pipeline) or user (manual decision). Null for queued events.
+        criteriaStale:
+          type: boolean
+          description: True when the event was scored against criteria that have since changed.
 
     RegisterRequest:
       type: object

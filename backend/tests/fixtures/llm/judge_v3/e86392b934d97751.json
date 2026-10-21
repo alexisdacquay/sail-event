@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 20,
+    "reason": "Techno at Berghain in Berlin on 20 October falls in your dates, but it's techno, not jazz.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 835,
+    "completion_tokens": 80
+  },
+  "recorded_at": "2026-10-18T12:00:00+02:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

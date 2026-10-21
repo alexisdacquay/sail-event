@@ -1,5 +1,5 @@
 {
-  "description": "Golden set B \u2014 22 labelled candidates for C1 (jazz in Berlin, 19-21 Oct 2026), now = 2026-10-18 12:00 Europe/Berlin",
+  "description": "Golden set B — 22 labelled candidates for C1 (jazz in Berlin, 19-21 Oct 2026), now = 2026-10-18 12:00 Europe/Berlin",
   "criteria": {
     "text": "jazz in Berlin (Germany) next week (19-21st October 2026)",
     "user_tz": "Europe/Berlin",
@@ -183,6 +183,16 @@
         100
       ],
       "note": "budget rule removed; Vienna Philharmonic fits C2 on place, date and topic"
+    },
+    {
+      "id": "E23",
+      "label": "unconfirmed hard constraint (price unknown, C2 says under 30 EUR)",
+      "expected": "judged",
+      "expected_band": [
+        70,
+        89
+      ],
+      "note": "Price not mentioned on the page; C2 asks under 30 EUR. Score must be at most 89, reason names the unconfirmed constraint. Needs live recording."
     }
   ]
 }

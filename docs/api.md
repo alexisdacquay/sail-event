@@ -13,6 +13,7 @@
 | `decideEvent`     | `decideEvent`    | POST   | `/api/events/{id}/decision` |
 | `getConfig`       | `getConfig`      | GET    | `/api/config`               |
 | —                 | `healthCheck`    | GET    | `/api/health`               |
+| `getLastRun`      | `getLastRun`     | GET    | `/api/search/last-run`      |
 | —                 | `searchAll`      | POST   | `/api/search/all`           |
 | `getCalendarUrl`  | `getCalendarUrl` | GET    | `/api/calendar-url`         |
 | `rotateCalendarUrl` | `rotateCalendarUrl` | POST | `/api/calendar/rotate`    |

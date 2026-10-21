@@ -168,7 +168,7 @@ describe('MainPage search card', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
     const result = await screen.findByTestId('search-result')
     // Run report includes the pipeline line
-    expect(result).toHaveTextContent(/6 queries → 31 results/)
+    expect(result).toHaveTextContent(/6 queries → 31 results → 12 events → 9 passed filters → 7 judged/)
     expect(result).toHaveTextContent(/2 accepted, 3 queued, 2 rejected/)
     expect(screen.getByRole('button', { name: /Review 5 events/ })).toBeInTheDocument()
     expect(onSearchComplete).toHaveBeenCalled()
@@ -247,6 +247,7 @@ describe('MainPage right column', () => {
         scoreReason: 'moderate',
         status: 'queued',
         decidedBy: null,
+        criteriaStale: false,
       },
     ]
     renderMainPage(async () => 1, queued)
@@ -260,5 +261,60 @@ describe('MainPage right column', () => {
     renderMainPage()
     await screen.findByTestId('criteria-card')
     expect(screen.queryByTestId('review-sidebar')).not.toBeInTheDocument()
+  })
+})
+
+describe('MainPage reload persistence', () => {
+  it('shows Searching state when last run is in progress', async () => {
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'getLastRun').mockResolvedValue({
+      run: {
+        runId: 'run-in-progress',
+        eventsFound: 0,
+        eventsNew: 0,
+        stageCounts: null,
+        stoppedAtStage: null,
+        error: null,
+        startedAt: '2026-10-21T09:00:00Z',
+        finishedAt: null,
+      },
+    })
+
+    renderMainPage()
+    // The button should show "Searching…" text since a run is in progress
+    const btn = await screen.findByRole('button', { name: /Searching/i })
+    expect(btn).toBeDisabled()
+    vi.restoreAllMocks()
+  })
+
+  it('shows last result line on reload after a finished run', async () => {
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'getLastRun').mockResolvedValue({
+      run: {
+        runId: 'run-done',
+        eventsFound: 10,
+        eventsNew: 5,
+        stageCounts: {
+          queries_planned: 1,
+          results_fetched: 10,
+          events_extracted: 8,
+          events_judged: 5,
+          accepted: 2,
+          queued: 2,
+          rejected: 1,
+        },
+        stoppedAtStage: null,
+        error: null,
+        startedAt: '2026-10-21T09:00:00Z',
+        finishedAt: '2026-10-21T09:01:30Z',
+      },
+    })
+
+    const onSearchComplete = vi.fn().mockResolvedValue(2)
+    renderMainPage(onSearchComplete)
+    const result = await screen.findByTestId('search-result')
+    expect(result).toHaveTextContent(/5 judged/)
+    expect(result).toHaveTextContent(/2 accepted/)
+    vi.restoreAllMocks()
   })
 })

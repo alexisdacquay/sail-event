@@ -9,6 +9,8 @@ export type SearchResult = {
   stageCounts: Record<string, number> | null
   stoppedAtStage: string | null
   error: string | null
+  startedAt?: string | null
+  finishedAt?: string | null
 }
 
 export type EventStatus = 'new' | 'accepted' | 'rejected' | 'queued'
@@ -30,6 +32,7 @@ export type Event = {
   scoreReason: string
   status: EventStatus
   decidedBy: 'auto' | 'user' | null
+  criteriaStale: boolean
 }
 
 const useHttp = import.meta.env.VITE_API_URL !== undefined
@@ -46,6 +49,7 @@ export const saveCriteria = mod.saveCriteria
 export const getThresholds = mod.getThresholds
 export const saveThresholds = mod.saveThresholds
 export const runSearch = mod.runSearch
+export const getLastRun = mod.getLastRun
 export const listEvents = mod.listEvents
 export const decideEvent = mod.decideEvent
 export const getCalendarUrl = mod.getCalendarUrl
