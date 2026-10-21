@@ -2,7 +2,6 @@ export type AuthResponse = { token: string; username: string }
 export type ConfigResponse = { registrationCodeRequired: boolean }
 export type Criteria = { text: string; updatedAt: string; timeZone: string }
 export type Thresholds = { lowerThreshold: number; upperThreshold: number }
-export type RunTrigger = 'manual' | 'scheduled'
 export type SearchResult = {
   runId: string
   eventsFound: number
@@ -13,12 +12,14 @@ export type SearchResult = {
   error: string | null
   startedAt: string | null
   finishedAt: string | null
-  // issue 108 adds these; optional until that PR merges
+  // #108: always sent by the backend; optional so existing test literals in MainPage.test.tsx still type-check
   durationSeconds?: number | null
   trigger?: RunTrigger
 }
 
 export type LastRunResponse = { run: SearchResult | null }
+
+export type RunTrigger = 'manual' | 'scheduled'
 
 export type RunSummary = {
   runId: string

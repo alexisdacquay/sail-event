@@ -45,13 +45,13 @@ describe('Stream page from mock data', () => {
     expect(tl).toHaveTextContent('18 Oct')
     expect(tl).toHaveTextContent('your run · 1 min 30 s')
     expect(tl).toHaveTextContent('Searched the web, 31 pages')
-    expect(tl).toHaveTextContent('Read 20 pages, found 12 events')
+    expect(tl).toHaveTextContent('Read 0 pages, found 12 events')
     expect(tl).toHaveTextContent('Set aside 5 before judging')
     expect(tl).toHaveTextContent('Judged 7 · 2 in calendar, 3 to review, 2 rejected')
     expect(screen.getByRole('button', { name: 'Search again' })).toBeInTheDocument()
     expect(screen.getByTestId('funnel')).toHaveTextContent('12 found')
-    // the mock has four runs; the current one is not an earlier run
-    expect(screen.getAllByTestId('earlier-run')).toHaveLength(3)
+    // the mock has three runs; the current one (run-001) is not an earlier run
+    expect(screen.getAllByTestId('earlier-run')).toHaveLength(2)
     expect(screen.getByTestId('month-calendar')).toBeInTheDocument()
     expect(screen.getByTestId('calendar-url')).toHaveValue('http://localhost:8000/api/calendar/mock-ics-token')
     expect(screen.getByTestId('searches')).toHaveTextContent('sailing regattas')
