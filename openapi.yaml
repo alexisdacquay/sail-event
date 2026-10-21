@@ -153,6 +153,29 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/search/last-run:
+    get:
+      operationId: getLastRun
+      summary: Get the user's most recent run (polling and reload persistence)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Last run or null
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - run
+                properties:
+                  run:
+                    oneOf:
+                      - $ref: '#/components/schemas/SearchResult'
+                      - type: 'null'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /api/events:
     get:
       operationId: listEvents
@@ -174,6 +197,26 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Event'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      operationId: deleteAllEvents
+      summary: Delete all events for the current user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Events deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - deleted
+                properties:
+                  deleted:
+                    type: integer
+                    description: Number of events deleted
         '401':
           $ref: '#/components/responses/Unauthorized'
 

@@ -14,6 +14,8 @@
 | `getConfig`       | `getConfig`      | GET    | `/api/config`               |
 | —                 | `healthCheck`    | GET    | `/api/health`               |
 | —                 | `searchAll`      | POST   | `/api/search/all`           |
+| `getLastRun`      | `getLastRun`     | GET    | `/api/search/last-run`      |
+| `deleteAllEvents` | `deleteAllEvents`| DELETE | `/api/events`               |
 | `getCalendarUrl`  | `getCalendarUrl` | GET    | `/api/calendar-url`         |
 | `rotateCalendarUrl` | `rotateCalendarUrl` | POST | `/api/calendar/rotate`    |
 | —                 | `getCalendarFeed`| GET    | `/api/calendar/{ics_token}` |
