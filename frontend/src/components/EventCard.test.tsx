@@ -20,6 +20,7 @@ const event: Event = {
   scoreReason: 'Strong match: test event.',
   status: 'queued',
   decidedBy: null,
+  criteriaStale: false,
 }
 
 describe('EventCard', () => {

@@ -30,6 +30,7 @@ export type Event = {
   scoreReason: string
   status: EventStatus
   decidedBy: 'auto' | 'user' | null
+  criteriaStale: boolean
 }
 
 const useHttp = import.meta.env.VITE_API_URL !== undefined

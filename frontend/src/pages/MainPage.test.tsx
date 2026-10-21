@@ -247,6 +247,7 @@ describe('MainPage right column', () => {
         scoreReason: 'moderate',
         status: 'queued',
         decidedBy: null,
+        criteriaStale: false,
       },
     ]
     renderMainPage(async () => 1, queued)

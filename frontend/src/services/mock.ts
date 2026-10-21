@@ -27,6 +27,7 @@ const INITIAL_EVENTS: Event[] = [
     scoreReason: 'Strong match: tech meetup, aligns with frontend interest.',
     status: 'accepted',
     decidedBy: 'auto',
+    criteriaStale: false,
   },
   {
     id: 'evt-2',
@@ -46,6 +47,7 @@ const INITIAL_EVENTS: Event[] = [
     scoreReason: 'Entertainment event, but not a tech or professional event.',
     status: 'queued',
     decidedBy: null,
+    criteriaStale: false,
   },
   {
     id: 'evt-3',
@@ -65,6 +67,7 @@ const INITIAL_EVENTS: Event[] = [
     scoreReason: 'Cloud computing event with professional networking.',
     status: 'queued',
     decidedBy: null,
+    criteriaStale: false,
   },
   {
     id: 'evt-4',
@@ -84,6 +87,7 @@ const INITIAL_EVENTS: Event[] = [
     scoreReason: 'Arts and crafts, no professional or tech angle.',
     status: 'rejected',
     decidedBy: 'auto',
+    criteriaStale: false,
   },
   {
     id: 'evt-5',
@@ -103,6 +107,7 @@ const INITIAL_EVENTS: Event[] = [
     scoreReason: 'Core technology conference, excellent match.',
     status: 'new',
     decidedBy: null,
+    criteriaStale: false,
   },
 ]
 

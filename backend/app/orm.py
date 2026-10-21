@@ -88,6 +88,7 @@ class Event(Base):
     score_reason: Mapped[str | None] = mapped_column(String, nullable=True)
     judge_model: Mapped[str | None] = mapped_column(String, nullable=True)
     judge_version: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    criteria_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     status: Mapped[str] = mapped_column(String(8), nullable=False)
     decided_by: Mapped[str | None] = mapped_column(String(4), nullable=True)
     run_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("runs.id"), nullable=True)

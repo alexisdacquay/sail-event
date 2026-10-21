@@ -525,6 +525,8 @@ def _judge_and_triage(
     db: Session,
 ) -> tuple[int, int, int, int]:
     """Judge events and triage.  Returns (llm_calls, tokens_in, tokens_out, judge_errors)."""
+    import hashlib
+    crit_hash = hashlib.sha256(criteria_text.encode()).hexdigest()[:16] if criteria_text else None
     facets = json.loads(criteria_row.facets_json) if criteria_row and criteria_row.facets_json else {}
     date_facets = facets.get("date", {}) or {}
 
@@ -607,6 +609,7 @@ def _judge_and_triage(
                         evt.score_reason = result.reason
                     evt.judge_model = model.model_id if hasattr(model, "model_id") else None
                     evt.judge_version = "judge_v3"
+                    evt.criteria_hash = crit_hash
 
     # Triage
     with tracer.start_as_current_span("triage"):

@@ -127,6 +127,11 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
 
   const fields = (
     <>
+      {event.criteriaStale && (
+        <p className="text-xs text-muted-foreground italic" data-testid="criteria-stale">
+          Scored against your earlier criteria
+        </p>
+      )}
       <p>
         <span className="font-semibold tabular-nums">Score {event.score}%</span>
         {event.band && <span className="text-muted-foreground"> · {event.band}</span>}

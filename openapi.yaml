@@ -480,6 +480,9 @@ components:
             - user
             - null
           description: Who triaged this event — auto (pipeline) or user (manual decision). Null for queued events.
+        criteriaStale:
+          type: boolean
+          description: True when the event was scored against criteria that have since changed.
 
     RegisterRequest:
       type: object
