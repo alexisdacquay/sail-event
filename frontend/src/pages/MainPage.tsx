@@ -545,7 +545,7 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue, onNa
                 onClick={onNavigateEvents ?? onNavigateQueue}
                 data-testid="rejected-link"
               >
-                See all events
+                See the full list
               </button>
             </p>
           )}
