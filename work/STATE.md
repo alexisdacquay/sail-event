@@ -320,3 +320,7 @@ Pick a project for DataTalksClub AI Dev Tools Zoomcamp (ProjectOne = temp name).
   not removable from here; user manages it in the app's Skills settings.
 - engineering:* skills (architecture, system-design, testing-strategy...) come from a
   desktop-app bundled plugin, global, not project-scoped.
+
+## 2026-10-21 field-test tool
+- Built `/field-test` (`.claude/skills/field-test/SKILL.md`): tool in `backend/tests/field/` (invariants.py with 13 data invariants, personas.yaml 17 cells, battery.py tier 1 runner, sweep.sql tier 0, test_invariants.py), UI invariants in `e2e/field.spec.ts` (4 known failures annotated with their issue), log `work/FIELD-TESTS.md`.
+- First tier 0 sweep and tier 1 battery on prod are in the log. Confirmed live: I3 hedged auto-accepts (place-less criteria), I8 stale accepted events after a criteria change, I6 root links, I9 no way back from a rejection. Prod registers 5 users per IP per hour, so 12 personas are still unregistered; run the battery again after an hour or raise REGISTER_RATE_LIMIT_PER_HOUR for the window.
