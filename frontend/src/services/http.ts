@@ -3,6 +3,7 @@ import type {
   ConfigResponse,
   Criteria,
   Thresholds,
+  ThresholdsSaveResult,
   SearchResult,
   Event,
   EventStatus,
@@ -97,8 +98,8 @@ export async function getThresholds(): Promise<Thresholds> {
 
 export async function saveThresholds(
   thresholds: Thresholds,
-): Promise<Thresholds> {
-  return request<Thresholds>('/api/thresholds', {
+): Promise<ThresholdsSaveResult> {
+  return request<ThresholdsSaveResult>('/api/thresholds', {
     method: 'PUT',
     body: JSON.stringify(thresholds),
   })
@@ -115,7 +116,7 @@ export async function listEvents(status?: EventStatus): Promise<Event[]> {
 
 export async function decideEvent(
   id: string,
-  decision: 'accepted' | 'rejected',
+  decision: 'accepted' | 'rejected' | 'queued',
 ): Promise<Event> {
   return request<Event>(`/api/events/${id}/decision`, {
     method: 'POST',

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Card,
   CardContent,
@@ -63,20 +63,26 @@ export function formatWhen(event: Event, viewerTz?: string): string {
   const { dateTime, startTz } = event
   const browserTz = viewerTz ?? getBrowserTz()
 
-  // Date-only: no T in the string — use midday UTC to avoid date rollover
+  // Missing date entirely
+  if (!dateTime) return 'time unknown'
+
+  // Date-only: no T in the string — show "all day" label
   if (!dateTime.includes('T')) {
     const [y, m, d] = dateTime.split('-').map(Number)
+    if (!y || !m || !d) return 'time unknown'
     const midday = new Date(Date.UTC(y, m - 1, d, 12, 0, 0))
-    return fmtParts(midday, 'UTC', false)
+    return `${fmtParts(midday, 'UTC', false)} (all day)`
   }
 
   const date = new Date(dateTime)
+  if (isNaN(date.getTime())) return 'time unknown'
+
   const tz = startTz || undefined
   const tzLabel = startTz || 'local time'
 
   let result = `${fmtParts(date, tz, true)} (${tzLabel})`
 
-  // Show browser time when event tz differs from browser tz
+  // Show browser time only when event tz differs from browser tz
   if (startTz && startTz !== browserTz) {
     const browserTime = new Intl.DateTimeFormat('en-GB', {
       hour: '2-digit',
@@ -84,7 +90,7 @@ export function formatWhen(event: Event, viewerTz?: string): string {
       hour12: false,
       timeZone: browserTz,
     }).format(date)
-    result += ` · ${browserTime} (${browserTz})`
+    result += ` · your time: ${browserTime} (${browserTz})`
   }
 
   return result
@@ -103,7 +109,7 @@ function formatWhere(event: Event): string {
 type EventCardProps = {
   event: Event
   variant: 'queue' | 'all'
-  onDecide?: (id: string, decision: 'accepted' | 'rejected') => Promise<void>
+  onDecide?: (id: string, decision: 'accepted' | 'rejected' | 'queued') => Promise<void>
 }
 
 export function EventCard({ event, variant, onDecide }: EventCardProps) {
@@ -113,15 +119,44 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
   const [leaving, setLeaving] = useState(false)
   const [error, setError] = useState('')
 
+  // 5-second inline undo after accept/reject in queue variant
+  const [undoDecision, setUndoDecision] = useState<'accepted' | 'rejected' | null>(null)
+  const [undoTimer, setUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => { if (undoTimer) clearTimeout(undoTimer) }
+  }, [undoTimer])
+
   async function handleDecide(decision: 'accepted' | 'rejected') {
     setDeciding(decision)
     setError('')
     try {
       await onDecide?.(event.id, decision)
-      if (variant === 'queue') setLeaving(true)
+      if (variant === 'queue') {
+        // Show undo for 5 seconds before removing the card
+        setUndoDecision(decision)
+        setDeciding(null)
+        const timer = setTimeout(() => {
+          setLeaving(true)
+        }, 5000)
+        setUndoTimer(timer)
+      }
     } catch {
       setError("Couldn't save your decision. Try again.")
       setDeciding(null)
+    }
+  }
+
+  async function handleUndo() {
+    if (undoTimer) clearTimeout(undoTimer)
+    setUndoTimer(null)
+    setUndoDecision(null)
+    setError('')
+    try {
+      await onDecide?.(event.id, 'queued')
+    } catch {
+      setError("Couldn't undo. Try again.")
     }
   }
 
@@ -162,11 +197,33 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
           <p className="text-sm leading-relaxed text-muted-foreground">
             {event.scoreReason}
           </p>
-          <CardTitle>{event.title}</CardTitle>
+          <CardTitle>
+            <a
+              href={event.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline underline-offset-2"
+            >
+              {event.title}
+            </a>
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-1.5 text-sm">
           {fields}
-          {onDecide && (
+          {undoDecision ? (
+            <div className="flex items-center gap-2 pt-3" data-testid="undo-bar">
+              <span className="text-sm">
+                {undoDecision === 'accepted' ? 'Accepted.' : 'Rejected.'}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleUndo}
+              >
+                Undo
+              </Button>
+            </div>
+          ) : onDecide && (
             <div className="flex gap-2 pt-3">
               <Button
                 size="sm"
@@ -200,7 +257,16 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
     <Card data-testid={`event-card-${event.id}`}>
       <CardHeader>
         <div className="flex flex-wrap-reverse items-start justify-between gap-2">
-          <CardTitle>{event.title}</CardTitle>
+          <CardTitle>
+            <a
+              href={event.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline underline-offset-2"
+            >
+              {event.title}
+            </a>
+          </CardTitle>
           <Badge variant={badgeVariant[event.status]}>
             {badgeText(event)}
           </Badge>
@@ -219,8 +285,25 @@ export function EventCard({ event, variant, onDecide }: EventCardProps) {
               confirmLabel="Remove"
               confirmingLabel="Removing…"
               errorText="Couldn't remove it. Try again."
-              onConfirm={() => onDecide(event.id, 'rejected')}
+              onConfirm={() => onDecide(event.id, 'queued')}
             />
+          </div>
+        )}
+        {event.status === 'rejected' && onDecide && (
+          <div className="pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  await onDecide(event.id, 'queued')
+                } catch {
+                  // handled by parent
+                }
+              }}
+            >
+              Put back to review
+            </Button>
           </div>
         )}
       </CardContent>

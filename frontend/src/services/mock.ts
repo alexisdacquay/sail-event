@@ -3,6 +3,7 @@ import type {
   ConfigResponse,
   Criteria,
   Thresholds,
+  ThresholdsSaveResult,
   SearchResult,
   Event,
   EventStatus,
@@ -158,9 +159,25 @@ export async function getThresholds(): Promise<Thresholds> {
 
 export async function saveThresholds(
   thresholds: Thresholds,
-): Promise<Thresholds> {
+): Promise<ThresholdsSaveResult> {
+  const old = { ...mockThresholds }
   mockThresholds = { ...thresholds }
-  return { ...mockThresholds }
+  // Re-apply to auto-decided mock events
+  let moved = 0
+  for (const evt of mockEvents) {
+    if (evt.decidedBy === 'user' || evt.score == null) continue
+    if (!['accepted', 'rejected', 'queued'].includes(evt.status)) continue
+    let newStatus: EventStatus
+    if (evt.score >= thresholds.upperThreshold) newStatus = 'accepted'
+    else if (evt.score <= thresholds.lowerThreshold) newStatus = 'rejected'
+    else newStatus = 'queued'
+    if (evt.status !== newStatus) {
+      evt.status = newStatus
+      evt.decidedBy = newStatus === 'queued' ? null : 'auto'
+      moved++
+    }
+  }
+  return { ...mockThresholds, eventsMoved: moved }
 }
 
 export async function runSearch(): Promise<SearchResult> {
@@ -194,12 +211,12 @@ export async function listEvents(status?: EventStatus): Promise<Event[]> {
 
 export async function decideEvent(
   id: string,
-  decision: 'accepted' | 'rejected',
+  decision: 'accepted' | 'rejected' | 'queued',
 ): Promise<Event> {
   const event = mockEvents.find((e) => e.id === id)
   if (!event) throw new Error(`Event not found: ${id}`)
   event.status = decision
-  event.decidedBy = 'user'
+  event.decidedBy = decision === 'queued' ? null : 'user'
   return { ...event }
 }
 

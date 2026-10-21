@@ -2,6 +2,7 @@ export type AuthResponse = { token: string; username: string }
 export type ConfigResponse = { registrationCodeRequired: boolean }
 export type Criteria = { text: string; updatedAt: string; timeZone: string }
 export type Thresholds = { lowerThreshold: number; upperThreshold: number }
+export type ThresholdsSaveResult = Thresholds & { eventsMoved: number }
 export type SearchResult = {
   runId: string
   eventsFound: number

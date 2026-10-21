@@ -20,7 +20,7 @@ import {
   getCalendarUrl,
   rotateCalendarUrl,
 } from '@/services/api'
-import type { Event, SearchResult } from '@/services/api'
+import type { Event, SearchResult, ThresholdsSaveResult } from '@/services/api'
 
 const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
@@ -94,6 +94,7 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
   const [lower, setLower] = useState(0)
   const [upper, setUpper] = useState(100)
   const [scoringSaved, setScoringSaved] = useState(false)
+  const [scoringMoved, setScoringMoved] = useState(0)
   const [scoringError, setScoringError] = useState('')
   const [scoringSaving, setScoringSaving] = useState(false)
 
@@ -103,9 +104,10 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
   const [searchErrorText, setSearchErrorText] = useState('')
 
   const [calendarUrl, setCalendarUrl] = useState('')
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState<'https' | 'webcal' | false>(false)
 
   const [userTimeZone, setUserTimeZone] = useState('UTC')
+  const [lastSearchTime, setLastSearchTime] = useState<string | null>(null)
 
   const thresholdInvalid = !(lower >= 0 && lower < upper && upper <= 100)
 
@@ -146,6 +148,7 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
     if (thresholdInvalid) return
     setScoringSaving(true)
     setScoringSaved(false)
+    setScoringMoved(0)
     setScoringError('')
     try {
       const saved = await saveThresholds({
@@ -154,8 +157,9 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
       })
       setLower(saved.lowerThreshold)
       setUpper(saved.upperThreshold)
+      setScoringMoved(saved.eventsMoved)
       setScoringSaved(true)
-      setTimeout(() => setScoringSaved(false), 2000)
+      setTimeout(() => setScoringSaved(false), 3000)
     } catch {
       setScoringError("Couldn't save. Try again.")
     } finally {
@@ -185,6 +189,7 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
 
     try {
       const result = await runSearch()
+      setLastSearchTime(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }))
       const queueCount = await onSearchComplete()
 
       if (result.eventsFound === 0 && !result.stageCounts) {
@@ -206,14 +211,27 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
     }
   }
 
-  async function handleCopyCalendarUrl() {
+  async function handleCopyUrl(url: string, which: 'https' | 'webcal') {
     try {
-      await navigator.clipboard.writeText(calendarUrl)
-      setCopied(true)
+      await navigator.clipboard.writeText(url)
+      setCopied(which)
       setTimeout(() => setCopied(false), 2000)
     } catch {
       // clipboard API unavailable (e.g. test environments)
     }
+  }
+
+  function webcalUrl(): string {
+    return calendarUrl.replace(/^https?:\/\//, 'webcal://')
+  }
+
+  /** Next cron run at :07 past the hour, in the viewer's zone. */
+  function nextRunTime(): string {
+    const now = new Date()
+    const next = new Date(now)
+    next.setMinutes(7, 0, 0)
+    if (now.getMinutes() >= 7) next.setHours(next.getHours() + 1)
+    return next.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })
   }
 
   const cards = (
@@ -281,7 +299,9 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
               Save
             </Button>
             {scoringSaved && (
-              <span role="status" className="text-sm font-medium text-accent-foreground animate-in fade-in-0 duration-200">Saved.</span>
+              <span role="status" className="text-sm font-medium text-accent-foreground animate-in fade-in-0 duration-200">
+                Saved.{scoringMoved > 0 && ` ${scoringMoved} events moved.`}
+              </span>
             )}
             {scoringError && (
               <span className="text-sm text-destructive">{scoringError}</span>
@@ -296,6 +316,8 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
           <CardTitle as="h2">Search now</CardTitle>
           <CardDescription>
             The app also searches automatically every hour.
+            {' '}Next automatic search: {nextRunTime()}.
+            {lastSearchTime && ` Last search: ${lastSearchTime}.`}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -359,8 +381,8 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
                 aria-label="Calendar feed URL"
                 className="flex-1 min-w-0 font-mono text-xs bg-muted/50"
               />
-              <Button onClick={handleCopyCalendarUrl} data-testid="copy-calendar-url">
-                {copied ? 'Copied' : 'Copy'}
+              <Button onClick={() => handleCopyUrl(calendarUrl, 'https')} data-testid="copy-calendar-url">
+                {copied === 'https' ? 'Copied' : 'Copy'}
               </Button>
               <ConfirmAction
                 label="Reset link"
@@ -374,6 +396,26 @@ export function MainPage({ onSearchComplete, queuedEvents, onNavigateQueue }: Ma
                 testId="rotate-calendar-url"
                 confirmTestId="rotate-confirm"
               />
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <Input
+                readOnly
+                value={webcalUrl()}
+                data-testid="webcal-url"
+                aria-label="Webcal feed URL"
+                className="flex-1 min-w-0 font-mono text-xs bg-muted/50"
+              />
+              <Button onClick={() => handleCopyUrl(webcalUrl(), 'webcal')} data-testid="copy-webcal-url">
+                {copied === 'webcal' ? 'Copied' : 'Copy webcal'}
+              </Button>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              <p className="font-medium">Subscribe</p>
+              <ul className="list-disc pl-5 mt-1 space-y-0.5">
+                <li>iPhone: copy the webcal link, open Settings → Calendar → Accounts → Add → Other → Add Subscribed Calendar, paste.</li>
+                <li>Google Calendar: open Settings → Add calendar → From URL, paste the https link.</li>
+                <li>Outlook: open Add calendar → Subscribe from web, paste the https link.</li>
+              </ul>
             </div>
           </CardContent>
         </Card>
