@@ -506,6 +506,11 @@ def run_pipeline(
                 counts["accepted"] = sum(1 for e in triaged if e.status == "accepted")
                 counts["rejected"] = sum(1 for e in triaged if e.status == "rejected")
                 counts["queued"] = sum(1 for e in triaged if e.status == "queued")
+                # #108 funnel bands: judge scores 0-9 mean wrong place/dates, 10-39 off topic
+                rejected_scores = [e.score or 0 for e in triaged if e.status == "rejected"]
+                counts["rejected_date_place"] = sum(1 for s in rejected_scores if s <= 9)
+                counts["rejected_off_topic"] = sum(1 for s in rejected_scores if 10 <= s <= 39)
+                counts["rejected_other"] = sum(1 for s in rejected_scores if s >= 40)
 
             span.set_attribute("events_found", events_found)
             span.set_attribute("events_new", events_new)
