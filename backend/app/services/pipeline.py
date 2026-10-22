@@ -379,7 +379,8 @@ def run_pipeline(
                 counts["extract_errors"] = extract_counts.extract_errors
                 if extract_counts.extract_errors > 0 and not error_detail:
                     error_detail = f"extract: {extract_counts.extract_errors} error(s)"
-                # Non-event count from extraction
+                # Page-level counts from extraction (#112: pages only, never events)
+                counts["pages_with_events"] = extract_counts.pages_with_events
                 counts["filtered_non_event"] = extract_counts.filtered_non_event
 
             # --- Stage 6: filter ---
@@ -416,7 +417,7 @@ def run_pipeline(
                 counts["filtered_past"] = filter_counts.filtered_past
                 counts["filtered_date"] = filter_counts.filtered_date
                 counts["filtered_place"] = filter_counts.filtered_place
-                counts["filtered_non_event"] = counts.get("filtered_non_event", 0) + filter_counts.filtered_non_event
+                counts["filtered_no_date"] = filter_counts.filtered_no_date
                 counts["filtered_duplicate"] = filter_counts.filtered_duplicate
 
                 # §9 stage_items metrics
@@ -424,7 +425,7 @@ def run_pipeline(
                 _stage_items.add(filter_counts.filtered_past, {"stage": "filter", "outcome": "past"})
                 _stage_items.add(filter_counts.filtered_date, {"stage": "filter", "outcome": "date"})
                 _stage_items.add(filter_counts.filtered_place, {"stage": "filter", "outcome": "place"})
-                _stage_items.add(filter_counts.filtered_non_event, {"stage": "filter", "outcome": "non_event"})
+                _stage_items.add(filter_counts.filtered_no_date, {"stage": "filter", "outcome": "no_date"})
                 _stage_items.add(filter_counts.filtered_duplicate, {"stage": "filter", "outcome": "duplicate"})
                 _stage_items.add(len(kept), {"stage": "filter", "outcome": "kept"})
 
@@ -674,8 +675,9 @@ def _finalise_run(
 ) -> orm.Run:
     """Write final fields on the run row and commit.  Returns the attached row."""
     run = db.merge(run)
-    # #108: the funnel reads the bands on every finished run, also when nothing was judged
-    for k in ("rejected_date_place", "rejected_off_topic", "rejected_other"):
+    # #108/#112: the funnel reads these on every finished run, also when it stopped early
+    for k in ("rejected_date_place", "rejected_off_topic", "rejected_other",
+              "filtered_no_date", "pages_with_events"):
         counts.setdefault(k, 0)
     run.finished_at = datetime.now(UTC)
     run.events_found = events_found

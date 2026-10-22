@@ -235,6 +235,15 @@ class TestFilterPipeline:
         assert len(kept) == 0
         assert counts.filtered_incomplete == 1
 
+    def test_no_start_date_counted_no_date(self):
+        """#112: a missing start is filtered_no_date, not incomplete and never a page count."""
+        ev = _make_event(start_local="")
+        kept, counts = _filter_one(ev)
+        assert len(kept) == 0
+        assert counts.filtered_no_date == 1
+        assert counts.filtered_incomplete == 0
+        assert not hasattr(counts, "filtered_non_event")
+
     def test_duplicate_link_filtered(self):
         ev1 = _make_event(link="https://example.com/event1", title="Event 1")
         ev2 = _make_event(link="https://example.com/event1", title="Event 2")

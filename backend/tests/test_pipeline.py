@@ -516,3 +516,43 @@ def test_scheduled_run_has_same_rejected_bands(_db_session):
         run = run_pipeline(user, _db_session, trigger="scheduled")
     assert run.trigger == "scheduled"
     _assert_bands(json.loads(run.stage_counts))
+
+
+# ---------- #112: no-date events and page counters ----------
+
+
+def test_no_date_event_and_page_counters_are_separate(client, auth_headers):
+    """An extracted event without a start lands in filtered_no_date; filtered_non_event
+    and pages_with_events count pages of the extract stage and sum to the pages extracted."""
+    from app.services import pipeline as pipeline_mod
+    from app.services.extract import ExtractedEvent
+
+    real_extract = pipeline_mod.extract_events
+    seen: dict[str, int] = {}
+
+    def extract_plus_no_date(results, **kw):
+        events, counts = real_extract(results, **kw)
+        seen["pages"] = len(results)
+        seen["with_events"] = len({e.source_url for e in events})
+        events.append(ExtractedEvent(
+            title="No start", start_local="", start_tz="Europe/Berlin", end_local=None,
+            venue=None, city="Berlin", country="DE", link="https://x.example.com/no-start",
+            description="d", confidence=0.9, source_url="https://x.example.com/no-start",
+            page_kind="single_event",
+        ))
+        counts.events_extracted += 1
+        return events, counts
+
+    h = auth_headers("demo", "demo")
+    with patch("app.services.pipeline.extract_events", side_effect=extract_plus_no_date):
+        sc = client.post("/api/search", headers=h).json()["stageCounts"]
+
+    assert sc["filtered_no_date"] == 1
+    assert sc["pages_with_events"] == seen["with_events"] > 0
+    assert sc["pages_with_events"] + sc["filtered_non_event"] == seen["pages"]
+
+
+def test_early_stop_defaults_no_date_and_pages_with_events(client, auth_headers):
+    """A run that stops before extract still carries both counters (0)."""
+    sc = client.post("/api/search", headers=auth_headers("nocrit", "nocritpw")).json()["stageCounts"]
+    assert (sc["filtered_no_date"], sc["pages_with_events"]) == (0, 0)
