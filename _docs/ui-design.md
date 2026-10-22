@@ -23,6 +23,18 @@ Status words: **decided** (build it), **candidate** (owner leaning to it, not fi
 | 2026-10-21 | Detail opening inline under the row (no rail detail) | Owner: "too messy". | `_docs/ui/03-stream-assembled.html` (hidden section "alt") · rejected |
 | 2026-10-21 | **Event rows on one line**: title · time · place · score · status pill, columns aligned across rows, long title cut with an ellipsis; on a phone the place column drops. | Owner: the two-line card wasted the horizontal space. | `_docs/ui/03-stream-assembled.html` · decided |
 
+## Stream, revisions after the owner's first use on dev (2026-10-22)
+
+| Date | Decision | Why | Where |
+|---|---|---|---|
+| 2026-10-22 | **Funnel in three stages**: pages read → events found (with "N pages: no events" as a side ribbon) → not judged (no date, past, duplicate) vs judged → in calendar / review / out (date or place, topic). The word "set aside" goes; "out" replaces "rejected" in pills and funnel. | Owner: "set aside isn't clear vs rejected, both are rejected in the end"; "should the funnel have more than 2 stages?" | mockup in the session (widget `stream_revisions_mockup`), issue 112/113 · decided |
+| 2026-10-22 | Events without a start date get their own counter (`filtered_no_date`) and a ribbon. | The maths did not add up on dev (28 found, 17 + 6 shown): those events were counted with "pages with no events". | issue 112 · decided |
+| 2026-10-22 | Search box: large, strong contour, the text itself is editable in place (click, type, Enter saves, Esc cancels); no Edit button; "Search again" is the only button. | Owner: "make the search bar more obvious"; "do I really need to edit? can I not click in the box?" | issue 113 · decided |
+| 2026-10-22 | Theme switch (light/dark) top right, remembered in the browser. | Owner request. | issue 113 · decided |
+| 2026-10-22 | Results list gets one column-header row (Event · Start · Where · Score · Status); time zone shown as a short name (CDT, BST) and only when it differs from the user's. | Owner: "what is 8%?"; "the time zone is too long, doesn't fit". | issue 113 · decided |
+| 2026-10-22 | Remove the "To review" and "All events" pages and tabs. | The Stream shows the same rows; duplicates confuse. | issue 113 · decided |
+| 2026-10-22 | Login and register pages restyled to the Stream look, with the pitch line. | Owner: "also update the login page". | issue 113 · decided |
+
 ## Event card (current app, before Stream)
 
 | Date | Decision | Why | Where |
