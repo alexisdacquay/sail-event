@@ -91,14 +91,16 @@ describe('Shell', () => {
 describe('Criteria', () => {
   it('initial value equals mock canned criteria text', async () => {
     await loginAsTestUser()
-    expect(screen.getByTestId('criteria-text')).toHaveValue(
+    await waitFor(() => expect(screen.getByTestId('criteria-text')).toHaveValue(
       'sailing regattas in the Mediterranean, July 2026',
-    )
+    ))
   })
 
   it('typing in place and pressing Enter round-trips criteria text', async () => {
     await loginAsTestUser()
     const box = screen.getByLabelText("What I'm looking for")
+    // wait for the saved text to load, or the edit is overwritten by it
+    await waitFor(() => expect(box).toHaveValue('sailing regattas in the Mediterranean, July 2026'))
     fireEvent.change(box, { target: { value: 'Atlantic tall ship races' } })
     fireEvent.keyDown(box, { key: 'Enter' })
     await waitFor(() => {
@@ -167,6 +169,7 @@ describe('Search', () => {
   it('disables Search again when the saved criteria are empty', async () => {
     await loginAsTestUser()
     const box = screen.getByLabelText("What I'm looking for")
+    await waitFor(() => expect(box).toHaveValue('sailing regattas in the Mediterranean, July 2026'))
     fireEvent.change(box, { target: { value: '' } })
     fireEvent.blur(box)
     await waitFor(() => expect(screen.getByRole('button', { name: 'Search again' })).toBeDisabled())

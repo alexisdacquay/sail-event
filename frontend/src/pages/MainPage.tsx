@@ -126,11 +126,13 @@ const tlLine = "relative mb-1.5 before:absolute before:-left-[19px] before:top-1
 const label = 'mb-1.5 text-[11px] font-semibold uppercase tracking-[.08em] text-muted-foreground'
 // same contour as the login and register boxes
 const PANEL = 'rounded-xl border-2 border-ring/50 bg-card p-4 shadow-sm'
+export const HINT_SEEN_KEY = 'sail-event-criteria-hint-seen'
 
 export function MainPage() {
   const [criteriaText, setCriteriaText] = useState('')
   const [draft, setDraft] = useState('')
-  const [hint, setHint] = useState(true)
+  // the hint goes for good once the user has saved a text in place
+  const [hint, setHint] = useState(() => !localStorage.getItem(HINT_SEEN_KEY))
   const [criteriaSaved, setCriteriaSaved] = useState(false)
   const [criteriaError, setCriteriaError] = useState('')
   const [criteriaSaving, setCriteriaSaving] = useState(false)
@@ -251,6 +253,8 @@ export function MainPage() {
       setCriteriaText(saved.text)
       setDraft(saved.text)
       setUserTimeZone(saved.timeZone)
+      localStorage.setItem(HINT_SEEN_KEY, '1')
+      setHint(false)
       showCriteriaSaved()
     } catch {
       setCriteriaError("Couldn't save. Try again.")

@@ -1,10 +1,11 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { MainPage, groupByDay, mostlyReason, runHeader, stageLines, stageText } from './MainPage'
+import { HINT_SEEN_KEY, MainPage, groupByDay, mostlyReason, runHeader, stageLines, stageText } from './MainPage'
 import type { Event, SearchResult } from '@/services/api'
 
 function renderMainPage() {
+  localStorage.clear()
   localStorage.setItem('sail-event-token', 'test-token')
   localStorage.setItem('sail-event-username', 'demo')
   return render(
@@ -41,7 +42,7 @@ beforeEach(() => {
 describe('Stream page from mock data', () => {
   it('renders the search box, chronology, funnel, earlier runs and the rail', async () => {
     renderMainPage()
-    expect(await screen.findByTestId('criteria-text')).toHaveValue('sailing regattas in the Mediterranean, July 2026')
+    await waitFor(() => expect(screen.getByTestId('criteria-text')).toHaveValue('sailing regattas in the Mediterranean, July 2026'))
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
     expect(screen.getByTestId('criteria-hint')).toHaveTextContent('click the text to change it · Enter saves')
     const tl = await screen.findByTestId('run-chronology')
@@ -71,8 +72,8 @@ describe('Stream page from mock data', () => {
     const api = await import('@/services/api')
     const save = vi.spyOn(api, 'saveCriteria').mockImplementation(async (text) => ({ text, updatedAt: 'now', timeZone: 'Europe/Berlin' }))
     renderMainPage()
-    const box = await screen.findByLabelText("What I'm looking for")
-    expect(box).toHaveValue('sailing regattas in the Mediterranean, July 2026')
+    const box = screen.getByLabelText("What I'm looking for")
+    await waitFor(() => expect(box).toHaveValue('sailing regattas in the Mediterranean, July 2026'))
     fireEvent.change(box, { target: { value: 'jazz tonight in Berlin' } })
     expect(screen.queryByTestId('criteria-hint')).not.toBeInTheDocument()
     fireEvent.keyDown(box, { key: 'Escape' })
@@ -84,6 +85,7 @@ describe('Stream page from mock data', () => {
     fireEvent.keyDown(box, { key: 'Enter' })
     expect(await screen.findByText('Saved.')).toBeInTheDocument()
     expect(save).toHaveBeenCalledTimes(1)
+    expect(localStorage.getItem(HINT_SEEN_KEY)).toBe('1')
     expect(screen.getByTestId('criteria-text')).toHaveValue('jazz tonight in Berlin')
     expect(screen.getByTestId('searches')).toHaveTextContent('jazz tonight in Berlin')
     expect(screen.queryByTestId('utc-notice')).not.toBeInTheDocument()
@@ -98,10 +100,18 @@ describe('Stream page from mock data', () => {
     const api = await import('@/services/api')
     vi.spyOn(api, 'getCriteria').mockResolvedValue({ text: '', updatedAt: 'now', timeZone: 'UTC' })
     renderMainPage()
-    expect(await screen.findByLabelText("What I'm looking for")).toHaveValue('')
+    expect(screen.getByLabelText("What I'm looking for")).toHaveValue('')
     expect(screen.getByTestId('criteria-hint')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Search again' })).toBeDisabled()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Search again' })).toBeDisabled())
     expect(screen.getByTestId('utc-notice')).toHaveTextContent('Times shown in UTC until you save your criteria.')
+  })
+
+  it('does not show the hint again once a text was saved in this browser', async () => {
+    renderMainPage()
+    localStorage.setItem(HINT_SEEN_KEY, '1')
+    render(<AuthProvider><MainPage /></AuthProvider>)
+    await waitFor(() => expect(screen.getAllByTestId('criteria-text')).toHaveLength(2))
+    expect(screen.getAllByTestId('criteria-hint')).toHaveLength(1)
   })
 })
 
