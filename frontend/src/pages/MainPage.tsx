@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { ScoreScale } from '@/components/ScoreScale'
 import { ConfirmAction } from '@/components/ConfirmAction'
-import { EventRow, formatDay } from '@/components/EventCard'
+import { COL, EventRow, ROW_GRID, formatDay } from '@/components/EventCard'
 import { EventDetail } from '@/components/EventDetail'
 import { EarlierRuns, fmtStamp } from '@/components/EarlierRuns'
 import { Funnel, funnelNumbers } from '@/components/Funnel'
@@ -27,10 +26,6 @@ import type { Event, RunSummary, SearchResult } from '@/services/api'
 
 const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-type MainPageProps = {
-  onSearchComplete: () => Promise<number>
-}
-
 /** Human-readable progress text from a run's currentStage and stageCounts. */
 export function stageText(run: SearchResult): string {
   const stage = run.currentStage
@@ -40,7 +35,7 @@ export function stageText(run: SearchResult): string {
     const accepted = c.accepted ?? 0
     const queued = c.queued ?? 0
     const rejected = c.rejected ?? 0
-    return `Done: ${accepted} added to your calendar, ${queued} to review, ${rejected} rejected`
+    return `Done: ${accepted} added to your calendar, ${queued} to review, ${rejected} out`
   }
 
   switch (stage) {
@@ -77,12 +72,12 @@ const STAGES = ['search', 'extract', 'filter', 'judge']
 export function stageLines(run: SearchResult): string[] {
   const c = run.stageCounts ?? {}
   const n = funnelNumbers(c)
-  // one entry per stage; found = set aside + judged, non-events are pages, not events
+  // one entry per stage; found = not judged + judged, non-events are pages, not events
   const done = [
     [`Searched the web, ${c.results_fetched ?? 0} pages`],
     [`Read ${n.pages} pages, found ${n.found} events`, ...(n.nonEvent > 0 ? [`Skipped ${n.nonEvent} pages that were not events`] : [])],
-    [`Set aside ${n.setAside} before judging`],
-    [`Judged ${c.events_judged ?? 0} · ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} rejected`],
+    [`Not judged: ${n.notJudged}`],
+    [`Judged ${c.events_judged ?? 0} · ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} out`],
   ]
   const stage = run.currentStage ?? run.stoppedAtStage
   const at = stage ? STAGES.indexOf(stage) : run.finishedAt ? STAGES.length : 0
@@ -129,11 +124,15 @@ export function groupByDay(events: Event[]): [string, Event[]][] {
 
 const tlLine = "relative mb-1.5 before:absolute before:-left-[19px] before:top-1.5 before:size-2 before:rounded-full before:bg-input before:content-['']"
 const label = 'mb-1.5 text-[11px] font-semibold uppercase tracking-[.08em] text-muted-foreground'
+// same contour as the login and register boxes
+const PANEL = 'rounded-xl border-2 border-ring/50 bg-card p-4 shadow-sm'
+export const HINT_SEEN_KEY = 'sail-event-criteria-hint-seen'
 
-export function MainPage({ onSearchComplete }: MainPageProps) {
+export function MainPage() {
   const [criteriaText, setCriteriaText] = useState('')
   const [draft, setDraft] = useState('')
-  const [editing, setEditing] = useState(false)
+  // the hint goes for good once the user has saved a text in place
+  const [hint, setHint] = useState(() => !localStorage.getItem(HINT_SEEN_KEY))
   const [criteriaSaved, setCriteriaSaved] = useState(false)
   const [criteriaError, setCriteriaError] = useState('')
   const [criteriaSaving, setCriteriaSaving] = useState(false)
@@ -185,7 +184,6 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
     getCriteria().then((c) => {
       setCriteriaText(c.text)
       setDraft(c.text)
-      setEditing(c.text === '')
       setUserTimeZone(c.timeZone)
     })
     getThresholds().then((t) => {
@@ -219,7 +217,6 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
     stopPolling()
     setSearching(false)
     setLastRun(run)
-    await onSearchComplete()
     refreshEvents()
     refreshRuns()
   }
@@ -245,7 +242,9 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
     setTimeout(() => setCriteriaSaved(false), 2000)
   }
 
+  /** Enter and blur save the text in place; nothing to do when it has not changed. */
   async function handleSaveCriteria() {
+    if (criteriaSaving || draft === criteriaText) return
     setCriteriaSaving(true)
     setCriteriaSaved(false)
     setCriteriaError('')
@@ -254,7 +253,8 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
       setCriteriaText(saved.text)
       setDraft(saved.text)
       setUserTimeZone(saved.timeZone)
-      setEditing(false)
+      localStorage.setItem(HINT_SEEN_KEY, '1')
+      setHint(false)
       showCriteriaSaved()
     } catch {
       setCriteriaError("Couldn't save. Try again.")
@@ -308,7 +308,6 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
 
   async function handleDecide(id: string, decision: 'accepted' | 'rejected') {
     await decideEvent(id, decision)
-    onSearchComplete()
     refreshEvents()
   }
 
@@ -317,7 +316,6 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
     setEvents([])
     setSelectedId(null)
     setShowRejected(false)
-    onSearchComplete()
   }
 
   async function handleCopyCalendarUrl() {
@@ -372,46 +370,39 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
   return (
     <div ref={screenRef} className="relative grid grid-cols-1 gap-6 md:grid-cols-[1fr_260px] md:gap-8 items-start">
       <div className="min-w-0">
-        {/* Search box */}
-        <div data-testid="search-box" className="rounded-xl border border-input bg-card p-3 text-sm">
-          {editing ? (
-            <div className="grid gap-2">
-              <Textarea
-                aria-label="What I'm looking for"
-                placeholder="e.g. jazz or folk concerts near Paris on weekends, under 40 EUR"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                rows={3}
-              />
-              <div className="flex items-center gap-2">
-                <Button size="sm" aria-label="Save criteria" disabled={criteriaSaving} onClick={handleSaveCriteria}>
-                  Save
-                </Button>
-                {criteriaText !== '' && (
-                  <Button size="sm" variant="ghost" onClick={() => { setDraft(criteriaText); setEditing(false) }}>
-                    Cancel
-                  </Button>
-                )}
-                {criteriaError && <span className="text-destructive">{criteriaError}</span>}
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-wrap items-center gap-3">
-              <p data-testid="criteria-text" className="min-w-0 flex-1">{criteriaText}</p>
-              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>Edit</Button>
-              <Button
-                size="sm"
-                disabled={!criteriaText.trim() || searching}
-                aria-busy={searching ? true : undefined}
-                onClick={handleSearch}
-              >
-                {searching ? 'Searching…' : lastRun ? 'Search again' : 'Search now'}
-              </Button>
-            </div>
+        {/* Search box: the text itself is editable in place */}
+        <div data-testid="search-box" className={`${PANEL} text-sm`}>
+          <textarea
+            aria-label="What I'm looking for"
+            data-testid="criteria-text"
+            placeholder="e.g. jazz or folk concerts near Paris on weekends, under 40 EUR"
+            value={draft}
+            rows={1}
+            className="field-sizing-content w-full resize-none bg-transparent text-base font-medium leading-snug outline-none placeholder:text-muted-foreground md:text-lg"
+            onChange={(e) => { setDraft(e.target.value); setHint(false) }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveCriteria() }
+              if (e.key === 'Escape') setDraft(criteriaText)
+            }}
+            onBlur={handleSaveCriteria}
+          />
+          {hint && (
+            <p data-testid="criteria-hint" className="text-xs text-muted-foreground">click the text to change it · Enter saves</p>
           )}
-          {criteriaSaved && (
-            <p role="status" className="mt-2 font-medium text-accent-foreground animate-in fade-in-0 duration-200">Saved.</p>
-          )}
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <Button
+              size="sm"
+              disabled={!criteriaText.trim() || searching}
+              aria-busy={searching ? true : undefined}
+              onClick={handleSearch}
+            >
+              {searching ? 'Searching…' : lastRun ? 'Search again' : 'Search now'}
+            </Button>
+            {criteriaSaved && (
+              <span role="status" className="font-medium text-accent-foreground animate-in fade-in-0 duration-200">Saved.</span>
+            )}
+            {criteriaError && <span className="text-destructive">{criteriaError}</span>}
+          </div>
           {userTimeZone === 'UTC' && (
             <p data-testid="utc-notice" className="mt-2 text-muted-foreground">Times shown in UTC until you save your criteria.</p>
           )}
@@ -422,7 +413,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
 
         {/* Run chronology and funnel */}
         {lastRun && (
-          <div data-testid="run" className="mt-3.5 grid items-start gap-4 md:grid-cols-[1fr_auto]">
+          <div data-testid="run" className="mt-3.5 grid gap-4">
             <div data-testid="run-chronology" className="border-l-2 border-border pl-3.5 text-sm">
               <p className={`${tlLine} font-mono text-xs text-muted-foreground`}>{runHeader(lastRun)}</p>
               {stageLines(lastRun).map((line, i) => (
@@ -457,9 +448,16 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
                 confirmTestId="clear-all-confirm"
               />
             </div>
+            <div data-testid="row-header" className={`${ROW_GRID} mt-3 border border-transparent ${label} mb-0`}>
+              <span>Event</span>
+              <span className={COL.time}>Start</span>
+              <span className={COL.place}>Where</span>
+              <span className={COL.score}>Score</span>
+              <span className={COL.status}>Status</span>
+            </div>
             {groupByDay(shown).map(([day, dayEvents]) => (
               <div key={day}>
-                <p data-testid="day-heading" className={`mt-3.5 ${label}`}>{day === todayKey ? `Tonight · ${day}` : day}</p>
+                <p data-testid="day-heading" className={`mt-2.5 ${label}`}>{day === todayKey ? `Tonight · ${day}` : day}</p>
                 <div className="grid gap-1.5">
                   {dayEvents.map((evt) => (
                     <EventRow
@@ -475,7 +473,7 @@ export function MainPage({ onSearchComplete }: MainPageProps) {
             ))}
             {rejected.length > 0 && (
               <p className="mt-2 text-sm text-muted-foreground">
-                {rejected.length} rejected{reason ? `, mostly ${reason}` : ''} ·{' '}
+                {rejected.length} out{reason ? `, mostly ${reason}` : ''} ·{' '}
                 <button
                   data-testid="rejected-toggle"
                   className="underline underline-offset-2 hover:text-foreground"

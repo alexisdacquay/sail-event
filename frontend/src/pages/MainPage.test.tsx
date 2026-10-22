@@ -1,15 +1,16 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { MainPage, groupByDay, mostlyReason, runHeader, stageLines, stageText } from './MainPage'
+import { HINT_SEEN_KEY, MainPage, groupByDay, mostlyReason, runHeader, stageLines, stageText } from './MainPage'
 import type { Event, SearchResult } from '@/services/api'
 
-function renderMainPage(onSearchComplete = async () => 0) {
+function renderMainPage() {
+  localStorage.clear()
   localStorage.setItem('sail-event-token', 'test-token')
   localStorage.setItem('sail-event-username', 'demo')
   return render(
     <AuthProvider>
-      <MainPage onSearchComplete={onSearchComplete} />
+      <MainPage />
     </AuthProvider>,
   )
 }
@@ -41,18 +42,23 @@ beforeEach(() => {
 describe('Stream page from mock data', () => {
   it('renders the search box, chronology, funnel, earlier runs and the rail', async () => {
     renderMainPage()
-    expect(await screen.findByTestId('criteria-text')).toHaveTextContent('sailing regattas in the Mediterranean, July 2026')
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByTestId('criteria-text')).toHaveValue('sailing regattas in the Mediterranean, July 2026'))
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+    expect(screen.getByTestId('criteria-hint')).toHaveTextContent('click the text to change it · Enter saves')
     const tl = await screen.findByTestId('run-chronology')
     expect(tl).toHaveTextContent('18 Oct')
     expect(tl).toHaveTextContent('your run · 1 min 30 s')
     expect(tl).toHaveTextContent('Searched the web, 31 pages')
     expect(tl).toHaveTextContent('Read 31 pages, found 12 events')
     expect(tl).toHaveTextContent('Skipped 2 pages that were not events')
-    expect(tl).toHaveTextContent('Set aside 3 before judging')
-    expect(tl).toHaveTextContent('Judged 7 · 2 in calendar, 3 to review, 2 rejected')
+    expect(tl).toHaveTextContent('Not judged: 5')
+    expect(tl).toHaveTextContent('Judged 7 · 2 in calendar, 3 to review, 2 out')
     expect(screen.getByRole('button', { name: 'Search again' })).toBeInTheDocument()
-    expect(screen.getByTestId('funnel')).toHaveTextContent('12 found')
+    const funnel = screen.getByTestId('funnel')
+    expect(funnel).toHaveTextContent('12 found')
+    expect(funnel).toHaveTextContent('12 events from 8 pages')
+    expect(funnel).toHaveTextContent('23 pages: no events')
+    expect(document.body.textContent).not.toMatch(/set aside|rejected/i)
     // the mock has three runs; the current one (run-001) is not an earlier run
     expect(screen.getAllByTestId('earlier-run')).toHaveLength(2)
     expect(screen.getByTestId('month-calendar')).toBeInTheDocument()
@@ -62,34 +68,50 @@ describe('Stream page from mock data', () => {
     expect(screen.getByRole('button', { name: '+ new search' })).toHaveAttribute('title', 'coming later')
   })
 
-  it('Edit opens the textarea in place; Save updates the text; Cancel restores it', async () => {
+  it('the text is edited in place: Esc cancels, Enter saves, blur saves, the hint goes after the first edit', async () => {
     const api = await import('@/services/api')
-    vi.spyOn(api, 'saveCriteria').mockImplementation(async (text) => ({ text, updatedAt: 'now', timeZone: 'Europe/Berlin' }))
+    const save = vi.spyOn(api, 'saveCriteria').mockImplementation(async (text) => ({ text, updatedAt: 'now', timeZone: 'Europe/Berlin' }))
     renderMainPage()
-    await screen.findByTestId('criteria-text')
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
-    const textarea = screen.getByLabelText("What I'm looking for")
-    expect(textarea).toHaveValue('sailing regattas in the Mediterranean, July 2026')
-    fireEvent.change(textarea, { target: { value: 'jazz tonight in Berlin' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
-    expect(screen.getByTestId('criteria-text')).toHaveTextContent('sailing regattas')
+    const box = screen.getByLabelText("What I'm looking for")
+    await waitFor(() => expect(box).toHaveValue('sailing regattas in the Mediterranean, July 2026'))
+    fireEvent.change(box, { target: { value: 'jazz tonight in Berlin' } })
+    expect(screen.queryByTestId('criteria-hint')).not.toBeInTheDocument()
+    fireEvent.keyDown(box, { key: 'Escape' })
+    expect(box).toHaveValue('sailing regattas in the Mediterranean, July 2026')
+    fireEvent.blur(box)
+    expect(save).not.toHaveBeenCalled()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
-    fireEvent.change(screen.getByLabelText("What I'm looking for"), { target: { value: 'jazz tonight in Berlin' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Save criteria' }))
+    fireEvent.change(box, { target: { value: 'jazz tonight in Berlin' } })
+    fireEvent.keyDown(box, { key: 'Enter' })
     expect(await screen.findByText('Saved.')).toBeInTheDocument()
-    expect(screen.getByTestId('criteria-text')).toHaveTextContent('jazz tonight in Berlin')
+    expect(save).toHaveBeenCalledTimes(1)
+    expect(localStorage.getItem(HINT_SEEN_KEY)).toBe('1')
+    expect(screen.getByTestId('criteria-text')).toHaveValue('jazz tonight in Berlin')
     expect(screen.getByTestId('searches')).toHaveTextContent('jazz tonight in Berlin')
     expect(screen.queryByTestId('utc-notice')).not.toBeInTheDocument()
+
+    fireEvent.change(box, { target: { value: 'folk in Paris' } })
+    fireEvent.blur(box)
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(2))
+    expect(save).toHaveBeenLastCalledWith('folk in Paris', expect.any(String))
   })
 
-  it('opens the editor when there is no saved search yet', async () => {
+  it('shows the empty box with the hint when there is no saved search yet', async () => {
     const api = await import('@/services/api')
     vi.spyOn(api, 'getCriteria').mockResolvedValue({ text: '', updatedAt: 'now', timeZone: 'UTC' })
     renderMainPage()
-    expect(await screen.findByLabelText("What I'm looking for")).toHaveValue('')
-    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument()
+    expect(screen.getByLabelText("What I'm looking for")).toHaveValue('')
+    expect(screen.getByTestId('criteria-hint')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Search again' })).toBeDisabled())
     expect(screen.getByTestId('utc-notice')).toHaveTextContent('Times shown in UTC until you save your criteria.')
+  })
+
+  it('does not show the hint again once a text was saved in this browser', async () => {
+    renderMainPage()
+    localStorage.setItem(HINT_SEEN_KEY, '1')
+    render(<AuthProvider><MainPage /></AuthProvider>)
+    await waitFor(() => expect(screen.getAllByTestId('criteria-text')).toHaveLength(2))
+    expect(screen.getAllByTestId('criteria-hint')).toHaveLength(1)
   })
 })
 
@@ -104,26 +126,29 @@ describe('Stream page results', () => {
     vi.useRealTimers()
     expect(days).toEqual(['Tue 20 Oct', 'Tonight · Wed 21 Oct'])
     expect(screen.getAllByTestId(/^event-row-/)).toHaveLength(3)
+    // one column-header row above the list, aligned with the rows (same grid)
+    const header = screen.getByTestId('row-header')
+    expect(header).toHaveTextContent('EventStartWhereScoreStatus')
+    expect(header.compareDocumentPosition(screen.getAllByTestId('day-heading')[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     const row = screen.getByTestId('event-row-a1')
     expect(within(row).getByRole('link', { name: 'Accepted Gig' })).toHaveAttribute('href', 'https://example.com/a1')
     expect(within(row).getByTestId('row-time')).toHaveTextContent('20:00')
     expect(within(row).getByTestId('row-place')).toHaveTextContent('A-Trane, Berlin, DE')
     expect(within(row).getByTestId('row-score')).toHaveTextContent('95%')
     expect(within(row).getByTestId('row-status')).toHaveTextContent('In calendar')
-    expect(within(screen.getByTestId('event-row-q2')).getByTestId('row-time')).toHaveTextContent('time unknown')
+    expect(within(screen.getByTestId('event-row-q2')).getByTestId('row-time')).toHaveTextContent('no time')
 
     expect(screen.queryByTestId('event-row-r1')).not.toBeInTheDocument()
-    expect(screen.getByText(/1 rejected, mostly wrong date or place/)).toBeInTheDocument()
+    expect(screen.getByText(/1 out, mostly wrong date or place/)).toBeInTheDocument()
     fireEvent.click(screen.getByTestId('rejected-toggle'))
     expect(screen.getByTestId('event-row-r1')).toBeInTheDocument()
-    expect(within(screen.getByTestId('event-row-r1')).getByTestId('row-status')).toHaveTextContent('Rejected')
+    expect(within(screen.getByTestId('event-row-r1')).getByTestId('row-status')).toHaveTextContent('Out')
   })
 
   it('selects one row at a time, shows the detail tied to it, and decides from the detail', async () => {
     const api = await mockEvents([accepted, sameDay])
     const decide = vi.spyOn(api, 'decideEvent').mockResolvedValue({ ...sameDay, status: 'accepted' })
-    const onSearchComplete = vi.fn().mockResolvedValue(0)
-    renderMainPage(onSearchComplete)
+    renderMainPage()
     await screen.findByTestId('results-section')
     expect(screen.queryByTestId('event-detail')).not.toBeInTheDocument()
 
@@ -144,7 +169,6 @@ describe('Stream page results', () => {
     fireEvent.click(screen.getByTestId('event-row-q1'))
     fireEvent.click(within(screen.getByTestId('event-detail')).getByRole('button', { name: 'Add to calendar' }))
     await waitFor(() => expect(decide).toHaveBeenCalledWith('q1', 'accepted'))
-    expect(onSearchComplete).toHaveBeenCalled()
 
     fireEvent.click(within(screen.getByTestId('event-detail')).getByRole('button', { name: 'Close' }))
     expect(screen.queryByTestId('event-detail')).not.toBeInTheDocument()
@@ -171,7 +195,7 @@ describe('Stream page results', () => {
     expect(screen.queryByTestId('event-detail')).not.toBeInTheDocument()
     expect(screen.queryAllByTestId(/^event-row-/).filter((r) => r.getAttribute('aria-pressed') === 'true')).toHaveLength(0)
     expect(tiePath()).toBe('')
-    expect(screen.getByText(/1 rejected/)).toBeInTheDocument()
+    expect(screen.getByText(/1 out/)).toBeInTheDocument()
   })
 
   it('Clear all empties the events after confirm', async () => {
@@ -211,12 +235,10 @@ describe('Stream page live run', () => {
   it('Search again runs a search and refreshes the page', async () => {
     const api = await import('@/services/api')
     const run = vi.spyOn(api, 'runSearch')
-    const onSearchComplete = vi.fn().mockResolvedValue(3)
-    renderMainPage(onSearchComplete)
+    renderMainPage()
     fireEvent.click(await screen.findByRole('button', { name: 'Search again' }))
     expect(screen.getByRole('button', { name: 'Searching…' })).toBeDisabled()
-    await waitFor(() => expect(onSearchComplete).toHaveBeenCalled())
-    expect(run).toHaveBeenCalled()
+    await waitFor(() => expect(run).toHaveBeenCalled())
     expect(await screen.findByRole('button', { name: 'Search again' })).toBeEnabled()
     expect(screen.getByTestId('run-chronology')).toHaveTextContent('Judged 7 ·')
   })
@@ -276,12 +298,12 @@ describe('stageLines', () => {
     expect(stageLines(finished)).toEqual([
       'Searched the web, 20 pages',
       'Read 20 pages, found 31 events',
-      'Set aside 9 before judging',
-      'Judged 22 · 2 in calendar, 1 to review, 19 rejected',
+      'Not judged: 9',
+      'Judged 22 · 2 in calendar, 1 to review, 19 out',
     ])
   })
 
-  it('found = set aside + judged, and non-events are a separate line', () => {
+  it('found = not judged + judged, and non-events are a separate line', () => {
     const real = {
       results_fetched: 22, pages_content_pass: 0, events_extracted: 10, filtered_non_event: 12,
       filtered_incomplete: 1, judge_errors: 1, events_judged: 8,
@@ -292,19 +314,19 @@ describe('stageLines', () => {
       'Searched the web, 22 pages',
       'Read 22 pages, found 10 events',
       'Skipped 12 pages that were not events',
-      'Set aside 2 before judging',
-      'Judged 8 · 3 in calendar, 1 to review, 4 rejected',
+      'Not judged: 2',
+      'Judged 8 · 3 in calendar, 1 to review, 4 out',
     ])
     const num = (re: RegExp) => Number(lines.join('\n').match(re)![1])
-    expect(num(/found (\d+) events/)).toBe(num(/Set aside (\d+)/) + num(/Judged (\d+)/))
-    expect(num(/Judged (\d+)/)).toBe(num(/(\d+) in calendar/) + num(/(\d+) to review/) + num(/(\d+) rejected/))
+    expect(num(/found (\d+) events/)).toBe(num(/Not judged: (\d+)/) + num(/Judged (\d+)/))
+    expect(num(/Judged (\d+)/)).toBe(num(/(\d+) in calendar/) + num(/(\d+) to review/) + num(/(\d+) out/))
   })
 
   it('shows the finished stages then the live line while judging', () => {
     expect(stageLines({ ...finished, currentStage: 'judge', finishedAt: null, stageCounts: { ...finished.stageCounts, events_judged: 3 } })).toEqual([
       'Searched the web, 20 pages',
       'Read 20 pages, found 31 events',
-      'Set aside 9 before judging',
+      'Not judged: 9',
       'Judging 3 of 10 events…',
     ])
   })
@@ -354,6 +376,6 @@ describe('stageText', () => {
   })
 
   it('shows done summary when finished', () => {
-    expect(stageText(finished)).toBe('Done: 2 added to your calendar, 1 to review, 19 rejected')
+    expect(stageText(finished)).toBe('Done: 2 added to your calendar, 1 to review, 19 out')
   })
 })

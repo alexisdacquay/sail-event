@@ -90,7 +90,7 @@ describe('ScoreScale', () => {
 
   it('shows all three zone labels', () => {
     renderScale()
-    expect(screen.getAllByText('Rejected').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Out').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText('You decide').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText('On your calendar').length).toBeGreaterThanOrEqual(1)
   })

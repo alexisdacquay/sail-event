@@ -8,6 +8,7 @@ const CRITERIA = "jazz in Berlin (Germany) next week (19-21st October 2026)";
 
 async function register(page: Page, user: string, pw: string) {
   await page.goto("/");
+  await expect(page.getByTestId("pitch")).toBeVisible();
   await page.getByRole("button", { name: "Create one" }).click();
   await page.getByLabel("Username").fill(user);
   await page.getByLabel("Password").fill(pw);
@@ -15,12 +16,15 @@ async function register(page: Page, user: string, pw: string) {
   await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
 }
 
-// A new user has no saved search, so the Stream page opens with the editor.
+// The criteria text is edited in place: type, Enter saves.
 async function saveCriteria(page: Page) {
-  await page.getByLabel("What I'm looking for").fill(CRITERIA);
-  await page.getByRole("button", { name: "Save criteria" }).click();
+  const box = page.getByLabel("What I'm looking for");
+  await expect(page.getByTestId("criteria-hint")).toBeVisible();
+  await box.fill(CRITERIA);
+  await box.press("Enter");
   await expect(page.getByText("Saved.")).toBeVisible();
-  await expect(page.getByTestId("criteria-text")).toHaveText(CRITERIA);
+  await expect(box).toHaveValue(CRITERIA);
+  await expect(page.getByTestId("criteria-hint")).toBeHidden();
 }
 
 async function search(page: Page) {
@@ -29,9 +33,7 @@ async function search(page: Page) {
 }
 
 test.describe("Journey 1: full user flow", () => {
-  test("register, criteria, scoring, search, stream decisions, queue, events page", async ({
-    page,
-  }) => {
+  test("register, criteria, scoring, search, decisions from the stream", async ({ page }) => {
     const user = uid();
     const pw = "testpass1";
 
@@ -39,7 +41,7 @@ test.describe("Journey 1: full user flow", () => {
     await saveCriteria(page);
 
     // Scoring lives in the rail, folded: open it, raise Auto-accept above by 6 (90 → 96)
-    // so more events land in the queue for the accept/reject test below
+    // so more events land in review for the accept/reject test below
     await page.getByText("Scoring", { exact: true }).click();
     const slider = page.getByRole("slider", { name: "Auto-accept above" });
     await slider.focus();
@@ -68,45 +70,51 @@ test.describe("Journey 1: full user flow", () => {
       page.getByRole("spinbutton", { name: "Auto-accept above" })
     ).toHaveValue("96");
 
-    // Search — the chronology ends with the Judged line and the funnel shows the found count
+    // Search — the chronology ends with the Judged line and the three-stage funnel sums
     await search(page);
-    await expect(page.getByTestId("funnel")).toBeVisible();
-    await expect(page.getByTestId("funnel")).toContainText(/\d+ found/);
+    const funnel = page.getByTestId("funnel");
+    await expect(funnel).toBeVisible();
+    await expect(funnel).toContainText(/\d+ pages read/);
+    await expect(funnel).toContainText(/\d+ found/);
+    await expect(funnel).toContainText(/\d+ judged/);
+    await expect(funnel).not.toContainText(/set aside|rejected/);
+    await expect(page.getByTestId("funnel-stage-3")).toBeVisible();
 
-    // Results: rows grouped by day; select a To review row and decide from the detail
+    // Results: a column header, rows grouped by day; select a Review row and decide from the detail
+    await expect(page.getByTestId("row-header")).toHaveText(/Event.*Start.*Where.*Score.*Status/);
     await expect(page.getByTestId("day-heading").first()).toBeVisible();
-    const firstQueued = page.getByTestId(/^event-row-/).filter({ hasText: "To review" }).first();
-    await expect(firstQueued).toBeVisible();
-    // pin the row by id: the filtered locator would re-resolve to the next queued row after the decision
-    const queuedRow = page.getByTestId((await firstQueued.getAttribute("data-testid"))!);
-    await queuedRow.click();
+    const reviewRows = page.getByTestId(/^event-row-/).filter({ has: page.getByTestId("row-status").getByText("Review", { exact: true }) });
+    await expect(reviewRows.first()).toBeVisible();
+    // pin the row by id: the filtered locator would re-resolve to the next review row after the decision
+    const firstRow = page.getByTestId((await reviewRows.first().getAttribute("data-testid"))!);
+    await firstRow.click();
     await expect(page.getByTestId("event-detail")).toBeVisible();
     await expect(page.getByTestId("tie")).toBeVisible();
     await page.getByTestId("event-detail").getByRole("button", { name: "Add to calendar" }).click();
-    await expect(queuedRow.getByTestId("row-status")).toHaveText("In calendar");
+    await expect(firstRow.getByTestId("row-status")).toHaveText("In calendar");
 
-    // The To review badge counts the rest
-    const nav = page.getByRole("navigation", { name: "Main navigation" });
-    await expect(nav.getByRole("button", { name: /To review \(\d+\)/ })).toBeVisible();
-    await nav.getByRole("button", { name: /To review/ }).click();
-    await expect(page.getByRole("heading", { name: "To review" })).toBeVisible();
-    const rejectButtons = page.getByRole("button", { name: "Reject" });
-    await expect(rejectButtons.first()).toBeVisible({ timeout: 5_000 });
-    await rejectButtons.first().click();
+    // Reject the next one from the detail: it folds into the "out" line
+    const secondRow = page.getByTestId((await reviewRows.first().getAttribute("data-testid"))!);
+    await secondRow.click();
+    await page.getByTestId("event-detail").getByRole("button", { name: "Reject" }).click();
+    await expect(secondRow).toBeHidden();
+    await expect(page.getByTestId("results-section")).toContainText(/\d+ out/);
+    await page.getByTestId("rejected-toggle").click();
+    await expect(secondRow.getByTestId("row-status")).toHaveText("Out");
 
-    // Go to All events page
-    await nav.getByRole("button", { name: "All events" }).click();
-    await expect(page.getByRole("heading", { name: "All events" })).toBeVisible();
-
-    // Verify an accepted event shows Remove from calendar
-    await expect(page.getByRole("button", { name: "Remove from calendar" }).first()).toBeVisible();
-
-    // Remove from calendar: click it, confirm
-    await page.getByRole("button", { name: "Remove from calendar" }).first().click();
+    // Remove from calendar from the detail: click it, confirm, status flips to Out
+    await firstRow.click();
+    await page.getByTestId("event-detail").getByRole("button", { name: "Remove from calendar" }).click();
     await page.getByRole("button", { name: "Remove", exact: true }).click();
+    await expect(firstRow.getByTestId("row-status")).toHaveText("Out");
 
-    // After removal the card shows Add to calendar (status flipped to rejected)
-    await expect(page.getByRole("button", { name: "Add to calendar" }).first()).toBeVisible();
+    // The theme switch flips the dark class and survives a reload
+    await page.getByRole("button", { name: "Switch to dark theme" }).click();
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await page.reload();
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await page.getByRole("button", { name: "Switch to light theme" }).click();
+    await expect(page.locator("html")).not.toHaveClass(/dark/);
   });
 
   test("phone: single column, funnel hidden, place hidden, detail as a bottom sheet", async ({ page }) => {
@@ -159,19 +167,17 @@ test.describe("Journey 2: user isolation", () => {
     await saveCriteria(page1);
     await search(page1);
 
-    // Confirm user 1 has events
-    await page1.getByRole("button", { name: "All events" }).click();
-    await expect(page1.getByText(/Score: \d+%/).first()).toBeVisible();
+    // Confirm user 1 has rows
+    await expect(page1.getByTestId(/^event-row-/).first()).toBeVisible();
     await ctx1.close();
 
-    // --- User 2: register, go straight to events ---
+    // --- User 2: register, the stream is empty ---
     const ctx2 = await browser.newContext();
     const page2 = await ctx2.newPage();
     await register(page2, user2, pw);
+    await expect(page2.getByTestId("criteria-hint")).toBeVisible();
     await expect(page2.getByTestId("results-section")).toBeHidden();
-    await page2.getByRole("button", { name: "All events" }).click();
-    await expect(page2.getByRole("heading", { name: "All events" })).toBeVisible();
-    await expect(page2.getByText("No events yet.")).toBeVisible();
+    await expect(page2.getByTestId(/^event-row-/)).toHaveCount(0);
     await ctx2.close();
   });
 });

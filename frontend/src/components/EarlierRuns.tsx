@@ -25,7 +25,7 @@ export function EarlierRuns({ runs }: { runs: RunSummary[] }) {
         <span className="font-mono text-[10px] font-normal normal-case tracking-normal">
           <Dot className="bg-zone-calendar" />in calendar
           <Dot className="bg-zone-decide" />to review
-          <Dot className="bg-zone-rejected" />rejected
+          <Dot className="bg-zone-rejected" />out
         </span>
       </p>
       {shown.map((r) => (

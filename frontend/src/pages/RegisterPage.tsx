@@ -2,15 +2,10 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { register, getConfig } from '@/services/api'
 import { useAuth } from '@/contexts/AuthContext'
 import { SailMark } from '@/components/SailMark'
+import { PITCH } from './LoginPage'
 
 export function RegisterPage({
   onNavigateLogin,
@@ -61,14 +56,15 @@ export function RegisterPage({
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
-      <SailMark className="size-10 mb-3" aria-hidden="true" />
-      <p className="font-heading text-[28px] font-bold tracking-tight text-center mb-6">Sail Event</p>
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle as="h2">Create account</CardTitle>
-        </CardHeader>
-        <CardContent>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4">
+      <div className="w-full max-w-sm flex flex-col items-center">
+        <SailMark className="size-10 mb-3" aria-hidden="true" />
+        <p className="font-heading text-[28px] font-bold tracking-tight text-center">Sail Event</p>
+        <p className="text-sm text-muted-foreground text-center mt-2 mb-6" data-testid="pitch">
+          {PITCH}
+        </p>
+        <div className="w-full rounded-xl border-2 border-ring/50 bg-card p-4 shadow-sm text-sm">
+          <h2 className="font-heading text-lg font-bold mb-4">Create account</h2>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="username">Username</Label>
@@ -121,8 +117,8 @@ export function RegisterPage({
               </button>
             </p>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

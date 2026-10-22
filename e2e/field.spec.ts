@@ -12,9 +12,10 @@ async function signUp(page: Page) {
   await page.getByLabel("Password").fill("testpass1");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
-  // a new user has no saved search, so the editor is open
-  await page.getByLabel("What I'm looking for").fill("jazz in Berlin (Germany) next week (19-21st October 2026)");
-  await page.getByRole("button", { name: "Save criteria" }).click();
+  // the criteria text is edited in place; Enter saves
+  const box = page.getByLabel("What I'm looking for");
+  await box.fill("jazz in Berlin (Germany) next week (19-21st October 2026)");
+  await box.press("Enter");
   await expect(page.getByText("Saved.")).toBeVisible();
 }
 
@@ -23,15 +24,6 @@ async function searchNow(page: Page) {
   await expect(page.getByTestId("run-chronology")).toContainText(/Judged \d+ ·/, { timeout: 15_000 });
 }
 
-test("U1 reload keeps the page", async ({ page }) => {
-  test.fail(true, "tabs are not in the URL (#96)");
-  await signUp(page);
-  await page.getByRole("button", { name: "All events" }).click();
-  await expect(page.getByRole("heading", { name: "All events" })).toBeVisible();
-  await page.reload();
-  await expect(page.getByRole("heading", { name: "All events" })).toBeVisible();
-});
-
 test("U1 reload keeps the search result", async ({ page }) => {
   await signUp(page);
   await searchNow(page);
@@ -39,18 +31,12 @@ test("U1 reload keeps the search result", async ({ page }) => {
   await expect(page.getByTestId("run-chronology")).toContainText(/Judged \d+ ·/);
 });
 
-test("U2 the Judged line matches the badge and the rows", async ({ page }) => {
+test("U2 the Judged line matches the rows", async ({ page }) => {
   await signUp(page);
   await searchNow(page);
   const line = (await page.getByTestId("run-chronology").textContent())!;
   const n = Number(line.match(/(\d+) to review/)![1]);
-  const nav = page.getByRole("navigation", { name: "Main navigation" });
-  if (n === 0) {
-    await expect(nav.getByTestId("queue-count")).toHaveCount(0);
-    return;
-  }
-  await expect(nav.getByTestId("queue-count")).toHaveText(`(${n})`);
-  await expect(page.getByTestId("row-status").filter({ hasText: "To review" })).toHaveCount(n);
+  await expect(page.getByTestId("row-status").filter({ hasText: /^Review$/ })).toHaveCount(n);
 });
 
 test("U3 slider knobs equal the boxes", async ({ page }) => {
