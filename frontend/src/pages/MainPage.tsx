@@ -183,7 +183,8 @@ export function MainPage() {
   useEffect(() => {
     getCriteria().then((c) => {
       setCriteriaText(c.text)
-      setDraft(c.text)
+      // a slow load must not wipe what the user has typed meanwhile
+      setDraft((d) => d || c.text)
       setUserTimeZone(c.timeZone)
     })
     getThresholds().then((t) => {
