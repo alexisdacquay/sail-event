@@ -78,6 +78,7 @@ def _run_summary(run: orm.Run) -> dict:
         ),
         # page-level
         "pagesRead": sc.get("results_fetched", 0),
+        "pagesWithEvents": sc.get("pages_with_events", 0),
         "pagesSkipped": sc.get("filtered_non_event", 0),
         "error": run.error,
     }

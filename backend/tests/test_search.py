@@ -345,7 +345,8 @@ def test_last_run_no_auth_returns_401(client):
 
 _RUN_SUMMARY_KEYS = {
     "runId", "startedAt", "finishedAt", "durationSeconds", "trigger",
-    "eventsFound", "accepted", "queued", "rejected", "setAside", "pagesRead", "pagesSkipped", "error",
+    "eventsFound", "accepted", "queued", "rejected", "setAside",
+    "pagesRead", "pagesWithEvents", "pagesSkipped", "error",
 }
 
 
@@ -405,7 +406,9 @@ def test_runs_summary_fields_and_set_aside(client, auth_headers):
     )
     assert summary["setAside"] > 0
     assert summary["pagesRead"] == sc["results_fetched"]
+    assert summary["pagesWithEvents"] == sc["pages_with_events"] > 0
     assert summary["pagesSkipped"] == sc["filtered_non_event"]
+    assert summary["pagesWithEvents"] + summary["pagesSkipped"] <= summary["pagesRead"]
     assert summary["error"] is None
     # the funnel invariant: every extracted event lands in exactly one bar
     assert summary["accepted"] + summary["queued"] + summary["rejected"] + summary["setAside"] == summary["eventsFound"]
