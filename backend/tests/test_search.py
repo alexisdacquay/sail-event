@@ -339,3 +339,150 @@ def test_last_run_returns_most_recent(client, auth_headers):
 def test_last_run_no_auth_returns_401(client):
     r = client.get("/api/search/last-run")
     assert r.status_code == 401
+
+
+# ---------- #108: durationSeconds, trigger, GET /api/search/runs ----------
+
+_RUN_SUMMARY_KEYS = {
+    "runId", "startedAt", "finishedAt", "durationSeconds", "trigger",
+    "eventsFound", "accepted", "queued", "rejected", "setAside", "pagesRead", "pagesSkipped", "error",
+}
+
+
+def test_last_run_has_duration_and_trigger(client, auth_headers):
+    h = auth_headers("demo", "demo")
+    client.post("/api/search", headers=h)
+    run = client.get("/api/search/last-run", headers=h).json()["run"]
+    assert run["trigger"] == "manual"
+    assert isinstance(run["durationSeconds"], float)
+    assert run["durationSeconds"] >= 0
+
+
+def test_last_run_duration_null_while_running(client, auth_headers, _db_session):
+    from datetime import UTC, datetime
+    from app.orm import Run, User
+
+    h = auth_headers("demo", "demo")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    _db_session.add(Run(user_id=user.id, started_at=datetime.now(UTC), trigger="scheduled",
+                        current_stage="search"))
+    _db_session.commit()
+    run = client.get("/api/search/last-run", headers=h).json()["run"]
+    assert run["durationSeconds"] is None
+    assert run["trigger"] == "scheduled"
+
+
+def test_runs_newest_first_and_own_only(client, auth_headers):
+    h_demo = auth_headers("demo", "demo")
+    h_alice = auth_headers("alice", "alicepw")
+    first = client.post("/api/search", headers=h_demo).json()["runId"]
+    second = client.post("/api/search", headers=h_demo).json()["runId"]
+    alice_run = client.post("/api/search", headers=h_alice).json()["runId"]
+
+    runs = client.get("/api/search/runs", headers=h_demo).json()["runs"]
+    assert [r["runId"] for r in runs] == [second, first]
+
+    alice_runs = client.get("/api/search/runs", headers=h_alice).json()["runs"]
+    assert [r["runId"] for r in alice_runs] == [alice_run]
+
+
+def test_runs_summary_fields_and_set_aside(client, auth_headers):
+    h = auth_headers("demo", "demo")
+    body = client.post("/api/search", headers=h).json()
+    sc = body["stageCounts"]
+    summary = client.get("/api/search/runs", headers=h).json()["runs"][0]
+    assert set(summary) == _RUN_SUMMARY_KEYS
+    assert summary["runId"] == body["runId"]
+    assert summary["trigger"] == "manual"
+    assert summary["durationSeconds"] == body["durationSeconds"]
+    assert summary["eventsFound"] == sc["events_extracted"]
+    assert summary["accepted"] == sc["accepted"]
+    assert summary["queued"] == sc["queued"]
+    assert summary["rejected"] == sc["rejected"]
+    assert summary["setAside"] == (
+        sc["filtered_incomplete"] + sc["filtered_past"] + sc["filtered_date"] + sc["filtered_place"]
+        + sc["filtered_duplicate"] + sc["events_capped"] + sc["judge_errors"]
+    )
+    assert summary["setAside"] > 0
+    assert summary["pagesRead"] == sc["results_fetched"]
+    assert summary["pagesSkipped"] == sc["filtered_non_event"]
+    assert summary["error"] is None
+    # the funnel invariant: every extracted event lands in exactly one bar
+    assert summary["accepted"] + summary["queued"] + summary["rejected"] + summary["setAside"] == summary["eventsFound"]
+
+
+def test_runs_invariant_holds_for_every_finished_run(client, auth_headers):
+    """Manual run, repeat run with nothing new, and an error run (no criteria)."""
+    h = auth_headers("demo", "demo")
+    client.post("/api/search", headers=h)
+    client.post("/api/search", headers=h)
+    h_fresh = auth_headers("fresh", "freshpw")
+    client.post("/api/search", headers=h_fresh)
+    for hdr in (h, h_fresh):
+        runs = client.get("/api/search/runs", headers=hdr).json()["runs"]
+        assert runs
+        for s in runs:
+            assert s["finishedAt"] is not None
+            assert s["accepted"] + s["queued"] + s["rejected"] + s["setAside"] == s["eventsFound"]
+        last = client.get("/api/search/last-run", headers=hdr).json()["run"]
+        sc = last["stageCounts"]
+        assert (sc["rejected_date_place"], sc["rejected_off_topic"], sc["rejected_other"]) == (0, 0, 0)
+
+
+def test_runs_invariant_holds_with_incomplete_capped_and_unjudged(client, auth_headers, monkeypatch):
+    """One incomplete extracted event, MAX_EVENTS_PER_RUN=3 and one judge error: all set aside, none lost."""
+    from unittest.mock import patch
+    from app.services import pipeline as pipeline_mod
+    from app.services.extract import ExtractedEvent
+    from app.services.judge import JudgeError, Verdict
+
+    real_extract = pipeline_mod.extract_events
+
+    def extract_plus_incomplete(results, **kw):
+        events, counts = real_extract(results, **kw)
+        events.append(ExtractedEvent(
+            title="No city", start_local="2026-10-20T20:00:00", start_tz="Europe/Berlin", end_local=None,
+            venue=None, city=None, country="DE", link="https://x.example.com/no-city", description="d",
+            confidence=0.9, source_url="https://x.example.com/no-city", page_kind="single_event",
+        ))
+        counts.events_extracted += 1
+        return events, counts
+
+    calls = []
+
+    def judge_fails_once(event, **kwargs):
+        calls.append(1)
+        if len(calls) == 1:
+            return JudgeError(event=event, error="forced")
+        return Verdict(score=95, reason="t", fit={}, is_event=True, capped=False)
+
+    monkeypatch.setenv("MAX_EVENTS_PER_RUN", "3")
+    h = auth_headers("demo", "demo")
+    with patch("app.services.pipeline.extract_events", side_effect=extract_plus_incomplete), \
+            patch("app.services.pipeline.judge_event", side_effect=judge_fails_once):
+        sc = client.post("/api/search", headers=h).json()["stageCounts"]
+    monkeypatch.delenv("MAX_EVENTS_PER_RUN")
+
+    assert sc["filtered_incomplete"] == 1
+    assert sc["events_capped"] == 5  # 8 kept by the fixture run, 3 judged
+    assert sc["judge_errors"] == 1
+    assert sc["accepted"] == 2
+    s = client.get("/api/search/runs", headers=h).json()["runs"][0]
+    assert s["eventsFound"] == sc["events_extracted"] == 11
+    assert s["setAside"] == 1 + 2 + 5 + 1  # incomplete, duplicates, capped, unjudged
+    assert s["accepted"] + s["queued"] + s["rejected"] + s["setAside"] == s["eventsFound"]
+
+
+def test_runs_limit_validated(client, auth_headers):
+    h = auth_headers("demo", "demo")
+    client.post("/api/search", headers=h)
+    client.post("/api/search", headers=h)
+    assert client.get("/api/search/runs?limit=0", headers=h).status_code == 400
+    assert client.get("/api/search/runs?limit=101", headers=h).status_code == 400
+    assert client.get("/api/search/runs?limit=x", headers=h).status_code == 400
+    assert len(client.get("/api/search/runs?limit=1", headers=h).json()["runs"]) == 1
+    assert len(client.get("/api/search/runs", headers=h).json()["runs"]) == 2
+
+
+def test_runs_no_auth_returns_401(client):
+    assert client.get("/api/search/runs").status_code == 401

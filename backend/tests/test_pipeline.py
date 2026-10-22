@@ -473,3 +473,46 @@ def test_extract_and_judge_write_intermediate_counts(_db_session):
         assert len(intermediates) >= 1, (
             f"expected intermediate events_judged, got {judged_values}"
         )
+
+
+# ---------- #108: rejected bands in stage_counts ----------
+
+
+def _cycling_judge(scores):
+    """judge_event stand-in that hands out *scores* in turn."""
+    from itertools import cycle
+    from app.services.judge import Verdict
+
+    it = cycle(scores)
+
+    def _judge(event, **kwargs):
+        return Verdict(score=next(it), reason="test", fit={}, is_event=True, capped=False)
+
+    return _judge
+
+
+def _assert_bands(sc: dict) -> None:
+    assert sc["rejected_date_place"] == 2
+    assert sc["rejected_off_topic"] == 2
+    assert sc["rejected_other"] == 2
+    assert sc["rejected_date_place"] + sc["rejected_off_topic"] + sc["rejected_other"] == sc["rejected"]
+
+
+def test_rejected_bands_sum_to_rejected(client, auth_headers, _db_session):
+    """Scores 5/20/40/95 over the 8 fixture events: two per band, 40 is rejected (lower threshold 40)."""
+    h = auth_headers("demo", "demo")
+    with patch("app.services.pipeline.judge_event", side_effect=_cycling_judge([5, 20, 40, 95])):
+        body = client.post("/api/search", headers=h).json()
+    sc = body["stageCounts"]
+    assert sc["events_judged"] == 8
+    assert sc["accepted"] == 2
+    _assert_bands(sc)
+
+
+def test_scheduled_run_has_same_rejected_bands(_db_session):
+    """Hourly runs go through the same run_pipeline, so the bands match the manual run."""
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    with patch("app.services.pipeline.judge_event", side_effect=_cycling_judge([5, 20, 40, 95])):
+        run = run_pipeline(user, _db_session, trigger="scheduled")
+    assert run.trigger == "scheduled"
+    _assert_bands(json.loads(run.stage_counts))

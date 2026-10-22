@@ -8,7 +8,7 @@ import math
 import os
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Header
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -27,6 +27,16 @@ _OVERLAP_MINUTES = 55
 _SEARCH_NOW_WINDOW = 3600  # 1 hour in seconds
 
 
+def _duration_seconds(run: orm.Run) -> float | None:
+    """Wall time of a finished run; None while running."""
+    if run.started_at is None or run.finished_at is None:
+        return None
+    # SQLite strips tzinfo; a row updated in-session may still be aware
+    start = run.started_at if run.started_at.tzinfo else run.started_at.replace(tzinfo=UTC)
+    end = run.finished_at if run.finished_at.tzinfo else run.finished_at.replace(tzinfo=UTC)
+    return round((end - start).total_seconds(), 1)
+
+
 def _run_response(run: orm.Run) -> dict:
     """Build the SearchResult response dict from a Run row."""
     stage_counts = json.loads(run.stage_counts) if run.stage_counts else None
@@ -40,7 +50,54 @@ def _run_response(run: orm.Run) -> dict:
         "error": run.error,
         "startedAt": run.started_at.isoformat() if getattr(run, "started_at", None) else None,
         "finishedAt": run.finished_at.isoformat() if getattr(run, "finished_at", None) else None,
+        "durationSeconds": _duration_seconds(run),
+        "trigger": run.trigger,
     }
+
+
+def _run_summary(run: orm.Run) -> dict:
+    """One line of run history (#108 RunSummary)."""
+    sc = json.loads(run.stage_counts) if run.stage_counts else {}
+    return {
+        "runId": run.id,
+        "startedAt": run.started_at.isoformat(),
+        "finishedAt": run.finished_at.isoformat() if run.finished_at else None,
+        "durationSeconds": _duration_seconds(run),
+        "trigger": run.trigger,
+        # event-level only, so accepted + queued + rejected + setAside == eventsFound
+        "eventsFound": sc.get("events_extracted", 0),
+        "accepted": sc.get("accepted", 0),
+        "queued": sc.get("queued", 0),
+        "rejected": sc.get("rejected", 0),
+        "setAside": sum(
+            sc.get(k, 0)
+            for k in (
+                "filtered_incomplete", "filtered_past", "filtered_date", "filtered_place",
+                "filtered_duplicate", "events_capped", "judge_errors",
+            )
+        ),
+        # page-level
+        "pagesRead": sc.get("results_fetched", 0),
+        "pagesSkipped": sc.get("filtered_non_event", 0),
+        "error": run.error,
+    }
+
+
+@router.get("/api/search/runs", operation_id="getRuns")
+def get_runs(
+    limit: int = Query(20, ge=1, le=100),
+    user: orm.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return the user's runs, newest first."""
+    runs = (
+        db.query(orm.Run)
+        .filter(orm.Run.user_id == user.id)
+        .order_by(orm.Run.started_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return {"runs": [_run_summary(r) for r in runs]}
 
 
 @router.get("/api/search/last-run", operation_id="getLastRun")

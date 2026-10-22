@@ -15,6 +15,8 @@ function run(i: number): RunSummary {
     queued: 0,
     rejected: 19,
     setAside: 8,
+    pagesRead: 20,
+    pagesSkipped: 3,
     error: null,
   }
 }

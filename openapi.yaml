@@ -176,6 +176,40 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/search/runs:
+    get:
+      operationId: getRuns
+      summary: The user's run history, newest first
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Runs of the current user
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - runs
+                properties:
+                  runs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RunSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /api/events:
     get:
       operationId: listEvents
@@ -432,7 +466,17 @@ components:
           type:
             - object
             - 'null'
-          description: Per-stage item counts from the run
+          description: >-
+            Per-stage item counts from the run. After triage also holds
+            rejected_date_place (score 0-9), rejected_off_topic (10-39) and
+            rejected_other (40 up to the lower threshold); they sum to rejected
+            and are 0, never absent, on every finished run. events_capped counts
+            kept events dropped by MAX_EVENTS_PER_RUN.
+        currentStage:
+          type:
+            - string
+            - 'null'
+          description: Stage in progress; null once the run is finished
         stoppedAtStage:
           type:
             - string
@@ -443,6 +487,86 @@ components:
             - string
             - 'null'
           description: Run-level error message
+        startedAt:
+          type:
+            - string
+            - 'null'
+        finishedAt:
+          type:
+            - string
+            - 'null'
+        durationSeconds:
+          type:
+            - number
+            - 'null'
+          description: finishedAt minus startedAt; null while running
+        trigger:
+          type: string
+          enum:
+            - manual
+            - scheduled
+
+    RunSummary:
+      type: object
+      required:
+        - runId
+        - startedAt
+        - finishedAt
+        - durationSeconds
+        - trigger
+        - eventsFound
+        - accepted
+        - queued
+        - rejected
+        - setAside
+        - pagesRead
+        - pagesSkipped
+        - error
+      properties:
+        runId:
+          type: string
+        startedAt:
+          type: string
+        finishedAt:
+          type:
+            - string
+            - 'null'
+        durationSeconds:
+          type:
+            - number
+            - 'null'
+          description: null while running
+        trigger:
+          type: string
+          enum:
+            - manual
+            - scheduled
+        eventsFound:
+          type: integer
+          description: >-
+            events_extracted; accepted + queued + rejected + setAside == eventsFound
+        accepted:
+          type: integer
+        queued:
+          type: integer
+        rejected:
+          type: integer
+        setAside:
+          type: integer
+          description: >-
+            Extracted events that got no verdict: filtered_incomplete + filtered_past
+            + filtered_date + filtered_place + filtered_duplicate + events_capped
+            (over MAX_EVENTS_PER_RUN) + judge_errors
+        pagesRead:
+          type: integer
+          description: results_fetched (pages)
+        pagesSkipped:
+          type: integer
+          description: filtered_non_event (pages that were not events)
+        error:
+          type:
+            - string
+            - 'null'
 
     EventStatus:
       type: string
