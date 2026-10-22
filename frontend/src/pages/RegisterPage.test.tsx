@@ -12,6 +12,7 @@ vi.mock('@/services/api', async (importOriginal) => {
 })
 
 import { RegisterPage } from './RegisterPage'
+import { PITCH } from './LoginPage'
 
 describe('RegisterPage', () => {
   it('shows registration code input when getConfig says required', async () => {
@@ -25,5 +26,6 @@ describe('RegisterPage', () => {
         screen.getByLabelText('Invitation code'),
       ).toBeInTheDocument()
     })
+    expect(screen.getByTestId('pitch')).toHaveTextContent(PITCH)
   })
 })
