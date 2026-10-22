@@ -1,109 +1,139 @@
 import { cn } from 'cn'
 
-/** One definition shared with the chronology and the backend (PR 110): found = accepted + queued +
- *  rejected + setAside, setAside = the seven counts below; filtered_non_event are pages, not events. */
-export function funnelNumbers(counts: Record<string, number>) {
-  const past = counts.filtered_past ?? 0
-  const date = counts.filtered_date ?? 0
-  const place = counts.filtered_place ?? 0
-  const duplicate = counts.filtered_duplicate ?? 0
-  const incomplete = counts.filtered_incomplete ?? 0
-  const capped = counts.events_capped ?? 0
-  const judgeErrors = counts.judge_errors ?? 0
+/** One definition shared with the chronology and the backend: found = judged + notJudged,
+ *  judged = accepted + queued + rejected; filtered_non_event are pages, not events. */
+export function funnelNumbers(counts: Record<string, number>, pagesWithEvents?: number) {
+  const c = (k: string) => counts[k] ?? 0
+  const pages = c('results_fetched')
+  const withEvents = pagesWithEvents ?? pages
+  const [accepted, queued, rejected] = [c('accepted'), c('queued'), c('rejected')]
+  const [noDate, past, duplicate, date] = [c('filtered_no_date'), c('filtered_past'), c('filtered_duplicate'), c('filtered_date')]
+  const [place, incomplete, capped, judgeErrors] = [c('filtered_place'), c('filtered_incomplete'), c('events_capped'), c('judge_errors')]
   return {
-    found: counts.events_extracted ?? 0,
-    pages: counts.results_fetched ?? 0,
-    nonEvent: counts.filtered_non_event ?? 0,
-    accepted: counts.accepted ?? 0,
-    queued: counts.queued ?? 0,
-    rejected: counts.rejected ?? 0,
-    rejectedDatePlace: counts.rejected_date_place ?? 0,
-    rejectedOffTopic: counts.rejected_off_topic ?? 0,
-    rejectedOther: counts.rejected_other ?? 0,
+    pages,
+    pagesWithEvents: withEvents,
+    pagesNoEvents: pages - withEvents,
+    found: c('events_extracted'),
+    nonEvent: c('filtered_non_event'),
+    judged: accepted + queued + rejected,
+    accepted,
+    queued,
+    rejected,
+    rejectedDatePlace: c('rejected_date_place'),
+    rejectedOffTopic: c('rejected_off_topic'),
+    rejectedOther: c('rejected_other'),
+    noDate,
     past,
+    duplicate,
     date,
     place,
-    duplicate,
     incomplete,
     capped,
     judgeErrors,
-    setAside: incomplete + past + date + place + duplicate + capped + judgeErrors,
+    notJudged: noDate + past + duplicate + date + place + incomplete + capped + judgeErrors,
   }
 }
 
 const MAIN = { fill: 'var(--foreground)', fontWeight: 500 }
 const SUB = { fill: 'var(--muted-foreground)' }
+const RING = { color: 'var(--ring)', opacity: 0.45 }
+const GREY = { color: 'var(--muted-foreground)', opacity: 0.3 }
 
-export function Funnel({ counts, className }: { counts: Record<string, number>; className?: string }) {
-  const n = funnelNumbers(counts)
-  if (n.found === 0) return null
-  // the ribbons never overrun the bar, even when the backend's parts do not sum to found
-  const s = 124 / Math.max(n.found, n.accepted + n.queued + n.rejected + n.setAside)
-  const ribbons = [
-    { count: n.accepted, color: 'var(--zone-calendar)', opacity: 0.55, label: `${n.accepted} in calendar`, subs: [] as string[] },
-    { count: n.queued, color: 'var(--zone-decide)', opacity: 0.9, label: `${n.queued} to review`, subs: [] },
-    {
-      count: n.rejected, color: 'var(--zone-rejected)', opacity: 0.6, label: `${n.rejected} rejected`,
-      subs: [
-        `${n.rejectedDatePlace} wrong date or place`,
-        `${n.rejectedOffTopic} off topic`,
-        ...(n.rejectedOther > 0 ? [`${n.rejectedOther} other`] : []),
-      ],
-    },
-    {
-      count: n.setAside, color: 'var(--muted-foreground)', opacity: 0.35, label: `${n.setAside} set aside`,
-      // only the non-zero parts: the full list overflows the 352 px viewBox
-      subs: [[[n.past, 'past'], [n.date, 'date'], [n.place, 'place'], [n.duplicate, 'dup'],
-        [n.incomplete, 'incomplete'], [n.capped, 'capped'], [n.judgeErrors, 'errors']]
-        .filter(([c]) => (c as number) > 0).map(([c, w]) => `${c} ${w}`).join(' · ')],
-    },
-  ].filter((r) => r.count > 0)
+type Ribbon = { count: number; color: string; opacity: number; label: string; subs?: string[] }
 
+/** Ribbons of one stage: curves from the bar to a square, labels to the right, 11 px per line, never overlapping. */
+function layout(bar: number, ribbons: Ribbon[]) {
+  const live = ribbons.filter((r) => r.count > 0)
+  // the ribbons never overrun the bar, even when the backend's parts do not sum to it
+  const s = 124 / (Math.max(bar, live.reduce((a, r) => a + r.count, 0)) || 1)
   let yL = 10
   let yR = 6
   let lastY = -Infinity
-  const parts = ribbons.map((r) => {
+  const parts = live.map((r) => {
     const h = r.count * s
     const [yL0, yL1, yR0, yR1] = [yL, yL + h, yR, yR + h]
     yL = yL1
     yR = yR1 + 6
-    const lines: { y: number; text: string; main: boolean }[] = []
     let y = Math.max(yR0 + h / 2 + 3, lastY + 11)
-    lines.push({ y, text: r.label, main: true })
-    for (const sub of r.subs) {
-      y += 11
-      lines.push({ y, text: sub, main: false })
-    }
+    const lines = [{ y, text: r.label, main: true }]
+    for (const sub of r.subs ?? []) lines.push({ y: (y += 11), text: sub, main: false })
     lastY = y
     return { ...r, yL0, yL1, yR0, yR1, h, lines }
   })
-  const height = Math.max(172, lastY + 10)
+  return { parts, lastY }
+}
+
+export function Funnel({ counts, pagesWithEvents, className }: { counts: Record<string, number>; pagesWithEvents?: number; className?: string }) {
+  const n = funnelNumbers(counts, pagesWithEvents)
+  if (n.found === 0) return null
+  const nz = (count: number, word: string) => (count > 0 ? [`${count} ${word}`] : [])
+  const stages = [
+    {
+      bar: n.pages, caption: `${n.pages} pages read`,
+      ribbons: [
+        { count: n.pagesWithEvents, ...RING, label: `${n.found} events from ${n.pagesWithEvents} pages` },
+        { count: n.pagesNoEvents, ...GREY, label: `${n.pagesNoEvents} pages: no events` },
+      ],
+    },
+    {
+      bar: n.found, caption: `${n.found} found`,
+      ribbons: [
+        { count: n.judged, ...RING, label: `${n.judged} judged` },
+        {
+          count: n.notJudged, ...GREY, label: `${n.notJudged} not judged`,
+          subs: [
+            `${n.noDate} no date`, `${n.past} past`, `${n.duplicate} duplicate`,
+            ...nz(n.date, 'date'), ...nz(n.place, 'place'), ...nz(n.incomplete, 'incomplete'),
+            ...nz(n.capped, 'capped'), ...nz(n.judgeErrors, 'errors'),
+          ],
+        },
+      ],
+    },
+    {
+      bar: n.judged, caption: `${n.judged} judged`,
+      ribbons: [
+        { count: n.accepted, color: 'var(--zone-calendar)', opacity: 0.55, label: `${n.accepted} in calendar` },
+        { count: n.queued, color: 'var(--zone-decide)', opacity: 0.9, label: `${n.queued} to review` },
+        {
+          count: n.rejected, color: 'var(--zone-rejected)', opacity: 0.6, label: `${n.rejected} out`,
+          subs: [`${n.rejectedDatePlace} date or place`, `${n.rejectedOffTopic} topic`, ...nz(n.rejectedOther, 'other')],
+        },
+      ],
+    },
+  ].map((st) => ({ ...st, ...layout(st.bar, st.ribbons) }))
+  const height = Math.max(172, ...stages.map((st) => st.lastY + 10))
 
   return (
     <svg
       data-testid="funnel"
       role="img"
-      aria-label={`Funnel of the ${n.found} events found: ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} rejected, ${n.setAside} set aside`}
-      viewBox={`0 0 352 ${height}`}
-      className={cn('w-[352px] max-w-full font-mono text-[10px]', className)}
+      aria-label={`Funnel: ${n.pages} pages read, ${n.found} events found, ${n.judged} judged: ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} out`}
+      viewBox={`0 0 720 ${height}`}
+      className={cn('w-full max-w-[720px] font-mono text-[10px]', className)}
     >
       <title>Where the {n.found} events went</title>
-      <rect x={12} y={10} width={18} height={124} fill="var(--border)" />
-      <text x={12} y={150} style={MAIN}>{n.found} found</text>
-      <text x={12} y={162} style={SUB}>on {n.pages} pages read</text>
-      {parts.map((p) => (
-        <g key={p.label}>
-          <path
-            d={`M30 ${p.yL0} C140 ${p.yL0} 140 ${p.yR0} 212 ${p.yR0} L212 ${p.yR1} C140 ${p.yR1} 140 ${p.yL1} 30 ${p.yL1} Z`}
-            fill={p.color}
-            opacity={p.opacity}
-          />
-          <rect x={212} y={p.yR0} width={8} height={p.h} fill={p.color} />
-          {p.lines.map((l) => (
-            <text key={l.text} x={226} y={l.y} style={l.main ? MAIN : SUB}>{l.text}</text>
-          ))}
-        </g>
-      ))}
+      {stages.map((st, i) => {
+        const ox = i * 240
+        return (
+          <g key={st.caption} data-testid={`funnel-stage-${i + 1}`}>
+            <rect x={ox} y={10} width={14} height={124} fill="var(--border)" />
+            <text x={ox} y={150} style={MAIN}>{st.caption}</text>
+            {st.parts.map((p) => (
+              <g key={p.label}>
+                <path
+                  d={`M${ox + 14} ${p.yL0} C${ox + 50} ${p.yL0} ${ox + 50} ${p.yR0} ${ox + 88} ${p.yR0} L${ox + 88} ${p.yR1} C${ox + 50} ${p.yR1} ${ox + 50} ${p.yL1} ${ox + 14} ${p.yL1} Z`}
+                  fill={p.color}
+                  opacity={p.opacity}
+                />
+                <rect x={ox + 88} y={p.yR0} width={6} height={p.h} fill={p.color} />
+                {p.lines.map((l) => (
+                  <text key={l.text} x={ox + 100} y={l.y} style={l.main ? MAIN : SUB}>{l.text}</text>
+                ))}
+              </g>
+            ))}
+          </g>
+        )
+      })}
     </svg>
   )
 }
