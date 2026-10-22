@@ -53,10 +53,9 @@ describe('Stream page from mock data', () => {
     expect(tl).toHaveTextContent('Not judged: 5')
     expect(tl).toHaveTextContent('Judged 7 · 2 in calendar, 3 to review, 2 out')
     expect(screen.getByRole('button', { name: 'Search again' })).toBeInTheDocument()
-    // the funnel's first stage takes pagesWithEvents from the matching run summary
     const funnel = screen.getByTestId('funnel')
     expect(funnel).toHaveTextContent('12 found')
-    await waitFor(() => expect(funnel).toHaveTextContent('12 events from 8 pages'))
+    expect(funnel).toHaveTextContent('12 events from 8 pages')
     expect(funnel).toHaveTextContent('23 pages: no events')
     expect(document.body.textContent).not.toMatch(/set aside|rejected/i)
     // the mock has three runs; the current one (run-001) is not an earlier run

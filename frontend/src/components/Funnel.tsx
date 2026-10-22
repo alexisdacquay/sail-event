@@ -2,10 +2,11 @@ import { cn } from 'cn'
 
 /** One definition shared with the chronology and the backend: found = judged + notJudged,
  *  judged = accepted + queued + rejected; filtered_non_event are pages, not events. */
-export function funnelNumbers(counts: Record<string, number>, pagesWithEvents?: number) {
+export function funnelNumbers(counts: Record<string, number>) {
   const c = (k: string) => counts[k] ?? 0
   const pages = c('results_fetched')
-  const withEvents = pagesWithEvents ?? pages
+  // pages_with_events arrived with #112; a run from before it has no side ribbon
+  const withEvents = counts.pages_with_events ?? pages
   const [accepted, queued, rejected] = [c('accepted'), c('queued'), c('rejected')]
   const [noDate, past, duplicate, date] = [c('filtered_no_date'), c('filtered_past'), c('filtered_duplicate'), c('filtered_date')]
   const [place, incomplete, capped, judgeErrors] = [c('filtered_place'), c('filtered_incomplete'), c('events_capped'), c('judge_errors')]
@@ -63,8 +64,8 @@ function layout(bar: number, ribbons: Ribbon[]) {
   return { parts, lastY }
 }
 
-export function Funnel({ counts, pagesWithEvents, className }: { counts: Record<string, number>; pagesWithEvents?: number; className?: string }) {
-  const n = funnelNumbers(counts, pagesWithEvents)
+export function Funnel({ counts, className }: { counts: Record<string, number>; className?: string }) {
+  const n = funnelNumbers(counts)
   if (n.found === 0) return null
   const nz = (count: number, word: string) => (count > 0 ? [`${count} ${word}`] : [])
   const stages = [

@@ -362,7 +362,6 @@ export function MainPage() {
   const todayKey = formatDay({ dateTime: new Date().toISOString(), startTz: null } as Event)
   const reason = lastRun?.stageCounts ? mostlyReason(lastRun.stageCounts) : ''
   const earlier = runs.filter((r) => r.runId !== lastRun?.runId)
-  const pagesWithEvents = runs.find((r) => r.runId === lastRun?.runId)?.pagesWithEvents
 
   return (
     <div ref={screenRef} className="relative grid grid-cols-1 gap-6 md:grid-cols-[1fr_260px] md:gap-8 items-start">
@@ -424,7 +423,7 @@ export function MainPage() {
                 </p>
               ))}
             </div>
-            {lastRun.stageCounts && <Funnel counts={lastRun.stageCounts} pagesWithEvents={pagesWithEvents} className="hidden md:block" />}
+            {lastRun.stageCounts && <Funnel counts={lastRun.stageCounts} className="hidden md:block" />}
           </div>
         )}
         <EarlierRuns runs={earlier} />
