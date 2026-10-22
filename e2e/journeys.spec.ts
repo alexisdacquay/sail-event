@@ -78,7 +78,7 @@ test.describe("Journey 1: full user flow", () => {
     await expect(funnel).toContainText(/\d+ found/);
     await expect(funnel).toContainText(/\d+ judged/);
     await expect(funnel).not.toContainText(/set aside|rejected/);
-    await expect(page.getByTestId("funnel-stage-3")).toBeVisible();
+    await expect(page.getByTestId("funnel-stage-2")).toBeVisible();
 
     // Results: a column header, rows grouped by day; select a Review row and decide from the detail
     await expect(page.getByTestId("row-header")).toHaveText(/Event.*Start.*Where.*Score.*Status/);
