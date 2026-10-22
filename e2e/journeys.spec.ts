@@ -22,7 +22,8 @@ async function saveCriteria(page: Page) {
   await expect(page.getByTestId("criteria-hint")).toBeVisible();
   await box.fill(CRITERIA);
   await box.press("Enter");
-  await expect(page.getByText("Saved.")).toBeVisible();
+  // the PUT waits behind other workers' searches on CI's single backend
+  await expect(page.getByText("Saved.")).toBeVisible({ timeout: 15_000 });
   await expect(box).toHaveValue(CRITERIA);
   await expect(page.getByTestId("criteria-hint")).toBeHidden();
 }
