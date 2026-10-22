@@ -38,19 +38,21 @@ export function funnelNumbers(counts: Record<string, number>) {
 
 const MAIN = { fill: 'var(--foreground)', fontWeight: 500 }
 const SUB = { fill: 'var(--muted-foreground)' }
-const RING = { fill: 'var(--ring)', opacity: 0.45 }
+const JUDGED_RIBBON = { fill: 'var(--border)', opacity: 0.9 }
 const GREY = { fill: 'var(--muted-foreground)', opacity: 0.3 }
 
-// Sankey after _docs/ui/05-funnel-sankey.svg: one scale (px per event) for the whole drawing, three columns
-// at equal spacing, nodes of a column stacked with a fixed gap and centred, labels beside their own node.
-export const GAP = 8
-export const TOP = 20
-export const HEIGHT = 140
-export const X = [10, 250, 490]
-export const WIDTH = 730
+// Sankey with the numbers of _docs/ui/05-funnel-sankey.svg: 120 px for the events found (5 px per event for 24),
+// columns at x 10 / 260 / 520, nodes stacked GAP apart and centred, labels beside their own node. The viewBox
+// only grows for labels, never by scaling. shortcut: the drawing's column gaps are 28 and 16, not one value;
+// 16 reproduces its column 3 and its not-judged node, upgrade if the owner wants column 2 wider apart.
+export const GAP = 16
+export const TOP = 40
+export const HEIGHT = 120
+export const X = [10, 260, 520]
+export const WIDTH = 640
 const BAR = [14, 14, 6]
 const LINE = 11
-const CHARS = 36 // a breakdown line wraps here: 36 × 6 px fits the room between two columns
+const CHARS = [0, 40, 26] // a breakdown line wraps here per column (6 px per character)
 
 type Node = { key: string; count: number; fill: string; opacity?: number; label: string; subs: string[] }
 type Placed = Node & { x: number; w: number; y: number; h: number; lines: { y: number; text: string; main: boolean }[] }
@@ -62,11 +64,11 @@ function ribbon(x0: number, yL0: number, yL1: number, x1: number, yR0: number, y
 }
 
 /** "5 no date · 9 duplicate · …" cut into lines no wider than the gap between two columns. */
-function wrap(parts: string[]): string[] {
+function wrap(parts: string[], chars: number): string[] {
   const lines: string[] = []
   for (const p of parts) {
     const last = lines[lines.length - 1]
-    if (last !== undefined && `${last} · ${p}`.length <= CHARS) lines[lines.length - 1] = `${last} · ${p}`
+    if (last !== undefined && `${last} · ${p}`.length <= chars) lines[lines.length - 1] = `${last} · ${p}`
     else lines.push(p)
   }
   return lines
@@ -103,8 +105,8 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
   const found: Placed = {
     key: 'found', count: n.found, fill: 'var(--border)', label: `${n.found} found`, x: X[0], w: BAR[0], y: TOP, h: HEIGHT,
     subs: [], lines: [
-      { y: TOP + HEIGHT + 15, text: `${n.found} found`, main: true },
-      { y: TOP + HEIGHT + 15 + LINE, main: false, text: 'pages_with_events' in counts ? `from ${n.pagesWithEvents} of ${n.pages} pages read` : `on ${n.pages} pages read` },
+      { y: TOP + HEIGHT + 16, text: `${n.found} found`, main: true },
+      { y: TOP + HEIGHT + 16 + LINE, main: false, text: 'pages_with_events' in counts ? `from ${n.pagesWithEvents} of ${n.pages} pages read` : `on ${n.pages} pages read` },
     ],
   }
   const col2 = stack([
@@ -114,7 +116,7 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
       subs: wrap([
         ...nz(n.noDate, 'no date'), ...nz(n.past, 'past'), ...nz(n.duplicate, 'duplicate'), ...nz(n.date, 'date'),
         ...nz(n.place, 'place'), ...nz(n.incomplete, 'incomplete'), ...nz(n.capped, 'capped'), ...nz(n.judgeErrors, 'errors'),
-      ]),
+      ], CHARS[1]),
     },
     { key: 'notAccounted', count: notAccounted, fill: 'var(--border)', label: `${notAccounted} not accounted`, subs: ['run before 22 Oct, counters added later'] },
   ], 1, s, centre)
@@ -123,8 +125,8 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
     { key: 'accepted', count: n.accepted, fill: 'var(--zone-calendar)', opacity: 0.6, label: `${n.accepted} in calendar`, subs: [] },
     { key: 'queued', count: n.queued, fill: 'var(--zone-decide)', opacity: 0.7, label: `${n.queued} to review`, subs: [] },
     {
-      key: 'rejected', count: n.rejected, fill: 'var(--zone-rejected)', opacity: 0.35, label: `${n.rejected} out`,
-      subs: wrap([...nz(n.rejectedDatePlace, 'date or place'), ...nz(n.rejectedOffTopic, 'topic'), ...nz(n.rejectedOther, 'other')]),
+      key: 'rejected', count: n.rejected, fill: 'var(--zone-rejected)', opacity: 0.4, label: `${n.rejected} out`,
+      subs: wrap([...nz(n.rejectedDatePlace, 'date or place'), ...nz(n.rejectedOffTopic, 'topic'), ...nz(n.rejectedOther, 'other')], CHARS[2]),
     },
   ], 2, s, judged ? judged.y + judged.h / 2 : centre)
 
@@ -134,19 +136,22 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
     return to.map((t) => {
       const d = ribbon(from.x + from.w, y, y + t.h, t.x, t.y, t.y + t.h)
       y += t.h
-      return { key: t.key, d, style: t.key === 'judged' ? RING : from.key === 'found' ? GREY : { fill: t.fill, opacity: t.opacity } }
+      return { key: t.key, d, style: t.key === 'judged' ? JUDGED_RIBBON : from.key === 'found' ? GREY : { fill: t.fill, opacity: t.opacity } }
     })
   }
   const ribbons = [...flows(found, col2), ...(judged ? flows(judged, col3) : [])]
   const all = [found, ...col2, ...col3]
+  const labelX = (p: Placed) => (p.key === 'found' ? p.x : p.x + p.w + 6)
+  // the drawing's frame; it only grows to keep a long label line inside, never shrinking the nodes' scale
   const height = Math.max(...all.flatMap((p) => [p.y + p.h, ...p.lines.map((l) => l.y)])) + 6
+  const width = Math.max(WIDTH, ...all.flatMap((p) => p.lines.map((l) => labelX(p) + l.text.length * 6 + 6)))
 
   return (
     <svg
       data-testid="funnel"
       role="img"
       aria-label={`Funnel: ${n.found} events found, ${n.judged} judged: ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} out`}
-      viewBox={`0 0 ${WIDTH} ${height}`}
+      viewBox={`0 0 ${width} ${height}`}
       className={cn('w-full font-mono text-[10px]', className)}
     >
       <title>Where the {n.found} events went</title>
@@ -155,7 +160,7 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
         <g key={p.key}>
           <rect data-testid={`funnel-node-${p.key}`} x={p.x} y={p.y} width={p.w} height={p.h} fill={p.fill} />
           {p.lines.map((l) => (
-            <text key={l.text} x={p.key === 'found' ? p.x : p.x + p.w + 6} y={l.y} style={l.main ? MAIN : SUB}>{l.text}</text>
+            <text key={l.text} x={labelX(p)} y={l.y} style={l.main ? MAIN : SUB}>{l.text}</text>
           ))}
         </g>
       ))}

@@ -69,9 +69,8 @@ function expectStructure(container: HTMLElement, c: Record<string, number>, extr
     expect(r.yL0).toBeGreaterThanOrEqual(from.y)
     expect(r.yL1).toBeLessThanOrEqual(from.y + from.h + 1e-6)
   }
-  // columns: equal x spacing; nodes GAP apart; column 2 centred on found, column 3 on judged
+  // columns at the drawing's x; nodes GAP apart; column 2 centred on found, column 3 on judged
   expect(by.found).toMatchObject({ x: X[0], y: TOP, h: HEIGHT })
-  expect(X[1] - X[0]).toBe(X[2] - X[1])
   const col = (x: number) => ns.filter((b) => b.x === x).sort((a, b) => a.y - b.y)
   const centred = (c: Box[], centre: number) => {
     for (let i = 1; i < c.length; i++) expect(c[i].y - (c[i - 1].y + c[i - 1].h)).toBeCloseTo(GAP, 6)
@@ -112,7 +111,59 @@ describe('funnelNumbers', () => {
   })
 })
 
+// The owner's drawing, _docs/ui/05-funnel-sankey.svg, read as numbers: 24 found, 8 judged, 16 not judged, 2 / 1 / 5.
+const DRAWING = {
+  counts: { results_fetched: 20, pages_with_events: 8, events_extracted: 24, filtered_no_date: 5, filtered_duplicate: 9, judge_errors: 2, accepted: 2, queued: 1, rejected: 5, rejected_date_place: 4, rejected_off_topic: 1 },
+  viewBox: [640, 200],
+  rects: {
+    found: { x: 10, y: 40, w: 14, h: 120 },
+    judged: { x: 260, y: 20, w: 14, h: 40 },
+    notJudged: { x: 260, y: 88, w: 14, h: 80 },
+    accepted: { x: 520, y: 8, w: 6, h: 10 },
+    queued: { x: 520, y: 34, w: 6, h: 5 },
+    rejected: { x: 520, y: 55, w: 6, h: 25 },
+  },
+  texts: {
+    '24 found': [10, 176], 'from 8 of 20 pages read': [10, 187],
+    '8 judged': [280, 33], '16 not judged': [280, 124], '5 no date · 9 duplicate · 2 errors': [280, 135],
+    '2 in calendar': [532, 16], '1 to review': [532, 40], '5 out': [532, 66], '4 date or place · 1 topic': [532, 77],
+  },
+  ribbons: { judged: ['var(--border)', '0.9'], notJudged: ['var(--muted-foreground)', '0.3'], accepted: ['var(--zone-calendar)', '0.6'], queued: ['var(--zone-decide)', '0.7'], rejected: ['var(--zone-rejected)', '0.4'] },
+}
+// Where the hand-made drawing departs from its own rule (nodes GAP apart, centred on their source): its column-2 gap is
+// 28 and its judged node sits 12 px higher than a centred stack puts it, which moves column 3 and "8 judged" with it.
+const HAND_PLACED = { judged: 12, accepted: 8, queued: 8, rejected: 8, '8 judged': 22, '2 in calendar': 8, '1 to review': 8, '5 out': 8, '4 date or place · 1 topic': 8 }
+
 describe('Funnel', () => {
+  it("matches the owner's drawing numerically: frame, scale, columns, widths, labels, fills", () => {
+    const { container } = render(<Funnel counts={DRAWING.counts} />)
+    const [width, height] = container.querySelector('svg')!.getAttribute('viewBox')!.split(' ').slice(2).map(Number)
+    // the drawing's own "4 date or place · 1 topic" runs to x 682, past its 640 frame: the frame grows just enough for it
+    expect(width).toBeGreaterThanOrEqual(DRAWING.viewBox[0])
+    expect(width).toBeLessThanOrEqual(690)
+    expect(Math.abs(height - DRAWING.viewBox[1])).toBeLessThanOrEqual(7) // the frame ends 6 px under the last label
+    const within = (got: number, want: number, slack: number, what: string) => expect(Math.abs(got - want), what).toBeLessThanOrEqual(slack)
+    const by = Object.fromEntries(nodes(container).map((b) => [b.key, b]))
+    for (const [key, r] of Object.entries(DRAWING.rects)) {
+      expect(by[key], key).toBeDefined()
+      within(by[key].x, r.x, 0, `${key} x`)
+      within(by[key].w, r.w, 0, `${key} width`)
+      within(by[key].h, r.h, 2, `${key} height`)
+      within(by[key].y, r.y, 2 + (HAND_PLACED[key as keyof typeof HAND_PLACED] ?? 0), `${key} y`)
+    }
+    for (const [text, [x, y]] of Object.entries(DRAWING.texts)) {
+      const t = screen.getByText(text)
+      within(Number(t.getAttribute('x')), x, 0, `${text} x`)
+      within(Number(t.getAttribute('y')), y, 2 + (HAND_PLACED[text as keyof typeof HAND_PLACED] ?? 0), `${text} y`)
+    }
+    for (const [key, [fill, opacity]] of Object.entries(DRAWING.ribbons)) {
+      const p = screen.getByTestId(`funnel-ribbon-${key}`)
+      expect([p.getAttribute('fill'), p.getAttribute('opacity')], key).toEqual([fill, opacity])
+    }
+    // the rule itself, exactly: nodes GAP apart, column 2 centred on found, column 3 on judged
+    expectStructure(container, DRAWING.counts)
+  })
+
   it('is a Sankey at one scale: ribbons as thick as their node at both ends, columns stacked GAP apart and centred', () => {
     const { container } = render(<Funnel counts={counts} />)
     expectStructure(container, counts)
