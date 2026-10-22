@@ -31,9 +31,10 @@ export type RunSummary = {
   accepted: number
   queued: number
   rejected: number
-  setAside: number // extracted events with no verdict: filtered_incomplete/past/date/place/duplicate + events_capped + judge_errors
+  setAside: number // extracted events with no verdict: filtered_no_date/incomplete/past/date/place/duplicate + events_capped + judge_errors
   pagesRead: number // results_fetched
-  pagesSkipped: number // filtered_non_event
+  pagesWithEvents: number // pages_with_events: pages that yielded at least one event (#112)
+  pagesSkipped: number // filtered_non_event: pages that yielded no event; pagesWithEvents + pagesSkipped <= pagesRead
   error: string | null
 }
 
