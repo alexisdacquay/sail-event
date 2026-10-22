@@ -71,15 +71,16 @@ test.describe("Journey 1: full user flow", () => {
       page.getByRole("spinbutton", { name: "Auto-accept above" })
     ).toHaveValue("96");
 
-    // Search — the chronology ends with the Judged line and the three-stage funnel sums
+    // Search — the chronology ends with the Judged line and the Sankey funnel has its three columns
     await search(page);
     const funnel = page.getByTestId("funnel");
     await expect(funnel).toBeVisible();
     await expect(funnel).toContainText(/\d+ pages read/);
     await expect(funnel).toContainText(/\d+ found/);
     await expect(funnel).toContainText(/\d+ judged/);
-    await expect(funnel).not.toContainText(/set aside|rejected/);
-    await expect(page.getByTestId("funnel-stage-2")).toBeVisible();
+    await expect(funnel).not.toContainText(/set aside|rejected|not accounted/);
+    await expect(page.getByTestId("funnel-node-judged")).toBeVisible();
+    await expect(page.getByTestId("funnel-node-accepted")).toBeVisible();
 
     // Results: a column header, rows grouped by day; select a Review row and decide from the detail
     await expect(page.getByTestId("row-header")).toHaveText(/Event.*Start.*Where.*Score.*Status/);
@@ -150,6 +151,7 @@ test.describe("Journey 1: full user flow", () => {
       await page.getByTestId(/^event-row-/).first().click();
       await expect(page.getByTestId("event-detail")).toBeVisible();
       await page.screenshot({ path: `test-results/stream-desktop-${colorScheme}.png`, fullPage: true });
+      await page.getByTestId("funnel").screenshot({ path: `test-results/funnel-${colorScheme}.png` });
       await ctx.close();
     }
   });

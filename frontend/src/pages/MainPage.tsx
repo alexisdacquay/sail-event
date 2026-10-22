@@ -73,8 +73,11 @@ export function stageLines(run: SearchResult): string[] {
   const c = run.stageCounts ?? {}
   const n = funnelNumbers(c)
   // one entry per stage; found = not judged + judged, non-events are pages, not events
+  // shortcut: new = fetched - known ignores duplicate URLs removed in between; upgrade if the backend ever counts them
   const done = [
-    [`Searched the web, ${c.results_fetched ?? 0} pages`],
+    [n.pagesKnown > 0
+      ? `Searched the web: ${n.pages} pages, ${n.pagesKnown} already known from earlier runs, ${n.pages - n.pagesKnown} new`
+      : `Searched the web, ${n.pages} pages`],
     [`Read ${n.pages} pages, found ${n.found} events`, ...(n.nonEvent > 0 ? [`Skipped ${n.nonEvent} pages that were not events`] : [])],
     [`Not judged: ${n.notJudged}`],
     [`Judged ${c.events_judged ?? 0} · ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} out`],
@@ -428,7 +431,7 @@ export function MainPage() {
                 </p>
               ))}
             </div>
-            {lastRun.stageCounts && <Funnel counts={lastRun.stageCounts} className="hidden md:block" />}
+            {lastRun.stageCounts && <Funnel counts={lastRun.stageCounts} countsVersion={lastRun.countsVersion ?? 1} className="hidden md:block" />}
           </div>
         )}
         <EarlierRuns runs={earlier} />

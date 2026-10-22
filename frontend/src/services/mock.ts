@@ -172,6 +172,7 @@ export async function runSearch(): Promise<SearchResult> {
     eventsFound: 12,
     eventsNew: 4,
     stageCounts: {
+      counts_version: 3,
       queries_planned: 6,
       results_fetched: 31,
       pages_with_events: 8,
@@ -195,6 +196,7 @@ export async function runSearch(): Promise<SearchResult> {
     finishedAt: '2026-10-18T10:01:30+00:00',
     durationSeconds: 90,
     trigger: 'manual',
+    countsVersion: 3,
   }
 }
 
@@ -210,6 +212,7 @@ const mockRuns: RunSummary[] = [
     finishedAt: '2026-10-18T10:01:30+00:00',
     durationSeconds: 90,
     trigger: 'manual',
+    countsVersion: 3,
     eventsFound: 12,
     accepted: 2,
     queued: 3,
@@ -226,6 +229,7 @@ const mockRuns: RunSummary[] = [
     finishedAt: '2026-10-18T09:00:42+00:00',
     durationSeconds: 42,
     trigger: 'scheduled',
+    countsVersion: 1, // a run from before the reject bands (#118)
     eventsFound: 9,
     accepted: 0,
     queued: 1,
@@ -242,6 +246,7 @@ const mockRuns: RunSummary[] = [
     finishedAt: '2026-10-18T08:00:03+00:00',
     durationSeconds: 3,
     trigger: 'scheduled',
+    countsVersion: 3,
     eventsFound: 0,
     accepted: 0,
     queued: 0,

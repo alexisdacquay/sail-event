@@ -15,6 +15,8 @@ export type SearchResult = {
   // #108: always sent by the backend; optional so existing test literals in MainPage.test.tsx still type-check
   durationSeconds?: number | null
   trigger?: RunTrigger
+  // #118: shape of stageCounts, 3 now; the backend reports 1 for rows stored without a version
+  countsVersion?: number
 }
 
 export type LastRunResponse = { run: SearchResult | null }
@@ -27,6 +29,7 @@ export type RunSummary = {
   finishedAt: string | null
   durationSeconds: number | null
   trigger: RunTrigger
+  countsVersion: number // #118: 3 now; 1 = before the reject bands, 2 = before filtered_no_date
   eventsFound: number // events_extracted; accepted + queued + rejected + setAside == eventsFound
   accepted: number
   queued: number
