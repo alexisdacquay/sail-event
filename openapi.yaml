@@ -471,7 +471,15 @@ components:
             rejected_date_place (score 0-9), rejected_off_topic (10-39) and
             rejected_other (40 up to the lower threshold); they sum to rejected
             and are 0, never absent, on every finished run. events_capped counts
-            kept events dropped by MAX_EVENTS_PER_RUN.
+            kept events dropped by MAX_EVENTS_PER_RUN. results_known counts result
+            pages already stored from earlier runs. counts_version is the shape
+            version (see countsVersion); for a run below the current version the
+            bands are recomputed from the run's events at read time.
+        countsVersion:
+          type: integer
+          description: >-
+            Shape of stageCounts: 3 = current, 2 = before filtered_no_date,
+            1 = before the reject bands (rows without counts_version).
         currentStage:
           type:
             - string
@@ -514,6 +522,7 @@ components:
         - finishedAt
         - durationSeconds
         - trigger
+        - countsVersion
         - eventsFound
         - accepted
         - queued
@@ -542,6 +551,9 @@ components:
           enum:
             - manual
             - scheduled
+        countsVersion:
+          type: integer
+          description: Shape of the run's stage counts; 1 for rows stored without a version
         eventsFound:
           type: integer
           description: >-

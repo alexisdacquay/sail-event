@@ -118,8 +118,8 @@ def run_pipeline(
             db.flush()
         span.set_attribute("run_id", run.id)
 
-        # Accumulators
-        counts: dict[str, int] = {}
+        # Accumulators; the version goes in from the start so a live run never reads as an old one
+        counts: dict[str, int] = {"counts_version": COUNTS_VERSION}
         search_calls = 0
         llm_calls = 0
         llm_tokens_in = 0
@@ -508,11 +508,7 @@ def run_pipeline(
                 counts["accepted"] = sum(1 for e in triaged if e.status == "accepted")
                 counts["rejected"] = sum(1 for e in triaged if e.status == "rejected")
                 counts["queued"] = sum(1 for e in triaged if e.status == "queued")
-                # #108 funnel bands: judge scores 0-9 mean wrong place/dates, 10-39 off topic
-                rejected_scores = [e.score or 0 for e in triaged if e.status == "rejected"]
-                counts["rejected_date_place"] = sum(1 for s in rejected_scores if s <= 9)
-                counts["rejected_off_topic"] = sum(1 for s in rejected_scores if 10 <= s <= 39)
-                counts["rejected_other"] = sum(1 for s in rejected_scores if s >= 40)
+                counts.update(reject_bands(triaged))
 
             span.set_attribute("events_found", events_found)
             span.set_attribute("events_new", events_new)
@@ -659,6 +655,20 @@ def _judge_and_triage(
     return llm_calls, tokens_in, tokens_out, judge_errors
 
 
+# #118: shape of stage_counts. 1 = before the reject bands, 2 = before filtered_no_date, 3 = now.
+COUNTS_VERSION = 3
+
+
+def reject_bands(events: list[orm.Event]) -> dict[str, int]:
+    """#108 funnel bands of a run's rejected events: judge scores 0-9 mean wrong place/dates, 10-39 off topic."""
+    scores = [e.score or 0 for e in events if e.status == "rejected"]
+    return {
+        "rejected_date_place": sum(1 for s in scores if s <= 9),
+        "rejected_off_topic": sum(1 for s in scores if 10 <= s <= 39),
+        "rejected_other": sum(1 for s in scores if s >= 40),
+    }
+
+
 def _finalise_run(
     run: orm.Run,
     db: Session,
@@ -679,6 +689,7 @@ def _finalise_run(
     for k in ("rejected_date_place", "rejected_off_topic", "rejected_other",
               "filtered_no_date", "pages_with_events"):
         counts.setdefault(k, 0)
+    counts["counts_version"] = COUNTS_VERSION
     run.finished_at = datetime.now(UTC)
     run.events_found = events_found
     run.events_new = events_new
