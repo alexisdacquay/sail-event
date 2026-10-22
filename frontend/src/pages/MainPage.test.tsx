@@ -1,403 +1,359 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { MainPage, stageText } from './MainPage'
+import { MainPage, groupByDay, mostlyReason, runHeader, stageLines, stageText } from './MainPage'
 import type { Event, SearchResult } from '@/services/api'
 
-const emptyQueue: Event[] = []
-
-function renderMainPage(
-  onSearchComplete = async () => 0,
-  queuedEvents: Event[] = emptyQueue,
-  onNavigateQueue = () => {},
-) {
+function renderMainPage(onSearchComplete = async () => 0) {
   localStorage.setItem('sail-event-token', 'test-token')
   localStorage.setItem('sail-event-username', 'demo')
   return render(
     <AuthProvider>
-      <MainPage
-        onSearchComplete={onSearchComplete}
-        queuedEvents={queuedEvents}
-        onNavigateQueue={onNavigateQueue}
-      />
+      <MainPage onSearchComplete={onSearchComplete} />
     </AuthProvider>,
   )
+}
+
+const base: Event = {
+  id: 'a1', title: 'Accepted Gig', dateTime: '2026-10-20T20:00:00+02:00',
+  place: 'A-Trane', link: 'https://example.com/a1', description: 'desc',
+  startTz: 'Europe/Berlin', endTime: null, city: 'Berlin', country: 'DE',
+  sourceUrl: null, band: 'fits', score: 95, scoreReason: 'Great match',
+  status: 'accepted', decidedBy: 'auto',
+}
+const accepted = base
+const sameDay: Event = { ...base, id: 'q1', title: 'Maybe Gig', dateTime: '2026-10-20T22:00:00+02:00', score: 55, scoreReason: 'Moderate', status: 'queued', decidedBy: null }
+const nextDay: Event = { ...base, id: 'q2', title: 'Other Gig', dateTime: '2026-10-21', startTz: null, score: 58, status: 'queued', decidedBy: null }
+const rejected: Event = { ...base, id: 'r1', title: 'Bad Gig', dateTime: '2026-10-22T20:00:00+02:00', score: 10, scoreReason: 'No match', status: 'rejected' }
+
+const tiePath = () => screen.getByTestId('tie').querySelector('path')!.getAttribute('d')
+
+async function mockEvents(events: Event[]) {
+  const api = await import('@/services/api')
+  vi.spyOn(api, 'listEvents').mockImplementation(async (status) => events.filter((e) => !status || e.status === status))
+  return api
 }
 
 beforeEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('MainPage cards', () => {
-  it('renders all four card testids', async () => {
+describe('Stream page from mock data', () => {
+  it('renders the search box, chronology, funnel, earlier runs and the rail', async () => {
     renderMainPage()
-    await screen.findByTestId('criteria-card')
-    expect(screen.getByTestId('scoring-card')).toBeInTheDocument()
-    expect(screen.getByTestId('search-card')).toBeInTheDocument()
-    expect(screen.getByTestId('calendar-card')).toBeInTheDocument()
-  })
-})
-
-describe('MainPage calendar feed', () => {
-  it('shows the calendar URL and copy button', async () => {
-    renderMainPage()
-
-    const urlInput = await screen.findByTestId('calendar-url')
-    expect(urlInput).toBeInTheDocument()
-    expect(urlInput).toHaveValue('http://localhost:8000/api/calendar/mock-ics-token')
-
-    expect(screen.getByTestId('copy-calendar-url')).toBeInTheDocument()
-    expect(
-      screen.getByText(
-        'Paste this link into your calendar app. Accepted events will appear there.',
-      ),
-    ).toBeInTheDocument()
+    expect(await screen.findByTestId('criteria-text')).toHaveTextContent('sailing regattas in the Mediterranean, July 2026')
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    const tl = await screen.findByTestId('run-chronology')
+    expect(tl).toHaveTextContent('18 Oct')
+    expect(tl).toHaveTextContent('your run · 1 min 30 s')
+    expect(tl).toHaveTextContent('Searched the web, 31 pages')
+    expect(tl).toHaveTextContent('Read 31 pages, found 12 events')
+    expect(tl).toHaveTextContent('Skipped 2 pages that were not events')
+    expect(tl).toHaveTextContent('Set aside 3 before judging')
+    expect(tl).toHaveTextContent('Judged 7 · 2 in calendar, 3 to review, 2 rejected')
+    expect(screen.getByRole('button', { name: 'Search again' })).toBeInTheDocument()
+    expect(screen.getByTestId('funnel')).toHaveTextContent('12 found')
+    // the mock has three runs; the current one (run-001) is not an earlier run
+    expect(screen.getAllByTestId('earlier-run')).toHaveLength(2)
+    expect(screen.getByTestId('month-calendar')).toBeInTheDocument()
+    expect(screen.getByTestId('calendar-url')).toHaveValue('http://localhost:8000/api/calendar/mock-ics-token')
+    expect(screen.getByTestId('searches')).toHaveTextContent('sailing regattas')
+    expect(screen.getByRole('button', { name: '+ new search' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '+ new search' })).toHaveAttribute('title', 'coming later')
   })
 
-  it('shows inline confirmation when Reset link is clicked', async () => {
+  it('Edit opens the textarea in place; Save updates the text; Cancel restores it', async () => {
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'saveCriteria').mockImplementation(async (text) => ({ text, updatedAt: 'now', timeZone: 'Europe/Berlin' }))
     renderMainPage()
+    await screen.findByTestId('criteria-text')
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    const textarea = screen.getByLabelText("What I'm looking for")
+    expect(textarea).toHaveValue('sailing regattas in the Mediterranean, July 2026')
+    fireEvent.change(textarea, { target: { value: 'jazz tonight in Berlin' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.getByTestId('criteria-text')).toHaveTextContent('sailing regattas')
 
-    const rotateBtn = await screen.findByTestId('rotate-calendar-url')
-    fireEvent.click(rotateBtn)
-
-    expect(screen.getByTestId('rotate-confirm')).toBeInTheDocument()
-    expect(
-      screen.getByText(
-        'This will break any existing subscription. Reset?',
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByTestId('rotate-confirm-yes')).toBeInTheDocument()
-    expect(screen.getByTestId('rotate-confirm-cancel')).toBeInTheDocument()
-  })
-
-  it('hides confirmation and keeps URL when Cancel is clicked', async () => {
-    renderMainPage()
-
-    const rotateBtn = await screen.findByTestId('rotate-calendar-url')
-    fireEvent.click(rotateBtn)
-    fireEvent.click(screen.getByTestId('rotate-confirm-cancel'))
-
-    expect(screen.queryByTestId('rotate-confirm')).not.toBeInTheDocument()
-    expect(screen.getByTestId('rotate-calendar-url')).toBeInTheDocument()
-    expect(screen.getByTestId('calendar-url')).toHaveValue(
-      'http://localhost:8000/api/calendar/mock-ics-token',
-    )
-  })
-
-  it('updates the URL on confirm', async () => {
-    renderMainPage()
-
-    const rotateBtn = await screen.findByTestId('rotate-calendar-url')
-    fireEvent.click(rotateBtn)
-    fireEvent.click(screen.getByTestId('rotate-confirm-yes'))
-
-    const urlInput = await screen.findByTestId('calendar-url')
-    await screen.findByTestId('rotate-calendar-url')
-    expect((urlInput as HTMLInputElement).value).not.toBe(
-      'http://localhost:8000/api/calendar/mock-ics-token',
-    )
-    expect(screen.queryByTestId('rotate-confirm')).not.toBeInTheDocument()
-  })
-})
-
-describe('MainPage criteria card', () => {
-  it('shows Saved. after save', async () => {
-    renderMainPage()
-    await screen.findByLabelText("What I'm looking for")
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.change(screen.getByLabelText("What I'm looking for"), { target: { value: 'jazz tonight in Berlin' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save criteria' }))
-    await waitFor(() => {
-      expect(screen.getByText('Saved.')).toBeInTheDocument()
-    })
+    expect(await screen.findByText('Saved.')).toBeInTheDocument()
+    expect(screen.getByTestId('criteria-text')).toHaveTextContent('jazz tonight in Berlin')
+    expect(screen.getByTestId('searches')).toHaveTextContent('jazz tonight in Berlin')
+    expect(screen.queryByTestId('utc-notice')).not.toBeInTheDocument()
   })
 
-  it('shows UTC notice when user timeZone is UTC', async () => {
+  it('opens the editor when there is no saved search yet', async () => {
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'getCriteria').mockResolvedValue({ text: '', updatedAt: 'now', timeZone: 'UTC' })
     renderMainPage()
-    const notice = await screen.findByTestId('utc-notice')
-    expect(notice).toHaveTextContent(
-      'Times shown in UTC until you save your criteria.',
-    )
+    expect(await screen.findByLabelText("What I'm looking for")).toHaveValue('')
+    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument()
+    expect(screen.getByTestId('utc-notice')).toHaveTextContent('Times shown in UTC until you save your criteria.')
   })
 })
 
-describe('MainPage scoring card', () => {
-  it('shows validation error live when lower >= upper', async () => {
+describe('Stream page results', () => {
+  it('groups rows by day with aligned columns and collapses the rejected', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-10-21T12:00:00+02:00'))
+    await mockEvents([accepted, sameDay, nextDay, rejected])
     renderMainPage()
-    const lower = await screen.findByRole('spinbutton', { name: 'Auto-reject below' })
-    const upper = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
-    fireEvent.change(lower, { target: { value: '80' } })
-    fireEvent.change(upper, { target: { value: '50' } })
-    expect(
-      screen.getByText(
-        'The auto-accept line must be higher than the auto-reject line.',
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Save scoring' })).toBeDisabled()
+    await screen.findByTestId('results-section')
+    const days = screen.getAllByTestId('day-heading').map((d) => d.textContent)
+    vi.useRealTimers()
+    expect(days).toEqual(['Tue 20 Oct', 'Tonight · Wed 21 Oct'])
+    expect(screen.getAllByTestId(/^event-row-/)).toHaveLength(3)
+    const row = screen.getByTestId('event-row-a1')
+    expect(within(row).getByRole('link', { name: 'Accepted Gig' })).toHaveAttribute('href', 'https://example.com/a1')
+    expect(within(row).getByTestId('row-time')).toHaveTextContent('20:00')
+    expect(within(row).getByTestId('row-place')).toHaveTextContent('A-Trane, Berlin, DE')
+    expect(within(row).getByTestId('row-score')).toHaveTextContent('95%')
+    expect(within(row).getByTestId('row-status')).toHaveTextContent('In calendar')
+    expect(within(screen.getByTestId('event-row-q2')).getByTestId('row-time')).toHaveTextContent('time unknown')
+
+    expect(screen.queryByTestId('event-row-r1')).not.toBeInTheDocument()
+    expect(screen.getByText(/1 rejected, mostly wrong date or place/)).toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('rejected-toggle'))
+    expect(screen.getByTestId('event-row-r1')).toBeInTheDocument()
+    expect(within(screen.getByTestId('event-row-r1')).getByTestId('row-status')).toHaveTextContent('Rejected')
   })
 
-  it('explainer shows live threshold numbers', async () => {
-    renderMainPage()
-    await screen.findByRole('spinbutton', { name: 'Auto-reject below' })
-    expect(screen.getByText('Below 30: rejected.')).toBeInTheDocument()
-    expect(screen.getByText('Above 70: accepted.')).toBeInTheDocument()
-  })
-
-  it('shows band meaning explanation', async () => {
-    renderMainPage()
-    await screen.findByRole('spinbutton', { name: 'Auto-reject below' })
-    expect(
-      screen.getByText(/Recommended thresholds: 90 \/ 40/),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/90\+ fits/)).toBeInTheDocument()
-  })
-})
-
-describe('MainPage search card', () => {
-  it('shows hint and disabled button when criteria is empty', async () => {
-    renderMainPage()
-    const textarea = await screen.findByLabelText("What I'm looking for")
-    fireEvent.change(textarea, { target: { value: '' } })
-    expect(screen.getByRole('button', { name: 'Search now' })).toBeDisabled()
-    expect(
-      screen.getByText(
-        "Write what you're looking for, then press Search now.",
-      ),
-    ).toBeInTheDocument()
-  })
-
-  it('calls onSearchComplete and shows run report', async () => {
-    const onSearchComplete = vi.fn().mockResolvedValue(5)
-    renderMainPage(onSearchComplete)
-    await screen.findByLabelText("What I'm looking for")
-
-    fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
-    const result = await screen.findByTestId('search-result')
-    // Run report includes the pipeline line
-    expect(result).toHaveTextContent(/6 queries → 31 results/)
-    expect(result).toHaveTextContent(/2 accepted, 3 queued, 2 rejected/)
-    expect(screen.getByRole('button', { name: /Review 5 events/ })).toBeInTheDocument()
-    expect(onSearchComplete).toHaveBeenCalled()
-  })
-
-  it('shows filter details in run report', async () => {
+  it('selects one row at a time, shows the detail tied to it, and decides from the detail', async () => {
+    const api = await mockEvents([accepted, sameDay])
+    const decide = vi.spyOn(api, 'decideEvent').mockResolvedValue({ ...sameDay, status: 'accepted' })
     const onSearchComplete = vi.fn().mockResolvedValue(0)
     renderMainPage(onSearchComplete)
-    await screen.findByLabelText("What I'm looking for")
+    await screen.findByTestId('results-section')
+    expect(screen.queryByTestId('event-detail')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
-    const result = await screen.findByTestId('search-result')
-    expect(result).toHaveTextContent(/Filtered:/)
-    expect(result).toHaveTextContent(/2 past/)
+    fireEvent.click(screen.getByTestId('event-row-q1'))
+    const detail = screen.getByTestId('event-detail')
+    expect(detail).toHaveTextContent('Maybe Gig')
+    expect(detail).toHaveTextContent('Score 55%')
+    expect(detail).toHaveTextContent('Moderate')
+    expect(screen.getByTestId('event-row-q1')).toHaveAttribute('aria-pressed', 'true')
+    expect(tiePath()).toMatch(/^M/)
+
+    // keyboard: Enter on another row moves the selection
+    fireEvent.keyDown(screen.getByTestId('event-row-a1'), { key: 'Enter' })
+    expect(screen.getByTestId('event-detail')).toHaveTextContent('Accepted Gig')
+    expect(screen.getByTestId('event-row-q1')).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getAllByTestId(/^event-row-/).filter((r) => r.getAttribute('aria-pressed') === 'true')).toHaveLength(1)
+
+    fireEvent.click(screen.getByTestId('event-row-q1'))
+    fireEvent.click(within(screen.getByTestId('event-detail')).getByRole('button', { name: 'Add to calendar' }))
+    await waitFor(() => expect(decide).toHaveBeenCalledWith('q1', 'accepted'))
+    expect(onSearchComplete).toHaveBeenCalled()
+
+    fireEvent.click(within(screen.getByTestId('event-detail')).getByRole('button', { name: 'Close' }))
+    expect(screen.queryByTestId('event-detail')).not.toBeInTheDocument()
+    expect(tiePath()).toBe('')
   })
 
-  it('shows 429 rate-limit message with minutes from Retry-After', async () => {
+  it('clears the selection, the detail and the tie when the selected row leaves the list', async () => {
+    const list = [accepted, sameDay]
+    const api = await mockEvents(list)
+    // deciding from the detail flips the row to rejected, which is folded away: the row disappears
+    vi.spyOn(api, 'decideEvent').mockImplementation(async (id, decision) => {
+      const e = list.find((x) => x.id === id)!
+      e.status = decision
+      return e
+    })
+    renderMainPage()
+    await screen.findByTestId('results-section')
+    fireEvent.click(screen.getByTestId('event-row-q1'))
+    expect(screen.getByTestId('event-detail')).toHaveTextContent('Maybe Gig')
+    expect(tiePath()).toMatch(/^M/)
+
+    fireEvent.click(within(screen.getByTestId('event-detail')).getByRole('button', { name: 'Reject' }))
+    await waitFor(() => expect(screen.queryByTestId('event-row-q1')).not.toBeInTheDocument())
+    expect(screen.queryByTestId('event-detail')).not.toBeInTheDocument()
+    expect(screen.queryAllByTestId(/^event-row-/).filter((r) => r.getAttribute('aria-pressed') === 'true')).toHaveLength(0)
+    expect(tiePath()).toBe('')
+    expect(screen.getByText(/1 rejected/)).toBeInTheDocument()
+  })
+
+  it('Clear all empties the events after confirm', async () => {
+    const api = await mockEvents([accepted])
+    vi.spyOn(api, 'deleteAllEvents').mockResolvedValue({ deleted: 1 })
+    renderMainPage()
+    await screen.findByTestId('results-section')
+    fireEvent.click(screen.getByTestId('clear-all'))
+    expect(screen.getByText('Delete all your events? This cannot be undone.')).toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('clear-all-confirm-yes'))
+    await waitFor(() => expect(api.deleteAllEvents).toHaveBeenCalled())
+    await waitFor(() => expect(screen.queryByTestId('results-section')).not.toBeInTheDocument())
+  })
+})
+
+describe('Stream page live run', () => {
+  const running: SearchResult = {
+    runId: 'run-live', eventsFound: 0, eventsNew: 0,
+    stageCounts: { results_fetched: 20, pages_content_pass: 7 },
+    currentStage: 'extract', stoppedAtStage: null, error: null,
+    startedAt: '2026-10-18T10:00:00+00:00', finishedAt: null, trigger: 'scheduled',
+  }
+
+  it('resumes the live line from last-run on reload', async () => {
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'getLastRun').mockResolvedValue({ run: running })
+    renderMainPage()
+    const live = await screen.findByTestId('search-progress')
+    expect(live).toHaveTextContent('Reading pages 7 of 20…')
+    const tl = screen.getByTestId('run-chronology')
+    expect(tl).toHaveTextContent('automatic run · running…')
+    expect(tl).toHaveTextContent('Searched the web, 20 pages')
+    expect(tl).not.toHaveTextContent('Judged')
+    expect(screen.getByRole('button', { name: 'Searching…' })).toBeDisabled()
+  })
+
+  it('Search again runs a search and refreshes the page', async () => {
+    const api = await import('@/services/api')
+    const run = vi.spyOn(api, 'runSearch')
+    const onSearchComplete = vi.fn().mockResolvedValue(3)
+    renderMainPage(onSearchComplete)
+    fireEvent.click(await screen.findByRole('button', { name: 'Search again' }))
+    expect(screen.getByRole('button', { name: 'Searching…' })).toBeDisabled()
+    await waitFor(() => expect(onSearchComplete).toHaveBeenCalled())
+    expect(run).toHaveBeenCalled()
+    expect(await screen.findByRole('button', { name: 'Search again' })).toBeEnabled()
+    expect(screen.getByTestId('run-chronology')).toHaveTextContent('Judged 7 ·')
+  })
+
+  it('shows the 429 message with minutes from Retry-After', async () => {
     const api = await import('@/services/api')
     const err = new Error('Too many requests') as Error & { status: number; retryAfter: number }
     err.status = 429
-    err.retryAfter = 300 // 5 minutes
+    err.retryAfter = 300
     vi.spyOn(api, 'runSearch').mockRejectedValueOnce(err)
-
     renderMainPage()
-    await screen.findByLabelText("What I'm looking for")
-
-    fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
-    const result = await screen.findByTestId('search-result')
-    expect(result).toHaveTextContent('Search limit reached, try again in 5 minutes')
-  })
-
-  it('shows stopped-at stage and error in run report', async () => {
-    const api = await import('@/services/api')
-    vi.spyOn(api, 'runSearch').mockResolvedValueOnce({
-      runId: 'run-stop',
-      eventsFound: 0,
-      eventsNew: 0,
-      stageCounts: {
-        queries_planned: 2,
-        results_fetched: 0,
-      },
-      currentStage: null,
-      stoppedAtStage: 'search',
-      error: 'budget: search',
-      startedAt: '2026-10-18T10:00:00+00:00',
-      finishedAt: '2026-10-18T10:00:05+00:00',
-    })
-
-    const onSearchComplete = vi.fn().mockResolvedValue(0)
-    renderMainPage(onSearchComplete)
-    await screen.findByLabelText("What I'm looking for")
-
-    fireEvent.click(screen.getByRole('button', { name: 'Search now' }))
-    const result = await screen.findByTestId('search-result')
-    expect(result).toHaveTextContent('Stopped at search: budget: search.')
+    fireEvent.click(await screen.findByRole('button', { name: 'Search again' }))
+    expect(await screen.findByTestId('search-error')).toHaveTextContent('Search limit reached, try again in 5 minutes')
   })
 })
 
-describe('MainPage right column', () => {
-  it('shows To review sidebar when queued events exist', async () => {
-    const queued: Event[] = [
-      {
-        id: 'q1',
-        title: 'Queued Event 1',
-        dateTime: '2026-07-15T20:00:00Z',
-        place: 'Venue',
-        link: 'https://example.com/q1',
-        description: '',
-        startTz: 'Europe/London',
-        endTime: null,
-        city: 'London',
-        country: 'GB',
-        sourceUrl: null,
-        band: 'open question',
-        score: 55,
-        scoreReason: 'moderate',
-        status: 'queued',
-        decidedBy: null,
-      },
-    ]
-    renderMainPage(async () => 1, queued)
-    await screen.findByTestId('criteria-card')
-    expect(screen.getByTestId('review-sidebar')).toBeInTheDocument()
-    expect(screen.getByText('Queued Event 1')).toBeInTheDocument()
-    expect(screen.getByText('Score 55%')).toBeInTheDocument()
+describe('Stream page rail', () => {
+  it('copy button and Reset link keep working', async () => {
+    renderMainPage()
+    fireEvent.click(await screen.findByTestId('rotate-calendar-url'))
+    expect(screen.getByText('This will break any existing subscription. Reset?')).toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('rotate-confirm-cancel'))
+    expect(screen.getByTestId('calendar-url')).toHaveValue('http://localhost:8000/api/calendar/mock-ics-token')
+    fireEvent.click(screen.getByTestId('rotate-calendar-url'))
+    fireEvent.click(screen.getByTestId('rotate-confirm-yes'))
+    await waitFor(() => expect(screen.getByTestId('calendar-url')).not.toHaveValue('http://localhost:8000/api/calendar/mock-ics-token'))
+    expect(screen.getByTestId('copy-calendar-url')).toHaveTextContent('Copy')
   })
 
-  it('hides sidebar when no queued events', async () => {
+  it('scoring stays reachable: validation and save', async () => {
     renderMainPage()
-    await screen.findByTestId('criteria-card')
-    expect(screen.queryByTestId('review-sidebar')).not.toBeInTheDocument()
+    const lower = await screen.findByRole('spinbutton', { name: 'Auto-reject below' })
+    const upper = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
+    await waitFor(() => expect(lower).toHaveValue(30))
+    fireEvent.change(lower, { target: { value: '80' } })
+    fireEvent.change(upper, { target: { value: '50' } })
+    expect(screen.getByText('The auto-accept line must be higher than the auto-reject line.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save scoring' })).toBeDisabled()
+    fireEvent.change(lower, { target: { value: '20' } })
+    fireEvent.change(upper, { target: { value: '90' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save scoring' }))
+    await waitFor(() => expect(screen.getByText('Saved.')).toBeInTheDocument())
   })
 })
 
-// --- #104: live progress ---
+// --- pure helpers ---
+
+const finished: SearchResult = {
+  runId: 'r1', eventsFound: 30, eventsNew: 10,
+  stageCounts: { results_fetched: 20, pages_content_pass: 20, events_extracted: 31, filtered_past: 4, filtered_place: 2, filtered_duplicate: 3, events_judged: 22, accepted: 2, queued: 1, rejected: 19, rejected_date_place: 16, rejected_off_topic: 3 },
+  currentStage: null, stoppedAtStage: null, error: null,
+  startedAt: '2026-10-18T10:00:00+00:00', finishedAt: '2026-10-18T10:01:40+00:00',
+}
+
+describe('stageLines', () => {
+  it('lists the four stage lines for a finished run', () => {
+    expect(stageLines(finished)).toEqual([
+      'Searched the web, 20 pages',
+      'Read 20 pages, found 31 events',
+      'Set aside 9 before judging',
+      'Judged 22 · 2 in calendar, 1 to review, 19 rejected',
+    ])
+  })
+
+  it('found = set aside + judged, and non-events are a separate line', () => {
+    const real = {
+      results_fetched: 22, pages_content_pass: 0, events_extracted: 10, filtered_non_event: 12,
+      filtered_incomplete: 1, judge_errors: 1, events_judged: 8,
+      accepted: 3, queued: 1, rejected: 4,
+    }
+    const lines = stageLines({ ...finished, stageCounts: real })
+    expect(lines).toEqual([
+      'Searched the web, 22 pages',
+      'Read 22 pages, found 10 events',
+      'Skipped 12 pages that were not events',
+      'Set aside 2 before judging',
+      'Judged 8 · 3 in calendar, 1 to review, 4 rejected',
+    ])
+    const num = (re: RegExp) => Number(lines.join('\n').match(re)![1])
+    expect(num(/found (\d+) events/)).toBe(num(/Set aside (\d+)/) + num(/Judged (\d+)/))
+    expect(num(/Judged (\d+)/)).toBe(num(/(\d+) in calendar/) + num(/(\d+) to review/) + num(/(\d+) rejected/))
+  })
+
+  it('shows the finished stages then the live line while judging', () => {
+    expect(stageLines({ ...finished, currentStage: 'judge', finishedAt: null, stageCounts: { ...finished.stageCounts, events_judged: 3 } })).toEqual([
+      'Searched the web, 20 pages',
+      'Read 20 pages, found 31 events',
+      'Set aside 9 before judging',
+      'Judging 3 of 10 events…',
+    ])
+  })
+
+  it('shows only the stop line for a run stopped at search', () => {
+    expect(stageLines({ ...finished, stageCounts: { queries_planned: 2 }, stoppedAtStage: 'search', error: 'budget: search' }))
+      .toEqual(['Stopped at search: budget: search.'])
+  })
+
+  it('shows Starting up… before the first stage', () => {
+    expect(stageLines({ ...finished, stageCounts: null, currentStage: 'adapters', finishedAt: null })).toEqual(['Starting up…'])
+  })
+})
+
+describe('runHeader', () => {
+  it('falls back to the started/finished stamps for the duration', () => {
+    expect(runHeader(finished)).toMatch(/^18 Oct \d\d:\d\d · 1 min 40 s$/)
+    expect(runHeader({ ...finished, trigger: 'scheduled', durationSeconds: 45 })).toMatch(/automatic run · 45 s$/)
+    // whole seconds: the backend sends a float
+    expect(runHeader({ ...finished, durationSeconds: 100.3 })).toMatch(/1 min 40 s$/)
+    expect(runHeader({ ...finished, durationSeconds: 119.6 })).toMatch(/2 min 0 s$/)
+    expect(runHeader({ ...finished, trigger: 'manual', finishedAt: null, currentStage: 'search' })).toMatch(/your run · running…$/)
+  })
+})
+
+describe('mostlyReason and groupByDay', () => {
+  it('names the most common rejected reason', () => {
+    expect(mostlyReason(finished.stageCounts!)).toBe('wrong date or place')
+    expect(mostlyReason({ rejected_off_topic: 5, rejected_other: 1 })).toBe('off topic')
+    expect(mostlyReason({ rejected_other: 1 })).toBe('below your threshold')
+    expect(mostlyReason({ rejected: 3 })).toBe('')
+  })
+
+  it('groups in date order by day', () => {
+    const groups = groupByDay([nextDay, sameDay, accepted])
+    expect(groups.map(([d, es]) => [d, es.map((e) => e.id)])).toEqual([['Tue 20 Oct', ['a1', 'q1']], ['Wed 21 Oct', ['q2']]])
+  })
+})
 
 describe('stageText', () => {
   it('shows stage-appropriate text for search stage', () => {
-    const run: SearchResult = {
-      runId: 'r1', eventsFound: 0, eventsNew: 0,
-      stageCounts: { results_fetched: 10 },
-      currentStage: 'search',
-      stoppedAtStage: null, error: null,
-      startedAt: '2026-10-18T10:00:00+00:00', finishedAt: null,
-    }
-    expect(stageText(run)).toBe('Searching the web…')
+    expect(stageText({ ...finished, currentStage: 'search', finishedAt: null })).toBe('Searching the web…')
   })
 
   it('shows reading pages with counts for extract stage', () => {
-    const run: SearchResult = {
-      runId: 'r1', eventsFound: 0, eventsNew: 0,
-      stageCounts: { results_fetched: 20, pages_content_pass: 7 },
-      currentStage: 'extract',
-      stoppedAtStage: null, error: null,
-      startedAt: '2026-10-18T10:00:00+00:00', finishedAt: null,
-    }
-    expect(stageText(run)).toBe('Reading pages 7 of 20…')
-  })
-
-  it('shows judging with counts for judge stage', () => {
-    const run: SearchResult = {
-      runId: 'r1', eventsFound: 5, eventsNew: 5,
-      stageCounts: { events_judged: 3 },
-      currentStage: 'judge',
-      stoppedAtStage: null, error: null,
-      startedAt: '2026-10-18T10:00:00+00:00', finishedAt: null,
-    }
-    expect(stageText(run)).toBe('Judging 3 of 5 events…')
+    expect(stageText({ ...finished, currentStage: 'extract', finishedAt: null, stageCounts: { results_fetched: 20, pages_content_pass: 7 } })).toBe('Reading pages 7 of 20…')
   })
 
   it('shows done summary when finished', () => {
-    const run: SearchResult = {
-      runId: 'r1', eventsFound: 30, eventsNew: 10,
-      stageCounts: { accepted: 3, queued: 5, rejected: 22 },
-      currentStage: null,
-      stoppedAtStage: null, error: null,
-      startedAt: '2026-10-18T10:00:00+00:00', finishedAt: '2026-10-18T10:01:30+00:00',
-    }
-    expect(stageText(run)).toBe('Done: 3 added to your calendar, 5 to review, 22 rejected')
-  })
-})
-
-// --- #104: results section ---
-
-describe('MainPage results section', () => {
-  it('shows accepted and queued groups from fetched events', async () => {
-    const api = await import('@/services/api')
-    const accepted: Event[] = [{
-      id: 'a1', title: 'Accepted Gig', dateTime: '2026-10-20T20:00:00+02:00',
-      place: 'Berlin', link: 'https://example.com/a1', description: 'desc',
-      startTz: 'Europe/Berlin', endTime: null, city: 'Berlin', country: 'DE',
-      sourceUrl: null, band: 'fits', score: 95, scoreReason: 'Great match',
-      status: 'accepted', decidedBy: 'auto',
-    }]
-    const queued: Event[] = [{
-      id: 'q1', title: 'Maybe Gig', dateTime: '2026-10-21T18:00:00+02:00',
-      place: 'Berlin', link: 'https://example.com/q1', description: 'desc',
-      startTz: 'Europe/Berlin', endTime: null, city: 'Berlin', country: 'DE',
-      sourceUrl: null, band: 'open question', score: 55, scoreReason: 'Moderate',
-      status: 'queued', decidedBy: null,
-    }]
-    const rejected: Event[] = [{
-      id: 'r1', title: 'Bad Gig', dateTime: '2026-10-22T20:00:00+02:00',
-      place: 'Berlin', link: 'https://example.com/r1', description: 'desc',
-      startTz: 'Europe/Berlin', endTime: null, city: 'Berlin', country: 'DE',
-      sourceUrl: null, band: 'off topic', score: 10, scoreReason: 'No match',
-      status: 'rejected', decidedBy: 'auto',
-    }]
-
-    vi.spyOn(api, 'listEvents').mockImplementation(async (status) => {
-      if (status === 'accepted') return accepted
-      if (status === 'queued') return queued
-      if (status === 'rejected') return rejected
-      return [...accepted, ...queued, ...rejected]
-    })
-
-    renderMainPage()
-    await screen.findByTestId('results-section')
-    expect(screen.getByTestId('results-accepted')).toBeInTheDocument()
-    expect(screen.getByText('In your calendar (1)')).toBeInTheDocument()
-    expect(screen.getByText('Accepted Gig')).toBeInTheDocument()
-    expect(screen.getByTestId('results-queued')).toBeInTheDocument()
-    expect(screen.getByText('To review (1)')).toBeInTheDocument()
-    expect(screen.getByText('Maybe Gig')).toBeInTheDocument()
-    expect(screen.getByTestId('results-rejected')).toBeInTheDocument()
-    expect(screen.getByText(/Rejected \(1\)/)).toBeInTheDocument()
-    // Summary line
-    expect(screen.getByTestId('results-summary')).toHaveTextContent('1 in your calendar · 1 to review · 1 rejected')
-  })
-
-  it('shows Clear all button that empties events after confirm', async () => {
-    const api = await import('@/services/api')
-    const accepted: Event[] = [{
-      id: 'a1', title: 'Accepted Gig', dateTime: '2026-10-20T20:00:00+02:00',
-      place: 'Berlin', link: 'https://example.com/a1', description: 'desc',
-      startTz: 'Europe/Berlin', endTime: null, city: 'Berlin', country: 'DE',
-      sourceUrl: null, band: 'fits', score: 95, scoreReason: 'Great match',
-      status: 'accepted', decidedBy: 'auto',
-    }]
-
-    vi.spyOn(api, 'listEvents').mockImplementation(async (status) => {
-      if (status === 'accepted') return accepted
-      if (status === 'queued') return []
-      if (status === 'rejected') return []
-      return accepted
-    })
-    vi.spyOn(api, 'deleteAllEvents').mockResolvedValue({ deleted: 1 })
-
-    const onSearchComplete = vi.fn().mockResolvedValue(0)
-    renderMainPage(onSearchComplete)
-
-    await screen.findByTestId('results-section')
-    // Click Clear all -> shows confirmation
-    fireEvent.click(screen.getByTestId('clear-all'))
-    expect(screen.getByTestId('clear-all-confirm')).toBeInTheDocument()
-    expect(screen.getByText('Delete all your events? This cannot be undone.')).toBeInTheDocument()
-
-    // Confirm
-    fireEvent.click(screen.getByTestId('clear-all-confirm-yes'))
-    await waitFor(() => {
-      expect(api.deleteAllEvents).toHaveBeenCalled()
-    })
-    // Results section should be gone after clear
-    await waitFor(() => {
-      expect(screen.queryByTestId('results-section')).not.toBeInTheDocument()
-    })
+    expect(stageText(finished)).toBe('Done: 2 added to your calendar, 1 to review, 19 rejected')
   })
 })

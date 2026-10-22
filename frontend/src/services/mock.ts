@@ -197,7 +197,8 @@ export async function runSearch(): Promise<SearchResult> {
 }
 
 export async function getLastRun(): Promise<LastRunResponse> {
-  return { run: null }
+  // the Stream page renders the chronology and funnel from this run
+  return { run: await runSearch() }
 }
 
 const mockRuns: RunSummary[] = [

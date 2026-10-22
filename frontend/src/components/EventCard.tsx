@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type Ref } from 'react'
 import {
   Card,
   CardContent,
@@ -46,30 +46,32 @@ function fmtTime(date: Date, tz: string | undefined): string {
   }).format(date)
 }
 
-export function formatWhen(event: Event, viewerTz?: string): string {
+export function formatDay(event: Event): string {
   const { dateTime, startTz } = event
-  const browserTz = viewerTz ?? getBrowserTz()
-
   // Date-only: no T in the string — use midday UTC to avoid date rollover
   if (!dateTime.includes('T')) {
     const [y, m, d] = dateTime.split('-').map(Number)
-    const midday = new Date(Date.UTC(y, m - 1, d, 12, 0, 0))
-    return fmtDate(midday, 'UTC')
+    return fmtDate(new Date(Date.UTC(y, m - 1, d, 12, 0, 0)), 'UTC')
   }
+  return fmtDate(new Date(dateTime), startTz || undefined)
+}
 
-  const date = new Date(dateTime)
-  const tz = startTz || undefined
-  let result = `${fmtDate(date, tz)} · ${fmtTime(date, tz)}`
-
+export function formatTime(event: Event, viewerTz?: string): string {
+  const { dateTime, startTz } = event
+  if (!dateTime.includes('T')) return 'time unknown'
+  let result = fmtTime(new Date(dateTime), startTz || undefined)
   // Tz suffix only when event zone ≠ viewer zone
-  if (startTz && startTz !== browserTz) {
-    result += ` (${startTz})`
-  }
-
+  if (startTz && startTz !== (viewerTz ?? getBrowserTz())) result += ` (${startTz})`
   return result
 }
 
-function formatWhere(event: Event): string {
+export function formatWhen(event: Event, viewerTz?: string): string {
+  const day = formatDay(event)
+  if (!event.dateTime.includes('T')) return day
+  return `${day} · ${formatTime(event, viewerTz)}`
+}
+
+export function formatWhere(event: Event): string {
   if (event.country === 'ZZ') return 'place unknown'
   const parts: string[] = []
   if (event.place) parts.push(event.place)
@@ -77,6 +79,70 @@ function formatWhere(event: Event): string {
   // the API's place is "venue, city, country" since search v2; do not print the country twice
   if (event.country && !event.place.endsWith(event.country)) parts.push(event.country)
   return parts.join(', ') || 'place unknown'
+}
+
+const STATUS_PILL = {
+  accepted: ['In calendar', 'bg-zone-calendar/30'],
+  queued: ['To review', 'bg-zone-decide'],
+  rejected: ['Rejected', 'bg-zone-rejected/60'],
+  new: ['New', 'bg-muted'],
+} as const
+
+export function EventRow({
+  event,
+  selected,
+  onSelect,
+  rowRef,
+}: {
+  event: Event
+  selected: boolean
+  onSelect: (id: string) => void
+  rowRef?: Ref<HTMLDivElement>
+}) {
+  const [pillText, pillColor] = STATUS_PILL[event.status]
+  return (
+    <div
+      ref={rowRef}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      data-testid={`event-row-${event.id}`}
+      onClick={() => onSelect(event.id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onSelect(event.id)
+        }
+      }}
+      className={`grid grid-cols-[minmax(0,1fr)_auto_auto_auto] md:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] items-center gap-2 md:gap-3.5 rounded-lg border px-2.5 py-2 text-sm whitespace-nowrap cursor-pointer outline-none focus-visible:ring-3 focus-visible:ring-ring/40 ${
+        selected ? 'border-ring bg-accent/40' : 'border-border bg-card hover:bg-muted/50'
+      }`}
+    >
+      <a
+        href={event.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-semibold truncate hover:underline"
+      >
+        {event.title}
+      </a>
+      <span data-testid="row-time" className="md:w-[6.5rem] text-xs text-muted-foreground tabular-nums">
+        {formatTime(event)}
+      </span>
+      <span data-testid="row-place" className="hidden md:block w-44 truncate text-xs text-muted-foreground">
+        {formatWhere(event)}
+      </span>
+      <span data-testid="row-score" className="w-10 text-right font-mono text-xs text-muted-foreground tabular-nums">
+        {event.score}%
+      </span>
+      <span
+        data-testid="row-status"
+        className={`md:w-[86px] text-center rounded-full px-2 py-px text-[11px] font-medium ${pillColor}`}
+      >
+        {pillText}
+      </span>
+    </div>
+  )
 }
 
 type EventCardProps = {

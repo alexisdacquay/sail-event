@@ -5,6 +5,7 @@ import type {
   Thresholds,
   SearchResult,
   LastRunResponse,
+  RunsResponse,
   Event,
   EventStatus,
 } from './api'
@@ -126,6 +127,10 @@ export async function decideEvent(
 
 export async function getLastRun(): Promise<LastRunResponse> {
   return request<LastRunResponse>('/api/search/last-run')
+}
+
+export async function getRuns(limit = 20): Promise<RunsResponse> {
+  return request<RunsResponse>(`/api/search/runs?limit=${limit}`)
 }
 
 export async function deleteAllEvents(): Promise<{ deleted: number }> {

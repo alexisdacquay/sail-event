@@ -77,6 +77,7 @@ export const runSearch = mod.runSearch
 export const listEvents = mod.listEvents
 export const decideEvent = mod.decideEvent
 export const getLastRun = mod.getLastRun
+export const getRuns = mod.getRuns
 export const deleteAllEvents = mod.deleteAllEvents
 export const getCalendarUrl = mod.getCalendarUrl
 export const rotateCalendarUrl = mod.rotateCalendarUrl
