@@ -73,7 +73,7 @@ const STATUS_PILL = {
 /** Shared by the rows and the column-header row above them, so the columns line up. */
 export const ROW_GRID = 'grid grid-cols-[minmax(0,1fr)_auto_auto_auto] md:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] items-center gap-2 md:gap-3.5 px-2.5 whitespace-nowrap'
 export const COL = {
-  time: 'w-[4.5rem] md:w-[6.5rem] truncate',
+  time: 'w-20 md:w-[6.5rem] truncate',
   place: 'hidden md:block w-44 truncate',
   score: 'w-10 text-right',
   status: 'w-[72px] md:w-[86px] text-center',
