@@ -345,7 +345,8 @@ def test_last_run_no_auth_returns_401(client):
 
 _RUN_SUMMARY_KEYS = {
     "runId", "startedAt", "finishedAt", "durationSeconds", "trigger",
-    "eventsFound", "accepted", "queued", "rejected", "setAside", "pagesRead", "pagesSkipped", "error",
+    "eventsFound", "accepted", "queued", "rejected", "setAside",
+    "pagesRead", "pagesWithEvents", "pagesSkipped", "error",
 }
 
 
@@ -400,21 +401,43 @@ def test_runs_summary_fields_and_set_aside(client, auth_headers):
     assert summary["queued"] == sc["queued"]
     assert summary["rejected"] == sc["rejected"]
     assert summary["setAside"] == (
-        sc["filtered_incomplete"] + sc["filtered_past"] + sc["filtered_date"] + sc["filtered_place"]
-        + sc["filtered_duplicate"] + sc["events_capped"] + sc["judge_errors"]
+        sc["filtered_no_date"] + sc["filtered_incomplete"] + sc["filtered_past"] + sc["filtered_date"]
+        + sc["filtered_place"] + sc["filtered_duplicate"] + sc["events_capped"] + sc["judge_errors"]
     )
     assert summary["setAside"] > 0
     assert summary["pagesRead"] == sc["results_fetched"]
+    assert summary["pagesWithEvents"] == sc["pages_with_events"] > 0
     assert summary["pagesSkipped"] == sc["filtered_non_event"]
+    assert summary["pagesWithEvents"] + summary["pagesSkipped"] <= summary["pagesRead"]
     assert summary["error"] is None
     # the funnel invariant: every extracted event lands in exactly one bar
     assert summary["accepted"] + summary["queued"] + summary["rejected"] + summary["setAside"] == summary["eventsFound"]
 
 
 def test_runs_invariant_holds_for_every_finished_run(client, auth_headers):
-    """Manual run, repeat run with nothing new, and an error run (no criteria)."""
+    """Manual run with a no-date event (#112), repeat run with nothing new, and an error run (no criteria)."""
+    from unittest.mock import patch
+    from app.services import pipeline as pipeline_mod
+    from app.services.extract import ExtractedEvent
+
+    real_extract = pipeline_mod.extract_events
+
+    def extract_plus_no_date(results, **kw):
+        events, counts = real_extract(results, **kw)
+        events.append(ExtractedEvent(
+            title="No start", start_local="", start_tz="Europe/Berlin", end_local=None,
+            venue=None, city="Berlin", country="DE", link="https://x.example.com/no-start",
+            description="d", confidence=0.9, source_url="https://x.example.com/no-start",
+            page_kind="single_event",
+        ))
+        counts.events_extracted += 1
+        return events, counts
+
     h = auth_headers("demo", "demo")
-    client.post("/api/search", headers=h)
+    with patch("app.services.pipeline.extract_events", side_effect=extract_plus_no_date):
+        sc = client.post("/api/search", headers=h).json()["stageCounts"]
+    assert sc["filtered_no_date"] == 1
+    assert client.get("/api/search/runs", headers=h).json()["runs"][0]["setAside"] == sc["filtered_no_date"] + sc["filtered_duplicate"]
     client.post("/api/search", headers=h)
     h_fresh = auth_headers("fresh", "freshpw")
     client.post("/api/search", headers=h_fresh)

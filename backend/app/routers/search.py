@@ -72,12 +72,13 @@ def _run_summary(run: orm.Run) -> dict:
         "setAside": sum(
             sc.get(k, 0)
             for k in (
-                "filtered_incomplete", "filtered_past", "filtered_date", "filtered_place",
-                "filtered_duplicate", "events_capped", "judge_errors",
+                "filtered_no_date", "filtered_incomplete", "filtered_past", "filtered_date",
+                "filtered_place", "filtered_duplicate", "events_capped", "judge_errors",
             )
         ),
         # page-level
         "pagesRead": sc.get("results_fetched", 0),
+        "pagesWithEvents": sc.get("pages_with_events", 0),
         "pagesSkipped": sc.get("filtered_non_event", 0),
         "error": run.error,
     }

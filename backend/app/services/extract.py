@@ -77,7 +77,8 @@ class ExtractionCounts:
     pages_content_pass: int = 0
     extract_truncated: int = 0
     events_extracted: int = 0
-    filtered_non_event: int = 0
+    pages_with_events: int = 0
+    filtered_non_event: int = 0  # pages only: results that yielded no event
     extract_errors: int = 0
 
 
@@ -242,6 +243,9 @@ def extract_events(
             if on_page_done:
                 on_page_done(counts)
 
+    # #112: page counters derived once at the end; source_url is always a result URL
+    counts.pages_with_events = len({e.source_url for e in all_events})
+    counts.filtered_non_event = len(results) - counts.pages_with_events
     return all_events, counts
 
 
@@ -263,7 +267,6 @@ def _process_pass1(
     raw_events = response.get("events", [])
 
     if not raw_events:
-        counts.filtered_non_event += len(results)
         return []
 
     # Build URL lookup
@@ -273,7 +276,6 @@ def _process_pass1(
     for ev in raw_events:
         confidence = ev.get("confidence", 0)
         if confidence < 0.5:
-            counts.filtered_non_event += 1
             continue
 
         link = ev.get("link", "")
@@ -309,12 +311,6 @@ def _process_pass1(
     for ev in extracted:
         ev.page_kind = _infer_page_kind(ev.source_url, url_counts.get(ev.source_url, 0))
 
-    # Count non-event results (URLs that produced no events)
-    result_urls_with_events = {ev.source_url for ev in extracted}
-    for r in results:
-        if r.url not in result_urls_with_events:
-            counts.filtered_non_event += 1
-
     return extracted
 
 
@@ -328,7 +324,6 @@ def _process_pass2(
     raw_events = response.get("events", [])
 
     if page_kind == "not_event" or not raw_events:
-        counts.filtered_non_event += 1
         return []
 
     result_urls = {result.url}
@@ -336,7 +331,6 @@ def _process_pass2(
     for ev in raw_events[:MAX_EVENTS_PER_PAGE]:
         confidence = ev.get("confidence", 0)
         if confidence < 0.5:
-            counts.filtered_non_event += 1
             continue
 
         link = ev.get("link", result.url)

@@ -520,6 +520,7 @@ components:
         - rejected
         - setAside
         - pagesRead
+        - pagesWithEvents
         - pagesSkipped
         - error
       properties:
@@ -554,15 +555,20 @@ components:
         setAside:
           type: integer
           description: >-
-            Extracted events that got no verdict: filtered_incomplete + filtered_past
-            + filtered_date + filtered_place + filtered_duplicate + events_capped
-            (over MAX_EVENTS_PER_RUN) + judge_errors
+            Extracted events that got no verdict: filtered_no_date (no start date)
+            + filtered_incomplete + filtered_past + filtered_date + filtered_place
+            + filtered_duplicate + events_capped (over MAX_EVENTS_PER_RUN) + judge_errors
         pagesRead:
           type: integer
           description: results_fetched (pages)
+        pagesWithEvents:
+          type: integer
+          description: pages_with_events (pages from which at least one event was extracted)
         pagesSkipped:
           type: integer
-          description: filtered_non_event (pages that were not events)
+          description: >-
+            filtered_non_event (pages that yielded no event; pages only, never events).
+            pagesWithEvents + pagesSkipped <= pagesRead
         error:
           type:
             - string

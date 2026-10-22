@@ -43,7 +43,7 @@ class FilterCounts:
     filtered_past: int = 0
     filtered_date: int = 0
     filtered_place: int = 0
-    filtered_non_event: int = 0
+    filtered_no_date: int = 0
     filtered_duplicate: int = 0
 
 
@@ -243,6 +243,11 @@ def filter_events(
     kept: list[ExtractedEvent] = []
 
     for ev in events:
+        # #112: no start date gets its own counter, before the generic incomplete check
+        if not ev.start_local:
+            counts.filtered_no_date += 1
+            continue
+
         # 0. Incomplete: required fields missing
         if not _is_complete(ev):
             counts.filtered_incomplete += 1
@@ -255,11 +260,6 @@ def filter_events(
             continue
 
         # Place and date-window filtering removed — the judge decides.
-
-        # 2. Non-event: already handled in extract (confidence < 0.5 dropped there)
-        if not ev.start_local:
-            counts.filtered_non_event += 1
-            continue
 
         # 5. Duplicate by link
         cal_date = _event_calendar_date(ev) or ""
