@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { HINT_SEEN_KEY, MainPage, groupByDay, mostlyReason, runHeader, stageLines, stageText } from './MainPage'
@@ -56,8 +56,7 @@ describe('Stream page from mock data', () => {
     expect(screen.getByRole('button', { name: 'Search again' })).toBeInTheDocument()
     const funnel = screen.getByTestId('funnel')
     expect(funnel).toHaveTextContent('12 found')
-    expect(funnel).toHaveTextContent('12 events from 8 pages')
-    expect(funnel).toHaveTextContent('23 pages: no events')
+    expect(funnel).toHaveTextContent('from 8 of 31 pages read')
     expect(document.body.textContent).not.toMatch(/set aside|rejected/i)
     // the mock has three runs; the current one (run-001) is not an earlier run
     expect(screen.getAllByTestId('earlier-run')).toHaveLength(2)
@@ -94,6 +93,21 @@ describe('Stream page from mock data', () => {
     fireEvent.blur(box)
     await waitFor(() => expect(save).toHaveBeenCalledTimes(2))
     expect(save).toHaveBeenLastCalledWith('folk in Paris', expect.any(String))
+  })
+
+  it('keeps what the user typed when the saved criteria load late, and Enter saves it', async () => {
+    const api = await import('@/services/api')
+    let loaded!: (c: { text: string; updatedAt: string; timeZone: string }) => void
+    vi.spyOn(api, 'getCriteria').mockReturnValue(new Promise((resolve) => { loaded = resolve }))
+    const save = vi.spyOn(api, 'saveCriteria').mockImplementation(async (text) => ({ text, updatedAt: 'now', timeZone: 'Europe/Berlin' }))
+    renderMainPage()
+    const box = screen.getByLabelText("What I'm looking for")
+    fireEvent.change(box, { target: { value: 'jazz tonight in Berlin' } })
+    await act(async () => loaded({ text: '', updatedAt: 'now', timeZone: 'UTC' }))
+    expect(box).toHaveValue('jazz tonight in Berlin')
+    fireEvent.keyDown(box, { key: 'Enter' })
+    expect(await screen.findByText('Saved.')).toBeInTheDocument()
+    expect(save).toHaveBeenCalledWith('jazz tonight in Berlin', expect.any(String))
   })
 
   it('shows the empty box with the hint when there is no saved search yet', async () => {

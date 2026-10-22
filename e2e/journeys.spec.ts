@@ -22,7 +22,8 @@ async function saveCriteria(page: Page) {
   await expect(page.getByTestId("criteria-hint")).toBeVisible();
   await box.fill(CRITERIA);
   await box.press("Enter");
-  await expect(page.getByText("Saved.")).toBeVisible();
+  // the PUT waits behind other workers' searches on CI's single backend
+  await expect(page.getByText("Saved.")).toBeVisible({ timeout: 15_000 });
   await expect(box).toHaveValue(CRITERIA);
   await expect(page.getByTestId("criteria-hint")).toBeHidden();
 }
@@ -78,7 +79,7 @@ test.describe("Journey 1: full user flow", () => {
     await expect(funnel).toContainText(/\d+ found/);
     await expect(funnel).toContainText(/\d+ judged/);
     await expect(funnel).not.toContainText(/set aside|rejected/);
-    await expect(page.getByTestId("funnel-stage-3")).toBeVisible();
+    await expect(page.getByTestId("funnel-stage-2")).toBeVisible();
 
     // Results: a column header, rows grouped by day; select a Review row and decide from the detail
     await expect(page.getByTestId("row-header")).toHaveText(/Event.*Start.*Where.*Score.*Status/);

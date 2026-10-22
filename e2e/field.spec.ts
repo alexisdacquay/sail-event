@@ -16,7 +16,7 @@ async function signUp(page: Page) {
   const box = page.getByLabel("What I'm looking for");
   await box.fill("jazz in Berlin (Germany) next week (19-21st October 2026)");
   await box.press("Enter");
-  await expect(page.getByText("Saved.")).toBeVisible();
+  await expect(page.getByText("Saved.")).toBeVisible({ timeout: 15_000 });
 }
 
 async function searchNow(page: Page) {
