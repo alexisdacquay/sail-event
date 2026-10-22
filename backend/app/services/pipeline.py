@@ -431,6 +431,7 @@ def run_pipeline(
             # --- Phase 1: insert kept events as `new`, commit (crash-recoverable) ---
             cap = int(os.environ.get("MAX_EVENTS_PER_RUN", "50"))
             to_judge = kept[:cap]
+            counts["events_capped"] = len(kept) - len(to_judge)
             events_new = len(to_judge)
 
             for ev in to_judge:
@@ -506,6 +507,11 @@ def run_pipeline(
                 counts["accepted"] = sum(1 for e in triaged if e.status == "accepted")
                 counts["rejected"] = sum(1 for e in triaged if e.status == "rejected")
                 counts["queued"] = sum(1 for e in triaged if e.status == "queued")
+                # #108 funnel bands: judge scores 0-9 mean wrong place/dates, 10-39 off topic
+                rejected_scores = [e.score or 0 for e in triaged if e.status == "rejected"]
+                counts["rejected_date_place"] = sum(1 for s in rejected_scores if s <= 9)
+                counts["rejected_off_topic"] = sum(1 for s in rejected_scores if 10 <= s <= 39)
+                counts["rejected_other"] = sum(1 for s in rejected_scores if s >= 40)
 
             span.set_attribute("events_found", events_found)
             span.set_attribute("events_new", events_new)
@@ -668,6 +674,9 @@ def _finalise_run(
 ) -> orm.Run:
     """Write final fields on the run row and commit.  Returns the attached row."""
     run = db.merge(run)
+    # #108: the funnel reads the bands on every finished run, also when nothing was judged
+    for k in ("rejected_date_place", "rejected_off_topic", "rejected_other"):
+        counts.setdefault(k, 0)
     run.finished_at = datetime.now(UTC)
     run.events_found = events_found
     run.events_new = events_new

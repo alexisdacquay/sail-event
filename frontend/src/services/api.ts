@@ -12,9 +12,32 @@ export type SearchResult = {
   error: string | null
   startedAt: string | null
   finishedAt: string | null
+  // #108: always sent by the backend; optional so existing test literals in MainPage.test.tsx still type-check
+  durationSeconds?: number | null
+  trigger?: RunTrigger
 }
 
 export type LastRunResponse = { run: SearchResult | null }
+
+export type RunTrigger = 'manual' | 'scheduled'
+
+export type RunSummary = {
+  runId: string
+  startedAt: string
+  finishedAt: string | null
+  durationSeconds: number | null
+  trigger: RunTrigger
+  eventsFound: number // events_extracted; accepted + queued + rejected + setAside == eventsFound
+  accepted: number
+  queued: number
+  rejected: number
+  setAside: number // extracted events with no verdict: filtered_incomplete/past/date/place/duplicate + events_capped + judge_errors
+  pagesRead: number // results_fetched
+  pagesSkipped: number // filtered_non_event
+  error: string | null
+}
+
+export type RunsResponse = { runs: RunSummary[] }
 
 export type EventStatus = 'new' | 'accepted' | 'rejected' | 'queued'
 
