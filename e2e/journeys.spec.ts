@@ -98,7 +98,7 @@ test.describe("Journey 1: full user flow", () => {
     await secondRow.click();
     await page.getByTestId("event-detail").getByRole("button", { name: "Reject" }).click();
     await expect(secondRow).toBeHidden();
-    await expect(page.getByText(/\d+ out/)).toBeVisible();
+    await expect(page.getByTestId("results-section")).toContainText(/\d+ out/);
     await page.getByTestId("rejected-toggle").click();
     await expect(secondRow.getByTestId("row-status")).toHaveText("Out");
 
