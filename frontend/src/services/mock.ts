@@ -175,8 +175,11 @@ export async function runSearch(): Promise<SearchResult> {
       queries_planned: 6,
       results_fetched: 31,
       events_extracted: 12,
+      // judged 7 + not judged 5 = 12 found (#112 invariant), with a no-date case
+      filtered_no_date: 1,
       filtered_past: 2,
       filtered_place: 1,
+      filtered_duplicate: 1,
       filtered_non_event: 2,
       events_judged: 7,
       accepted: 2,
@@ -203,7 +206,7 @@ export async function getLastRun(): Promise<LastRunResponse> {
 
 const mockRuns: RunSummary[] = [
   {
-    runId: 'run-003',
+    runId: 'run-001',
     startedAt: '2026-10-18T10:00:00+00:00',
     finishedAt: '2026-10-18T10:01:30+00:00',
     durationSeconds: 90,
@@ -214,11 +217,12 @@ const mockRuns: RunSummary[] = [
     rejected: 2,
     setAside: 5,
     pagesRead: 31,
-    pagesSkipped: 14,
+    pagesWithEvents: 8,
+    pagesSkipped: 2,
     error: null,
   },
   {
-    runId: 'run-002',
+    runId: 'run-003',
     startedAt: '2026-10-18T09:00:00+00:00',
     finishedAt: '2026-10-18T09:00:42+00:00',
     durationSeconds: 42,
@@ -229,11 +233,12 @@ const mockRuns: RunSummary[] = [
     rejected: 4,
     setAside: 4,
     pagesRead: 20,
+    pagesWithEvents: 6,
     pagesSkipped: 9,
     error: null,
   },
   {
-    runId: 'run-001',
+    runId: 'run-002',
     startedAt: '2026-10-18T08:00:00+00:00',
     finishedAt: '2026-10-18T08:00:03+00:00',
     durationSeconds: 3,
@@ -244,6 +249,7 @@ const mockRuns: RunSummary[] = [
     rejected: 0,
     setAside: 0,
     pagesRead: 0,
+    pagesWithEvents: 0,
     pagesSkipped: 0,
     error: 'TimeoutError: search provider timed out',
   },

@@ -31,8 +31,9 @@ export type RunSummary = {
   accepted: number
   queued: number
   rejected: number
-  setAside: number // extracted events with no verdict: filtered_incomplete/past/date/place/duplicate + events_capped + judge_errors
+  setAside: number // extracted events with no verdict: filtered_incomplete/past/date/place/duplicate/no_date + events_capped + judge_errors
   pagesRead: number // results_fetched
+  pagesWithEvents: number // pages from which at least one event was extracted (#112)
   pagesSkipped: number // filtered_non_event
   error: string | null
 }
