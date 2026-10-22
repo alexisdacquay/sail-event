@@ -1,10 +1,11 @@
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import App from './App'
 import * as mock from './services/mock'
 
 beforeEach(() => {
   localStorage.clear()
+  document.documentElement.classList.remove('dark')
   mock._resetMockEvents()
 })
 
@@ -25,6 +26,7 @@ describe('Auth', () => {
     render(<App />)
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
     expect(screen.getByLabelText('Username')).toBeInTheDocument()
+    expect(screen.getByTestId('pitch')).toBeInTheDocument()
   })
 
   it('navigates from login to register', () => {
@@ -66,25 +68,43 @@ describe('Auth', () => {
   })
 })
 
+describe('Shell', () => {
+  it('the Stream is the only page: no navigation, no To review or All events', async () => {
+    await loginAsTestUser()
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+    expect(screen.queryByText('To review')).not.toBeInTheDocument()
+    expect(screen.queryByText('All events')).not.toBeInTheDocument()
+    expect(screen.getByTestId('calendar-url')).toBeInTheDocument()
+    expect(screen.getByText('Scoring')).toBeInTheDocument()
+  })
+
+  it('theme switch in the header toggles the dark class and remembers it', async () => {
+    await loginAsTestUser()
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to dark theme' }))
+    expect(document.documentElement).toHaveClass('dark')
+    expect(localStorage.getItem('sail-event-theme')).toBe('dark')
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to light theme' }))
+    expect(document.documentElement).not.toHaveClass('dark')
+  })
+})
+
 describe('Criteria', () => {
   it('initial value equals mock canned criteria text', async () => {
     await loginAsTestUser()
-    expect(screen.getByTestId('criteria-text')).toHaveTextContent(
+    expect(screen.getByTestId('criteria-text')).toHaveValue(
       'sailing regattas in the Mediterranean, July 2026',
     )
   })
 
-  it('edit and save round-trips criteria text', async () => {
+  it('typing in place and pressing Enter round-trips criteria text', async () => {
     await loginAsTestUser()
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
-    fireEvent.change(screen.getByLabelText("What I'm looking for"), {
-      target: { value: 'Atlantic tall ship races' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Save criteria' }))
+    const box = screen.getByLabelText("What I'm looking for")
+    fireEvent.change(box, { target: { value: 'Atlantic tall ship races' } })
+    fireEvent.keyDown(box, { key: 'Enter' })
     await waitFor(() => {
       expect(screen.getByText('Saved.')).toBeInTheDocument()
     })
-    expect(screen.getByTestId('criteria-text')).toHaveTextContent('Atlantic tall ship races')
+    expect(screen.getByTestId('criteria-text')).toHaveValue('Atlantic tall ship races')
     await mock.saveCriteria('sailing regattas in the Mediterranean, July 2026', 'UTC')
   })
 })
@@ -132,62 +152,24 @@ describe('Thresholds', () => {
 })
 
 describe('Search', () => {
-  it('Search again runs and the queue count is fresh afterwards', async () => {
+  it('Search again runs and the results show the pills', async () => {
     await loginAsTestUser()
-    const nav = screen.getByRole('navigation', { name: 'Main navigation' })
     const button = await screen.findByRole('button', { name: 'Search again' })
     fireEvent.click(button)
     expect(screen.getByRole('button', { name: 'Searching…' })).toBeDisabled()
     await screen.findByRole('button', { name: 'Search again' })
     // Mock has 2 queued events
     await waitFor(() => {
-      expect(nav).toHaveTextContent('(2)')
+      expect(screen.getAllByText('Review')).toHaveLength(2)
     })
   })
 
   it('disables Search again when the saved criteria are empty', async () => {
     await loginAsTestUser()
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
-    fireEvent.change(screen.getByLabelText("What I'm looking for"), { target: { value: '' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Save criteria' }))
+    const box = screen.getByLabelText("What I'm looking for")
+    fireEvent.change(box, { target: { value: '' } })
+    fireEvent.blur(box)
     await waitFor(() => expect(screen.getByRole('button', { name: 'Search again' })).toBeDisabled())
     await mock.saveCriteria('sailing regattas in the Mediterranean, July 2026', 'UTC')
-  })
-})
-
-describe('Tab bar and queue count', () => {
-  it('shows tabs with queue count and decrements on accept', async () => {
-    await loginAsTestUser()
-
-    const nav = screen.getByRole('navigation', { name: 'Main navigation' })
-    expect(nav).toHaveTextContent('Stream')
-    expect(nav).toHaveTextContent('All events')
-    expect(nav).toHaveTextContent('To review')
-
-    // Queue count equals mock's queued events (2)
-    await waitFor(() => {
-      expect(nav).toHaveTextContent('(2)')
-    })
-
-    // Navigate to To review tab
-    fireEvent.click(within(nav).getByRole('button', { name: /To review/ }))
-
-    // Wait for queued events to render
-    await screen.findByText('Jazz in the Park')
-
-    // Accept evt-2
-    const card = screen.getByTestId('event-card-evt-2')
-    const acceptButton = card.querySelector('button')!
-    fireEvent.click(acceptButton)
-
-    // Event leaves the queue
-    await waitFor(() => {
-      expect(screen.queryByText('Jazz in the Park')).not.toBeInTheDocument()
-    })
-
-    // Queue count decrements to 1
-    await waitFor(() => {
-      expect(nav).toHaveTextContent('(1)')
-    })
   })
 })

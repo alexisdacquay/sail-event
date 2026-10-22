@@ -59,7 +59,7 @@ Needs Docker. One command starts the app and its Postgres:
 docker compose up --build
 ```
 
-Open <http://localhost:8000>, log in as **demo / demo**, press **Search now**, then open **To review**. Locally the search provider and the model are fixtures with recorded responses, so results are canned and scores are deterministic: no API keys needed. On the live site a search takes one to two minutes (real web search, then a model call per page and per event); the button shows the progress. Port 8000 already taken? `HOST_PORT=8010 docker compose up --build` and open <http://localhost:8010>.
+Open <http://localhost:8000>, log in as **demo / demo**, press **Search now**, then click a **Review** row to decide. Locally the search provider and the model are fixtures with recorded responses, so results are canned and scores are deterministic: no API keys needed. On the live site a search takes one to two minutes (real web search, then a model call per page and per event); the button shows the progress. Port 8000 already taken? `HOST_PORT=8010 docker compose up --build` and open <http://localhost:8010>.
 
 <details>
 <summary>Same journey with curl (no browser)</summary>
