@@ -102,7 +102,7 @@ export function Funnel({ counts, className }: { counts: Record<string, number>; 
       data-testid="funnel"
       role="img"
       aria-label={`Funnel: ${n.found} events found, ${n.judged} judged: ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} out`}
-      viewBox={`0 0 640 ${height}`}
+      viewBox={`0 0 700 ${height}`}
       className={cn('w-full font-mono text-[10px]', className)}
     >
       <title>Where the {n.found} events went</title>

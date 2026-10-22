@@ -116,8 +116,11 @@ describe('Funnel', () => {
       const overlap = a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1
       expect(overlap, `${a.text} / ${b.text}`).toBe(false)
     }
-    const height = Number(screen.getByTestId('funnel').getAttribute('viewBox')!.split(' ')[3])
-    for (const b of boxes) expect(b.y1).toBeLessThanOrEqual(height)
+    const [width, height] = screen.getByTestId('funnel').getAttribute('viewBox')!.split(' ').slice(2).map(Number)
+    for (const b of boxes) {
+      expect(b.y1).toBeLessThanOrEqual(height)
+      expect(b.x1, b.text!).toBeLessThanOrEqual(width)
+    }
   })
 
   it('never says set aside or rejected', () => {
