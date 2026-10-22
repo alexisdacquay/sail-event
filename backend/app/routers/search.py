@@ -72,8 +72,8 @@ def _run_summary(run: orm.Run) -> dict:
         "setAside": sum(
             sc.get(k, 0)
             for k in (
-                "filtered_incomplete", "filtered_past", "filtered_date", "filtered_place",
-                "filtered_duplicate", "events_capped", "judge_errors",
+                "filtered_no_date", "filtered_incomplete", "filtered_past", "filtered_date",
+                "filtered_place", "filtered_duplicate", "events_capped", "judge_errors",
             )
         ),
         # page-level
