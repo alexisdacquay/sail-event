@@ -114,7 +114,7 @@ export function ScoreScale({ lower, upper, onChange }: ScoreScaleProps) {
           className="flex items-center justify-center gap-1 truncate"
         >
           <span className="size-2 rounded-full bg-zone-rejected shrink-0" aria-hidden="true" />
-          Rejected
+          Out
         </span>
         <span
           style={{ flexBasis: `${u - l}%` }}
@@ -136,7 +136,7 @@ export function ScoreScale({ lower, upper, onChange }: ScoreScaleProps) {
       <div className="flex sm:hidden flex-col gap-1 text-sm">
         <div className="flex items-center gap-2">
           <span className="inline-block w-3 h-3 rounded-full bg-zone-rejected shrink-0" />
-          <span>Rejected</span>
+          <span>Out</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-block w-3 h-3 rounded-full bg-zone-decide border border-foreground/10 shrink-0" />
