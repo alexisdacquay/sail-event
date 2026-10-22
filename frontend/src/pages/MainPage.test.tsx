@@ -56,7 +56,8 @@ describe('Stream page from mock data', () => {
     expect(screen.getByRole('button', { name: 'Search again' })).toBeInTheDocument()
     const funnel = screen.getByTestId('funnel')
     expect(funnel).toHaveTextContent('12 found')
-    expect(funnel).toHaveTextContent('12 events from 8 pages')
+    expect(funnel).toHaveTextContent('12 events')
+    expect(funnel).toHaveTextContent('from 8 pages')
     expect(funnel).toHaveTextContent('23 pages: no events')
     expect(document.body.textContent).not.toMatch(/set aside|rejected/i)
     // the mock has three runs; the current one (run-001) is not an earlier run
