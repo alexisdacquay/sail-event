@@ -8,7 +8,7 @@ Status words: **decided** (build it), **candidate** (owner leaning to it, not fi
 
 | Date | Decision | Why | Where |
 |---|---|---|---|
-| 2026-10-21 | Main page = **Stream**: one column; the saved search text pinned at the top; the run as a chronology with the funnel; earlier runs; one-line event rows; a right rail with calendar, feed link, searches, event detail tied to the selected row. | Owner picked it from five directions (Stream, Agenda, Inbox, Spotlight, Board) and approved the assembled version ("awesome, I love it"). | `_docs/ui/03-stream-assembled.html` · decided (not yet built) |
+| 2026-10-21 | Main page = **Stream**: one column; the saved search text pinned at the top; the run as a chronology with the funnel; earlier runs; one-line event rows; a right rail with calendar, feed link, searches, event detail tied to the selected row. | Owner picked it from five directions (Stream, Agenda, Inbox, Spotlight, Board) and approved the assembled version ("awesome, I love it"). | `_docs/ui/03-stream-assembled.html` · built: issues 108 + 109, PRs 110 + 111 (main 07fff9d, 2026-10-22), on dev; one saved search per user in this version; ribbon colours are the app theme's, not the mockup's |
 | 2026-10-21 | Agenda, Inbox, Spotlight, Board directions | Discarded by the owner after review. The Inbox's event-detail pane survives inside Stream. | `_docs/ui/01-five-directions.html` §02-05 · rejected |
 | 2026-10-21 | Several saved searches per user (the rail lists them; "+ new search") | Every direction assumed it; owner: "we can add several saved searches as a feature if it makes sense". Not scheduled. | `_docs/ui/01-five-directions.html` · candidate |
 
