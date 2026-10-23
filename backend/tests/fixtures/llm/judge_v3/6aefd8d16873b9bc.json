@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 15,
+    "reason": "This is an outdoor photography meetup in Berlin on 20 October, not a jazz event, though the city and date fit.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 773,
+    "completion_tokens": 80
+  },
+  "recorded_at": "2026-10-23T23:00:09.438641+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 15,
+    "reason": "Techno, not jazz, though it's in Berlin on 20 October within your dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 773,
+    "completion_tokens": 85
+  },
+  "recorded_at": "2026-10-23T23:00:07.754274+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}
