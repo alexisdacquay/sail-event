@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 95,
+    "reason": "Open-air jazz in Berlin on 19 October 2026 matches your jazz-in-Berlin request for 19\u201321 October.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 761,
+    "completion_tokens": 80
+  },
+  "recorded_at": "2026-10-23T23:32:23.910054+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

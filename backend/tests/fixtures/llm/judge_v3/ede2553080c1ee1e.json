@@ -1,0 +1,13 @@
+{
+  "response": {
+    "score": 82,
+    "reason": "Jazz event in Berlin on 21 October 2026 fits your dates, though it's a workshop rather than a concert."
+  },
+  "usage": {
+    "prompt_tokens": 765,
+    "completion_tokens": 84
+  },
+  "recorded_at": "2026-10-23T23:32:25.850422+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}
