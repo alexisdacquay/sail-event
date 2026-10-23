@@ -95,9 +95,11 @@ class TestValidateResponse:
         with pytest.raises(RuntimeError, match=r"guard: schema violation: field 'reason'.*not in"):
             validate_response("guard", {"blocked": False, "reason": "bad_value"}, _GUARD_SCHEMA)
 
-    def test_additional_properties(self):
-        with pytest.raises(RuntimeError, match=r"guard: schema violation: unexpected fields"):
-            validate_response("guard", {"blocked": False, "reason": "ok", "extra": 1}, _GUARD_SCHEMA)
+    def test_additional_properties_stripped(self):
+        """#125: extra fields are dropped (debug log), not rejected."""
+        response = {"blocked": False, "reason": "ok", "extra": 1}
+        validate_response("guard", response, _GUARD_SCHEMA)
+        assert "extra" not in response  # stripped in place
 
     def test_not_an_object(self):
         with pytest.raises(RuntimeError, match=r"guard: schema violation: expected object"):

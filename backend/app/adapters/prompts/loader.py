@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
+
+logger = logging.getLogger(__name__)
 
 _PROMPTS_DIR = Path(__file__).parent
 
@@ -43,9 +46,9 @@ def validate_response(prompt_name: str, response: dict, schema: dict) -> None:
         if schema.get("additionalProperties") is False:
             extra = set(response) - set(properties)
             if extra:
-                raise RuntimeError(
-                    f"{prompt_name}: schema violation: unexpected fields {sorted(extra)}"
-                )
+                logger.debug("%s: dropping extra fields %s", prompt_name, sorted(extra))
+                for field in extra:
+                    del response[field]
 
         for field, field_schema in properties.items():
             if field not in response:
@@ -103,3 +106,40 @@ def load_prompt(
     rendered = template.format(**variables)
 
     return rendered, schema
+
+
+def call_with_repair(
+    model,
+    *,
+    prompt_name: str,
+    prompt_version: str,
+    variables: dict[str, str],
+    repair_hint: str,
+) -> tuple[dict, Any, bool]:
+    """Call model.complete_json; on schema violation, retry once with the error.
+
+    Returns (response, usage, repaired).  *repaired* is True when the first
+    call failed validation but the repair succeeded.  Extract and judge use
+    this helper; the caller adds its own domain checks after.
+    """
+    try:
+        response, usage = model.complete_json(
+            prompt_name=prompt_name,
+            prompt_version=prompt_version,
+            variables=variables,
+        )
+        return response, usage, False
+    except RuntimeError as exc:
+        if "schema violation" not in str(exc):
+            raise
+        repair_msg = (
+            f"Your answer was rejected: {exc}. "
+            f"Answer again with exactly the fields: {repair_hint}."
+        )
+        response, usage = model.complete_json(
+            prompt_name=prompt_name,
+            prompt_version=prompt_version,
+            variables=variables,
+            repair_messages=[{"role": "user", "content": repair_msg}],
+        )
+        return response, usage, True
