@@ -15,6 +15,7 @@ function run(i: number): RunSummary {
     queued: 0,
     rejected: 19,
     setAside: 8,
+    countsVersion: 3,
     pagesRead: 20,
     pagesWithEvents: 12,
     pagesSkipped: 3,

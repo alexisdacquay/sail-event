@@ -346,8 +346,50 @@ def test_last_run_no_auth_returns_401(client):
 _RUN_SUMMARY_KEYS = {
     "runId", "startedAt", "finishedAt", "durationSeconds", "trigger",
     "eventsFound", "accepted", "queued", "rejected", "setAside",
-    "pagesRead", "pagesWithEvents", "pagesSkipped", "error",
+    "pagesRead", "pagesWithEvents", "pagesSkipped", "error", "countsVersion",
 }
+
+
+def test_counts_version_stamped_and_exposed(client, auth_headers):
+    """#118: every finished run carries counts_version 3; last-run and /runs expose it as countsVersion."""
+    h = auth_headers("demo", "demo")
+    body = client.post("/api/search", headers=h).json()
+    assert body["stageCounts"]["counts_version"] == 3
+    assert body["countsVersion"] == 3
+    assert client.get("/api/search/last-run", headers=h).json()["run"]["countsVersion"] == 3
+    assert client.get("/api/search/runs", headers=h).json()["runs"][0]["countsVersion"] == 3
+    # a run that stopped early is stamped too
+    stopped = client.post("/api/search", headers=auth_headers("nocrit", "nocritpw")).json()
+    assert stopped["stoppedAtStage"] and stopped["stageCounts"]["counts_version"] == 3
+
+
+def test_old_run_reports_version_1_and_recomputes_bands(client, auth_headers, _db_session):
+    """#118: a run row stored before the bands reports countsVersion 1 and its bands from its events' scores."""
+    import json
+    from datetime import UTC, datetime
+    from app.orm import Event, Run, User
+
+    h = auth_headers("demo", "demo")
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    now = datetime.now(UTC)
+    run = Run(user_id=user.id, started_at=now, finished_at=now, trigger="scheduled",
+              stage_counts=json.dumps({"results_fetched": 5, "events_extracted": 4, "accepted": 1, "rejected": 3}))
+    _db_session.add(run)
+    _db_session.flush()
+    for i, (status, score) in enumerate([("accepted", 90), ("rejected", 5), ("rejected", 20), ("rejected", 50)]):
+        _db_session.add(Event(
+            user_id=user.id, run_id=run.id, title=f"e{i}", date_time="2026-10-20T20:00:00+02:00",
+            place="Berlin", link=f"https://x.example.com/{i}", description="d", status=status, score=score,
+        ))
+    _db_session.commit()
+
+    last = client.get("/api/search/last-run", headers=h).json()["run"]
+    assert last["runId"] == run.id
+    assert last["countsVersion"] == 1
+    sc = last["stageCounts"]
+    assert (sc["rejected_date_place"], sc["rejected_off_topic"], sc["rejected_other"]) == (1, 1, 1)
+    assert "counts_version" not in sc
+    assert client.get("/api/search/runs", headers=h).json()["runs"][0]["countsVersion"] == 1
 
 
 def test_last_run_has_duration_and_trigger(client, auth_headers):

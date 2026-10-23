@@ -336,6 +336,12 @@ describe('stageLines', () => {
     expect(num(/Judged (\d+)/)).toBe(num(/(\d+) in calendar/) + num(/(\d+) to review/) + num(/(\d+) out/))
   })
 
+  it('says how many pages were already known from earlier runs', () => {
+    expect(stageLines({ ...finished, stageCounts: { ...finished.stageCounts, results_known: 6 } })[0])
+      .toBe('Searched the web: 20 pages, 6 already known from earlier runs, 14 new')
+    expect(stageLines({ ...finished, stageCounts: { ...finished.stageCounts, results_known: 0 } })[0]).toBe('Searched the web, 20 pages')
+  })
+
   it('shows the finished stages then the live line while judging', () => {
     expect(stageLines({ ...finished, currentStage: 'judge', finishedAt: null, stageCounts: { ...finished.stageCounts, events_judged: 3 } })).toEqual([
       'Searched the web, 20 pages',

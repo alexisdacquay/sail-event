@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..deps import get_current_user
 from .. import orm
-from ..services.pipeline import run_pipeline
+from ..services.pipeline import COUNTS_VERSION, reject_bands, run_pipeline
 
 logger = logging.getLogger("sail-event.search")
 
@@ -37,14 +37,19 @@ def _duration_seconds(run: orm.Run) -> float | None:
     return round((end - start).total_seconds(), 1)
 
 
-def _run_response(run: orm.Run) -> dict:
+def _run_response(run: orm.Run, db: Session) -> dict:
     """Build the SearchResult response dict from a Run row."""
     stage_counts = json.loads(run.stage_counts) if run.stage_counts else None
+    version = (stage_counts or {}).get("counts_version", 1)
+    if stage_counts and version < COUNTS_VERSION:
+        # #118: an older run stored no bands; read them back from its events rather than show zeros
+        stage_counts.update(reject_bands(db.query(orm.Event).filter(orm.Event.run_id == run.id).all()))
     return {
         "runId": run.id,
         "eventsFound": run.events_found,
         "eventsNew": run.events_new,
         "stageCounts": stage_counts,
+        "countsVersion": version,
         "currentStage": run.current_stage,
         "stoppedAtStage": run.stopped_at_stage,
         "error": run.error,
@@ -64,6 +69,7 @@ def _run_summary(run: orm.Run) -> dict:
         "finishedAt": run.finished_at.isoformat() if run.finished_at else None,
         "durationSeconds": _duration_seconds(run),
         "trigger": run.trigger,
+        "countsVersion": sc.get("counts_version", 1),
         # event-level only, so accepted + queued + rejected + setAside == eventsFound
         "eventsFound": sc.get("events_extracted", 0),
         "accepted": sc.get("accepted", 0),
@@ -115,7 +121,7 @@ def get_last_run(
     )
     if run is None:
         return JSONResponse(content={"run": None})
-    return JSONResponse(content={"run": _run_response(run)})
+    return JSONResponse(content={"run": _run_response(run, db)})
 
 
 @router.post("/api/search", operation_id="runSearch")
@@ -156,7 +162,7 @@ def run_search(
         )
 
     run = run_pipeline(user, db, trigger="manual")
-    return _run_response(run)
+    return _run_response(run, db)
 
 
 def _select_users(db: Session, max_users: int) -> tuple[list[orm.User], int]:
