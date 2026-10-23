@@ -57,11 +57,12 @@
 2. Hourly: GitHub Actions calls `POST /api/search/all` with a shared-secret header; server iterates every user with criteria, one Run per user
 3. For each user: derive search queries from criteria text
 4. `SearchProvider.search(queries)` returns candidate events
-5. Dedup: `INSERT ... ON CONFLICT(user_id, link) DO NOTHING`; keep only new rows
-6. Score any of the user's events still in `new` (recovery), then score each new event via `Scorer.score`
-7. Triage: score > upper threshold -> accepted; score < lower threshold -> rejected; otherwise (including equal) -> queued
-8. Run row written with events_found, events_new, trigger, timestamps
-9. Accepted events appear in the user's ICS feed at `GET /api/calendar/{ics_token}`
+5. Extract: every result with page content is read in full (one model call per page, in parallel up to `EXTRACT_CONCURRENCY`); results without content fall back to a single snippet-only call. `page_kind` comes from the model's answer. Known single-event pages from earlier runs are skipped.
+6. Hard filters: past, date window, place, non-event, dedup by link and by title+date
+7. Judge: each surviving event scored by the model against the criteria; recovery of `new` events from previous runs
+8. Triage: score >= upper threshold -> accepted; score <= lower threshold -> rejected; between -> queued
+9. Run row written with stage_counts, calls, tokens, timestamps
+10. Accepted events appear in the user's ICS feed at `GET /api/calendar/{ics_token}`
 
 ## Environments
 | Aspect | Dev | Prod |
