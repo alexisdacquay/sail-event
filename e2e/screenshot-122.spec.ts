@@ -23,11 +23,9 @@ test.describe("Issue 122 screenshots", () => {
       const page = await ctx.newPage();
       const user = uid();
       await register(page, user, "testpass1");
-      const box = page.getByLabel("What I'm looking for");
+      // One action: fill and click Search (PR 121 merged the save + run into one)
+      const box = page.getByLabel("What are you looking for?");
       await box.fill(CRITERIA);
-      await box.press("Enter");
-      await expect(page.getByText("Saved.")).toBeVisible({ timeout: 15_000 });
-      // Start search and capture the live line before it finishes
       await page.getByRole("button", { name: /Search (now|again)/ }).click();
       // Wait for the chronology to show a live line with the hairline
       await expect(page.getByTestId("search-progress")).toBeVisible({ timeout: 15_000 });
