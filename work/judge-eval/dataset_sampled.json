@@ -1,0 +1,1217 @@
+[
+  {
+    "triple_id": "berlin_jazz",
+    "criteria": "jazz in Berlin (Germany) next week",
+    "user_tz": "Europe/Berlin",
+    "event": {
+      "title": "jazzexzess w/ Luise Volkmann\u2019s Punk-Jazz-Projekt + Vehicle/Passenger",
+      "start_local": "2026-10-24T20:00",
+      "start_tz": "Europe/Berlin",
+      "city": "Berlin",
+      "country": "DE",
+      "description": "Live jazz performance at House of Music, Berlin.",
+      "link": ""
+    },
+    "source_url": "https://www.eventbrite.com/d/germany--berlin/jazz"
+  },
+  {
+    "triple_id": "berlin_jazz",
+    "criteria": "jazz in Berlin (Germany) next week",
+    "user_tz": "Europe/Berlin",
+    "event": {
+      "title": "London Symphony Orchestra, Sir Antonio Pappano, Eivind Ringstad",
+      "start_local": "2026-09-06T20:00",
+      "start_tz": "Europe/Berlin",
+      "city": "Berlin",
+      "country": "DE",
+      "description": "London Symphony Orchestra with Sir Antonio Pappano and Eivind Ringstad at Berliner Philharmoniker.",
+      "link": "/event/7e6350af-6f35-4dd1-83d9-f6e6cfa4894f"
+    },
+    "source_url": "https://www.jazzucrist.com/jazz/berlin"
+  },
+  {
+    "triple_id": "berlin_jazz",
+    "criteria": "jazz in Berlin (Germany) next week",
+    "user_tz": "Europe/Berlin",
+    "event": {
+      "title": "Freiburger Barockorchester, Sir Simon Rattle, Isabelle Faust",
+      "start_local": "2026-09-03T20:00",
+      "start_tz": "Europe/Berlin",
+      "city": "Berlin",
+      "country": "DE",
+      "description": "Freiburger Barockorchester, Sir Simon Rattle and Isabelle Faust perform at Berliner Philharmoniker, Berlin.",
+      "link": "/event/7c4e3b95-3198-4d24-9027-9cb2a690165a"
+    },
+    "source_url": "https://www.jazzucrist.com/jazz/berlin"
+  },
+  {
+    "triple_id": "berlin_jazz",
+    "criteria": "jazz in Berlin (Germany) next week",
+    "user_tz": "Europe/Berlin",
+    "event": {
+      "title": "Classical Guitar Meets Latin & Jazz mit Jens M\u00fcller",
+      "start_local": "2026-10-30T20:00",
+      "start_tz": "Europe/Berlin",
+      "city": "Berlin",
+      "country": "DE",
+      "description": "Classical guitar meets Latin & jazz with Jens M\u00fcller.",
+      "link": ""
+    },
+    "source_url": "https://www.eventbrite.com/d/germany--berlin/jazz"
+  },
+  {
+    "triple_id": "berlin_jazz",
+    "criteria": "jazz in Berlin (Germany) next week",
+    "user_tz": "Europe/Berlin",
+    "event": {
+      "title": "Asger Nissen IVtet",
+      "start_local": "2026-09-18T20:30",
+      "start_tz": "Europe/Berlin",
+      "city": "Berlin",
+      "country": "DE",
+      "description": "Asger Nissen IVtet live at Donau115, Berlin.",
+      "link": "/event/b9e87cf0-eaea-48be-a314-71533fea0549"
+    },
+    "source_url": "https://www.jazzucrist.com/jazz/berlin"
+  },
+  {
+    "triple_id": "berlin_jazz",
+    "criteria": "jazz in Berlin (Germany) next week",
+    "user_tz": "Europe/Berlin",
+    "event": {
+      "title": "Berliner Philharmoniker, Sir Simon Rattle, Rinat Shaham, Dominik Wollenweber",
+      "start_local": "2026-09-17T20:00",
+      "start_tz": "Europe/Berlin",
+      "city": "Berlin",
+      "country": "DE",
+      "description": "Berliner Philharmoniker with Sir Simon Rattle, Rinat Shaham and Dominik Wollenweber at Berliner Philharmoniker.",
+      "link": "/event/e6c1d32a-ccea-4939-9e4a-b16669956f8f"
+    },
+    "source_url": "https://www.jazzucrist.com/jazz/berlin"
+  },
+  {
+    "triple_id": "berlin_jazz",
+    "criteria": "jazz in Berlin (Germany) next week",
+    "user_tz": "Europe/Berlin",
+    "event": {
+      "title": "Ignaz Schick Quartett",
+      "start_local": "2026-11-01T15:00",
+      "start_tz": "Europe/Berlin",
+      "city": "Berlin",
+      "country": "DE",
+      "description": "Ignaz Schick Quartett performing at Industriesalon Sch\u00f6neweide.",
+      "link": ""
+    },
+    "source_url": "https://www.eventbrite.com/d/germany--berlin/jazz"
+  },
+  {
+    "triple_id": "berlin_jazz",
+    "criteria": "jazz in Berlin (Germany) next week",
+    "user_tz": "Europe/Berlin",
+    "event": {
+      "title": "Pablo Held Trio & Emilio Modeste - 20 Jahre Pablo Held Trio",
+      "start_local": "2026-09-11T18:00",
+      "start_tz": "Europe/Berlin",
+      "city": "Berlin",
+      "country": "DE",
+      "description": "Pablo Held Trio & Emilio Modeste celebrate 20 years of Pablo Held Trio at Zig Zag Jazzclub, with shows at 18:00 and 20:30.",
+      "link": "/event/d1f39fe7-0a24-4a7c-80d5-770672368871"
+    },
+    "source_url": "https://www.jazzucrist.com/jazz/berlin"
+  },
+  {
+    "triple_id": "berlin_jazz",
+    "criteria": "jazz in Berlin (Germany) next week",
+    "user_tz": "Europe/Berlin",
+    "event": {
+      "title": "jazzexzess w/ O/H/R + HOW NOISY ARE THE ROOMS?",
+      "start_local": "2026-11-13T20:00",
+      "start_tz": "Europe/Berlin",
+      "city": "Berlin",
+      "country": "DE",
+      "description": "Jazzexzess with O/H/R and HOW NOISY ARE THE ROOMS? at Kantine am Berghain.",
+      "link": ""
+    },
+    "source_url": "https://www.eventbrite.com/d/germany--berlin/jazz"
+  },
+  {
+    "triple_id": "berlin_jazz",
+    "criteria": "jazz in Berlin (Germany) next week",
+    "user_tz": "Europe/Berlin",
+    "event": {
+      "title": "Lizz Wright",
+      "start_local": "2026-11-03",
+      "start_tz": "Europe/Berlin",
+      "city": "Berlin",
+      "country": "DE",
+      "description": "Lizz Wright concert at Kammermusiksaal, Berlin.",
+      "link": "https://www.jazznearyou.com/berlin/events/lizz-wright-at-kammermusiksaal-on-november-3"
+    },
+    "source_url": "https://www.jazznearyou.com/berlin/live-calendar"
+  },
+  {
+    "triple_id": "london_ai",
+    "criteria": "AI meetups and tech events in London next week",
+    "user_tz": "Europe/London",
+    "event": {
+      "title": "The London Startup Party 2026",
+      "start_local": "2026-10-28T18:00",
+      "start_tz": "Europe/London",
+      "city": "London",
+      "country": "GB",
+      "description": "Meet founders, investors and startup enthusiasts from across the UK at this informal evening networking party in London.",
+      "link": "/event/london-the-london-startup-party-2026-oct-2026"
+    },
+    "source_url": "https://createwith.com/cities/london"
+  },
+  {
+    "triple_id": "london_ai",
+    "criteria": "AI meetups and tech events in London next week",
+    "user_tz": "Europe/London",
+    "event": {
+      "title": "Cofounder Speed Dating Breakfast: Vertical AI",
+      "start_local": "2026-08-02T10:00",
+      "start_tz": "Europe/London",
+      "city": "London",
+      "country": "GB",
+      "description": "AI Tinkerers hosted a cofounder speed dating breakfast focused on Vertical AI. This in-person meetup facilitated connections within the AI community.",
+      "link": "https://london.aitinkerers.org/p/cofounder-speed-dating-breakfast-vertical-ai"
+    },
+    "source_url": "https://london.aitinkerers.org"
+  },
+  {
+    "triple_id": "london_ai",
+    "criteria": "AI meetups and tech events in London next week",
+    "user_tz": "Europe/London",
+    "event": {
+      "title": "Hacking Open Source Projects",
+      "start_local": "2026-09-20T10:00",
+      "start_tz": "Europe/London",
+      "city": "London",
+      "country": "GB",
+      "description": "AI Tinkerers - London hosted an in-person meetup focused on hacking open source projects. The event was organized by Louis Knight-Webb.",
+      "link": "https://london.aitinkerers.org/p/hacking-open-source-projects"
+    },
+    "source_url": "https://london.aitinkerers.org"
+  },
+  {
+    "triple_id": "london_ai",
+    "criteria": "AI meetups and tech events in London next week",
+    "user_tz": "Europe/London",
+    "event": {
+      "title": "The London AI Conference 2026",
+      "start_local": "2026-10-27T18:00",
+      "start_tz": "Europe/London",
+      "city": "London",
+      "country": "GB",
+      "description": "Meet 300 business, innovation, product and technology leaders at a focused evening of AI discussion and structured networking in London.",
+      "link": "/event/london-the-london-ai-conference-2026-oct-2026"
+    },
+    "source_url": "https://createwith.com/cities/london"
+  },
+  {
+    "triple_id": "london_ai",
+    "criteria": "AI meetups and tech events in London next week",
+    "user_tz": "Europe/London",
+    "event": {
+      "title": "QonfX London 2026",
+      "start_local": "2026-10-22",
+      "start_tz": "Europe/London",
+      "city": "London",
+      "country": "GB",
+      "description": "QonfX London 2026 is a dedicated AI conference taking place in London on 22 October 2026, focused on the latest developments and innovations in artificial intelligence.",
+      "link": "/event/london-qonfx-london-2026-oct-2026"
+    },
+    "source_url": "https://createwith.com/cities/london"
+  },
+  {
+    "triple_id": "london_ai",
+    "criteria": "AI meetups and tech events in London next week",
+    "user_tz": "Europe/London",
+    "event": {
+      "title": "General Magic Movie Screening // 11th June",
+      "start_local": "2026-06-11T18:00",
+      "start_tz": "Europe/London",
+      "city": "London",
+      "country": "GB",
+      "description": "AI Tinkerers hosted a screening of the General Magic movie.",
+      "link": "https://london.aitinkerers.org/p/general-magic-movie-screening-11th-june"
+    },
+    "source_url": "https://london.aitinkerers.org"
+  },
+  {
+    "triple_id": "london_ai",
+    "criteria": "AI meetups and tech events in London next week",
+    "user_tz": "Europe/London",
+    "event": {
+      "title": "Trustworthy AI: From Principles to Practice - Report Launch Reception",
+      "start_local": "2026-10-29T18:00",
+      "start_tz": "Europe/London",
+      "city": "London",
+      "country": "GB",
+      "description": "Explore how organisations can demonstrate trustworthy AI in practice at UKAI\u2019s free, invite-only report launch in Central London on 29 October 2026.",
+      "link": "/event/london-trustworthy-ai-from-principles-to-practice-report-launch-rec-oct-2026"
+    },
+    "source_url": "https://createwith.com/cities/london"
+  },
+  {
+    "triple_id": "london_ai",
+    "criteria": "AI meetups and tech events in London next week",
+    "user_tz": "Europe/London",
+    "event": {
+      "title": "AI Battle Bot Tournament",
+      "start_local": "2026-09-15T18:00",
+      "start_tz": "Europe/London",
+      "city": "London",
+      "country": "GB",
+      "description": "AI Tinkerers hosted an in-person AI Battle Bot Tournament. The event brought together enthusiasts for a competitive showcase of artificial intelligence.",
+      "link": "https://london.aitinkerers.org/p/ai-battle-bot-tournament"
+    },
+    "source_url": "https://london.aitinkerers.org"
+  },
+  {
+    "triple_id": "london_ai",
+    "criteria": "AI meetups and tech events in London next week",
+    "user_tz": "Europe/London",
+    "event": {
+      "title": "The Use of AI for Electronic and Print Media by London Bangla Press Club",
+      "start_local": "2026-11-10T18:30",
+      "start_tz": "Europe/London",
+      "city": "London",
+      "country": "GB",
+      "description": "Explore how AI could reshape electronic and print journalism at this 90-minute, bilingual talk for Bangladeshi media professionals in London.",
+      "link": "/event/london-the-use-of-ai-for-electronic-and-print-media-by-london-bangl-nov-2026"
+    },
+    "source_url": "https://createwith.com/cities/london"
+  },
+  {
+    "triple_id": "london_ai",
+    "criteria": "AI meetups and tech events in London next week",
+    "user_tz": "Europe/London",
+    "event": {
+      "title": "[London] Enterprise AI Showcase (October)",
+      "start_local": "2026-10-19T18:00",
+      "start_tz": "Europe/London",
+      "city": "London",
+      "country": "GB",
+      "description": "Enterprise AI meetup in London for practitioners building, deploying, and scaling AI inside enterprises. Includes check-in, tech talks, Q&A, and open discussion.",
+      "link": "https://www.aicamp.ai/event/eventdetails/W2026101910"
+    },
+    "source_url": "https://www.aicamp.ai/event/eventdetails/W2026101910"
+  },
+  {
+    "triple_id": "lisbon_fado",
+    "criteria": "fado ao vivo em Lisboa este fim de semana",
+    "user_tz": "Europe/Lisbon",
+    "event": {
+      "title": "Fado ao vivo: uma experi\u00eancia intimista com lugares VIP",
+      "start_local": "2026-10-25T19:00",
+      "start_tz": "Europe/Lisbon",
+      "city": "Lisbon",
+      "country": "PT",
+      "description": "Fado ao vivo intimista com lugares VIP, em diferentes espa\u00e7os conforme o dia da semana, no Jardim do Pr\u00edncipe Real.",
+      "link": "https://feverup.com/m/631983"
+    },
+    "source_url": "https://feverup.com/m/631983"
+  },
+  {
+    "triple_id": "lisbon_fado",
+    "criteria": "fado ao vivo em Lisboa este fim de semana",
+    "user_tz": "Europe/Lisbon",
+    "event": {
+      "title": "Afro Blackjack - Halloween",
+      "start_local": "2026-10-31T22:00",
+      "start_tz": "Europe/Lisbon",
+      "city": "Lisboa",
+      "country": "PT",
+      "description": "Afro Blackjack Halloween party at R. do Norte 111, Lisbon.",
+      "link": "https://www.eventbrite.pt/e/afro-blackjack-halloween-tickets-2003075029334?dsrp_sid=0a7deb72-e000-430b-81e6-98920e097023&aff=ebdssbdestsearch"
+    },
+    "source_url": "https://www.eventbrite.pt/d/portugal--lisboa/fado"
+  },
+  {
+    "triple_id": "lisbon_fado",
+    "criteria": "fado ao vivo em Lisboa este fim de semana",
+    "user_tz": "Europe/Lisbon",
+    "event": {
+      "title": "The Jazz Room: Um Tributo a Frank Sinatra e Louis Armstrong",
+      "start_local": "2026-11-13",
+      "start_tz": "Europe/Lisbon",
+      "city": "Lisbon",
+      "country": "PT",
+      "description": "Tributo a Frank Sinatra e Louis Armstrong no Jazz Room.",
+      "link": "https://feverup.com/m/684390"
+    },
+    "source_url": "https://feverup.com/m/631983"
+  },
+  {
+    "triple_id": "lisbon_fado",
+    "criteria": "fado ao vivo em Lisboa este fim de semana",
+    "user_tz": "Europe/Lisbon",
+    "event": {
+      "title": "Fado em Lisboa: show intimista de fado ao vivo \u00e0 noite com vinho do Porto",
+      "start_local": "2026-10-24",
+      "start_tz": "Europe/Lisbon",
+      "city": "Lisbon",
+      "country": "PT",
+      "description": "Show intimista de fado ao vivo \u00e0 noite com vinho do Porto, em Lisboa.",
+      "link": "https://feverup.com/m/156666"
+    },
+    "source_url": "https://feverup.com/m/98979"
+  },
+  {
+    "triple_id": "lisbon_fado",
+    "criteria": "fado ao vivo em Lisboa este fim de semana",
+    "user_tz": "Europe/Lisbon",
+    "event": {
+      "title": "Experi\u00eancia de Fado na Casa da Am\u00e1lia com concerto ao vivo",
+      "start_local": "2026-10-24",
+      "start_tz": "Europe/Lisbon",
+      "city": "Lisbon",
+      "country": "PT",
+      "description": "Sess\u00e3o de fado na casa onde Am\u00e1lia Rodrigues viveu 44 anos, com concerto ac\u00fastico de voz, guitarra portuguesa e viola de fado no jardim secreto.",
+      "link": "https://feverup.com/m/290633"
+    },
+    "source_url": "https://feverup.com/m/98979"
+  },
+  {
+    "triple_id": "lisbon_fado",
+    "criteria": "fado ao vivo em Lisboa este fim de semana",
+    "user_tz": "Europe/Lisbon",
+    "event": {
+      "title": "The Jazz Room: Um Tributo a Frank Sinatra e Louis Armstrong",
+      "start_local": "2026-11-13",
+      "start_tz": "Europe/Lisbon",
+      "city": "Lisbon",
+      "country": "PT",
+      "description": "Tributo a Frank Sinatra e Louis Armstrong na Time Out Market de Lisboa.",
+      "link": "https://feverup.com/m/684390"
+    },
+    "source_url": "https://feverup.com/m/98979"
+  },
+  {
+    "triple_id": "lisbon_fado",
+    "criteria": "fado ao vivo em Lisboa este fim de semana",
+    "user_tz": "Europe/Lisbon",
+    "event": {
+      "title": "Sucessos de Am\u00e1lia pela Guitarra Portuguesa",
+      "start_local": "2027-01-17",
+      "start_tz": "Europe/Lisbon",
+      "city": "Lisbon",
+      "country": "PT",
+      "description": "Sucessos de Am\u00e1lia pela Guitarra Portuguesa na Casa-Museu Am\u00e1lia Rodrigues.",
+      "link": "https://feverup.com/m/102294"
+    },
+    "source_url": "https://feverup.com/m/98979"
+  },
+  {
+    "triple_id": "lisbon_fado",
+    "criteria": "fado ao vivo em Lisboa este fim de semana",
+    "user_tz": "Europe/Lisbon",
+    "event": {
+      "title": "An Intimate Live Fado Experience with VIP seating access",
+      "start_local": "2026-10-25T19:00",
+      "start_tz": "Europe/Lisbon",
+      "city": "Lisboa",
+      "country": "PT",
+      "description": "Intimate live fado experience with VIP seating access at Principe Real Garden.",
+      "link": "https://www.eventbrite.co.uk/e/an-intimate-live-fado-experience-with-vip-seating-access-tickets-1988072676894?dsrp_sid=0a7deb72-e000-430b-81e6-98920e097023&aff=ebdssbdestsearch"
+    },
+    "source_url": "https://www.eventbrite.pt/d/portugal--lisboa/fado"
+  },
+  {
+    "triple_id": "lisbon_fado",
+    "criteria": "fado ao vivo em Lisboa este fim de semana",
+    "user_tz": "Europe/Lisbon",
+    "event": {
+      "title": "A Minha Can\u00e7\u00e3o \u00e9 Saudade | Cl\u00e1ssicos de Am\u00e1lia",
+      "start_local": "2026-11-07",
+      "start_tz": "Europe/Lisbon",
+      "city": "Lisbon",
+      "country": "PT",
+      "description": "Cl\u00e1ssicos de Am\u00e1lia na Casa-Museu.",
+      "link": "https://feverup.com/m/256191"
+    },
+    "source_url": "https://feverup.com/m/631983"
+  },
+  {
+    "triple_id": "lisbon_fado",
+    "criteria": "fado ao vivo em Lisboa este fim de semana",
+    "user_tz": "Europe/Lisbon",
+    "event": {
+      "title": "Fado Night: Live Music & A Glass of Wine",
+      "start_local": "2026-10-24T18:30",
+      "start_tz": "Europe/Lisbon",
+      "city": "Lisboa",
+      "country": "PT",
+      "description": "Live fado music and a glass of wine at R. do Crucifixo 17, Lisbon.",
+      "link": "https://www.eventbrite.co.uk/e/fado-night-live-music-a-glass-of-wine-tickets-2002292216921?dsrp_sid=0a7deb72-e000-430b-81e6-98920e097023&aff=ebdssbdestsearch"
+    },
+    "source_url": "https://www.eventbrite.pt/d/portugal--lisboa/fado"
+  },
+  {
+    "triple_id": "valencia_regatta",
+    "criteria": "regatas de vela en Valencia en noviembre",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Regata Clase Windsurf \u2013 Club N\u00e1utico Benidorm",
+      "start_local": "2026-12-12",
+      "start_tz": "Europe/Madrid",
+      "city": "Benidorm",
+      "country": "ES",
+      "description": "Prueba de la clase Windsurf en Benidorm los d\u00edas 12 y 13 de diciembre.",
+      "link": "https://somvela.com/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+    },
+    "source_url": "https://www.fvcv.es/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+  },
+  {
+    "triple_id": "valencia_regatta",
+    "criteria": "regatas de vela en Valencia en noviembre",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Regata Clase ILCA \u2013 Real Club de Regatas de Alicante",
+      "start_local": "2026-12-06",
+      "start_tz": "Europe/Madrid",
+      "city": "Alicante",
+      "country": "ES",
+      "description": "Prueba de la clase ILCA en Alicante del 6 al 8 de diciembre.",
+      "link": "https://somvela.com/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+    },
+    "source_url": "https://www.fvcv.es/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+  },
+  {
+    "triple_id": "valencia_regatta",
+    "criteria": "regatas de vela en Valencia en noviembre",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Regata Clase 420 \u2013 Club N\u00e1utico Oropesa",
+      "start_local": "2026-10-17",
+      "start_tz": "Europe/Madrid",
+      "city": "Oropesa del Mar",
+      "country": "ES",
+      "description": "Prueba de la clase 420 incluida en el calendario de clases estrat\u00e9gicas 2026-2027.",
+      "link": "https://somvela.com/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+    },
+    "source_url": "https://www.fvcv.es/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+  },
+  {
+    "triple_id": "valencia_regatta",
+    "criteria": "regatas de vela en Valencia en noviembre",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Regata Clase Optimist A \u2013 Real Club de Regatas de Alicante",
+      "start_local": "2026-11-28",
+      "start_tz": "Europe/Madrid",
+      "city": "Alicante",
+      "country": "ES",
+      "description": "Prueba de la clase Optimist A en Alicante los d\u00edas 28 y 29 de noviembre.",
+      "link": "https://somvela.com/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+    },
+    "source_url": "https://www.fvcv.es/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+  },
+  {
+    "triple_id": "valencia_regatta",
+    "criteria": "regatas de vela en Valencia en noviembre",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Regata Clase 420 \u2013 Real Club N\u00e1utico Valencia",
+      "start_local": "2026-11-21",
+      "start_tz": "Europe/Madrid",
+      "city": "Valencia",
+      "country": "ES",
+      "description": "Prueba de la clase 420 en Valencia los d\u00edas 21 y 22 de noviembre.",
+      "link": "https://somvela.com/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+    },
+    "source_url": "https://www.fvcv.es/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+  },
+  {
+    "triple_id": "valencia_regatta",
+    "criteria": "regatas de vela en Valencia en noviembre",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Regata Clase ILCA \u2013 Real Club N\u00e1utico Valencia",
+      "start_local": "2026-11-21",
+      "start_tz": "Europe/Madrid",
+      "city": "Valencia",
+      "country": "ES",
+      "description": "Prueba de la clase ILCA en Valencia los d\u00edas 21 y 22 de noviembre.",
+      "link": "https://somvela.com/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+    },
+    "source_url": "https://www.fvcv.es/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+  },
+  {
+    "triple_id": "valencia_regatta",
+    "criteria": "regatas de vela en Valencia en noviembre",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Regata Clase 420 \u2013 Club N\u00e1utico Benidorm",
+      "start_local": "2026-12-12",
+      "start_tz": "Europe/Madrid",
+      "city": "Benidorm",
+      "country": "ES",
+      "description": "Prueba de la clase 420 en Benidorm los d\u00edas 12 y 13 de diciembre.",
+      "link": "https://somvela.com/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+    },
+    "source_url": "https://www.fvcv.es/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+  },
+  {
+    "triple_id": "valencia_regatta",
+    "criteria": "regatas de vela en Valencia en noviembre",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Regata Clase Optimist A \u2013 Club N\u00e1utico Dehesa Campoamor",
+      "start_local": "2026-10-24",
+      "start_tz": "Europe/Madrid",
+      "city": "Orihuela",
+      "country": "ES",
+      "description": "Prueba de la clase Optimist A en Dehesa Campoamor los d\u00edas 24 y 25 de octubre.",
+      "link": "https://somvela.com/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+    },
+    "source_url": "https://www.fvcv.es/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+  },
+  {
+    "triple_id": "valencia_regatta",
+    "criteria": "regatas de vela en Valencia en noviembre",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Regata Clase Optimist B \u2013 Club N\u00e1utico Dehesa Campoamor",
+      "start_local": "2026-10-24",
+      "start_tz": "Europe/Madrid",
+      "city": "Orihuela",
+      "country": "ES",
+      "description": "Prueba de la clase Optimist B en Dehesa Campoamor los d\u00edas 24 y 25 de octubre.",
+      "link": "https://somvela.com/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+    },
+    "source_url": "https://www.fvcv.es/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+  },
+  {
+    "triple_id": "valencia_regatta",
+    "criteria": "regatas de vela en Valencia en noviembre",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Regata Clase Optimist B \u2013 Real Club de Regatas de Alicante",
+      "start_local": "2026-11-28",
+      "start_tz": "Europe/Madrid",
+      "city": "Alicante",
+      "country": "ES",
+      "description": "Prueba de la clase Optimist B en Alicante los d\u00edas 28 y 29 de noviembre.",
+      "link": "https://somvela.com/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+    },
+    "source_url": "https://www.fvcv.es/es/noticias/ya-puedes-consultar-el-calendario-de-regatas-de-las-clases-estrategicas-2026-2027"
+  },
+  {
+    "triple_id": "sevilla_kids",
+    "criteria": "talleres infantiles y actividades para ninos en Sevilla este fin de semana",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Mi\u00e9rcoles Addams: El Secreto de la Mansi\u00f3n",
+      "start_local": "2026-11-08T12:30",
+      "start_tz": "Europe/Madrid",
+      "city": "Sevilla",
+      "country": "ES",
+      "description": "Mi\u00e9rcoles Addams: El Secreto de la Mansi\u00f3n a las 12:30 horas en el Auditorio Cartuja, Sevilla.",
+      "link": "https://www.juntadeandalucia.es/cultura/agendaculturaldeandalucia/evento/miercoles-addams-el-secreto-de-la-mansion"
+    },
+    "source_url": "https://www.juntadeandalucia.es/cultura/agendaculturaldeandalucia/planes/cosas-de-ninos-planes-antiaburrimiento-en-sevilla"
+  },
+  {
+    "triple_id": "sevilla_kids",
+    "criteria": "talleres infantiles y actividades para ninos en Sevilla este fin de semana",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "El arc\u00f3n de Noa",
+      "start_local": "2026-10-31T12:00",
+      "start_tz": "Europe/Madrid",
+      "city": "Sevilla",
+      "country": "ES",
+      "description": "El arc\u00f3n de Noa llega a Sevilla con una historia de danza, fantas\u00eda y juguetes que cobran vida.",
+      "link": "https://www.agendadesevilla.com/el-arcon-de-noa/"
+    },
+    "source_url": "https://www.agendadesevilla.com/ninos"
+  },
+  {
+    "triple_id": "sevilla_kids",
+    "criteria": "talleres infantiles y actividades para ninos en Sevilla este fin de semana",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Pica pica Operaci\u00f3n Halloween",
+      "start_local": "2026-10-25T11:00",
+      "start_tz": "Europe/Madrid",
+      "city": "Sevilla",
+      "country": "ES",
+      "description": "Musical Pica Pica Operaci\u00f3n Halloween en el Auditorio Cartuja Sevilla.",
+      "link": "https://www.agendadesevilla.com/pica-pica-operacion-halloween/"
+    },
+    "source_url": "https://www.agendadesevilla.com/ninos"
+  },
+  {
+    "triple_id": "sevilla_kids",
+    "criteria": "talleres infantiles y actividades para ninos en Sevilla este fin de semana",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Dinosaurios de la Patagonia",
+      "start_local": "2026-04-09",
+      "start_tz": "Europe/Madrid",
+      "city": "Sevilla",
+      "country": "ES",
+      "description": "Exposici\u00f3n Dinosaurios de la Patagonia en CaixaForum Sevilla, del 9 de abril al 12 de octubre de 2026.",
+      "link": "https://www.juntadeandalucia.es/cultura/agendaculturaldeandalucia/evento/dinosaurios-de-la-patagonia"
+    },
+    "source_url": "https://www.juntadeandalucia.es/cultura/agendaculturaldeandalucia/planes/cosas-de-ninos-planes-antiaburrimiento-en-sevilla"
+  },
+  {
+    "triple_id": "sevilla_kids",
+    "criteria": "talleres infantiles y actividades para ninos en Sevilla este fin de semana",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "CantaJuego, con Yo quiero ser",
+      "start_local": "2026-12-28",
+      "start_tz": "Europe/Madrid",
+      "city": "Sevilla",
+      "country": "ES",
+      "description": "CantaJuego, con Yo quiero ser, el 28 de diciembre de 2026 en FIBES II, sesiones a las 16:30 y 19:00 h.",
+      "link": "https://www.juntadeandalucia.es/cultura/agendaculturaldeandalucia/evento/cantajuego-con-yo-quiero-ser-0"
+    },
+    "source_url": "https://www.juntadeandalucia.es/cultura/agendaculturaldeandalucia/planes/cosas-de-ninos-planes-antiaburrimiento-en-sevilla"
+  },
+  {
+    "triple_id": "sevilla_kids",
+    "criteria": "talleres infantiles y actividades para ninos en Sevilla este fin de semana",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Space Explorers: The ISS Experience",
+      "start_local": "2026-10-23T09:00",
+      "start_tz": "Europe/Madrid",
+      "city": "Sevilla",
+      "country": "ES",
+      "description": "Sevilla se convierte en una puerta de entrada al universo con Space Explorers: The ISS Experience.",
+      "link": "https://www.agendadesevilla.com/space-explorers-the-iss-experience/"
+    },
+    "source_url": "https://www.agendadesevilla.com/ninos"
+  },
+  {
+    "triple_id": "sevilla_kids",
+    "criteria": "talleres infantiles y actividades para ninos en Sevilla este fin de semana",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Muestra Fotogr\u00e1fica 'Cine hecho por Ni\u00f1as/os'",
+      "start_local": "2026-09-14",
+      "start_tz": "Europe/Madrid",
+      "city": "Sevilla",
+      "country": "ES",
+      "description": "Muestra fotogr\u00e1fica 'Cine hecho por Ni\u00f1as/os' en el Centro C\u00edvico Las Sirenas, del 14 de septiembre al 2 de octubre de 2026.",
+      "link": "https://www.juntadeandalucia.es/cultura/agendaculturaldeandalucia/evento/muestra-fotografica-cine-hecho-por-ninasos"
+    },
+    "source_url": "https://www.juntadeandalucia.es/cultura/agendaculturaldeandalucia/planes/cosas-de-ninos-planes-antiaburrimiento-en-sevilla"
+  },
+  {
+    "triple_id": "sevilla_kids",
+    "criteria": "talleres infantiles y actividades para ninos en Sevilla este fin de semana",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Un paseo por Disney",
+      "start_local": "2026-10-04T12:00",
+      "start_tz": "Europe/Madrid",
+      "city": "Sevilla",
+      "country": "ES",
+      "description": "Un paseo por Disney a las 12:00 horas en el Auditorio Cartuja, Sevilla.",
+      "link": "https://www.juntadeandalucia.es/cultura/agendaculturaldeandalucia/evento/un-paseo-por-disney"
+    },
+    "source_url": "https://www.juntadeandalucia.es/cultura/agendaculturaldeandalucia/planes/cosas-de-ninos-planes-antiaburrimiento-en-sevilla"
+  },
+  {
+    "triple_id": "sevilla_kids",
+    "criteria": "talleres infantiles y actividades para ninos en Sevilla este fin de semana",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Pica pica. Operaci\u00f3n Halloween",
+      "start_local": "2026-10-25",
+      "start_tz": "Europe/Madrid",
+      "city": "Sevilla",
+      "country": "ES",
+      "description": "Pica pica. Operaci\u00f3n Halloween, dos sesiones: 11:00 y 13:00 horas en el Auditorio Cartuja.",
+      "link": "https://www.juntadeandalucia.es/cultura/agendaculturaldeandalucia/evento/pica-pica-operacion-halloween"
+    },
+    "source_url": "https://www.juntadeandalucia.es/cultura/agendaculturaldeandalucia/planes/cosas-de-ninos-planes-antiaburrimiento-en-sevilla"
+  },
+  {
+    "triple_id": "sevilla_kids",
+    "criteria": "talleres infantiles y actividades para ninos en Sevilla este fin de semana",
+    "user_tz": "Europe/Madrid",
+    "event": {
+      "title": "Cirktober \u2013 Festival de Circo de la Provincia de Sevilla",
+      "start_local": "2026-10-22T21:00",
+      "start_tz": "Europe/Madrid",
+      "city": "Sevilla",
+      "country": "ES",
+      "description": "Cirktober 2026 lleva el circo contempor\u00e1neo a m\u00e1s de 30 municipios de Sevilla en octubre.",
+      "link": "https://www.agendadesevilla.com/cirktober/"
+    },
+    "source_url": "https://www.agendadesevilla.com/ninos"
+  },
+  {
+    "triple_id": "paris_art",
+    "criteria": "expositions d'art a Paris ce mois-ci",
+    "user_tz": "Europe/Paris",
+    "event": {
+      "title": "Parallax : l'artiste Stan Douglas au c\u0153ur d'une exposition r\u00e9trospective au Jeu de Paume, nos photos",
+      "start_local": "2026-10-20",
+      "start_tz": "Europe/Paris",
+      "city": "Paris",
+      "country": "FR",
+      "description": "D\u00e9couvrez le travail de Stan Douglas avec l'exposition Parallax, au Jeu de Paume du 20 octobre 2026 au 10 janvier 2027. La photographie comme mani\u00e8re de raconter des histoires.",
+      "link": "https://www.sortiraparis.fr/arts-culture/exposition/articles/349208-parallax-l-artiste-stan-douglas-au-coeur-d-une-exposition-retrospective-au-jeu-de-paume-nos-photos"
+    },
+    "source_url": "https://www.sortiraparis.com/arts-culture/exposition/guides/56309-sortir-a-paris-en-octobre-2026-les-belles-expositions-a-voir-en-ce-moment-dans-la-capitale"
+  },
+  {
+    "triple_id": "paris_art",
+    "criteria": "expositions d'art a Paris ce mois-ci",
+    "user_tz": "Europe/Paris",
+    "event": {
+      "title": "Georges Perec \u00e0 l'honneur dans une exposition \u00e0 la BnF Fran\u00e7ois Mitterrand",
+      "start_local": "2026-10-13",
+      "start_tz": "Europe/Paris",
+      "city": "Paris",
+      "country": "FR",
+      "description": "Georges Perec \u00e0 l'honneur dans une exposition \u00e0 la BnF Fran\u00e7ois Mitterrand is currently on view at Bnf Site Francois Mitterrand.",
+      "link": "https://www.expoparis.com/en/exhibitions/georges-perec-a-l-honneur-dans-une-bnf-site-francois-mitterrand-2026-10-13/"
+    },
+    "source_url": "https://expo-paris.com/en/months/october"
+  },
+  {
+    "triple_id": "paris_art",
+    "criteria": "expositions d'art a Paris ce mois-ci",
+    "user_tz": "Europe/Paris",
+    "event": {
+      "title": "Gustave Fayet \u00e0 la Fondation Louis Vuitton : Van Gogh, Gauguin et Redon dans une exposition \u00e9v\u00e9nement",
+      "start_local": "2026-10-09",
+      "start_tz": "Europe/Paris",
+      "city": "Paris",
+      "country": "FR",
+      "description": "La Fondation Louis Vuitton consacre une exposition XXL \u00e0 Gustave Fayet, collectionneur visionnaire et cr\u00e9ateur touche-\u00e0-tout, du 9 octobre 2026 au 8 mars 2027.",
+      "link": "https://www.sortiraparis.fr/arts-culture/exposition/articles/346700-gustave-fayet-a-la-fondation-louis-vuitton-van-gogh-gauguin-et-redon-dans-une-exposition-evenement"
+    },
+    "source_url": "https://www.sortiraparis.com/arts-culture/exposition/guides/56309-sortir-a-paris-en-octobre-2026-les-belles-expositions-a-voir-en-ce-moment-dans-la-capitale"
+  },
+  {
+    "triple_id": "paris_art",
+    "criteria": "expositions d'art a Paris ce mois-ci",
+    "user_tz": "Europe/Paris",
+    "event": {
+      "title": "Asia Now : profitez de l'\u00e9dition 2026 de la plus asiatique des foires artistiques \u00e0 la Monnaie de Paris",
+      "start_local": "2026-10-20",
+      "start_tz": "Europe/Paris",
+      "city": "Paris",
+      "country": "FR",
+      "description": "La foire d'art asiatique Asia Now est de retour \u00e0 Paris ! La foire s'installe \u00e0 la Monnaie de Paris du 20 au 24 octobre 2026. Voici le programme de cette 12e \u00e9dition.",
+      "link": "https://www.sortiraparis.com/arts-culture/exposition/articles/320614-asia-now-profitez-de-l-edition-2026-de-la-plus-asiatique-des-foires-artistiques-a-la-monnaie-de-paris"
+    },
+    "source_url": "https://www.sortiraparis.com/arts-culture/exposition/guides/274659-les-evenements-artistiques-a-paris-a-ne-pas-manquer-ces-prochains-jours"
+  },
+  {
+    "triple_id": "paris_art",
+    "criteria": "expositions d'art a Paris ce mois-ci",
+    "user_tz": "Europe/Paris",
+    "event": {
+      "title": "pop art car 2.0 : l\u2019exposition gratuite entre pop art, design et num\u00e9rique, sur les Champs-\u00c9lys\u00e9es",
+      "start_local": "2026-09-24",
+      "start_tz": "Europe/Paris",
+      "city": "Paris",
+      "country": "FR",
+      "description": "Depuis le 24 septembre 2026 et jusqu'au 31 janvier 2027, pop art car 2.0 investit le d\u00e9fil\u00e9 renault\u00ae, au 53 avenue des Champs-\u00c9lys\u00e9es \u00e0 Paris. Entre \u0153uvres historiques, cr\u00e9ations num\u00e9riques in\u00e9dites et automobile, cette exposition gratuite r\u00e9unit notamment les artistes S\u00e9bastien Preschoux, Popay, Victor Vasarely et Julio Le Parc.",
+      "link": "https://www.sortiraparis.com/arts-culture/exposition/articles/347077-pop-art-car-2-0-l-exposition-gratuite-entre-pop-art-design-et-numerique-sur-les-champs-elysees"
+    },
+    "source_url": "https://www.sortiraparis.com/arts-culture/exposition/guides/274659-les-evenements-artistiques-a-paris-a-ne-pas-manquer-ces-prochains-jours"
+  },
+  {
+    "triple_id": "paris_art",
+    "criteria": "expositions d'art a Paris ce mois-ci",
+    "user_tz": "Europe/Paris",
+    "event": {
+      "title": "Le mus\u00e9e d\u2019Orsay donne la r\u00e9plique \u00e0 la Com\u00e9die-Fran\u00e7aise lors de cinq soir\u00e9es d\u00e8s octobre 2026",
+      "start_local": "2026-10-10",
+      "start_tz": "Europe/Paris",
+      "city": "Paris",
+      "country": "FR",
+      "description": "Le mus\u00e9e d\u2019Orsay donne la r\u00e9plique \u00e0 la Com\u00e9die-Fran\u00e7aise lors de cinq soir\u00e9es d\u00e8s octobre 2026.",
+      "link": "https://www.expoparis.com/en/exhibitions/le-musee-d-orsay-donne-la-replique-a-la-auditorium-du-musee-d-orsay-2026-10-10/"
+    },
+    "source_url": "https://expo-paris.com/en/months/october"
+  },
+  {
+    "triple_id": "paris_art",
+    "criteria": "expositions d'art a Paris ce mois-ci",
+    "user_tz": "Europe/Paris",
+    "event": {
+      "title": "Outsider' Paris 2026 : le salon de l'art brut s'empare du Bastille Design Center \u00e0 Paris",
+      "start_local": "2026-10-20",
+      "start_tz": "Europe/Paris",
+      "city": "Paris",
+      "country": "FR",
+      "description": "La foire de l'art brut, Outsider' Paris, revient pour une toute nouvelle \u00e9dition au Bastille Design Center, du 20 au 25 octobre 2026. Un rendez-vous gratuit pour les amoureux de l'art et les curieux de Paris.",
+      "link": "https://www.sortiraparis.com/arts-culture/exposition/articles/86027-outsider-paris-2026-le-salon-de-l-art-brut-s-empare-du-bastille-design-center-a-paris"
+    },
+    "source_url": "https://www.sortiraparis.com/arts-culture/exposition/guides/274659-les-evenements-artistiques-a-paris-a-ne-pas-manquer-ces-prochains-jours"
+  },
+  {
+    "triple_id": "paris_art",
+    "criteria": "expositions d'art a Paris ce mois-ci",
+    "user_tz": "Europe/Paris",
+    "event": {
+      "title": "Kurt Schwitters. Le chaos-monde. 1918-1948",
+      "start_local": "2026-10-06",
+      "start_tz": "Europe/Paris",
+      "city": "Paris",
+      "country": "FR",
+      "description": "The Mus\u00e9e national Picasso-Paris is dedicated to Kurt Schwitters (1887-1948) with its first French retrospective in over thirty years, from October 6, 2026 to February 7, 2027.",
+      "link": "https://www.expoparis.com/en/exhibitions/exposition-kurt-schwitters-au-musee-picasso-musee-national-picasso-2026-10-06/"
+    },
+    "source_url": "https://expo-paris.com/en/months/october"
+  },
+  {
+    "triple_id": "paris_art",
+    "criteria": "expositions d'art a Paris ce mois-ci",
+    "user_tz": "Europe/Paris",
+    "event": {
+      "title": "Exposition Louise Bourgeois \u00e0 la BnF : dessins, gravures et nerfs \u00e0 vif",
+      "start_local": "2026-10-20",
+      "start_tz": "Europe/Paris",
+      "city": "Paris",
+      "country": "FR",
+      "description": "La BnF Richelieu pr\u00e9sente l\u2019exposition 'Louise Bourgeois. Extr\u00eame tension', consacr\u00e9e aux dessins et gravures de l\u2019artiste, du 20 octobre 2026 au 21 f\u00e9vrier 2027.",
+      "link": "https://www.sortiraparis.fr/arts-culture/exposition/articles/349031-exposition-louise-bourgeois-a-la-bnf-dessins-gravures-et-nerfs-a-vif"
+    },
+    "source_url": "https://www.sortiraparis.com/arts-culture/exposition/guides/56309-sortir-a-paris-en-octobre-2026-les-belles-expositions-a-voir-en-ce-moment-dans-la-capitale"
+  },
+  {
+    "triple_id": "paris_art",
+    "criteria": "expositions d'art a Paris ce mois-ci",
+    "user_tz": "Europe/Paris",
+    "event": {
+      "title": "Remember Me",
+      "start_local": "2026-10-07",
+      "start_tz": "Europe/Paris",
+      "city": "Paris",
+      "country": "FR",
+      "description": "is currently on view at Bourse de Commerce - Pinault Collection.",
+      "link": "https://www.expoparis.com/en/exhibitions/remember-me-bourse-de-commerce-pinault-collection-2026-10-07/"
+    },
+    "source_url": "https://expo-paris.com/en/months/october"
+  },
+  {
+    "triple_id": "tokyo_jazz",
+    "criteria": "\u6771\u4eac \u30b8\u30e3\u30ba 11\u6708",
+    "user_tz": "Asia/Tokyo",
+    "event": {
+      "title": "MET JAZZ TOKYO: Day 0",
+      "start_local": "2026-11-29T17:30",
+      "start_tz": "Asia/Tokyo",
+      "city": "Tokyo",
+      "country": "JP",
+      "description": "Pre-concert curated by Hiromi Uehara, featuring leading Japanese jazz musicians. Doors open 16:30, start 17:30 at Bunkamura Orchard Hall.",
+      "link": "https://www.metjazztokyo.com/"
+    },
+    "source_url": "https://jazin.net?p=3630"
+  },
+  {
+    "triple_id": "tokyo_jazz",
+    "criteria": "\u6771\u4eac \u30b8\u30e3\u30ba 11\u6708",
+    "user_tz": "Asia/Tokyo",
+    "event": {
+      "title": "MET JAZZ TOKYO FESTIVAL",
+      "start_local": "2027-05-28",
+      "start_tz": "Asia/Tokyo",
+      "city": "Tokyo",
+      "country": "JP",
+      "description": "New jazz festival in Tokyo from May 28 to 30, 2027, featuring international and local artists at multiple Shibuya venues.",
+      "link": "https://www.metjazztokyo.com/"
+    },
+    "source_url": "https://jazin.net?p=3630"
+  },
+  {
+    "triple_id": "tokyo_jazz",
+    "criteria": "\u6771\u4eac \u30b8\u30e3\u30ba 11\u6708",
+    "user_tz": "Asia/Tokyo",
+    "event": {
+      "title": "\u963f\u4f50\u8c37\u30b8\u30e3\u30ba\u30b9\u30c8\u30ea\u30fc\u30c82026",
+      "start_local": "2026-10-30",
+      "start_tz": "Asia/Tokyo",
+      "city": "Suginami",
+      "country": "JP",
+      "description": "\u30b8\u30e3\u30ba\u30d5\u30a7\u30b9\u30c6\u30a3\u30d0\u30eb\u3002\u958b\u50ac\u65e5: 2026\u5e7410\u670830\u65e5\u301c31\u65e5\u3002\u4f1a\u5834: JR\u963f\u4f50\u30b1\u8c37\u99c5\u5468\u8fba\u3002",
+      "link": "https://asagayajazzstreets.com/"
+    },
+    "source_url": "https://www.arban-mag.com/article/113845"
+  },
+  {
+    "triple_id": "tokyo_jazz",
+    "criteria": "\u6771\u4eac \u30b8\u30e3\u30ba 11\u6708",
+    "user_tz": "Asia/Tokyo",
+    "event": {
+      "title": "\u633e\u9593\u7f8e\u5e06\uff06\u30c7\u30f3\u30de\u30fc\u30af\u30e9\u30b8\u30aa\u30fb\u30d3\u30c3\u30b0\u30d0\u30f3\u30c9",
+      "start_local": "2026-11-18T19:00",
+      "start_tz": "Asia/Tokyo",
+      "city": "Tokyo",
+      "country": "JP",
+      "description": "\u633e\u9593\u7f8e\u5e06\uff08\u6307\u63ee\uff09\u3068\u30c7\u30f3\u30de\u30fc\u30af\u30e9\u30b8\u30aa\u30fb\u30d3\u30c3\u30b0\u30d0\u30f3\u30c9\u306b\u3088\u308b\u516c\u6f14\u3002\u4e16\u754c\u304c\u6ce8\u76ee\u3059\u308b\u30b8\u30e3\u30ba\u4f5c\u66f2\u5bb6\u3068\u5317\u6b27\u306e\u540d\u9580\u30d3\u30c3\u30b0\u30d0\u30f3\u30c9\u304c\u8d08\u308b\u81f3\u9ad8\u306e\u30a2\u30f3\u30b5\u30f3\u30d6\u30eb\u3002",
+      "link": "https://www.concertsquare.jp/blog/2026/202605212075788.html"
+    },
+    "source_url": "https://www.concertsquare.jp/concert/prefecture/toukyo/jazz"
+  },
+  {
+    "triple_id": "tokyo_jazz",
+    "criteria": "\u6771\u4eac \u30b8\u30e3\u30ba 11\u6708",
+    "user_tz": "Asia/Tokyo",
+    "event": {
+      "title": "NAOTO Six Colors",
+      "start_local": "2026-11-10T19:00",
+      "start_tz": "Asia/Tokyo",
+      "city": "Tokyo",
+      "country": "JP",
+      "description": "\u30f4\u30a1\u30a4\u30aa\u30ea\u30f3\u3001\u30ae\u30bf\u30fc\u3001\u30d4\u30a2\u30ce\u304c\u7e54\u308a\u306a\u3059\u3001\u7518\u304f\u523a\u6fc0\u7684\u306a\u30a2\u30f3\u30b5\u30f3\u30d6\u30eb\u3002",
+      "link": "https://www.concertsquare.jp/blog/2026/202609056554519.html"
+    },
+    "source_url": "https://www.concertsquare.jp/concert/prefecture/toukyo/jazz"
+  },
+  {
+    "triple_id": "tokyo_jazz",
+    "criteria": "\u6771\u4eac \u30b8\u30e3\u30ba 11\u6708",
+    "user_tz": "Asia/Tokyo",
+    "event": {
+      "title": "\u6771\u4eac\u30a2\u30ab\u30c7\u30df\u30fc\u30aa\u30fc\u30b1\u30b9\u30c8\u30e9 \u7b2c65\u56de\u5b9a\u671f\u6f14\u594f\u4f1aDay1 with\u30d2\u30f3\u30bf\u30fc\u30e9\u30a4\u30bf\u30fc",
+      "start_local": "2026-11-02T19:00",
+      "start_tz": "Asia/Tokyo",
+      "city": "Yokohama",
+      "country": "JP",
+      "description": "\u30d2\u30f3\u30bf\u30fc\u30e9\u30a4\u30bf\u30fc\u3092\u8fce\u3048\u3001\u30d6\u30ea\u30c6\u30f3\u3001\u30e2\u30fc\u30c4\u30a1\u30eb\u30c8\u3001\u30d6\u30e9\u30fc\u30e0\u30b9\u306e\u4f5c\u54c1\u3092\u6f14\u594f\u3002",
+      "link": "https://www.concertsquare.jp/blog/2026/202609261320526.html"
+    },
+    "source_url": "https://www.concertsquare.jp/concert/prefecture/toukyo/jazz"
+  },
+  {
+    "triple_id": "tokyo_jazz",
+    "criteria": "\u6771\u4eac \u30b8\u30e3\u30ba 11\u6708",
+    "user_tz": "Asia/Tokyo",
+    "event": {
+      "title": "\u702c\u6238\u5185\u30b8\u30e3\u30f3\u30b4\u30fb\u30b9\u30c8\u30ea\u30fc\u30c8 in SUMIDA",
+      "start_local": "2026-10-25",
+      "start_tz": "Asia/Tokyo",
+      "city": "Sumida",
+      "country": "JP",
+      "description": "\u30b8\u30e3\u30ba\u30a4\u30d9\u30f3\u30c8\u3002\u958b\u50ac\u65e5: 2026\u5e7410\u670825\u65e5\u3002\u4f1a\u5834: \u58a8\u7530\u533a\u5185\u7279\u8a2d\u30b9\u30c6\u30fc\u30b8\u3002",
+      "link": "https://stu-django.net/"
+    },
+    "source_url": "https://www.arban-mag.com/article/113845"
+  },
+  {
+    "triple_id": "tokyo_jazz",
+    "criteria": "\u6771\u4eac \u30b8\u30e3\u30ba 11\u6708",
+    "user_tz": "Asia/Tokyo",
+    "event": {
+      "title": "NAOTO Six Colors",
+      "start_local": "2026-11-11T19:00",
+      "start_tz": "Asia/Tokyo",
+      "city": "Tokyo",
+      "country": "JP",
+      "description": "NAOTO\u3068\u6d5c\u7aef\u30e8\u30a6\u30d8\u30a4\u3089\u306b\u3088\u308b\u3001\u904a\u3073\u5fc3\u3068\u30b0\u30eb\u30fc\u30f4\u306b\u6e80\u3061\u305f\u30e9\u30a4\u30d6\u3002",
+      "link": "https://www.concertsquare.jp/blog/2026/202609057107285.html"
+    },
+    "source_url": "https://www.concertsquare.jp/concert/prefecture/toukyo/jazz"
+  },
+  {
+    "triple_id": "tokyo_jazz",
+    "criteria": "\u6771\u4eac \u30b8\u30e3\u30ba 11\u6708",
+    "user_tz": "Asia/Tokyo",
+    "event": {
+      "title": "JAZZ-FUSION SUMMIT",
+      "start_local": "2026-11-01",
+      "start_tz": "Asia/Tokyo",
+      "city": "Tokyo",
+      "country": "JP",
+      "description": "\u30b8\u30e3\u30ba\u30d5\u30a7\u30b9\u30c6\u30a3\u30d0\u30eb\u3002\u958b\u50ac\u65e5: 2026\u5e7411\u67081\u65e5\u3002\u4f1a\u5834: Kanadevia Hall\u3002",
+      "link": "https://www.bluenote.co.jp/jp/lp/jazz-fusion-summit-2026/"
+    },
+    "source_url": "https://www.arban-mag.com/article/113845"
+  },
+  {
+    "triple_id": "tokyo_jazz",
+    "criteria": "\u6771\u4eac \u30b8\u30e3\u30ba 11\u6708",
+    "user_tz": "Asia/Tokyo",
+    "event": {
+      "title": "NAOTO Six Colors",
+      "start_local": "2026-11-12T19:00",
+      "start_tz": "Asia/Tokyo",
+      "city": "Tokyo",
+      "country": "JP",
+      "description": "NAOTO\u3068\u557c\u9d6c\u3092\u4e2d\u5fc3\u306b\u3001\u591a\u5f69\u306a\u697d\u5668\u304c\u7e54\u308a\u306a\u3059\u81ea\u7531\u306a\u30bb\u30c3\u30b7\u30e7\u30f3\u3002",
+      "link": "https://www.concertsquare.jp/blog/2026/202609059328676.html"
+    },
+    "source_url": "https://www.concertsquare.jp/concert/prefecture/toukyo/jazz"
+  },
+  {
+    "triple_id": "vienna_classical",
+    "criteria": "classical concerts in Vienna, 1-15 Nov 2026",
+    "user_tz": "Europe/Vienna",
+    "event": {
+      "title": "Mozart, Beethoven, Haydn and Schubert in St. Anna",
+      "start_local": "2026-10-22",
+      "start_tz": "Europe/Vienna",
+      "city": "Vienna",
+      "country": "AT",
+      "description": "Classical concerts in string quartet form featuring chamber music by Mozart, Beethoven, Haydn and Schubert in the Baroque atmosphere of St. Anne Church.",
+      "link": "https://vienna-concert.com/en/event/mozart-beethoven-haydn---schubert-im-st--anna--10926"
+    },
+    "source_url": "https://www.vienna-concert.com/en/event/mozart-beethoven-haydn-and-schubert-in-st-anna-6712-10926"
+  },
+  {
+    "triple_id": "amsterdam_tech",
+    "criteria": "tech meetups in Amsterdam this month",
+    "user_tz": "Europe/Amsterdam",
+    "event": {
+      "title": "Weekly Meeten en Drinken",
+      "start_local": "2026-10-28T19:00",
+      "start_tz": "Europe/Amsterdam",
+      "city": "Amsterdam",
+      "country": "NL",
+      "description": "Weekly Meeten en Drinken social event at Cafe Bax.",
+      "link": "https://www.meetup.com/appsterdam/events/312986124/"
+    },
+    "source_url": "https://techin.amsterdam"
+  },
+  {
+    "triple_id": "amsterdam_tech",
+    "criteria": "tech meetups in Amsterdam this month",
+    "user_tz": "Europe/Amsterdam",
+    "event": {
+      "title": "Startup Networking Amsterdam: Founders, Investors & Talent Mixer",
+      "start_local": "2026-10-29T18:00",
+      "start_tz": "Europe/Amsterdam",
+      "city": "Amsterdam",
+      "country": "NL",
+      "description": "Networking event for founders, investors and talent.",
+      "link": "https://www.eventbrite.com/d/netherlands--amsterdam/tech-meetup/"
+    },
+    "source_url": "https://www.eventbrite.com/d/netherlands--amsterdam/tech-meetup"
+  },
+  {
+    "triple_id": "amsterdam_tech",
+    "criteria": "tech meetups in Amsterdam this month",
+    "user_tz": "Europe/Amsterdam",
+    "event": {
+      "title": "The Amsterdam Startup Meetup - November 2026",
+      "start_local": "2026-11-05T18:30",
+      "start_tz": "Europe/Amsterdam",
+      "city": "Amsterdam",
+      "country": "NL",
+      "description": "Startup meetup for entrepreneurs and founders.",
+      "link": "https://www.eventbrite.com/d/netherlands--amsterdam/tech-meetup/"
+    },
+    "source_url": "https://www.eventbrite.com/d/netherlands--amsterdam/tech-meetup"
+  },
+  {
+    "triple_id": "amsterdam_tech",
+    "criteria": "tech meetups in Amsterdam this month",
+    "user_tz": "Europe/Amsterdam",
+    "event": {
+      "title": "Climate Canals: Next Gen Data, AI & Robotics for Climate Solutions",
+      "start_local": "2026-10-06T15:30",
+      "start_tz": "Europe/Amsterdam",
+      "city": "Amsterdam",
+      "country": "NL",
+      "description": "Next Gen Data, AI & Robotics for Climate Solutions event by Climate Canals at Piet Heinkade 99.",
+      "link": "https://lu.ma/md44y4bd"
+    },
+    "source_url": "https://hiddenevents.online/amsterdam/tech-events"
+  },
+  {
+    "triple_id": "amsterdam_tech",
+    "criteria": "tech meetups in Amsterdam this month",
+    "user_tz": "Europe/Amsterdam",
+    "event": {
+      "title": "AI4ALL Amsterdam Meetup: Where skills meet AI",
+      "start_local": "2026-11-12T17:00",
+      "start_tz": "Europe/Amsterdam",
+      "city": "Amsterdam",
+      "country": "NL",
+      "description": "AI meetup for skills and networking.",
+      "link": "https://www.eventbrite.com/d/netherlands--amsterdam/tech-meetup/"
+    },
+    "source_url": "https://www.eventbrite.com/d/netherlands--amsterdam/tech-meetup"
+  },
+  {
+    "triple_id": "amsterdam_tech",
+    "criteria": "tech meetups in Amsterdam this month",
+    "user_tz": "Europe/Amsterdam",
+    "event": {
+      "title": "Disrupt.com x World Summit AI: Builder's Meetup | Amsterdam Edition",
+      "start_local": "2026-10-07T16:00",
+      "start_tz": "Europe/Amsterdam",
+      "city": "Amsterdam",
+      "country": "NL",
+      "description": "Builder's meetup during World Summit AI, by Disrupt.com.",
+      "link": "https://lu.ma/amsterdam2026"
+    },
+    "source_url": "https://hiddenevents.online/amsterdam/tech-events"
+  },
+  {
+    "triple_id": "amsterdam_tech",
+    "criteria": "tech meetups in Amsterdam this month",
+    "user_tz": "Europe/Amsterdam",
+    "event": {
+      "title": "GlobalFindr Kingdom Wealth Business Event",
+      "start_local": "2026-10-24T11:30",
+      "start_tz": "Europe/Amsterdam",
+      "city": "Amsterdam",
+      "country": "NL",
+      "description": "GlobalFindr Kingdom Wealth Business Event at Paasheuvelweg 20, Amsterdam.",
+      "link": "https://www.eventbrite.nl/e/globalfindr-kingdom-wealth-business-event-tickets-1993134067650"
+    },
+    "source_url": "https://techin.amsterdam"
+  },
+  {
+    "triple_id": "amsterdam_tech",
+    "criteria": "tech meetups in Amsterdam this month",
+    "user_tz": "Europe/Amsterdam",
+    "event": {
+      "title": "World AI Week | The True Cost of AI: A Hands-On Workshop for Building AI Products Responsibly (Ladies first)",
+      "start_local": "2026-10-05T14:30",
+      "start_tz": "Europe/Amsterdam",
+      "city": "Amsterdam",
+      "country": "NL",
+      "description": "Workshop on building AI products responsibly, part of World AI Week, by Ladies Build With AI.",
+      "link": "https://lu.ma/2hx08zqs"
+    },
+    "source_url": "https://hiddenevents.online/amsterdam/tech-events"
+  },
+  {
+    "triple_id": "amsterdam_tech",
+    "criteria": "tech meetups in Amsterdam this month",
+    "user_tz": "Europe/Amsterdam",
+    "event": {
+      "title": "Almere TechConnect. Friday night community drinks #12. All in yellow party",
+      "start_local": "2026-11-27T19:00",
+      "start_tz": "Europe/Amsterdam",
+      "city": "Almere",
+      "country": "NL",
+      "description": "Tech community drinks and party in Almere.",
+      "link": "https://www.eventbrite.com/d/netherlands--amsterdam/tech-meetup/"
+    },
+    "source_url": "https://www.eventbrite.com/d/netherlands--amsterdam/tech-meetup"
+  },
+  {
+    "triple_id": "amsterdam_tech",
+    "criteria": "tech meetups in Amsterdam this month",
+    "user_tz": "Europe/Amsterdam",
+    "event": {
+      "title": "Cyber security X AI - Developers Connect",
+      "start_local": "2026-10-25T05:30",
+      "start_tz": "Europe/Amsterdam",
+      "city": "Amsterdam",
+      "country": "NL",
+      "description": "Cyber security and AI developers connect event.",
+      "link": "https://lu.ma/trqvz1c5"
+    },
+    "source_url": "https://techin.amsterdam"
+  }
+]
