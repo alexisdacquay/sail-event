@@ -12,14 +12,11 @@ async function signUp(page: Page) {
   await page.getByLabel("Password").fill("testpass1");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
-  // the criteria text is edited in place; Enter saves
-  const box = page.getByLabel("What I'm looking for");
-  await box.fill("jazz in Berlin (Germany) next week (19-21st October 2026)");
-  await box.press("Enter");
-  await expect(page.getByText("Saved.")).toBeVisible({ timeout: 15_000 });
 }
 
+// one action: type, click Search once
 async function searchNow(page: Page) {
+  await page.getByLabel("What are you looking for?").fill("jazz in Berlin (Germany) next week (19-21st October 2026)");
   await page.getByRole("button", { name: /Search (now|again)/ }).click();
   await expect(page.getByTestId("run-chronology")).toContainText(/Judged \d+ ·/, { timeout: 15_000 });
 }

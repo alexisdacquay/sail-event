@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { HINT_SEEN_KEY, MainPage, groupByDay, mostlyReason, runHeader, stageFraction, stageLines, stageText } from './MainPage'
+import { MainPage, groupByDay, mostlyReason, runHeader, stageFraction, stageLines, stageText } from './MainPage'
 import type { Event, SearchResult } from '@/services/api'
 
 function renderMainPage() {
@@ -44,7 +44,6 @@ describe('Stream page from mock data', () => {
     renderMainPage()
     await waitFor(() => expect(screen.getByTestId('criteria-text')).toHaveValue('sailing regattas in the Mediterranean, July 2026'))
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
-    expect(screen.getByTestId('criteria-hint')).toHaveTextContent('click the text to change it · Enter saves')
     const tl = await screen.findByTestId('run-chronology')
     expect(tl).toHaveTextContent('18 Oct')
     expect(tl).toHaveTextContent('your run · 1 min 30 s')
@@ -67,65 +66,103 @@ describe('Stream page from mock data', () => {
     expect(screen.getByRole('button', { name: '+ new search' })).toHaveAttribute('title', 'coming later')
   })
 
-  it('the text is edited in place: Esc cancels, Enter saves, blur saves, the hint goes after the first edit', async () => {
+  /** saveCriteria and runSearch spies that record their call order. */
+  async function spyPutThenPost() {
     const api = await import('@/services/api')
-    const save = vi.spyOn(api, 'saveCriteria').mockImplementation(async (text) => ({ text, updatedAt: 'now', timeZone: 'Europe/Berlin' }))
+    const calls: string[] = []
+    const save = vi.spyOn(api, 'saveCriteria').mockImplementation(async (text) => { calls.push(`PUT ${text}`); return { text, updatedAt: 'now', timeZone: 'Europe/Berlin' } })
+    const real = api.runSearch
+    vi.spyOn(api, 'runSearch').mockImplementation(async () => { calls.push('POST'); return real() })
+    return { calls, save }
+  }
+
+  it('typing then clicking Search once saves and runs: PUT then POST with the typed text', async () => {
+    const { calls } = await spyPutThenPost()
     renderMainPage()
-    const box = screen.getByLabelText("What I'm looking for")
+    const box = screen.getByLabelText('What are you looking for?')
     await waitFor(() => expect(box).toHaveValue('sailing regattas in the Mediterranean, July 2026'))
     fireEvent.change(box, { target: { value: 'jazz tonight in Berlin' } })
-    expect(screen.queryByTestId('criteria-hint')).not.toBeInTheDocument()
-    fireEvent.keyDown(box, { key: 'Escape' })
-    expect(box).toHaveValue('sailing regattas in the Mediterranean, July 2026')
-    fireEvent.blur(box)
-    expect(save).not.toHaveBeenCalled()
-
-    fireEvent.change(box, { target: { value: 'jazz tonight in Berlin' } })
-    fireEvent.keyDown(box, { key: 'Enter' })
-    expect(await screen.findByText('Saved.')).toBeInTheDocument()
-    expect(save).toHaveBeenCalledTimes(1)
-    expect(localStorage.getItem(HINT_SEEN_KEY)).toBe('1')
-    expect(screen.getByTestId('criteria-text')).toHaveValue('jazz tonight in Berlin')
+    fireEvent.click(screen.getByRole('button', { name: 'Search again' }))
+    expect(screen.getByRole('button', { name: 'Searching…' })).toBeDisabled()
+    await waitFor(() => expect(calls).toEqual(['PUT jazz tonight in Berlin', 'POST']))
+    expect(await screen.findByRole('button', { name: 'Search again' })).toBeEnabled()
     expect(screen.getByTestId('searches')).toHaveTextContent('jazz tonight in Berlin')
-    expect(screen.queryByTestId('utc-notice')).not.toBeInTheDocument()
-
-    fireEvent.change(box, { target: { value: 'folk in Paris' } })
-    fireEvent.blur(box)
-    await waitFor(() => expect(save).toHaveBeenCalledTimes(2))
-    expect(save).toHaveBeenLastCalledWith('folk in Paris', expect.any(String))
   })
 
-  it('keeps what the user typed when the saved criteria load late, and Enter saves it', async () => {
+  it('Enter saves and runs, Shift+Enter is left to insert a newline, Esc restores the saved text', async () => {
+    const { calls } = await spyPutThenPost()
+    renderMainPage()
+    const box = screen.getByLabelText('What are you looking for?')
+    await waitFor(() => expect(box).toHaveValue('sailing regattas in the Mediterranean, July 2026'))
+    fireEvent.change(box, { target: { value: 'jazz tonight in Berlin' } })
+    // Shift+Enter: default not prevented (the browser inserts the newline), nothing sent
+    expect(fireEvent.keyDown(box, { key: 'Enter', shiftKey: true })).toBe(true)
+    expect(calls).toEqual([])
+    fireEvent.keyDown(box, { key: 'Escape' })
+    expect(box).toHaveValue('sailing regattas in the Mediterranean, July 2026')
+
+    fireEvent.change(box, { target: { value: 'folk in Paris' } })
+    expect(fireEvent.keyDown(box, { key: 'Enter' })).toBe(false)
+    await waitFor(() => expect(calls).toEqual(['PUT folk in Paris', 'POST']))
+    await screen.findByRole('button', { name: 'Search again' })
+    fireEvent.change(box, { target: { value: 'something else' } })
+    fireEvent.keyDown(box, { key: 'Escape' })
+    expect(box).toHaveValue('folk in Paris')
+  })
+
+  it('keeps what the user typed when the saved criteria load late', async () => {
     const api = await import('@/services/api')
     let loaded!: (c: { text: string; updatedAt: string; timeZone: string }) => void
     vi.spyOn(api, 'getCriteria').mockReturnValue(new Promise((resolve) => { loaded = resolve }))
-    const save = vi.spyOn(api, 'saveCriteria').mockImplementation(async (text) => ({ text, updatedAt: 'now', timeZone: 'Europe/Berlin' }))
+    const { calls } = await spyPutThenPost()
     renderMainPage()
-    const box = screen.getByLabelText("What I'm looking for")
+    const box = screen.getByLabelText('What are you looking for?')
     fireEvent.change(box, { target: { value: 'jazz tonight in Berlin' } })
     await act(async () => loaded({ text: '', updatedAt: 'now', timeZone: 'UTC' }))
     expect(box).toHaveValue('jazz tonight in Berlin')
     fireEvent.keyDown(box, { key: 'Enter' })
-    expect(await screen.findByText('Saved.')).toBeInTheDocument()
-    expect(save).toHaveBeenCalledWith('jazz tonight in Berlin', expect.any(String))
+    await waitFor(() => expect(calls).toEqual(['PUT jazz tonight in Berlin', 'POST']))
+    expect(api.saveCriteria).toHaveBeenCalledWith('jazz tonight in Berlin', expect.any(String))
   })
 
-  it('shows the empty box with the hint when there is no saved search yet', async () => {
+  it('no hint, no Saved., no UTC line; the placeholder shows when empty and differs in style from the typed text', async () => {
     const api = await import('@/services/api')
     vi.spyOn(api, 'getCriteria').mockResolvedValue({ text: '', updatedAt: 'now', timeZone: 'UTC' })
     renderMainPage()
-    expect(screen.getByLabelText("What I'm looking for")).toHaveValue('')
-    expect(screen.getByTestId('criteria-hint')).toBeInTheDocument()
+    const box = screen.getByLabelText('What are you looking for?')
+    expect(box).toHaveValue('')
+    expect(box).toHaveAttribute('placeholder', 'e.g. jazz or folk concerts near Paris on weekends')
+    expect(box).toHaveClass('placeholder:italic', 'placeholder:text-muted-foreground', 'font-medium', 'text-foreground', 'border')
     await waitFor(() => expect(screen.getByRole('button', { name: 'Search again' })).toBeDisabled())
-    expect(screen.getByTestId('utc-notice')).toHaveTextContent('Times shown in UTC until you save your criteria.')
+    expect(screen.queryByTestId('criteria-hint')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('utc-notice')).not.toBeInTheDocument()
+    expect(screen.getByTestId('search-box')).not.toHaveTextContent(/Saved\.|UTC|click the text/)
+    expect(localStorage.getItem('sail-event-criteria-hint-seen')).toBeNull()
   })
 
-  it('does not show the hint again once a text was saved in this browser', async () => {
+  it('Search is enabled as soon as the box has text, without saving first', async () => {
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'getCriteria').mockResolvedValue({ text: '', updatedAt: 'now', timeZone: 'UTC' })
     renderMainPage()
-    localStorage.setItem(HINT_SEEN_KEY, '1')
-    render(<AuthProvider><MainPage /></AuthProvider>)
-    await waitFor(() => expect(screen.getAllByTestId('criteria-text')).toHaveLength(2))
-    expect(screen.getAllByTestId('criteria-hint')).toHaveLength(1)
+    const button = screen.getByRole('button', { name: /Search (now|again)/ })
+    await waitFor(() => expect(button).toBeDisabled())
+    fireEvent.change(screen.getByLabelText('What are you looking for?'), { target: { value: '   ' } })
+    expect(button).toBeDisabled()
+    fireEvent.change(screen.getByLabelText('What are you looking for?'), { target: { value: 'jazz' } })
+    expect(button).toBeEnabled()
+    expect(screen.getByTestId('search-box').tagName).toBe('FORM')
+    expect(button).toHaveAttribute('type', 'submit')
+  })
+
+  it('shows Couldn\'t save and no run when the PUT fails', async () => {
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'saveCriteria').mockRejectedValue(new Error('500'))
+    const run = vi.spyOn(api, 'runSearch')
+    renderMainPage()
+    fireEvent.click(await screen.findByRole('button', { name: 'Search again' }))
+    expect(await screen.findByText("Couldn't save. Try again.")).toBeInTheDocument()
+    expect(run).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Search again' })).toBeEnabled()
   })
 })
 
@@ -243,6 +280,24 @@ describe('Stream page live run', () => {
     expect(tl).toHaveTextContent('automatic run · running…')
     expect(tl).toHaveTextContent('Searched the web, 20 pages')
     expect(tl).not.toHaveTextContent('Judged')
+    expect(screen.getByRole('button', { name: 'Searching…' })).toBeDisabled()
+  })
+
+  it('while a run goes, the box stays editable and Enter saves for the next search without a POST', async () => {
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'getLastRun').mockResolvedValue({ run: running })
+    const save = vi.spyOn(api, 'saveCriteria').mockImplementation(async (text) => ({ text, updatedAt: 'now', timeZone: 'Europe/Berlin' }))
+    const run = vi.spyOn(api, 'runSearch')
+    renderMainPage()
+    await screen.findByTestId('search-progress')
+    const box = screen.getByLabelText('What are you looking for?')
+    expect(box).toBeEnabled()
+    fireEvent.change(box, { target: { value: 'folk in Paris' } })
+    expect(screen.getByRole('button', { name: 'Searching…' })).toBeDisabled()
+    fireEvent.keyDown(box, { key: 'Enter' })
+    expect(await screen.findByText('Saved for the next search')).toBeInTheDocument()
+    expect(save).toHaveBeenCalledWith('folk in Paris', expect.any(String))
+    expect(run).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: 'Searching…' })).toBeDisabled()
   })
 
@@ -415,7 +470,9 @@ describe('stageFraction', () => {
     expect(stageFraction({ ...finished, currentStage: 'extract', finishedAt: null, stageCounts: { results_fetched: 17, results_known: 1, pages_content_pass: 8 } })).toBeCloseTo(8 / 16)
   })
 
-  it('returns done/total for judge', () => {
+  it('returns done/total for judge from events_to_judge in stageCounts', () => {
+    expect(stageFraction({ ...finished, currentStage: 'judge', finishedAt: null, stageCounts: { events_to_judge: 10, events_judged: 3 } })).toBeCloseTo(3 / 10)
+    // falls back to eventsNew when the key is absent (finalised run)
     expect(stageFraction({ ...finished, currentStage: 'judge', finishedAt: null, eventsNew: 10, stageCounts: { events_judged: 3 } })).toBeCloseTo(3 / 10)
   })
 
@@ -461,5 +518,24 @@ describe('progress hairline', () => {
     renderMainPage()
     await waitFor(() => expect(screen.getByTestId('run-chronology')).toBeInTheDocument())
     expect(screen.queryByTestId('progress-hairline')).not.toBeInTheDocument()
+  })
+
+  it('adds progress-no-motion when prefers-reduced-motion matches', async () => {
+    const listeners: ((e: MediaQueryListEvent) => void)[] = []
+    vi.spyOn(window, 'matchMedia').mockReturnValue({
+      matches: true,
+      media: '(prefers-reduced-motion: reduce)',
+      addEventListener: (_: string, cb: (e: MediaQueryListEvent) => void) => listeners.push(cb),
+      removeEventListener: () => {},
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    })
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'getLastRun').mockResolvedValue({ run: extractRun })
+    renderMainPage()
+    const hairline = await screen.findByTestId('progress-hairline')
+    expect(hairline.classList.contains('progress-no-motion')).toBe(true)
   })
 })

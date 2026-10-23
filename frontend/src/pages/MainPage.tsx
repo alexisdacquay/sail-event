@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScoreScale } from '@/components/ScoreScale'
@@ -161,17 +161,13 @@ function ProgressHairline({ fraction }: { fraction: number | null }) {
 const label = 'mb-1.5 text-[11px] font-semibold uppercase tracking-[.08em] text-muted-foreground'
 // same contour as the login and register boxes
 const PANEL = 'rounded-xl border-2 border-ring/50 bg-card p-4 shadow-sm'
-export const HINT_SEEN_KEY = 'sail-event-criteria-hint-seen'
 
 export function MainPage() {
   const [criteriaText, setCriteriaText] = useState('')
   const [draft, setDraft] = useState('')
-  // the hint goes for good once the user has saved a text in place
-  const [hint, setHint] = useState(() => !localStorage.getItem(HINT_SEEN_KEY))
-  const [criteriaSaved, setCriteriaSaved] = useState(false)
   const [criteriaError, setCriteriaError] = useState('')
-  const [criteriaSaving, setCriteriaSaving] = useState(false)
-  const [userTimeZone, setUserTimeZone] = useState('UTC')
+  // a Search while a run is in progress saves the text for the next run
+  const [queued, setQueued] = useState(false)
 
   const [lower, setLower] = useState(0)
   const [upper, setUpper] = useState(100)
@@ -220,7 +216,6 @@ export function MainPage() {
       setCriteriaText(c.text)
       // a slow load must not wipe what the user has typed meanwhile
       setDraft((d) => d || c.text)
-      setUserTimeZone(c.timeZone)
     })
     getThresholds().then((t) => {
       setLower(t.lowerThreshold)
@@ -252,6 +247,7 @@ export function MainPage() {
   async function finishRun(run: SearchResult) {
     stopPolling()
     setSearching(false)
+    setQueued(false)
     setLastRun(run)
     refreshEvents()
     refreshRuns()
@@ -273,32 +269,6 @@ export function MainPage() {
     }, 3000)
   }
 
-  function showCriteriaSaved() {
-    setCriteriaSaved(true)
-    setTimeout(() => setCriteriaSaved(false), 2000)
-  }
-
-  /** Enter and blur save the text in place; nothing to do when it has not changed. */
-  async function handleSaveCriteria() {
-    if (criteriaSaving || draft === criteriaText) return
-    setCriteriaSaving(true)
-    setCriteriaSaved(false)
-    setCriteriaError('')
-    try {
-      const saved = await saveCriteria(draft, browserTz)
-      setCriteriaText(saved.text)
-      setDraft(saved.text)
-      setUserTimeZone(saved.timeZone)
-      localStorage.setItem(HINT_SEEN_KEY, '1')
-      setHint(false)
-      showCriteriaSaved()
-    } catch {
-      setCriteriaError("Couldn't save. Try again.")
-    } finally {
-      setCriteriaSaving(false)
-    }
-  }
-
   async function handleSaveScoring() {
     if (thresholdInvalid) return
     setScoringSaving(true)
@@ -317,9 +287,27 @@ export function MainPage() {
     }
   }
 
-  async function handleSearch() {
-    setSearching(true)
+  /** One action: save what is in the box (PUT), then start the run (POST). While a run goes, only save. */
+  async function handleSearch(e?: FormEvent) {
+    e?.preventDefault()
+    if (!draft.trim()) return
+    setCriteriaError('')
     setSearchError('')
+    const wasSearching = searching
+    setSearching(true)
+    try {
+      const saved = await saveCriteria(draft, browserTz)
+      setCriteriaText(saved.text)
+      setDraft(saved.text)
+    } catch {
+      setCriteriaError("Couldn't save. Try again.")
+      setSearching(wasSearching)
+      return
+    }
+    if (wasSearching) {
+      setQueued(true)
+      return
+    }
     const previousRunId = lastRun?.runId ?? null
     setLastRun({
       runId: '', eventsFound: 0, eventsNew: 0, stageCounts: null, currentStage: 'adapters',
@@ -406,46 +394,38 @@ export function MainPage() {
   return (
     <div ref={screenRef} className="relative grid grid-cols-1 gap-6 md:grid-cols-[1fr_260px] md:gap-8 items-start">
       <div className="min-w-0">
-        {/* Search box: the text itself is editable in place */}
-        <div data-testid="search-box" className={`${PANEL} text-sm`}>
+        {/* Search box: one form, Search takes whatever is in the box */}
+        <form data-testid="search-box" className={`${PANEL} text-sm`} onSubmit={handleSearch}>
+          <label htmlFor="criteria" className="sr-only">What are you looking for?</label>
           <textarea
-            aria-label="What I'm looking for"
+            id="criteria"
             data-testid="criteria-text"
-            placeholder="e.g. jazz or folk concerts near Paris on weekends, under 40 EUR"
+            placeholder="e.g. jazz or folk concerts near Paris on weekends"
             value={draft}
             rows={1}
-            className="field-sizing-content w-full resize-none bg-transparent text-base font-medium leading-snug outline-none placeholder:text-muted-foreground md:text-lg"
-            onChange={(e) => { setDraft(e.target.value); setHint(false) }}
+            className="field-sizing-content max-h-24 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-base font-medium leading-snug text-foreground outline-none placeholder:font-normal placeholder:italic placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 md:text-lg"
+            onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveCriteria() }
+              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSearch() }
               if (e.key === 'Escape') setDraft(criteriaText)
             }}
-            onBlur={handleSaveCriteria}
           />
-          {hint && (
-            <p data-testid="criteria-hint" className="text-xs text-muted-foreground">click the text to change it · Enter saves</p>
-          )}
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <Button
+              type="submit"
               size="sm"
-              disabled={!criteriaText.trim() || searching}
+              disabled={!draft.trim() || searching}
               aria-busy={searching ? true : undefined}
-              onClick={handleSearch}
             >
               {searching ? 'Searching…' : lastRun ? 'Search again' : 'Search now'}
             </Button>
-            {criteriaSaved && (
-              <span role="status" className="font-medium text-accent-foreground animate-in fade-in-0 duration-200">Saved.</span>
-            )}
+            {queued && <span role="status" className="text-muted-foreground">Saved for the next search</span>}
             {criteriaError && <span className="text-destructive">{criteriaError}</span>}
           </div>
-          {userTimeZone === 'UTC' && (
-            <p data-testid="utc-notice" className="mt-2 text-muted-foreground">Times shown in UTC until you save your criteria.</p>
-          )}
           {searchError && (
             <p data-testid="search-error" role="status" className="mt-2 text-destructive">{searchError}</p>
           )}
-        </div>
+        </form>
 
         {/* Run chronology and funnel */}
         {lastRun && (
