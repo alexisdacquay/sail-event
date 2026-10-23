@@ -365,13 +365,14 @@ def run_pipeline(
                     model=model,
                     on_page_done=_on_page_done,
                 )
-                # Count LLM calls from extraction: 1 for pass-1 (if results) + pages_content_pass for pass-2
-                if all_results:
-                    llm_calls += 1  # pass 1
-                    _llm_calls_counter.add(1, {"prompt": "extract", "provider": getattr(model, "model_id", "unknown")})
-                llm_calls += extract_counts.pages_content_pass  # pass 2 calls
-                if extract_counts.pages_content_pass:
-                    _llm_calls_counter.add(extract_counts.pages_content_pass, {"prompt": "extract", "provider": getattr(model, "model_id", "unknown")})
+                # Count LLM calls: 1 per full-page read + 1 if snippet-only fallback ran
+                snippet_only = len([r for r in all_results if not r.raw_content])
+                llm_calls += extract_counts.pages_content_pass
+                if snippet_only:
+                    llm_calls += 1  # snippet-only call
+                extract_llm = extract_counts.pages_content_pass + (1 if snippet_only else 0)
+                if extract_llm:
+                    _llm_calls_counter.add(extract_llm, {"prompt": "extract", "provider": getattr(model, "model_id", "unknown")})
 
                 counts["pages_content_pass"] = extract_counts.pages_content_pass
                 counts["extract_truncated"] = extract_counts.extract_truncated
