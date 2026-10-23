@@ -31,9 +31,13 @@ class FakeLanguageModel:
         prompt_version: str,
         variables: dict[str, str],
         schema: dict | None = None,
+        repair_messages: list[dict] | None = None,
     ) -> tuple[dict, Usage]:
         rendered, _schema = load_prompt(prompt_name, prompt_version, variables)
-        prompt_hash = hashlib.sha256(rendered.encode()).hexdigest()[:16]
+        hash_input = rendered
+        if repair_messages:
+            hash_input += json.dumps(repair_messages)
+        prompt_hash = hashlib.sha256(hash_input.encode()).hexdigest()[:16]
 
         recording_path = _FIXTURES_DIR / f"{prompt_name}_{prompt_version}" / f"{prompt_hash}.json"
         if not recording_path.exists():

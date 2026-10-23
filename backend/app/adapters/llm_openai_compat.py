@@ -49,11 +49,14 @@ class OpenAICompatibleModel:
         prompt_version: str,
         variables: dict[str, str],
         schema: dict | None = None,
+        repair_messages: list[dict] | None = None,
     ) -> tuple[dict, Usage]:
         rendered, loaded_schema = load_prompt(prompt_name, prompt_version, variables)
         effective_schema = schema if schema is not None else loaded_schema
 
         body = self._build_body(prompt_name, rendered, effective_schema)
+        if repair_messages:
+            body["messages"].extend(repair_messages)
         data = self._call_api(body, prompt_name=prompt_name)
         usage = self._parse_usage(data)
         validate_response(prompt_name, data, effective_schema)
