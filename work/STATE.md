@@ -1,5 +1,10 @@
 # ProjectOne — work state (resumable)
 
+## 2026-10-23 — Stream page promoted to prod
+- Owner checked the Sankey funnel on dev ("looking good") and said push to prod: promote.yml run 39979831552 succeeded, prod = main 969a161 (Stream page, revisions, Sankey funnel with versioned counts). Previous prod 571b751.
+- Open: issues 94, 95, 96 (user-test fix batches; PRs 98, 97 stale against the Stream page), 101/99 (no place → never auto-accept; PR 103 stale), 102 (bulk-remove auto-accepted idea), parked 72 74 75 78. Eleven merged engineer worktrees in the scratchpad to remove.
+- Rules in force: owner picks every next item; no prod promote without the owner's check on dev; mockups before UI work (`_docs/ui-design.md`, `_docs/ui/`); Fable for engineers on layout and judgement work.
+
 ## PAUSE 2026-10-21 11:40 (owner stopped the chain) — RESUME HERE
 Owner rule 11:25: no new PRs or fix rounds without the owner's pick; present the ranked list, wait. Agents stopped gracefully, cron cancelled.
 - PR 97 (#95, fix-usertests-2 @ 9124468): CI green 3/3 but QA FAIL 4/8 (issue 95 comment 6312793090): threshold re-apply moves nothing for undecided events (`decided_by IN ('auto', NULL)` never matches NULL → must be `== 'auto' OR IS NULL`, real prod bug); viewer zone still the browser's, not the user's saved zone; no tests for the login pitch and "next automatic search". PASS: undo, time unknown/all day, slider labels, title link. Needs one engineer round, then QA.
