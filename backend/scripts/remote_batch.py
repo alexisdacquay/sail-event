@@ -87,17 +87,23 @@ def one(i, text):
     top = "; ".join(f"{e.get('title','')[:28]} · {e.get('city')}, {e.get('country')} · {str(e.get('dateTime') or '')[:10]} · {e.get('score')}" for e in kept[:3])
     dup = counts.get('filtered_duplicate', 0) + counts.get('results_known', 0)
     flow = f"{counts.get('results_fetched', '-')} res → {counts.get('events_extracted', '-')} ext → {counts.get('events_judged', 0)} judged → {counts.get('accepted', 0)} acc / {counts.get('queued', 0)} queued / {counts.get('rejected', 0)} rej" + (f" (already known {dup})" if dup else "")
-    # Collect all event source URLs from this run for the no-event page sample
-    all_events = events or []
-    source_urls = {e.get("sourceUrl") for e in all_events if e.get("sourceUrl")}
-    no_event_count = counts.get("filtered_non_event", 0)
-    # Events without a source URL match or from non-event pages aren't trackable via
-    # the API; report what we can: the count and the source URLs of pages that did yield events
+    # Try to get page list from the run (issue 124 adds `pages` to the response)
+    run_id = run.get("runId")
+    page_list = run.get("pages")
+    if not page_list and run_id:
+        # Try runs/{runId} endpoint
+        pst, pbody = call("GET", f"/api/search/runs/{run_id}", None, tok, 30)
+        if pst == 200 and isinstance(pbody, dict):
+            page_list = pbody.get("pages")
+    if not page_list:
+        # Try last-run (nested under "run")
+        pst, pbody = call("GET", "/api/search/last-run", None, tok, 30)
+        if pst == 200 and isinstance(pbody, dict):
+            run_obj = pbody.get("run") or pbody
+            page_list = run_obj.get("pages")
     run_meta = {
-        "no_event_pages": no_event_count,
-        "pages_with_events": counts.get("pages_with_events", 0),
-        "results_fetched": counts.get("results_fetched", 0),
-        "source_urls": list(source_urls),
+        "no_event_count": counts.get("filtered_non_event", 0),
+        "page_list": page_list,  # None when not available
     }
     return (i, text, status, err, flow, f"{secs}s", top, run_meta)
 
@@ -113,24 +119,23 @@ for r in rows:
     print(f"| {padded[0]} | {text} | {padded[2]} | {padded[3]} | {padded[4]} | {padded[5]} | {padded[6]} |")
 
 # §126: sample 5 pages counted as "no events" for human review
-# The API does not expose individual no-event page URLs, so we report the
-# aggregated count and sample from source URLs that DID produce events (for
-# contrast) plus the filtered_non_event count per run.
-all_no_event = 0
-all_with_event_urls = []
+all_no_event_pages = []
+page_list_available = False
+total_no_event_count = 0
 for r in rows:
     meta = r[7] if len(r) > 7 and isinstance(r[7], dict) else {}
-    all_no_event += meta.get("no_event_pages", 0)
-    all_with_event_urls.extend(meta.get("source_urls", []))
+    total_no_event_count += meta.get("no_event_count", 0)
+    pl = meta.get("page_list")
+    if pl and isinstance(pl, list):
+        page_list_available = True
+        all_no_event_pages.extend(p for p in pl if p.get("events", 0) == 0)
 
-print(f"\n### No-event page audit")
-print(f"Total pages with no events across all runs: {all_no_event}")
-if all_no_event > 0:
-    print("Individual no-event page URLs require server-side logging (not exposed via API).")
-    print("Pages that DID yield events (sample for contrast):")
-    sample_size = min(5, len(all_with_event_urls))
-    if sample_size > 0:
-        sampled = random.sample(list(set(all_with_event_urls)), sample_size)
-        for url in sampled:
-            print(f"  + {url}")
-    print(f"A human should check server logs for the {all_no_event} no-event pages to catch extraction failures.")
+print(f"\n### No-event page audit ({total_no_event_count} pages with no events)")
+if page_list_available and all_no_event_pages:
+    sampled = random.sample(all_no_event_pages, min(5, len(all_no_event_pages)))
+    for p in sampled:
+        print(f"  {p.get('title', '?')[:60]}  {p.get('url', '?')}")
+elif page_list_available:
+    print("  All fetched pages produced at least one event.")
+else:
+    print("  Page list not available on this server.")
