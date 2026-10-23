@@ -406,8 +406,8 @@ describe('stageLines', () => {
     expect(lines[1]).toBe('Read 16 pages, found 31 events')
   })
 
-  it('shows the finished stages then the live line while judging', () => {
-    expect(stageLines({ ...finished, currentStage: 'judge', finishedAt: null, stageCounts: { ...finished.stageCounts, events_judged: 3 } })).toEqual([
+  it('shows the finished stages then the live line while judging (from events_to_judge, not eventsNew)', () => {
+    expect(stageLines({ ...finished, eventsNew: 0, currentStage: 'judge', finishedAt: null, stageCounts: { ...finished.stageCounts, events_to_judge: 10, events_judged: 3 } })).toEqual([
       'Searched the web, 20 pages',
       'Read 20 pages, found 31 events',
       'Not judged: 9',

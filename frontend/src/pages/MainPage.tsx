@@ -57,7 +57,7 @@ export function stageText(run: SearchResult): string {
       return 'Filtering events…'
     case 'judge': {
       const judged = c.events_judged ?? 0
-      const total = run.eventsNew || 0
+      const total = c.events_to_judge ?? run.eventsNew ?? 0
       return total > 0
         ? `Judging ${judged} of ${total} events…`
         : 'Judging events…'
