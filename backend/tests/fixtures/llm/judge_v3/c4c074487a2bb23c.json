@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 85,
+    "reason": "Berlin jazz-club jam session on 21 October falls within your 19\u201321 October window, though it's an open jam rather than a staged concert.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 756,
+    "completion_tokens": 155
+  },
+  "recorded_at": "2026-10-23T23:00:40.869023+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

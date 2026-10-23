@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 2,
+    "reason": "This Vienna Philharmonic concert is in Vienna, not Berlin, and on 5 November, not 19\u201321 October, so it doesn't match your search.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 748,
+    "completion_tokens": 77
+  },
+  "recorded_at": "2026-10-23T23:00:53.138440+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

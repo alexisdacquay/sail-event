@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 15,
+    "reason": "This Berghain date on 20 October is in Berlin during your window, but it's a techno night, not jazz.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 746,
+    "completion_tokens": 86
+  },
+  "recorded_at": "2026-10-23T23:05:13.538074+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

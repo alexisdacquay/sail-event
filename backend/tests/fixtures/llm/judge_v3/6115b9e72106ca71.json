@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 15,
+    "reason": "This is an all-night techno event in Berlin on 20 October, not jazz; Berlin and the dates fit but the genre is off.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 744,
+    "completion_tokens": 84
+  },
+  "recorded_at": "2026-10-23T23:06:26.201394+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

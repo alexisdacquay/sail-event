@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 90,
+    "reason": "Jazz jam session at Zig Zag Jazz Club in Berlin on Oct 21 fits your jazz-in-Berlin 19\u201321 October search, though it's an open jam rather than a concert.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 765,
+    "completion_tokens": 152
+  },
+  "recorded_at": "2026-10-23T23:06:23.270239+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

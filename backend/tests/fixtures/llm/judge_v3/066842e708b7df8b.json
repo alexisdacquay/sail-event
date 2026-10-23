@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 20,
+    "reason": "A techno night at Berghain in Berlin on 20 October, so place and date fit, but it's techno rather than jazz.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 746,
+    "completion_tokens": 83
+  },
+  "recorded_at": "2026-10-23T23:00:51.940035+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

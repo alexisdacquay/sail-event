@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 95,
+    "reason": "Jazz open-air concert in Berlin on 19 October falls squarely in your next-week window \u2014 a clear fit.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 753,
+    "completion_tokens": 69
+  },
+  "recorded_at": "2026-10-23T23:05:06.871915+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

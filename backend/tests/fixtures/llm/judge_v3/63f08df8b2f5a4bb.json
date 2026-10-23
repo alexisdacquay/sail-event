@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 3,
+    "reason": "This is jazz on 20 October, but it's in Chicago, US, not Berlin, Germany as you asked.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 736,
+    "completion_tokens": 103
+  },
+  "recorded_at": "2026-10-23T23:00:42.548265+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}
