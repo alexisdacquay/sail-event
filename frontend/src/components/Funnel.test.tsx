@@ -128,7 +128,7 @@ const DRAWING = {
     '8 judged': [280, 33], '16 not judged': [280, 124], '5 no date · 9 duplicate · 2 errors': [280, 135],
     '2 in calendar': [532, 16], '1 to review': [532, 40], '5 out': [532, 66], '4 date or place · 1 topic': [532, 77],
   },
-  ribbons: { judged: ['var(--border)', '0.9'], notJudged: ['var(--muted-foreground)', '0.3'], accepted: ['var(--zone-calendar)', '0.6'], queued: ['var(--zone-decide)', '0.7'], rejected: ['var(--zone-rejected)', '0.4'] },
+  ribbons: { judged: ['#3b82f6', '0.55'], notJudged: ['#94a3b8', '0.4'], accepted: ['#10b981', '0.75'], queued: ['#f59e0b', '0.85'], rejected: ['#ef4444', '0.6'] },
 }
 // Where the hand-made drawing departs from its own rule (nodes GAP apart, centred on their source): its column-2 gap is
 // 28 and its judged node sits 12 px higher than a centred stack puts it, which moves column 3 and "8 judged" with it.
@@ -256,5 +256,22 @@ describe('Funnel', () => {
     const withKnown = { ...counts, results_known: 1 }
     render(<Funnel counts={withKnown} />)
     expect(screen.getByText('from 8 of 30 pages read')).toBeInTheDocument()
+  })
+
+  it('uses the issue 122 fills: blue judged, slate not-judged, saturated verdicts', () => {
+    const { container } = render(<Funnel counts={counts} />)
+    const node = (k: string) => container.querySelector(`[data-testid="funnel-node-${k}"]`)!
+    expect(node('found').getAttribute('fill')).toBe('#5b6472')
+    expect(node('judged').getAttribute('fill')).toBe('#2563eb')
+    expect(node('notJudged').getAttribute('fill')).toBe('#64748b')
+    expect(node('accepted').getAttribute('fill')).toBe('#059669')
+    expect(node('queued').getAttribute('fill')).toBe('#d97706')
+    expect(node('rejected').getAttribute('fill')).toBe('#dc2626')
+    const rib = (k: string) => container.querySelector(`[data-testid="funnel-ribbon-${k}"]`)!
+    expect([rib('judged').getAttribute('fill'), rib('judged').getAttribute('opacity')]).toEqual(['#3b82f6', '0.55'])
+    expect([rib('notJudged').getAttribute('fill'), rib('notJudged').getAttribute('opacity')]).toEqual(['#94a3b8', '0.4'])
+    expect([rib('accepted').getAttribute('fill'), rib('accepted').getAttribute('opacity')]).toEqual(['#10b981', '0.75'])
+    expect([rib('queued').getAttribute('fill'), rib('queued').getAttribute('opacity')]).toEqual(['#f59e0b', '0.85'])
+    expect([rib('rejected').getAttribute('fill'), rib('rejected').getAttribute('opacity')]).toEqual(['#ef4444', '0.6'])
   })
 })

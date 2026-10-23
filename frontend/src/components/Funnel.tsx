@@ -38,8 +38,6 @@ export function funnelNumbers(counts: Record<string, number>) {
 
 const MAIN = { fill: 'var(--foreground)', fontWeight: 500 }
 const SUB = { fill: 'var(--muted-foreground)' }
-const JUDGED_RIBBON = { fill: 'var(--border)', opacity: 0.9 }
-const GREY = { fill: 'var(--muted-foreground)', opacity: 0.3 }
 
 // Sankey with the numbers of _docs/ui/05-funnel-sankey.svg: 120 px for the events found (5 px per event for 24),
 // columns at x 10 / 260 / 520, nodes stacked GAP apart and centred, labels beside their own node. The viewBox
@@ -54,7 +52,8 @@ const BAR = [14, 14, 6]
 const LINE = 11
 const CHARS = [0, 40, 26] // a breakdown line wraps here per column (6 px per character)
 
-type Node = { key: string; count: number; fill: string; opacity?: number; label: string; subs: string[] }
+// Hardcoded colours: same in light and dark, per mockup 06-progress-and-colour.html
+type Node = { key: string; count: number; fill: string; ribbonFill?: string; ribbonOpacity?: number; label: string; subs: string[] }
 type Placed = Node & { x: number; w: number; y: number; h: number; lines: { y: number; text: string; main: boolean }[] }
 
 /** A ribbon from the span [yL0, yL1] at x0 to [yR0, yR1] at x1, curved like the approved drawing. */
@@ -103,29 +102,29 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
   const notAccounted = countsVersion < 3 ? Math.max(0, n.found - n.judged - n.notJudged) : 0
 
   const found: Placed = {
-    key: 'found', count: n.found, fill: 'var(--border)', label: `${n.found} found`, x: X[0], w: BAR[0], y: TOP, h: HEIGHT,
+    key: 'found', count: n.found, fill: '#5b6472', label: `${n.found} found`, x: X[0], w: BAR[0], y: TOP, h: HEIGHT,
     subs: [], lines: [
       { y: TOP + HEIGHT + 16, text: `${n.found} found`, main: true },
       { y: TOP + HEIGHT + 16 + LINE, main: false, text: 'pages_with_events' in counts ? `from ${n.pagesWithEvents} of ${n.pages - n.pagesKnown} pages read` : `on ${n.pages - n.pagesKnown} pages read` },
     ],
   }
   const col2 = stack([
-    { key: 'judged', count: n.judged, fill: 'var(--border)', label: `${n.judged} judged`, subs: [] },
+    { key: 'judged', count: n.judged, fill: '#2563eb', ribbonFill: '#3b82f6', ribbonOpacity: 0.55, label: `${n.judged} judged`, subs: [] },
     {
-      key: 'notJudged', count: n.notJudged, fill: 'var(--border)', label: `${n.notJudged} not judged`,
+      key: 'notJudged', count: n.notJudged, fill: '#64748b', ribbonFill: '#94a3b8', ribbonOpacity: 0.4, label: `${n.notJudged} not judged`,
       subs: wrap([
         ...nz(n.noDate, 'no date'), ...nz(n.past, 'past'), ...nz(n.duplicate, 'duplicate'), ...nz(n.date, 'date'),
         ...nz(n.place, 'place'), ...nz(n.incomplete, 'incomplete'), ...nz(n.capped, 'capped'), ...nz(n.judgeErrors, 'errors'),
       ], CHARS[1]),
     },
-    { key: 'notAccounted', count: notAccounted, fill: 'var(--border)', label: `${notAccounted} not accounted`, subs: ['run before 22 Oct, counters added later'] },
+    { key: 'notAccounted', count: notAccounted, fill: '#64748b', ribbonFill: '#94a3b8', ribbonOpacity: 0.4, label: `${notAccounted} not accounted`, subs: ['run before 22 Oct, counters added later'] },
   ], 1, s, centre)
   const judged = col2.find((p) => p.key === 'judged')
   const col3 = stack([
-    { key: 'accepted', count: n.accepted, fill: 'var(--zone-calendar)', opacity: 0.6, label: `${n.accepted} in calendar`, subs: [] },
-    { key: 'queued', count: n.queued, fill: 'var(--zone-decide)', opacity: 0.7, label: `${n.queued} to review`, subs: [] },
+    { key: 'accepted', count: n.accepted, fill: '#059669', ribbonFill: '#10b981', ribbonOpacity: 0.75, label: `${n.accepted} in calendar`, subs: [] },
+    { key: 'queued', count: n.queued, fill: '#d97706', ribbonFill: '#f59e0b', ribbonOpacity: 0.85, label: `${n.queued} to review`, subs: [] },
     {
-      key: 'rejected', count: n.rejected, fill: 'var(--zone-rejected)', opacity: 0.4, label: `${n.rejected} out`,
+      key: 'rejected', count: n.rejected, fill: '#dc2626', ribbonFill: '#ef4444', ribbonOpacity: 0.6, label: `${n.rejected} out`,
       subs: wrap([...nz(n.rejectedDatePlace, 'date or place'), ...nz(n.rejectedOffTopic, 'topic'), ...nz(n.rejectedOther, 'other')], CHARS[2]),
     },
   ], 2, s, judged ? judged.y + judged.h / 2 : centre)
@@ -136,7 +135,7 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
     return to.map((t) => {
       const d = ribbon(from.x + from.w, y, y + t.h, t.x, t.y, t.y + t.h)
       y += t.h
-      return { key: t.key, d, style: t.key === 'judged' ? JUDGED_RIBBON : from.key === 'found' ? GREY : { fill: t.fill, opacity: t.opacity } }
+      return { key: t.key, d, style: { fill: t.ribbonFill, opacity: t.ribbonOpacity } }
     })
   }
   const ribbons = [...flows(found, col2), ...(judged ? flows(judged, col3) : [])]
