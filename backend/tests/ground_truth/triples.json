@@ -1,0 +1,366 @@
+{
+  "_comment": "Ground-truth recall set for issue #126. 10 (place, window, topic) triples across 6 countries and 4 languages, each with 3-5 real events verified on the venue or organiser page. The runner skips entries whose date is in the past.",
+  "triples": [
+    {
+      "id": "berlin_jazz",
+      "criteria": "jazz in Berlin (Germany) next week",
+      "timeZone": "Europe/Berlin",
+      "place": {"city": "Berlin", "country": "DE"},
+      "language": "de",
+      "events": [
+        {
+          "title": "Emil Wahlgren \"Autumn in Berlin\"",
+          "date": "2026-10-28",
+          "venue": "A-Trane",
+          "url": "https://a-trane.de/programm/",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Jazzfest Berlin - Elin Forkelid \"Plays For Trane\"",
+          "date": "2026-10-29",
+          "venue": "A-Trane",
+          "url": "https://a-trane.de/programm/",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "STREAMLINE ORCHESTRA",
+          "date": "2026-10-29",
+          "venue": "b-flat",
+          "url": "https://b-flat-berlin.de/events",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "ZIG ZAG HALL: Kurt Elling & The Yellowjackets celebrate Weather Report",
+          "date": "2026-10-30",
+          "venue": "Zig Zag Jazz Club",
+          "url": "https://www.zigzag-jazzclub.berlin/programmneu",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Jazzfest Berlin - Wendy Eisenberg",
+          "date": "2026-10-30",
+          "venue": "Quasimodo",
+          "url": "https://quasimodo.club/en/concerts",
+          "verified_on": "2026-10-23"
+        }
+      ]
+    },
+    {
+      "id": "london_ai",
+      "criteria": "AI meetups and tech events in London next week",
+      "timeZone": "Europe/London",
+      "place": {"city": "London", "country": "GB"},
+      "language": "en",
+      "events": [
+        {
+          "title": "The London AI Conference 2026",
+          "date": "2026-10-27",
+          "venue": "London Canal Museum",
+          "url": "https://www.eventbrite.ie/e/the-london-ai-conference-2026-tickets-1983780312316",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "The Infrastructure Decisions That Define Your Trajectory",
+          "date": "2026-10-27",
+          "venue": "London AI Hub, 140 Goswell Road",
+          "url": "https://luma.com/LondonAIHubxAIforGrowth",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "The London Startup Party 2026",
+          "date": "2026-10-28",
+          "venue": "Big Chill, 257-259 Pentonville Road",
+          "url": "https://startupnetwork.eu/sne_events/the-london-startup-party-2026/",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Trustworthy AI: From Principles to Practice",
+          "date": "2026-10-29",
+          "venue": "Central London",
+          "url": "https://createwith.com/event/london-trustworthy-ai-from-principles-to-practice-report-launch-rec-oct-2026",
+          "verified_on": "2026-10-23"
+        }
+      ]
+    },
+    {
+      "id": "lisbon_fado",
+      "criteria": "fado ao vivo em Lisboa este fim de semana",
+      "timeZone": "Europe/Lisbon",
+      "place": {"city": "Lisbon", "country": "PT"},
+      "language": "pt",
+      "events": [
+        {
+          "title": "Fado in Chiado",
+          "date": "2026-10-24",
+          "venue": "Cine Theatro Gymnasio",
+          "url": "https://www.visitlisboa.com/en/events/fado-in-chiado",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Fado in the Garden of the House of Amalia Rodrigues",
+          "date": "2026-10-24",
+          "venue": "Casa-Museu Amalia Rodrigues",
+          "url": "https://www.visitlisboa.com/en/events/fado-in-the-garden-of-the-house-of-amalia-rodrigues",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Fado Performance at Pateo in Bairro do Avillez",
+          "date": "2026-10-28",
+          "venue": "Pateo, Bairro do Avillez",
+          "url": "https://www.visitlisboa.com/en/events/fado-performance-at-pateo-in-bairro-do-avillez",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Ha Fado no Cais - Trio SUL",
+          "date": "2026-10-30",
+          "venue": "Centro Cultural de Belem",
+          "url": "https://www.ccb.pt/evento/sul/",
+          "verified_on": "2026-10-23"
+        }
+      ]
+    },
+    {
+      "id": "valencia_regatta",
+      "criteria": "regatas de vela en Valencia en noviembre",
+      "timeZone": "Europe/Madrid",
+      "place": {"city": "Valencia", "country": "ES"},
+      "language": "es",
+      "events": [
+        {
+          "title": "J80 Winter Series RCNV 2026-2027 (opening round)",
+          "date": "2026-11-14",
+          "venue": "Real Club Nautico de Valencia",
+          "url": "https://www.regatas.eu/rcnv/regatas",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Trofeo Levante 2026 (ILCA 4/6/7)",
+          "date": "2026-11-21",
+          "venue": "Real Club Nautico de Valencia",
+          "url": "https://www.fvcv.es/es/clases-13/ILCA+4",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Trofeo Varadero Valencia 2026 (Cruceros ORC)",
+          "date": "2026-11-28",
+          "venue": "Real Club Nautico de Valencia",
+          "url": "https://www.regatas.eu/rcnv/regatas",
+          "verified_on": "2026-10-23"
+        }
+      ]
+    },
+    {
+      "id": "sevilla_kids",
+      "criteria": "talleres infantiles y actividades para ninos en Sevilla este fin de semana",
+      "timeZone": "Europe/Madrid",
+      "place": {"city": "Sevilla", "country": "ES"},
+      "language": "es",
+      "events": [
+        {
+          "title": "Pica Pica - Operacion Halloween",
+          "date": "2026-10-25",
+          "venue": "Ibercaja Auditorio Cartuja, Sevilla",
+          "url": "https://onsevilla.com/teatro-infantil-sevilla-fin-semana-24y25-octubre-2026",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Black and White (magia infantil)",
+          "date": "2026-10-25",
+          "venue": "Sala Cero, Sevilla",
+          "url": "https://onsevilla.com/teatro-infantil-sevilla-fin-semana-24y25-octubre-2026",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "El Ratoncito Perez (mision: diente de leche)",
+          "date": "2026-10-25",
+          "venue": "La Fundicion, Sevilla",
+          "url": "https://onsevilla.com/teatro-infantil-sevilla-fin-semana-24y25-octubre-2026",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Visita-taller familiar: Filmadores y filmados",
+          "date": "2026-10-25",
+          "venue": "CaixaForum Sevilla",
+          "url": "https://www.sevillaconlospeques.com/planes-para-familias-en-caixaforum-sevilla-durante-el-otono",
+          "verified_on": "2026-10-23"
+        }
+      ]
+    },
+    {
+      "id": "paris_art",
+      "criteria": "expositions d'art a Paris ce mois-ci",
+      "timeZone": "Europe/Paris",
+      "place": {"city": "Paris", "country": "FR"},
+      "language": "fr",
+      "_note": "Ongoing exhibitions: date is a representative date within the search window, not opening date",
+      "events": [
+        {
+          "title": "Mary Cassatt: Being Independent",
+          "date": "2026-10-25",
+          "venue": "Musee d'Orsay",
+          "url": "https://www.paristickets.com/orsay-museum/exhibitions/",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Stan Douglas: Parallax",
+          "date": "2026-10-25",
+          "venue": "Jeu de Paume",
+          "url": "https://www.jeudepaume.org/en/",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Gustave Fayet, Collector and Creator: Icons of Modernism",
+          "date": "2026-10-25",
+          "venue": "Fondation Louis Vuitton",
+          "url": "https://www.museos.com/en/paris/paris-exhibitions/",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Ibrahim Mahama: Harvest season",
+          "date": "2026-10-25",
+          "venue": "Fondation Cartier",
+          "url": "https://www.museos.com/en/paris/paris-exhibitions/",
+          "verified_on": "2026-10-23"
+        }
+      ]
+    },
+    {
+      "id": "tokyo_jazz",
+      "criteria": "東京 ジャズ 11月",
+      "timeZone": "Asia/Tokyo",
+      "place": {"city": "Tokyo", "country": "JP"},
+      "language": "ja",
+      "events": [
+        {
+          "title": "AZIZA featuring Dave Holland, Chris Potter, Lionel Loueke & Eric Harland",
+          "date": "2026-11-04",
+          "venue": "Blue Note Tokyo",
+          "url": "https://reserve.bluenote.co.jp/reserve/schedule/move/202611",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Kenny Barron Trio",
+          "date": "2026-11-23",
+          "venue": "Blue Note Tokyo",
+          "url": "https://reserve.bluenote.co.jp/reserve/schedule/move/202611",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Benny Green Trio",
+          "date": "2026-11-13",
+          "venue": "Cotton Club Tokyo",
+          "url": "https://reserve.cottonclubjapan.co.jp/reserve/schedule/move/202611",
+          "verified_on": "2026-10-23"
+        }
+      ]
+    },
+    {
+      "id": "vienna_classical",
+      "criteria": "classical concerts in Vienna, 1-15 Nov 2026",
+      "timeZone": "Europe/Vienna",
+      "place": {"city": "Vienna", "country": "AT"},
+      "language": "de",
+      "events": [
+        {
+          "title": "Otello (Verdi) - Kaufmann, Salsi, cond. Bertrand de Billy",
+          "date": "2026-11-05",
+          "venue": "Wiener Staatsoper",
+          "url": "https://www.wiener-staatsoper.at/en/calendar/2026/november/",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "La Fille du regiment (Donizetti)",
+          "date": "2026-11-07",
+          "venue": "Wiener Staatsoper",
+          "url": "https://www.wiener-staatsoper.at/en/calendar/2026/november/",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Lise Davidsen and James Baillieu - recital",
+          "date": "2026-11-07",
+          "venue": "Musikverein Golden Hall",
+          "url": "https://www.vienna-concert.com/en/events/musikverein-vienna-91",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Madama Butterfly (Puccini) - Jaho, Guerrero, cond. Bisanti",
+          "date": "2026-11-15",
+          "venue": "Wiener Staatsoper",
+          "url": "https://www.wiener-staatsoper.at/en/calendar/2026/november/",
+          "verified_on": "2026-10-23"
+        }
+      ]
+    },
+    {
+      "id": "amsterdam_tech",
+      "criteria": "tech meetups in Amsterdam this month",
+      "timeZone": "Europe/Amsterdam",
+      "place": {"city": "Amsterdam", "country": "NL"},
+      "language": "nl",
+      "events": [
+        {
+          "title": "AI Tinkerers Amsterdam: October Demo Night",
+          "date": "2026-10-27",
+          "venue": "JetBrains N.V., Gelrestraat 16",
+          "url": "https://amsterdam.aitinkerers.org/p/ai-tinkerers-amsterdam-october-demo-night",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "FastAPI Conf 2026",
+          "date": "2026-10-28",
+          "venue": "Transformatorhuis, Westerpark",
+          "url": "https://fastapiconf.com/",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "SREday Amsterdam 2026 Q4",
+          "date": "2026-11-02",
+          "venue": "ING Cedar, Bijlmerdreef 106",
+          "url": "https://sreday.com/2026-amsterdam-q4/",
+          "verified_on": "2026-10-23"
+        }
+      ]
+    },
+    {
+      "id": "running_global",
+      "criteria": "running",
+      "timeZone": "UTC",
+      "place": null,
+      "language": "en",
+      "events": [
+        {
+          "title": "TCS New York City Marathon 2026",
+          "date": "2026-11-01",
+          "city": "New York",
+          "country": "US",
+          "url": "https://marathonhandbook.com/ultimate-guide-to-new-york-city-marathon/",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "48th Istanbul Marathon 2026",
+          "date": "2026-11-01",
+          "city": "Istanbul",
+          "country": "TR",
+          "url": "https://spoferan.com/en/events/th-istanbul-marathon",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "43rd Athens Authentic Marathon 2026",
+          "date": "2026-11-08",
+          "city": "Athens",
+          "country": "GR",
+          "url": "https://www.athensauthenticmarathon.gr",
+          "verified_on": "2026-10-23"
+        },
+        {
+          "title": "Fukuoka Marathon 2026",
+          "date": "2026-11-08",
+          "city": "Fukuoka",
+          "country": "JP",
+          "url": "https://www.crossroadfukuoka.jp/en/event/11923",
+          "verified_on": "2026-10-23"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+# Recall measurements
+
+## 2026-10-23 21:41 UTC -- recall measurement -- https://sail-event-dev.onrender.com -- fae046f
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| berlin_jazz | jazz in Berlin (Germany) next week | 5 | 1 | 1 | Emil Wahlgren "Autumn in Berli (not_fetched); STREAMLINE ORCHESTRA (not_fetched); ZIG ZAG HALL: Kurt Elling & Th (not_fetched); Jazzfest Berlin - Wendy Eisenb (not_fetched) |
+| london_ai | AI meetups and tech events in London nex | 4 | 1 | 0 | The London AI Conference 2026 (not_fetched); The London Startup Party 2026 (not_fetched); Trustworthy AI: From Principle (not_fetched) |
+| lisbon_fado | fado ao vivo em Lisboa este fim de seman | 4 | 1 | 0 | Fado in the Garden of the Hous (not_fetched); Fado Performance at Pateo in B (not_fetched); Ha Fado no Cais - Trio SUL (not_fetched) |
+| valencia_regatta | regatas de vela en Valencia en noviembre | 3 | 0 | 0 | J80 Winter Series RCNV 2026-20 (not_fetched); Trofeo Levante 2026 (ILCA 4/6/ (not_fetched); Trofeo Varadero Valencia 2026 (not_fetched) |
+| sevilla_kids | talleres infantiles y actividades para n | 4 | 1 | 0 | Black and White (magia infanti (not_fetched); El Ratoncito Perez (mision: di (not_fetched); Visita-taller familiar: Filmad (not_fetched) |
+| paris_art | expositions d'art a Paris ce mois-ci | 4 | 0 | 0 | Mary Cassatt: Being Independen (not_fetched); Stan Douglas: Parallax (not_fetched); Gustave Fayet, Collector and C (not_fetched); Ibrahim Mahama: Harvest season (not_fetched) |
+| tokyo_jazz | 東京 ジャズ 11月 | 3 | 0 | 0 | AZIZA featuring Dave Holland (not_fetched); Kenny Barron Trio (not_fetched); Benny Green Trio (not_fetched) |
+| vienna_classical | classical concerts in Vienna, 1-15 Nov 2 | 4 | 0 | 0 | Otello (Verdi) - Kaufmann, Sal (not_fetched); La Fille du regiment (Donizett (not_fetched); Lise Davidsen and James Bailli (not_fetched); Madama Butterfly (Puccini) - J (not_fetched) |
+| amsterdam_tech | tech meetups in Amsterdam this month | 3 | 0 | 0 | AI Tinkerers Amsterdam: Octobe (not_fetched); FastAPI Conf 2026 (not_fetched); SREday Amsterdam 2026 Q4 (not_fetched) |
+| running_global | running | 4 | 0 | 0 | TCS New York City Marathon 202 (not_fetched); 48th Istanbul Marathon 2026 (not_fetched); 43rd Athens Authentic Marathon (not_fetched); Fukuoka Marathon 2026 (not_fetched) |
+
+recall@run: **4/38 (10.5%)**
+accepted-recall: **1/38 (2.6%)**
