@@ -1,0 +1,134 @@
+{
+  "response": {
+    "page_kind": "listing",
+    "events": [
+      {
+        "title": "LIA LIA",
+        "start_local": "2026-10-21",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Rough Trade Berlin",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/2026/genre/jazz",
+        "description": "LIA LIA live at Rough Trade Berlin, listed in Songkick's Berlin jazz concert listings for 2026.",
+        "confidence": 0.7
+      },
+      {
+        "title": "Mmeadows",
+        "start_local": "2026-10-27",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Columbia Theater",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/2026/genre/jazz",
+        "description": "Mmeadows perform at Columbia Theater, Berlin, per Songkick's Berlin concert listings.",
+        "confidence": 0.65
+      },
+      {
+        "title": "Flame Parade with Alice Gift",
+        "start_local": "2026-10-29",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Urban Spree",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/2026/genre/jazz",
+        "description": "Flame Parade with Alice Gift at Urban Spree, Berlin, listed among popular Berlin tickets on Songkick.",
+        "confidence": 0.65
+      },
+      {
+        "title": "OAKE, Regis, Irazu, Oliver Ho, Helm, Test Dept., and Scion",
+        "start_local": "2026-10-30",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Tresor",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/2026/genre/jazz",
+        "description": "Multi-artist bill featuring OAKE, Regis and others at Tresor, Berlin.",
+        "confidence": 0.65
+      },
+      {
+        "title": "Gloria de Oliveira",
+        "start_local": "2026-10-31",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Rough Trade Berlin",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/2026/genre/jazz",
+        "description": "Gloria de Oliveira live at Rough Trade Berlin, listed in Songkick's Berlin popular tickets.",
+        "confidence": 0.65
+      },
+      {
+        "title": "SADO OPERA",
+        "start_local": "2026-10-31",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Bar Tausend",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/2026/genre/jazz",
+        "description": "SADO OPERA at Bar Tausend, Berlin, listed among Songkick's popular Berlin shows.",
+        "confidence": 0.65
+      },
+      {
+        "title": "NORLYZ and Malika Alaoui",
+        "start_local": "2026-11-06",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Gretchen",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/2026/genre/jazz",
+        "description": "NORLYZ and Malika Alaoui perform at Gretchen, Berlin, per Songkick listings.",
+        "confidence": 0.65
+      },
+      {
+        "title": "Abanamat",
+        "start_local": "2026-11-13",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Neue Zukunft",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/2026/genre/jazz",
+        "description": "Abanamat live at Neue Zukunft, Berlin, listed among Songkick's Berlin concert tickets.",
+        "confidence": 0.65
+      },
+      {
+        "title": "Chlo\u00e9 Thevenin",
+        "start_local": "2026-11-18",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Rough Trade Berlin",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/2026/genre/jazz",
+        "description": "Chlo\u00e9 Thevenin at Rough Trade Berlin, listed in Songkick's Berlin popular tickets section.",
+        "confidence": 0.65
+      },
+      {
+        "title": "Mariama",
+        "start_local": "2026-11-19",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Studio dB",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/2026/genre/jazz",
+        "description": "Mariama performs at Studio dB, Berlin, per Songkick's Berlin concert listings.",
+        "confidence": 0.65
+      }
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 5281,
+    "completion_tokens": 3198
+  },
+  "recorded_at": "2026-10-23T21:49:24.969553+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

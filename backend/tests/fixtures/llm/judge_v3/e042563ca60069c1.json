@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 95,
+    "reason": "Open-air jazz in Berlin on 19 October matches your jazz-in-Berlin-next-week search exactly.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 756,
+    "completion_tokens": 63
+  },
+  "recorded_at": "2026-10-23T21:47:30.741855+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

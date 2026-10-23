@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "It's in Berlin, but on 31 October \u2014 outside your 19\u201321 October dates \u2014 and it's a drag/music show, not jazz.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 781,
+    "completion_tokens": 181
+  },
+  "recorded_at": "2026-10-23T21:50:50.262064+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

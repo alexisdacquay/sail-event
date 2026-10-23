@@ -1,0 +1,26 @@
+{
+  "response": {
+    "page_kind": "single_event",
+    "events": [
+      {
+        "title": "Late Night Jam Session",
+        "start_local": "2026-10-21T22:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Zig Zag Jazz Club",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.zigzagjazzclub.berlin/events/late-night-jam-oct21",
+        "description": "Open jam session with house rhythm section at Zig Zag Jazz Club, Berlin-Sch\u00f6neberg. Free entry for musicians, 5 EUR for listeners.",
+        "confidence": 0.96
+      }
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 1410,
+    "completion_tokens": 201
+  },
+  "recorded_at": "2026-10-23T21:33:40.678271+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

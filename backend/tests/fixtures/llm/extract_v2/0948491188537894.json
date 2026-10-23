@@ -1,0 +1,38 @@
+{
+  "response": {
+    "page_kind": "single_event",
+    "events": [
+      {
+        "title": "Jazzfest Berlin 2026 (63rd edition)",
+        "start_local": "2026-10-29",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2026-11-01",
+        "venue": "Haus der Berliner Festspiele",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.europejazz.net/news/jazzfest-berlin-2026-line-preview",
+        "description": "63rd Jazzfest Berlin runs 29 October to 1 November 2026 at Haus der Berliner Festspiele and neighbouring venues, with 24 acts and over 130 artists.",
+        "confidence": 0.8
+      },
+      {
+        "title": "Jazzfest Community Week opening",
+        "start_local": "2026-10-26",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2026-11-01",
+        "venue": "PAS Berlin (Petersburg Art Space)",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.europejazz.net/news/jazzfest-berlin-2026-line-preview",
+        "description": "Jazzfest Community Week runs 26 October to 1 November 2026 with free events in Moabit, opening on 26 October at PAS Berlin.",
+        "confidence": 0.6
+      }
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 4794,
+    "completion_tokens": 995
+  },
+  "recorded_at": "2026-10-23T21:49:14.105974+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

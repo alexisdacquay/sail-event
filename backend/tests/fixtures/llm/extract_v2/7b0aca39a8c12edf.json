@@ -1,0 +1,134 @@
+{
+  "response": {
+    "page_kind": "listing",
+    "events": [
+      {
+        "title": "DIETER ILG \u00abBACK AT THE A-TRANE\u00bb \u00abmotherland\u00bb 50 J\u00c4HRIGES B\u00dcHNENJUBIL\u00c4UM 2026",
+        "start_local": "2026-09-20T18:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "A-Trane",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.jazzucrist.com/event/fd98d608-1737-42f0-8e1b-2e509a0e6d6a",
+        "description": "Dieter Ilg brings his \u00abmotherland\u00bb programme back to A-Trane for his 50th stage anniversary in 2026, with Rainer B\u00f6hm and Patrice H\u00e9ral.",
+        "confidence": 0.9
+      },
+      {
+        "title": "Maik Krahl - Rain, Flowers and New Beginnings",
+        "start_local": "2026-09-22T21:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "b-flat",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.jazzucrist.com/event/1fb003b3-1f0f-4270-a3fa-2b85a8550ead",
+        "description": "Maik Krahl presents 'Rain, Flowers and New Beginnings' at b-flat Berlin with Constantin Krahmer, Jakob K\u00fchnemann and Fabian R\u00f6sch.",
+        "confidence": 0.9
+      },
+      {
+        "title": "Ben Kraef Trio",
+        "start_local": "2026-09-23T20:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Zig Zag Jazzclub",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.jazzucrist.com/event/44000f65-881b-4f76-9bb8-7a97c8246ff9",
+        "description": "Ben Kraef Trio with Andreas Lang and Tobias Backhaus live at Zig Zag Jazzclub, Berlin.",
+        "confidence": 0.9
+      },
+      {
+        "title": "Henning Schiewer Quintett",
+        "start_local": "2026-09-24T21:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "b-flat",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.jazzucrist.com/event/ffbe403a-226e-49dc-ab27-f9a3345d7809",
+        "description": "Henning Schiewer Quintett at b-flat Berlin with Konstantin Herleinsberger, Michel Schr\u00f6der, Jonas Oppermann and Tobias Frohnh\u00f6fer.",
+        "confidence": 0.9
+      },
+      {
+        "title": "Peter Bernstein Quartet",
+        "start_local": "2026-09-25T18:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Zig Zag Jazzclub",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.jazzucrist.com/event/cde05ae8-7502-4fac-a8b7-b67d430d1381",
+        "description": "Peter Bernstein Quartet with Sullivan Fortner, Doug Weiss and Kush Abadey at Zig Zag Jazzclub; multiple sets from 18:00.",
+        "confidence": 0.85
+      },
+      {
+        "title": "Konzerthausorchester Berlin, Iv\u00e1n Fischer",
+        "start_local": "2026-09-25T19:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Konzerthaus Berlin",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.jazzucrist.com/event/9e2b4bce-a1d1-49e9-aa56-612f4fc83747",
+        "description": "Konzerthausorchester Berlin under Iv\u00e1n Fischer, with violinist Patricia Kopatchinskaja, at Konzerthaus Berlin.",
+        "confidence": 0.9
+      },
+      {
+        "title": "Alec Goldfarb + Asger Nissen Quartet",
+        "start_local": "2026-09-25T20:30",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Donau115",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.jazzucrist.com/event/bab23cc9-8dd1-4b97-9981-dd7d8258677a",
+        "description": "Alec Goldfarb and Asger Nissen Quartet at Donau115, Berlin, with Felix Henkelhausen and Phillip Dornbusch.",
+        "confidence": 0.9
+      },
+      {
+        "title": "A-TRANE PRESENTS GERMAN JAZZ PRIZE WINNER 2026 DAY1: Fuasi Abdul-Khaliq \u00abJourney To The Source\u00bb",
+        "start_local": "2026-09-25T20:30",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "A-Trane",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.jazzucrist.com/event/e5a1050d-76c6-43aa-a4e1-6ab36119c283",
+        "description": "A-Trane presents German Jazz Prize winner 2026, day 1: Fuasi Abdul-Khaliq \u00abJourney To The Source\u00bb, with Rolf Zielke and Kenny Martin.",
+        "confidence": 0.9
+      },
+      {
+        "title": "Tom Maciel",
+        "start_local": "2026-09-25T21:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Kunstfabrik Schlot",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.jazzucrist.com/event/6167bd4b-1cc9-4503-9e39-851b327d58d7",
+        "description": "Tom Maciel live at Kunstfabrik Schlot, Berlin, with Axel Filip and Trigo Santana.",
+        "confidence": 0.88
+      },
+      {
+        "title": "Der lange Schatten",
+        "start_local": "2026-09-26T20:30",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Donau115",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.jazzucrist.com/event/4a480874-6559-4ac8-bb0c-5e330386a3b0",
+        "description": "Michael Thieke, H\u00e5vard Wiik and Antonio Borghini perform as Der lange Schatten at Donau115, Berlin.",
+        "confidence": 0.9
+      }
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 9630,
+    "completion_tokens": 2822
+  },
+  "recorded_at": "2026-10-23T21:49:25.485846+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

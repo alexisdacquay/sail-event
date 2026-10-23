@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 58,
+    "reason": "LIA LIA plays Berlin on 21 October within your dates, but the act reads as pop rather than jazz despite the jazz listing.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 761,
+    "completion_tokens": 197
+  },
+  "recorded_at": "2026-10-23T21:51:14.151254+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

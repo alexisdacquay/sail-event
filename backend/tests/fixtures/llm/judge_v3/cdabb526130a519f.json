@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 3,
+    "reason": "This show is at Berlin in Minneapolis, US, on 29 October, not in Berlin, Germany, during 19\u201321 October.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 768,
+    "completion_tokens": 77
+  },
+  "recorded_at": "2026-10-23T21:50:18.899917+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

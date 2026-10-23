@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 3,
+    "reason": "This show is at a Minneapolis venue called Berlin, not in Berlin, Germany, and it's on 23 October, outside your 19\u201321 October dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 770,
+    "completion_tokens": 104
+  },
+  "recorded_at": "2026-10-23T21:50:15.926325+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

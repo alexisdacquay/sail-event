@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 8,
+    "reason": "Jazz on 20 October fits the dates, but it's in Potsdam, not Berlin as you asked.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 742,
+    "completion_tokens": 146
+  },
+  "recorded_at": "2026-10-23T21:47:35.961312+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

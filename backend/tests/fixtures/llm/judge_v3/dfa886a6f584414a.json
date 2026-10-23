@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "Rejazz Festival is jazz in Berlin, but it runs 19 November 2026, not the 19\u201321 October dates you asked for.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 767,
+    "completion_tokens": 124
+  },
+  "recorded_at": "2026-10-23T21:49:53.987873+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

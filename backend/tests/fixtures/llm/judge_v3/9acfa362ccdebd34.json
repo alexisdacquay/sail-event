@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 7,
+    "reason": "Mariama plays Berlin jazz, but on 19 November 2026, not during your 19\u201321 October window.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 754,
+    "completion_tokens": 86
+  },
+  "recorded_at": "2026-10-23T21:50:57.035695+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

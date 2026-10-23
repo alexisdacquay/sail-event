@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "This Berlin show is on 24 October, outside the requested 19\u201321 October dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 757,
+    "completion_tokens": 82
+  },
+  "recorded_at": "2026-10-23T21:50:58.632527+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

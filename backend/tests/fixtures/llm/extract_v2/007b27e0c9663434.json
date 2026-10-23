@@ -1,0 +1,26 @@
+{
+  "response": {
+    "page_kind": "single_event",
+    "events": [
+      {
+        "title": "Jazz Vocal Workshop",
+        "start_local": "2026-10-21T18:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2026-10-21T20:00",
+        "venue": "Musikschule Berlin",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.berlin-workshops.de/jazz-vocal-workshop-oct21",
+        "description": "Learn vocal jazz techniques with a professional singer at Musikschule Berlin. Price: 25 EUR.",
+        "confidence": 0.95
+      }
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 1404,
+    "completion_tokens": 232
+  },
+  "recorded_at": "2026-10-23T21:33:43.927378+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

@@ -1,0 +1,50 @@
+{
+  "response": {
+    "page_kind": "listing",
+    "events": [
+      {
+        "title": "Christoph Schlingensief: Es ist nicht mehr mein Problem, macht eure Schei\u00dfe alleine",
+        "start_local": "2026-10-09",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2027-01-17",
+        "venue": "Gropius Bau",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.berlinerfestspiele.de/en/gropius-bau/programm/2026/ausstellungen/christoph-schlingensief",
+        "description": "Exhibition at Gropius Bau, the most comprehensive presentation of Christoph Schlingensief's genre-defying work in Germany in over a decade.",
+        "confidence": 0.9
+      },
+      {
+        "title": "Treffen junge Musikszene",
+        "start_local": "2026-11-25",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2026-11-30",
+        "venue": "Haus der Berliner Festspiele",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.berlinerfestspiele.de/en/treffen-junge-szene/treffen-junge-musikszene",
+        "description": "43rd Treffen junge Musikszene: 14 acts selected from 130 submissions by young musicians from all 16 German federal states, presented in November.",
+        "confidence": 0.9
+      },
+      {
+        "title": "Performing Arts Season (4th edition)",
+        "start_local": "2026-10-01",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2027-01-22",
+        "venue": null,
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.berlinerfestspiele.de/en/performing-arts-season/programm/2026/spielplan",
+        "description": "Fourth edition of the Performing Arts Season focuses on myths and rituals, with works by international artists such as Marina Abramovi\u0107, Marie Chouinard and Dumb Type.",
+        "confidence": 0.55
+      }
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 1959,
+    "completion_tokens": 795
+  },
+  "recorded_at": "2026-10-23T21:49:25.224598+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

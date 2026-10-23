@@ -1,0 +1,134 @@
+{
+  "response": {
+    "page_kind": "listing",
+    "events": [
+      {
+        "title": "Theodore with Izzy and the Black Trees",
+        "start_local": "2026-10-24",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Lark",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/genre/jazz",
+        "description": "Theodore live at Lark in Berlin, with support from Izzy and the Black Trees.",
+        "confidence": 0.6
+      },
+      {
+        "title": "Highest Primzahl on Mars",
+        "start_local": "2026-10-24",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Loge",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/genre/jazz",
+        "description": "Highest Primzahl on Mars concert at Loge, Berlin.",
+        "confidence": 0.55
+      },
+      {
+        "title": "Mmeadows",
+        "start_local": "2026-10-27",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Columbia Theater",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/genre/jazz",
+        "description": "Mmeadows performing live at Columbia Theater, Berlin.",
+        "confidence": 0.6
+      },
+      {
+        "title": "Flame Parade with Alice Gift",
+        "start_local": "2026-10-29",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Urban Spree",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/genre/jazz",
+        "description": "Flame Parade live at Urban Spree, Berlin, with Alice Gift.",
+        "confidence": 0.6
+      },
+      {
+        "title": "OAKE, Regis, Irazu, Oliver Ho, Helm, Test Dept. and Scion",
+        "start_local": "2026-10-30",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Tresor",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/genre/jazz",
+        "description": "Multi-artist bill at Tresor Berlin featuring OAKE, Regis, Irazu, Oliver Ho, Helm, Test Dept. and Scion.",
+        "confidence": 0.6
+      },
+      {
+        "title": "Gloria de Oliveira",
+        "start_local": "2026-10-31",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Rough Trade Berlin",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/genre/jazz",
+        "description": "Gloria de Oliveira live in concert at Rough Trade Berlin.",
+        "confidence": 0.6
+      },
+      {
+        "title": "Aura Vortex with Lukas Freudenberger",
+        "start_local": "2026-10-31",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "M-bia",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/genre/jazz",
+        "description": "Aura Vortex performs at M-bia in Berlin, joined by Lukas Freudenberger.",
+        "confidence": 0.55
+      },
+      {
+        "title": "SADO OPERA",
+        "start_local": "2026-10-31",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Bar Tausend",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/genre/jazz",
+        "description": "SADO OPERA live at Bar Tausend, Berlin.",
+        "confidence": 0.55
+      },
+      {
+        "title": "Abanamat",
+        "start_local": "2026-11-13",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Neue Zukunft",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/genre/jazz",
+        "description": "Abanamat in concert at Neue Zukunft, Berlin.",
+        "confidence": 0.55
+      },
+      {
+        "title": "Chlo\u00e9 Thevenin",
+        "start_local": "2026-11-18",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Rough Trade Berlin",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.songkick.com/metro-areas/28443-germany-berlin/genre/jazz",
+        "description": "Chlo\u00e9 Thevenin performs live at Rough Trade Berlin.",
+        "confidence": 0.55
+      }
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 6815,
+    "completion_tokens": 1903
+  },
+  "recorded_at": "2026-10-23T21:49:21.327023+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

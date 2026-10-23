@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 3,
+    "reason": "This jazz show is in Minneapolis on 28 October, not in Berlin during 19\u201321 October as you asked.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 802,
+    "completion_tokens": 74
+  },
+  "recorded_at": "2026-10-23T21:50:22.253343+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

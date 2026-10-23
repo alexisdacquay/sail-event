@@ -1,0 +1,134 @@
+{
+  "response": {
+    "page_kind": "listing",
+    "events": [
+      {
+        "title": "Genghis Khan \u2013 The World of the Mongols",
+        "start_local": "2026-10-21",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2027-04-18",
+        "venue": "James-Simon-Galerie",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.visitberlin.de/en/event/genghis-khan-and-world-mongols",
+        "description": "Major exhibition on the Mongol empire with archaeological treasures from Mongolia, many shown outside the country for the first time.",
+        "confidence": 0.95
+      },
+      {
+        "title": "Himmel unter Berlin Vol. III",
+        "start_local": "2026-10-08",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2026-10-25",
+        "venue": "Secret location in Berlin",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.visitberlin.de/en/event/himmel-unter-berlin-vol-iii",
+        "description": "Immersive installation labyrinth in a former engine factory, open on three weekends in October; location revealed 48 hours before the visit.",
+        "confidence": 0.85
+      },
+      {
+        "title": "Long Night of the Manufacturers",
+        "start_local": "2026-10-17T18:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2026-10-17T22:00",
+        "venue": "Various workshops in Mitte, Wedding, Moabit, Tiergarten, Gesundbrunnen and Hansaviertel",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.visitberlin.de/en/event/long-night-manufacturers",
+        "description": "First Long Night of Manufacturers: workshops, studios and backyards open their doors with tours, tastings and live demonstrations.",
+        "confidence": 0.85
+      },
+      {
+        "title": "Festival of Lights",
+        "start_local": "2026-10-09",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2026-10-18",
+        "venue": "Various locations across Berlin",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.visitberlin.de/en/tickets-festival-of-lights-berlin",
+        "description": "Light art and video installations illuminate Berlin's landmarks under the theme 'Colours of Love', with music and performances.",
+        "confidence": 0.9
+      },
+      {
+        "title": "Long Night of Families",
+        "start_local": "2026-10-10T17:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2026-10-11T00:00",
+        "venue": "Various venues across Berlin",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.visitberlin.de/en/event/long-night-families-2026",
+        "description": "16th Long Night of Families with theatre, sport, picture-book cinema, concerts and experiments across the city, mostly free.",
+        "confidence": 0.85
+      },
+      {
+        "title": "PEOPLE Festival",
+        "start_local": "2026-10-10T10:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2026-10-11",
+        "venue": "Funkhaus Berlin",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.visitberlin.de/en/event/people-festival-2026",
+        "description": "Improvised festival with 180 international musicians in 40 studios; 200 concerts across eleven stages at Funkhaus on the weekend.",
+        "confidence": 0.85
+      },
+      {
+        "title": "Berlin Food Week",
+        "start_local": "2026-10-05",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2026-10-11",
+        "venue": "Various venues in Berlin",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.visitberlin.de/en/event/berlin-food-week-2026",
+        "description": "Food festival bringing together chefs, restaurateurs, start-ups and producers, with the House of Food at Bikini Berlin and OkSoberfest.",
+        "confidence": 0.85
+      },
+      {
+        "title": "CLUB CULTURE DAY",
+        "start_local": "2026-10-03",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2026-10-11",
+        "venue": "Various clubs and venues across Berlin",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.visitberlin.de/en/event/club-culture-day",
+        "description": "Seventh edition under the theme STAY CORE, combining a cultural award for clubs and collectives with a week-long festival.",
+        "confidence": 0.85
+      },
+      {
+        "title": "Jazzfest Berlin 2026",
+        "start_local": "2026-10-29",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2026-11-01",
+        "venue": "Haus der Berliner Festspiele",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.visitberlin.de/en/event/jazzfest-berlin-2026",
+        "description": "Four days of contemporary avant-garde jazz with the Anthony Braxton Septet, Immanuel Wilkins Quartet, ganavya and many premieres.",
+        "confidence": 0.9
+      },
+      {
+        "title": "Kazuki Yamada's Inaugural Concert with the DSO",
+        "start_local": "2026-10-04T20:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "Philharmonie",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.visitberlin.de/en/event/dso-concert-mark-kazuki-yamadas-inauguration",
+        "description": "Kazuki Yamada's inaugural concert as DSO chief conductor with Ives, Grieg with Alice Sara Ott, Anna Clyne and Debussy, plus Maja G\u00f6pel.",
+        "confidence": 0.85
+      }
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 6588,
+    "completion_tokens": 2343
+  },
+  "recorded_at": "2026-10-23T21:49:21.242064+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

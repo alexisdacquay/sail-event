@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "Ostpro Berlin is a trade fair on 23 October, outside your 19\u201321 October dates, and it isn't jazz.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 757,
+    "completion_tokens": 143
+  },
+  "recorded_at": "2026-10-23T21:50:00.678924+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

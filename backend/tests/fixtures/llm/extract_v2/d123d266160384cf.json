@@ -1,0 +1,26 @@
+{
+  "response": {
+    "page_kind": "single_event",
+    "events": [
+      {
+        "title": "Berlin Jazz Festival (JazzFest) 2026",
+        "start_local": "2026-10-29",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2026-11-01",
+        "venue": null,
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.carnifest.com/berlin-jazz-festival-jazzfest-2026",
+        "description": "Annual Berlin jazz festival running since the 1960s, with jazz artists from around the world performing new and existing compositions across the city.",
+        "confidence": 0.85
+      }
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 4112,
+    "completion_tokens": 183
+  },
+  "recorded_at": "2026-10-23T21:49:10.605223+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

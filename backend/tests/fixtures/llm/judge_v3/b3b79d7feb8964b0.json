@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 20,
+    "reason": "This is a restored-film festival in Berlin on 21 October, so the place and date fit but it is not a jazz event.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 767,
+    "completion_tokens": 103
+  },
+  "recorded_at": "2026-10-23T21:49:57.483756+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 4,
+    "reason": "An autumn market in Berlin, not jazz, and on 17 October it falls before your 19\u201321 October dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 782,
+    "completion_tokens": 194
+  },
+  "recorded_at": "2026-10-23T21:49:55.942870+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}
