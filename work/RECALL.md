@@ -36,12 +36,29 @@ accepted-recall: **1/38 (2.6%)**
 recall@run: **9/38 (23.7%)**  
 accepted-recall: **6/38 (15.8%)**
 
-The first run (4/38) and the corrected run (9/38) are different dev runs on
-different days with different search results from Tavily. The found/accepted
-counts changed because Tavily returned different pages; the miss attribution
-changed because the first run had a bug reading stageCounts from the wrong
-nesting level (every miss said "not_fetched" regardless of the real cause).
+The first run (4/38) and the corrected run (9/38) are separate searches on
+the same day (2026-10-23, 21:41 and 22:34 UTC) with different Tavily draws.
+The found/accepted counts differ because Tavily returned different result
+pages; the miss attribution differs because the first run had a bug reading
+stageCounts from the wrong nesting level (every miss read "not_fetched").
 
-Page classification 27/35 = 77% on current main (deepseek-v4.1-flash),
-target 90%, red until issue 124 lands (the extractor reads every page in
-full instead of snippet-only).
+## 2026-10-23 23:45 UTC -- recall measurement -- https://sail-event-dev.onrender.com -- e39816b
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| berlin_jazz | jazz in Berlin (Germany) next week | 5 | 0 | 0 | Emil Wahlgren "Autumn in Berli (likely_no_event_extracted); Jazzfest Berlin - Elin Forkeli (likely_no_event_extracted); STREAMLINE ORCHESTRA (likely_no_event_extracted); ZIG ZAG HALL: Kurt Elling & Th (likely_no_event_extracted); Jazzfest Berlin - Wendy Eisenb (likely_no_event_extracted) |
+| london_ai | AI meetups and tech events in London nex | 4 | 3 | 0 | The Infrastructure Decisions T (likely_no_event_extracted) |
+| lisbon_fado | fado ao vivo em Lisboa este fim de seman | 4 | 2 | 2 | Fado Performance at Pateo in B (likely_no_event_extracted); Ha Fado no Cais - Trio SUL (likely_no_event_extracted) |
+| valencia_regatta | regatas de vela en Valencia en noviembre | 3 | 0 | 0 | J80 Winter Series RCNV 2026-20 (likely_no_event_extracted); Trofeo Levante 2026 (ILCA 4/6/ (likely_no_event_extracted); Trofeo Varadero Valencia 2026  (likely_no_event_extracted) |
+| sevilla_kids | talleres infantiles y actividades para n | 4 | 1 | 0 | Black and White (magia infanti (likely_no_event_extracted); El Ratoncito Perez (mision: di (likely_no_event_extracted); Visita-taller familiar: Filmad (likely_no_event_extracted) |
+| paris_art | expositions d'art a Paris ce mois-ci | 4 | 0 | 0 | Mary Cassatt: Being Independen (likely_no_event_extracted); Stan Douglas: Parallax (likely_no_event_extracted); Gustave Fayet, Collector and C (likely_no_event_extracted); Ibrahim Mahama: Harvest season (likely_no_event_extracted) |
+| tokyo_jazz | 東京 ジャズ 11月 | 3 | 0 | 0 | AZIZA featuring Dave Holland,  (likely_no_event_extracted); Kenny Barron Trio (likely_no_event_extracted); Benny Green Trio (likely_no_event_extracted) |
+| vienna_classical | classical concerts in Vienna, 1-15 Nov 2 | 4 | 1 | 0 | Otello (Verdi) - Kaufmann, Sal (likely_no_event_extracted); La Fille du regiment (Donizett (likely_no_event_extracted); Madama Butterfly (Puccini) - J (likely_no_event_extracted) |
+| amsterdam_tech | tech meetups in Amsterdam this month | 3 | 0 | 0 | AI Tinkerers Amsterdam: Octobe (likely_no_event_extracted); FastAPI Conf 2026 (likely_no_event_extracted); SREday Amsterdam 2026 Q4 (likely_no_event_extracted) |
+| running_global | running | 4 | 0 | 0 | TCS New York City Marathon 202 (likely_no_event_extracted); 48th Istanbul Marathon 2026 (likely_no_event_extracted); 43rd Athens Authentic Marathon (likely_no_event_extracted); Fukuoka Marathon 2026 (likely_no_event_extracted) |
+
+recall@run: **7/38 (18.4%)**  
+accepted-recall: **2/38 (5.3%)**
+
+Page classification 29/38 = 76% on current main (deepseek-v4.1-flash),
+target 90%, red until issue 124 lands.

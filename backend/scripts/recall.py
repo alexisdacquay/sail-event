@@ -30,6 +30,7 @@ import urllib.request
 from datetime import UTC, date, datetime
 from difflib import SequenceMatcher
 from pathlib import Path
+from urllib.parse import urlparse
 
 TRIPLES_PATH = Path(__file__).resolve().parent.parent / "tests" / "ground_truth" / "triples.json"
 RECALL_MD = Path(__file__).resolve().parent.parent.parent / "work" / "RECALL.md"
@@ -75,6 +76,34 @@ def _date_matches(event_dt: str | None, gt_date: str) -> bool:
     if not event_dt:
         return False
     return event_dt[:10] == gt_date[:10]
+
+
+def _url_matches(ev_url: str | None, gt_url: str) -> bool:
+    """Match by host + path (ignore query/fragment)."""
+    if not ev_url or not gt_url:
+        return False
+    a, b = urlparse(ev_url), urlparse(gt_url)
+    return (a.netloc.lower() == b.netloc.lower()
+            and a.path.rstrip("/") == b.path.rstrip("/"))
+
+
+def _is_match(gt: dict, ev: dict) -> tuple[bool, float]:
+    """Return (matched, similarity).
+
+    A ground-truth event matches a found event when:
+      - title similarity >= 0.75, OR
+      - the found event's link or sourceUrl matches the GT URL (host+path), OR
+      - title similarity >= 0.5 AND the date is the same day.
+    """
+    sim = _title_similarity(gt["title"], ev.get("title", ""))
+    if sim >= 0.75:
+        return True, sim
+    gt_url = gt.get("url", "")
+    if _url_matches(ev.get("link"), gt_url) or _url_matches(ev.get("sourceUrl"), gt_url):
+        return True, max(sim, 0.75)
+    if sim >= 0.5 and _date_matches(ev.get("dateTime"), gt["date"]):
+        return True, sim
+    return False, sim
 
 
 def run_triple(triple: dict, base: str) -> dict:
@@ -157,14 +186,10 @@ def run_triple(triple: dict, base: str) -> dict:
         best_match = None
         best_sim = 0.0
         for ev in events:
-            sim = _title_similarity(gt["title"], ev.get("title", ""))
-            if sim > best_sim and sim >= 0.4:
-                if _date_matches(ev.get("dateTime"), gt["date"]):
-                    best_sim = sim
-                    best_match = ev
-                elif sim >= 0.7:
-                    best_sim = sim
-                    best_match = ev
+            matched, sim = _is_match(gt, ev)
+            if matched and sim > best_sim:
+                best_sim = sim
+                best_match = ev
 
         if best_match:
             status = best_match.get("status", "unknown")
@@ -178,7 +203,7 @@ def run_triple(triple: dict, base: str) -> dict:
             if status == "accepted":
                 accepted_matches += 1
         else:
-            stage = _diagnose_miss(gt, events, stage_counts)
+            stage = _diagnose_miss(gt, stage_counts)
             misses.append({
                 "gt_title": gt["title"],
                 "gt_date": gt["date"],
@@ -227,17 +252,8 @@ def _sample_no_event_pages(base: str, tok: str, run_id: str | None) -> list[dict
     return random.sample(no_event, min(5, len(no_event)))
 
 
-def _diagnose_miss(gt: dict, events: list, counts: dict) -> str:
-    """Best guess at which stage lost a ground-truth event."""
-    # Check if any returned event has a similar title (was found but filtered/rejected)
-    for ev in events:
-        sim = _title_similarity(gt["title"], ev.get("title", ""))
-        if sim >= 0.4:
-            status = ev.get("status", "")
-            if status == "rejected":
-                return "judged_out"
-
-    # Use stage counts to guess
+def _diagnose_miss(gt: dict, counts: dict) -> str:
+    """Best guess at which stage lost a ground-truth event, from counts only."""
     extracted = counts.get("events_extracted", 0)
     non_event = counts.get("filtered_non_event", 0)
     fetched = counts.get("results_fetched", 0)
@@ -333,6 +349,19 @@ def main():
     acc_pct = f"{total_accepted}/{total_gt}" if total_gt else "0/0"
     recall_rate = round(total_found / total_gt * 100, 1) if total_gt else 0
     acc_rate = round(total_accepted / total_gt * 100, 1) if total_gt else 0
+
+    # Abort on errors: do not write a broken table to RECALL.md
+    has_errors = any("error" in r for r in results)
+    all_skipped = all(r.get("skipped") or "error" in r for r in results)
+    if has_errors or all_skipped:
+        print(f"\n=== Summary ===")
+        print(f"  recall@run: {recall_pct} ({recall_rate}%)")
+        print(f"  accepted-recall: {acc_pct} ({acc_rate}%)")
+        if has_errors:
+            print("\nErrors encountered; RECALL.md not updated.")
+            return 1
+        print("\nAll triples skipped; RECALL.md not updated.")
+        return 0
 
     print(f"\n=== Summary ===")
     print(f"  recall@run: {recall_pct} ({recall_rate}%)")
