@@ -76,7 +76,8 @@ export function stageFraction(run: SearchResult): number | null {
       return total > 0 ? (c.pages_content_pass ?? 0) / total : null
     }
     case 'judge': {
-      const total = run.eventsNew || 0
+      // events_to_judge is in stageCounts during the live run; eventsNew only after finalise
+      const total = c.events_to_judge ?? run.eventsNew ?? 0
       return total > 0 ? (c.events_judged ?? 0) / total : null
     }
     default:
@@ -146,17 +147,32 @@ export function groupByDay(events: Event[]): [string, Event[]][] {
 const tlLine = "relative mb-1.5 before:absolute before:-left-[19px] before:top-1.5 before:size-2 before:rounded-full before:bg-input before:content-['']"
 const tlLive = `${tlLine} before:!bg-primary`
 
+/** True when the user prefers reduced motion (respects live changes). */
+function useReducedMotion() {
+  const mql = typeof window !== 'undefined' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null
+  const [reduced, setReduced] = useState(mql?.matches ?? false)
+  useEffect(() => {
+    if (!mql) return
+    const h = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mql.addEventListener('change', h)
+    return () => mql.removeEventListener('change', h)
+  }, [mql])
+  return reduced
+}
+
 /** Hairline track + breathing dot. With a fraction: 2 px filled track. Without: dot only. */
 function ProgressHairline({ fraction }: { fraction: number | null }) {
+  const noMotion = useReducedMotion()
+  const cls = noMotion ? ' progress-no-motion' : ''
   if (fraction != null) {
     const pct = `${Math.min(100, Math.max(0, fraction * 100))}%`
     return (
-      <span data-testid="progress-hairline" className="progress-hairline" aria-hidden="true">
+      <span data-testid="progress-hairline" className={`progress-hairline${cls}`} aria-hidden="true">
         <span className="progress-hairline-fill" style={{ width: pct }} />
       </span>
     )
   }
-  return <span data-testid="progress-hairline" className="progress-hairline-dot" aria-hidden="true" />
+  return <span data-testid="progress-hairline" className={`progress-hairline-dot${cls}`} aria-hidden="true" />
 }
 const label = 'mb-1.5 text-[11px] font-semibold uppercase tracking-[.08em] text-muted-foreground'
 // same contour as the login and register boxes

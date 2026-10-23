@@ -472,7 +472,10 @@ components:
             rejected_other (40 up to the lower threshold); they sum to rejected
             and are 0, never absent, on every finished run. events_capped counts
             kept events dropped by MAX_EVENTS_PER_RUN. results_known counts result
-            pages already stored from earlier runs. counts_version is the shape
+            pages already stored from earlier runs. events_to_judge is the number
+            of events entering the judge stage, set when currentStage becomes judge;
+            the frontend uses it as the live progress total since eventsNew is only
+            written at finalise. counts_version is the shape
             version (see countsVersion); for a run below the current version the
             bands are recomputed from the run's events at read time.
         countsVersion:

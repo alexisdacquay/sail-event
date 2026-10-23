@@ -152,3 +152,7 @@
 @keyframes breathe {
   to { box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 10%, transparent); }
 }
+.progress-no-motion .progress-hairline-fill::after,
+.progress-no-motion.progress-hairline-dot {
+  animation: none;
+}
