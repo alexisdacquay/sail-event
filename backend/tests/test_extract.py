@@ -344,6 +344,56 @@ class TestPageKindFromModel:
         assert counts.pages_content_pass == 0
 
 
+class TestPageDetails:
+    """Per-page info stored on the run for the ground-truth engineer."""
+
+    def test_page_details_for_fixture_results(self):
+        """Fixture provider produces 22 results; page_details has one entry per result
+        with kinds consistent with the extraction counts."""
+        import os
+        os.environ.setdefault("FAKE_NOW", "2026-10-18T12:00:00+02:00")
+        from app.adapters.fixture import FixtureProvider
+        from app.adapters.factory import get_language_model
+        from app.services.window import resolve
+
+        provider = FixtureProvider()
+        results = provider.search("test")
+        model = get_language_model()
+        facets_date = {"start": "2026-10-19", "end": "2026-10-21",
+                       "relative": "next_week", "relative_n": None}
+        window = resolve(facets_date, "Europe/Berlin")
+
+        events, counts = extract_events(
+            results,
+            window_start=window.start_utc,
+            window_end=window.end_utc,
+            target_city="Berlin",
+            target_country="DE",
+            language="de",
+            user_tz="Europe/Berlin",
+            model=model,
+        )
+
+        assert len(counts.page_details) == 22
+        kinds = {p.kind for p in counts.page_details}
+        assert kinds <= {"single_event", "listing", "not_event", "no_content", "error"}
+        # Pages with events: pages_with_events count matches
+        with_events = [p for p in counts.page_details if p.events > 0]
+        assert len(with_events) == counts.pages_with_events
+        # No-content pages: results without raw_content and no events from snippet
+        no_content = [p for p in counts.page_details if p.kind == "no_content"]
+        assert all(not r.raw_content for r in results if r.url in {p.url for p in no_content})
+
+    def test_page_detail_fields_are_fixed(self):
+        """Each page detail has exactly: url, title, events, kind."""
+        from app.services.extract import PageInfo
+        p = PageInfo(url="https://x.example.com", title="X", events=0, kind="not_event")
+        assert p.url == "https://x.example.com"
+        assert p.title == "X"
+        assert p.events == 0
+        assert p.kind == "not_event"
+
+
 class TestKnownLinkRemoval:
     """Known-link removal applies only for single_event pages (design §7).
 

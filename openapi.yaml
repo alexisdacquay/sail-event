@@ -176,6 +176,35 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/search/runs/{run_id}:
+    get:
+      operationId: getRun
+      summary: Get a single run by ID (own runs only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: run_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The run
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - run
+                properties:
+                  run:
+                    $ref: '#/components/schemas/SearchResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Run not found or not owned by caller
+
   /api/search/runs:
     get:
       operationId: getRuns

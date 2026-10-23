@@ -78,6 +78,14 @@ class ExtractedEvent:
 
 
 @dataclass
+class PageInfo:
+    url: str
+    title: str
+    events: int
+    kind: str  # single_event, listing, not_event, no_content, error
+
+
+@dataclass
 class ExtractionCounts:
     pages_content_pass: int = 0
     extract_truncated: int = 0
@@ -85,6 +93,7 @@ class ExtractionCounts:
     pages_with_events: int = 0
     filtered_non_event: int = 0  # pages whose full read returned no events
     extract_errors: int = 0
+    page_details: list[PageInfo] = field(default_factory=list)
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
 
@@ -176,6 +185,7 @@ def extract_events(
     anchors = _month_anchor(window_start, window_end, language)
 
     all_events: list[ExtractedEvent] = []
+    error_urls: set[str] = set()  # pages where the model call failed
 
     # Split results: those with raw_content get full page reads,
     # those without fall back to snippet-only extraction.
@@ -217,6 +227,7 @@ def extract_events(
                     logger.warning("extract page error for %s: %s", r.url, exc)
                     with counts._lock:
                         counts.extract_errors += 1
+                        error_urls.add(r.url)
                     pspan.set_attribute("page_kind", "error")
                     pspan.set_attribute("event_count", 0)
                     return r, None
@@ -259,6 +270,25 @@ def extract_events(
     # Page counters derived once at the end
     counts.pages_with_events = len({e.source_url for e in all_events})
     counts.filtered_non_event = len(results) - counts.pages_with_events
+
+    # Per-page detail for the run row
+    events_by_url: dict[str, list[ExtractedEvent]] = {}
+    for ev in all_events:
+        events_by_url.setdefault(ev.source_url, []).append(ev)
+    for r in results:
+        evts = events_by_url.get(r.url, [])
+        if evts:
+            kind = evts[0].page_kind
+        elif r.url in error_urls:
+            kind = "error"
+        elif not r.raw_content:
+            kind = "no_content"
+        else:
+            kind = "not_event"
+        counts.page_details.append(PageInfo(
+            url=r.url, title=r.title, events=len(evts), kind=kind,
+        ))
+
     return all_events, counts
 
 

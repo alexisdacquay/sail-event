@@ -383,6 +383,13 @@ def run_pipeline(
                 # Page-level counts from extraction (#112: pages only, never events)
                 counts["pages_with_events"] = extract_counts.pages_with_events
                 counts["filtered_non_event"] = extract_counts.filtered_non_event
+                # Per-page detail (#124)
+                if extract_counts.page_details:
+                    from ..services.extract import PageInfo
+                    run.pages = json.dumps([
+                        {"url": p.url, "title": p.title, "events": p.events, "kind": p.kind}
+                        for p in extract_counts.page_details
+                    ])
 
             # --- Stage 6: filter ---
             current_stage = "filter"
