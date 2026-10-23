@@ -47,7 +47,8 @@ export function stageText(run: SearchResult): string {
       return 'Searching the web…'
     case 'extract': {
       const done = c.pages_content_pass ?? 0
-      const total = c.results_fetched ?? 0
+      // the extractor iterates results after known-page removal
+      const total = (c.results_fetched ?? 0) - (c.results_known ?? 0)
       return total > 0
         ? `Reading pages ${done} of ${total}…`
         : 'Reading pages…'
@@ -78,7 +79,7 @@ export function stageLines(run: SearchResult): string[] {
     [n.pagesKnown > 0
       ? `Searched the web: ${n.pages} pages, ${n.pagesKnown} already known from earlier runs, ${n.pages - n.pagesKnown} new`
       : `Searched the web, ${n.pages} pages`],
-    [`Read ${n.pages} pages, found ${n.found} events`, ...(n.nonEvent > 0 ? [`Skipped ${n.nonEvent} pages that were not events`] : [])],
+    [`Read ${n.pages - n.pagesKnown} pages, found ${n.found} events`, ...(n.nonEvent > 0 ? [`Skipped ${n.nonEvent} pages that were not events`] : [])],
     [`Not judged: ${n.notJudged}`],
     [`Judged ${c.events_judged ?? 0} · ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} out`],
   ]

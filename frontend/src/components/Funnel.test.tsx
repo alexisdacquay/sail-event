@@ -251,4 +251,10 @@ describe('Funnel', () => {
     expect(screen.getByText('on 31 pages read')).toBeInTheDocument()
     expectStructure(container, before)
   })
+
+  it('footer pages read = fetched minus known', () => {
+    const withKnown = { ...counts, results_known: 1 }
+    render(<Funnel counts={withKnown} />)
+    expect(screen.getByText('from 8 of 30 pages read')).toBeInTheDocument()
+  })
 })

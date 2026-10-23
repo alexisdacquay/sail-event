@@ -337,9 +337,18 @@ describe('stageLines', () => {
   })
 
   it('says how many pages were already known from earlier runs', () => {
-    expect(stageLines({ ...finished, stageCounts: { ...finished.stageCounts, results_known: 6 } })[0])
-      .toBe('Searched the web: 20 pages, 6 already known from earlier runs, 14 new')
+    const withKnown = stageLines({ ...finished, stageCounts: { ...finished.stageCounts, results_known: 6 } })
+    expect(withKnown[0]).toBe('Searched the web: 20 pages, 6 already known from earlier runs, 14 new')
+    expect(withKnown[1]).toBe('Read 14 pages, found 31 events')
     expect(stageLines({ ...finished, stageCounts: { ...finished.stageCounts, results_known: 0 } })[0]).toBe('Searched the web, 20 pages')
+  })
+
+  it('the reading total is fetched minus known: 17 fetched, 1 known → of 16', () => {
+    const counts = { ...finished.stageCounts, results_fetched: 17, results_known: 1, pages_content_pass: 9 }
+    expect(stageText({ ...finished, currentStage: 'extract', finishedAt: null, stageCounts: counts })).toBe('Reading pages 9 of 16…')
+    const lines = stageLines({ ...finished, stageCounts: counts })
+    expect(lines[0]).toBe('Searched the web: 17 pages, 1 already known from earlier runs, 16 new')
+    expect(lines[1]).toBe('Read 16 pages, found 31 events')
   })
 
   it('shows the finished stages then the live line while judging', () => {

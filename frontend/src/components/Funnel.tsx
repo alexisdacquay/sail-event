@@ -106,7 +106,7 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
     key: 'found', count: n.found, fill: 'var(--border)', label: `${n.found} found`, x: X[0], w: BAR[0], y: TOP, h: HEIGHT,
     subs: [], lines: [
       { y: TOP + HEIGHT + 16, text: `${n.found} found`, main: true },
-      { y: TOP + HEIGHT + 16 + LINE, main: false, text: 'pages_with_events' in counts ? `from ${n.pagesWithEvents} of ${n.pages} pages read` : `on ${n.pages} pages read` },
+      { y: TOP + HEIGHT + 16 + LINE, main: false, text: 'pages_with_events' in counts ? `from ${n.pagesWithEvents} of ${n.pages - n.pagesKnown} pages read` : `on ${n.pages - n.pagesKnown} pages read` },
     ],
   }
   const col2 = stack([
