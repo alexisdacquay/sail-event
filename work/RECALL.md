@@ -35,3 +35,13 @@ accepted-recall: **1/38 (2.6%)**
 
 recall@run: **9/38 (23.7%)**  
 accepted-recall: **6/38 (15.8%)**
+
+The first run (4/38) and the corrected run (9/38) are different dev runs on
+different days with different search results from Tavily. The found/accepted
+counts changed because Tavily returned different pages; the miss attribution
+changed because the first run had a bug reading stageCounts from the wrong
+nesting level (every miss said "not_fetched" regardless of the real cause).
+
+Page classification 27/35 = 77% on current main (deepseek-v4.1-flash),
+target 90%, red until issue 124 lands (the extractor reads every page in
+full instead of snippet-only).

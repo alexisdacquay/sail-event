@@ -141,10 +141,7 @@ def test_page_classification(pages, model):
         for url in misses:
             print(f"    - {url}")
 
-    # The ratio is reported, not tuned. The threshold is a sanity floor:
-    # the test fails only on a catastrophic regression, not on the current
-    # extractor's accuracy (which issue 124 is improving).
-    assert ratio >= 0.5, (
-        f"Page classification ratio {ratio:.1%} is below 50% sanity floor. "
+    assert ratio >= 0.9, (
+        f"Page classification ratio {ratio:.1%} is below 90% target. "
         f"Misses: {misses}"
     )
