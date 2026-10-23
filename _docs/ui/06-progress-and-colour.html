@@ -1,0 +1,101 @@
+<title>Run progress bar</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: three bar styles, each on one chronology line with the bar to the right of the text; then the recoloured funnel. */
+:root{--bg:#f6f7f9;--paper:#fff;--ink:#15181d;--ink-2:#5b6472;--ink-3:#9aa3b0;--line:#e3e6eb;--track:#e3e6eb;--fill:#1f5eff;--mono:"JetBrains Mono",Menlo,monospace;--body:"Figtree",Arial,sans-serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f1115;--paper:#171a20;--ink:#eef0f3;--ink-2:#a7afbb;--ink-3:#6b7482;--line:#262b34;--track:#262b34;--fill:#7aa2ff}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0f1115;--paper:#171a20;--ink:#eef0f3;--ink-2:#a7afbb;--ink-3:#6b7482;--line:#262b34;--track:#262b34;--fill:#7aa2ff}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;padding-block:32px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:760px;margin:0 auto;display:grid;gap:24px}
+h1{font-size:22px;font-weight:600;margin:0}
+p.lede{color:var(--ink-2);margin:4px 0 0;max-width:62ch}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px 20px}
+.state{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px}
+.tl{margin:0;padding-left:14px;border-left:2px solid var(--line);display:grid;gap:6px}
+.tl p{margin:0;position:relative;font-size:14px}
+.tl p::before{content:"";position:absolute;left:-19px;top:7px;width:8px;height:8px;border-radius:50%;background:var(--line)}
+.tl p.live::before{background:var(--fill)}
+.tl .ts{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+.row{display:flex;align-items:center;gap:14px}
+.row .t{white-space:nowrap}
+/* A: hairline with a lit tip */
+.a{flex:1;max-width:260px;height:2px;background:var(--track);border-radius:1px;position:relative}
+.a i{position:absolute;left:0;top:0;height:100%;width:56%;background:var(--fill);border-radius:1px}
+.a i::after{content:"";position:absolute;right:-3px;top:-2px;width:6px;height:6px;border-radius:50%;background:var(--fill);box-shadow:0 0 0 3px color-mix(in srgb,var(--fill) 25%,transparent);animation:breathe 1.4s ease-in-out infinite alternate}
+@keyframes breathe{to{box-shadow:0 0 0 6px color-mix(in srgb,var(--fill) 10%,transparent)}}
+/* B: soft band, rounded ends, sheen sweep */
+.b{flex:1;max-width:260px;height:8px;background:var(--track);border-radius:4px;overflow:hidden;position:relative}
+.b i{display:block;height:100%;width:56%;background:var(--fill);border-radius:4px;position:relative;overflow:hidden}
+.b i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 0,rgba(255,255,255,.45) 50%,transparent 100%);transform:translateX(-100%);animation:sweep 1.6s linear infinite}
+@keyframes sweep{to{transform:translateX(100%)}}
+/* C: ring beside the text */
+.c{width:18px;height:18px;flex:none}
+.c circle{fill:none;stroke-width:3}
+.c .tr{stroke:var(--track)} .c .fl{stroke:var(--fill);stroke-linecap:round;stroke-dasharray:47.1;stroke-dashoffset:20.7;transform:rotate(-90deg);transform-origin:50% 50%}
+@media (prefers-reduced-motion: reduce){.a i::after,.b i::after{animation:none}}
+.notes{font-size:14px;color:var(--ink-2);display:grid;gap:6px}
+.notes b{color:var(--ink);font-weight:600}
+.fun{font-family:var(--mono);font-size:10px;width:100%;max-width:700px}
+.fun text{fill:var(--ink-2)} .fun text.k{fill:var(--ink);font-weight:500}
+</style>
+<div class="wrap">
+  <header><h1>Bar beside the line, three styles</h1><p class="lede">Continuous, no segments, no counts beyond the text, no outcome colours. The bar sits to the right of the live line and disappears when the stage ends.</p></header>
+
+  <div class="card">
+    <p class="state">A · hairline with a lit tip</p>
+    <div class="tl">
+      <p class="ts">23 Oct 16:50 · your run · running…</p>
+      <p>Searched the web: 17 pages, 1 already known, 16 new</p>
+      <p class="live"><span class="row"><span class="t">Reading pages 9 of 16…</span><span class="a"><i></i></span></span></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="state">B · soft band with a sheen</p>
+    <div class="tl">
+      <p class="ts">23 Oct 16:50 · your run · running…</p>
+      <p>Searched the web: 17 pages, 1 already known, 16 new</p>
+      <p class="live"><span class="row"><span class="t">Reading pages 9 of 16…</span><span class="b"><i></i></span></span></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="state">C · ring, no bar</p>
+    <div class="tl">
+      <p class="ts">23 Oct 16:50 · your run · running…</p>
+      <p>Searched the web: 17 pages, 1 already known, 16 new</p>
+      <p class="live"><span class="row"><svg class="c" viewBox="0 0 18 18" aria-hidden="true"><circle class="tr" cx="9" cy="9" r="7.5"></circle><circle class="fl" cx="9" cy="9" r="7.5"></circle></svg><span class="t">Reading pages 9 of 16…</span></span></p>
+    </div>
+  </div>
+
+  <div class="notes">
+    <p><b>A</b> Quietest. The tip breathes, nothing else moves; reads as progress at any width.</p>
+    <p><b>B</b> The most "bar". The sheen says alive; the band is 8 px so it carries weight next to 14 px text.</p>
+    <p><b>C</b> No bar at all: the ring takes the bullet's place on the line, so nothing is added to the right. Best on a phone.</p>
+  </div>
+
+  <div class="card">
+    <p class="state">Funnel, more colour</p>
+    <svg class="fun" viewBox="0 0 700 200" role="img" aria-label="Recoloured Sankey">
+      <rect x="10" y="40" width="14" height="120" fill="#5b6472"></rect>
+      <text x="10" y="176" class="k">24 found</text><text x="10" y="187">from 8 of 20 pages read</text>
+      <path d="M24 40 C140 40 140 20 260 20 L260 60 C140 60 140 80 24 80 Z" fill="#3b82f6" opacity=".55"></path>
+      <path d="M24 80 C140 80 140 88 260 88 L260 168 C140 168 140 160 24 160 Z" fill="#94a3b8" opacity=".4"></path>
+      <rect x="260" y="20" width="14" height="40" fill="#2563eb"></rect>
+      <text x="280" y="43" class="k">8 judged</text>
+      <rect x="260" y="88" width="14" height="80" fill="#64748b"></rect>
+      <text x="280" y="124" class="k">16 not judged</text><text x="280" y="135">5 no date · 9 duplicate · 2 errors</text>
+      <path d="M274 20 C400 20 400 8 520 8 L520 18 C400 18 400 30 274 30 Z" fill="#10b981" opacity=".75"></path>
+      <path d="M274 30 C400 30 400 34 520 34 L520 39 C400 39 400 35 274 35 Z" fill="#f59e0b" opacity=".85"></path>
+      <path d="M274 35 C400 35 400 55 520 55 L520 80 C400 80 400 60 274 60 Z" fill="#ef4444" opacity=".6"></path>
+      <rect x="520" y="8" width="6" height="10" fill="#059669"></rect>
+      <rect x="520" y="34" width="6" height="5" fill="#d97706"></rect>
+      <rect x="520" y="55" width="6" height="25" fill="#dc2626"></rect>
+      <text x="532" y="16" class="k">2 in calendar</text>
+      <text x="532" y="40" class="k">1 to review</text>
+      <text x="532" y="66" class="k">5 out</text><text x="532" y="77">4 date or place · 1 topic</text>
+    </svg>
+    <div class="notes" style="margin-top:8px"><p><b>Colour</b> Judged ribbon and node go blue (the live stage), not judged stays slate, verdicts fully saturated green / amber / red with darker end bars. Same geometry.</p></div>
+  </div>
+</div>
