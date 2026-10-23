@@ -267,6 +267,10 @@ def extract_events(
             logger.warning("extract snippet-only error: %s", exc)
             counts.extract_errors += 1
 
+    # Deterministic order: sort by source_url so dedup in filters is stable
+    # regardless of thread completion order.
+    all_events.sort(key=lambda e: (e.source_url, e.start_local or "", e.title))
+
     # Page counters derived once at the end
     counts.pages_with_events = len({e.source_url for e in all_events})
     counts.filtered_non_event = len(results) - counts.pages_with_events

@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 98,
+    "reason": "A jazz trio playing A-Trane in Berlin on 20 October 2026 matches your search for jazz in Berlin on 19\u201321 October perfectly.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 773,
+    "completion_tokens": 73
+  },
+  "recorded_at": "2026-10-23T23:49:38.173813+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}
