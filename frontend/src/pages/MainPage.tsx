@@ -47,7 +47,8 @@ export function stageText(run: SearchResult): string {
       return 'Searching the web…'
     case 'extract': {
       const done = c.pages_content_pass ?? 0
-      const total = c.results_fetched ?? 0
+      // the extractor iterates results after known-page removal
+      const total = (c.results_fetched ?? 0) - (c.results_known ?? 0)
       return total > 0
         ? `Reading pages ${done} of ${total}…`
         : 'Reading pages…'
@@ -56,13 +57,31 @@ export function stageText(run: SearchResult): string {
       return 'Filtering events…'
     case 'judge': {
       const judged = c.events_judged ?? 0
-      const total = run.eventsNew || 0
+      const total = c.events_to_judge ?? run.eventsNew ?? 0
       return total > 0
         ? `Judging ${judged} of ${total} events…`
         : 'Judging events…'
     }
     default:
       return 'Working…'
+  }
+}
+
+/** 0–1 fraction of the live stage, or null when the total is unknown. */
+export function stageFraction(run: SearchResult): number | null {
+  const c = run.stageCounts ?? {}
+  switch (run.currentStage) {
+    case 'extract': {
+      const total = (c.results_fetched ?? 0) - (c.results_known ?? 0)
+      return total > 0 ? (c.pages_content_pass ?? 0) / total : null
+    }
+    case 'judge': {
+      // events_to_judge is in stageCounts during the live run; eventsNew only after finalise
+      const total = c.events_to_judge ?? run.eventsNew ?? 0
+      return total > 0 ? (c.events_judged ?? 0) / total : null
+    }
+    default:
+      return null
   }
 }
 
@@ -78,7 +97,7 @@ export function stageLines(run: SearchResult): string[] {
     [n.pagesKnown > 0
       ? `Searched the web: ${n.pages} pages, ${n.pagesKnown} already known from earlier runs, ${n.pages - n.pagesKnown} new`
       : `Searched the web, ${n.pages} pages`],
-    [`Read ${n.pages} pages, found ${n.found} events`, ...(n.nonEvent > 0 ? [`Skipped ${n.nonEvent} pages that were not events`] : [])],
+    [`Read ${n.pages - n.pagesKnown} pages, found ${n.found} events`, ...(n.nonEvent > 0 ? [`Skipped ${n.nonEvent} pages that were not events`] : [])],
     [`Not judged: ${n.notJudged}`],
     [`Judged ${c.events_judged ?? 0} · ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} out`],
   ]
@@ -126,6 +145,35 @@ export function groupByDay(events: Event[]): [string, Event[]][] {
 }
 
 const tlLine = "relative mb-1.5 before:absolute before:-left-[19px] before:top-1.5 before:size-2 before:rounded-full before:bg-input before:content-['']"
+const tlLive = `${tlLine} before:!bg-primary`
+
+/** True when the user prefers reduced motion (respects live changes). */
+function useReducedMotion() {
+  const mql = typeof window !== 'undefined' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null
+  const [reduced, setReduced] = useState(mql?.matches ?? false)
+  useEffect(() => {
+    if (!mql) return
+    const h = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mql.addEventListener('change', h)
+    return () => mql.removeEventListener('change', h)
+  }, [mql])
+  return reduced
+}
+
+/** Hairline track + breathing dot. With a fraction: 2 px filled track. Without: dot only. */
+function ProgressHairline({ fraction }: { fraction: number | null }) {
+  const noMotion = useReducedMotion()
+  const cls = noMotion ? ' progress-no-motion' : ''
+  if (fraction != null) {
+    const pct = `${Math.min(100, Math.max(0, fraction * 100))}%`
+    return (
+      <span data-testid="progress-hairline" className={`progress-hairline${cls}`} aria-hidden="true">
+        <span className="progress-hairline-fill" style={{ width: pct }} />
+      </span>
+    )
+  }
+  return <span data-testid="progress-hairline" className={`progress-hairline-dot${cls}`} aria-hidden="true" />
+}
 const label = 'mb-1.5 text-[11px] font-semibold uppercase tracking-[.08em] text-muted-foreground'
 // same contour as the login and register boxes
 const PANEL = 'rounded-xl border-2 border-ring/50 bg-card p-4 shadow-sm'
@@ -400,16 +448,24 @@ export function MainPage() {
           <div data-testid="run" className="mt-3.5 grid gap-4">
             <div data-testid="run-chronology" className="border-l-2 border-border pl-3.5 text-sm">
               <p className={`${tlLine} font-mono text-xs text-muted-foreground`}>{runHeader(lastRun)}</p>
-              {stageLines(lastRun).map((line, i) => (
-                <p
-                  key={i}
-                  className={tlLine}
-                  data-testid={line === stageText(lastRun) && lastRun.currentStage ? 'search-progress' : undefined}
-                  role={line === stageText(lastRun) && lastRun.currentStage ? 'status' : undefined}
-                >
-                  {line}
-                </p>
-              ))}
+              {stageLines(lastRun).map((line, i) => {
+                const isLive = line === stageText(lastRun) && !!lastRun.currentStage
+                return (
+                  <p
+                    key={i}
+                    className={isLive ? tlLive : tlLine}
+                    data-testid={isLive ? 'search-progress' : undefined}
+                    role={isLive ? 'status' : undefined}
+                  >
+                    {isLive ? (
+                      <span className="flex flex-wrap items-center gap-x-3.5 gap-y-1">
+                        <span className="whitespace-nowrap">{line}</span>
+                        <ProgressHairline fraction={stageFraction(lastRun)} />
+                      </span>
+                    ) : line}
+                  </p>
+                )
+              })}
             </div>
             {lastRun.stageCounts && <Funnel counts={lastRun.stageCounts} countsVersion={lastRun.countsVersion ?? 1} className="hidden md:block" />}
           </div>

@@ -458,6 +458,7 @@ def run_pipeline(
 
             # --- Stage 7 + 8: judge and triage ---
             current_stage = "judge"
+            counts["events_to_judge"] = events_new  # live total for the progress bar
             _update_run_stage(run, db, current_stage, counts)
             if events_new > 0:
                 # Budget check before judge LLM calls

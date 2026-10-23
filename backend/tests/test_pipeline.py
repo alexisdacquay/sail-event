@@ -475,6 +475,28 @@ def test_extract_and_judge_write_intermediate_counts(_db_session):
         )
 
 
+def test_events_to_judge_in_stage_counts_during_judge(_db_session):
+    """#122: events_to_judge is set in stage_counts when the judge stage starts."""
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    from app.services.pipeline import _update_run_stage
+    snapshots: list[tuple[str, dict]] = []
+
+    original_update = _update_run_stage
+
+    def _spy(run, db, stage, counts):
+        snapshots.append((stage, dict(counts)))
+        original_update(run, db, stage, counts)
+
+    with patch("app.services.pipeline._update_run_stage", side_effect=_spy):
+        run_pipeline(user, _db_session, trigger="manual")
+
+    judge_snaps = [(s, c) for s, c in snapshots if s == "judge"]
+    assert len(judge_snaps) >= 1, "judge stage never reached"
+    first_judge = judge_snaps[0][1]
+    assert "events_to_judge" in first_judge, f"events_to_judge missing: {first_judge.keys()}"
+    assert first_judge["events_to_judge"] >= 0
+
+
 # ---------- #108: rejected bands in stage_counts ----------
 
 

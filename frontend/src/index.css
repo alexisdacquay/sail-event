@@ -107,3 +107,52 @@
     }
   }
 }
+
+/* Progress hairline on the live chronology line (#122) */
+.progress-hairline {
+  flex: 1 1 0;
+  max-width: 260px;
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  position: relative;
+}
+@media (max-width: 767px) {
+  .progress-hairline { flex: none; width: 100%; max-width: none; }
+}
+.progress-hairline-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--primary);
+  border-radius: 1px;
+}
+.progress-hairline-fill::after {
+  content: "";
+  position: absolute;
+  right: -3px;
+  top: -2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+  animation: breathe 1.4s ease-in-out infinite alternate;
+}
+.progress-hairline-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+  animation: breathe 1.4s ease-in-out infinite alternate;
+}
+@keyframes breathe {
+  to { box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 10%, transparent); }
+}
+.progress-no-motion .progress-hairline-fill::after,
+.progress-no-motion.progress-hairline-dot {
+  animation: none;
+}
