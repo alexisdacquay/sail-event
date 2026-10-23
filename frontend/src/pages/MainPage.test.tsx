@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { HINT_SEEN_KEY, MainPage, groupByDay, mostlyReason, runHeader, stageLines, stageText } from './MainPage'
+import { HINT_SEEN_KEY, MainPage, groupByDay, mostlyReason, runHeader, stageFraction, stageLines, stageText } from './MainPage'
 import type { Event, SearchResult } from '@/services/api'
 
 function renderMainPage() {
@@ -406,5 +406,60 @@ describe('stageText', () => {
 
   it('shows done summary when finished', () => {
     expect(stageText(finished)).toBe('Done: 2 added to your calendar, 1 to review, 19 out')
+  })
+})
+
+describe('stageFraction', () => {
+  it('returns done/total for extract (uses fetched - known)', () => {
+    expect(stageFraction({ ...finished, currentStage: 'extract', finishedAt: null, stageCounts: { results_fetched: 20, pages_content_pass: 7 } })).toBeCloseTo(7 / 20)
+    expect(stageFraction({ ...finished, currentStage: 'extract', finishedAt: null, stageCounts: { results_fetched: 17, results_known: 1, pages_content_pass: 8 } })).toBeCloseTo(8 / 16)
+  })
+
+  it('returns done/total for judge', () => {
+    expect(stageFraction({ ...finished, currentStage: 'judge', finishedAt: null, eventsNew: 10, stageCounts: { events_judged: 3 } })).toBeCloseTo(3 / 10)
+  })
+
+  it('returns null when the total is unknown', () => {
+    expect(stageFraction({ ...finished, currentStage: 'search', finishedAt: null })).toBeNull()
+    expect(stageFraction({ ...finished, currentStage: 'filter', finishedAt: null })).toBeNull()
+    expect(stageFraction({ ...finished, currentStage: 'adapters', finishedAt: null, stageCounts: null })).toBeNull()
+  })
+})
+
+describe('progress hairline', () => {
+  const extractRun: SearchResult = {
+    runId: 'run-live', eventsFound: 0, eventsNew: 0,
+    stageCounts: { results_fetched: 20, pages_content_pass: 7 },
+    currentStage: 'extract', stoppedAtStage: null, error: null,
+    startedAt: '2026-10-18T10:00:00+00:00', finishedAt: null, trigger: 'manual',
+  }
+
+  it('shows the hairline with fill width matching the fraction during extract', async () => {
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'getLastRun').mockResolvedValue({ run: extractRun })
+    renderMainPage()
+    const hairline = await screen.findByTestId('progress-hairline')
+    expect(hairline).toBeInTheDocument()
+    expect(hairline.classList.contains('progress-hairline')).toBe(true)
+    const fill = hairline.querySelector('.progress-hairline-fill')!
+    expect(fill).toBeTruthy()
+    expect(fill.getAttribute('style')).toContain('width: 35%')
+  })
+
+  it('shows the dot alone when the total is unknown (search stage)', async () => {
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'getLastRun').mockResolvedValue({
+      run: { ...extractRun, currentStage: 'search', stageCounts: { queries_planned: 2 } },
+    })
+    renderMainPage()
+    const hairline = await screen.findByTestId('progress-hairline')
+    expect(hairline.classList.contains('progress-hairline-dot')).toBe(true)
+    expect(hairline.querySelector('.progress-hairline-fill')).toBeNull()
+  })
+
+  it('is removed when the stage is done', async () => {
+    renderMainPage()
+    await waitFor(() => expect(screen.getByTestId('run-chronology')).toBeInTheDocument())
+    expect(screen.queryByTestId('progress-hairline')).not.toBeInTheDocument()
   })
 })

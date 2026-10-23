@@ -67,6 +67,23 @@ export function stageText(run: SearchResult): string {
   }
 }
 
+/** 0–1 fraction of the live stage, or null when the total is unknown. */
+export function stageFraction(run: SearchResult): number | null {
+  const c = run.stageCounts ?? {}
+  switch (run.currentStage) {
+    case 'extract': {
+      const total = (c.results_fetched ?? 0) - (c.results_known ?? 0)
+      return total > 0 ? (c.pages_content_pass ?? 0) / total : null
+    }
+    case 'judge': {
+      const total = run.eventsNew || 0
+      return total > 0 ? (c.events_judged ?? 0) / total : null
+    }
+    default:
+      return null
+  }
+}
+
 const STAGES = ['search', 'extract', 'filter', 'judge']
 
 /** The chronology lines: finished stages, then the live line or the stop line. */
@@ -127,6 +144,20 @@ export function groupByDay(events: Event[]): [string, Event[]][] {
 }
 
 const tlLine = "relative mb-1.5 before:absolute before:-left-[19px] before:top-1.5 before:size-2 before:rounded-full before:bg-input before:content-['']"
+const tlLive = `${tlLine} before:!bg-primary`
+
+/** Hairline track + breathing dot. With a fraction: 2 px filled track. Without: dot only. */
+function ProgressHairline({ fraction }: { fraction: number | null }) {
+  if (fraction != null) {
+    const pct = `${Math.min(100, Math.max(0, fraction * 100))}%`
+    return (
+      <span data-testid="progress-hairline" className="progress-hairline" aria-hidden="true">
+        <span className="progress-hairline-fill" style={{ width: pct }} />
+      </span>
+    )
+  }
+  return <span data-testid="progress-hairline" className="progress-hairline-dot" aria-hidden="true" />
+}
 const label = 'mb-1.5 text-[11px] font-semibold uppercase tracking-[.08em] text-muted-foreground'
 // same contour as the login and register boxes
 const PANEL = 'rounded-xl border-2 border-ring/50 bg-card p-4 shadow-sm'
@@ -421,16 +452,24 @@ export function MainPage() {
           <div data-testid="run" className="mt-3.5 grid gap-4">
             <div data-testid="run-chronology" className="border-l-2 border-border pl-3.5 text-sm">
               <p className={`${tlLine} font-mono text-xs text-muted-foreground`}>{runHeader(lastRun)}</p>
-              {stageLines(lastRun).map((line, i) => (
-                <p
-                  key={i}
-                  className={tlLine}
-                  data-testid={line === stageText(lastRun) && lastRun.currentStage ? 'search-progress' : undefined}
-                  role={line === stageText(lastRun) && lastRun.currentStage ? 'status' : undefined}
-                >
-                  {line}
-                </p>
-              ))}
+              {stageLines(lastRun).map((line, i) => {
+                const isLive = line === stageText(lastRun) && !!lastRun.currentStage
+                return (
+                  <p
+                    key={i}
+                    className={isLive ? tlLive : tlLine}
+                    data-testid={isLive ? 'search-progress' : undefined}
+                    role={isLive ? 'status' : undefined}
+                  >
+                    {isLive ? (
+                      <span className="flex flex-wrap items-center gap-x-3.5 gap-y-1">
+                        <span className="whitespace-nowrap">{line}</span>
+                        <ProgressHairline fraction={stageFraction(lastRun)} />
+                      </span>
+                    ) : line}
+                  </p>
+                )
+              })}
             </div>
             {lastRun.stageCounts && <Funnel counts={lastRun.stageCounts} countsVersion={lastRun.countsVersion ?? 1} className="hidden md:block" />}
           </div>
