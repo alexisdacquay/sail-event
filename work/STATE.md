@@ -1,6 +1,7 @@
 # ProjectOne — work state (resumable)
 
 ## 2026-10-23 — Stream page promoted to prod
+- 2026-10-23 Kilo gateway verified: OpenAI-compatible at https://ai-gateway.kilo.ai/api/v1 (also https://api.kilo.ai/api/gateway), Bearer key in `backend/.env.local` as KILO_API_KEY (never printed), 402 models, JSON mode works; DeepSeek flash is there as `~deepseek/deepseek-flash-latest` (0.07/0.5 USD per M tokens) and `deepseek/deepseek-v4.1-flash`. Use when the owner's VPN blocks api.deepseek.com from the Mac: `LLM_PROVIDER=openai_compatible LLM_BASE_URL=$KILO_BASE_URL LLM_MODEL=~deepseek/deepseek-flash-latest LLM_API_KEY=$KILO_API_KEY`. Render services reach DeepSeek directly and do not need it.
 - Owner checked the Sankey funnel on dev ("looking good") and said push to prod: promote.yml run 39979831552 succeeded, prod = main 969a161 (Stream page, revisions, Sankey funnel with versioned counts). Previous prod 571b751.
 - Open: issues 94, 95, 96 (user-test fix batches; PRs 98, 97 stale against the Stream page), 101/99 (no place → never auto-accept; PR 103 stale), 102 (bulk-remove auto-accepted idea), parked 72 74 75 78. Eleven merged engineer worktrees in the scratchpad to remove.
 - Rules in force: owner picks every next item; no prod promote without the owner's check on dev; mockups before UI work (`_docs/ui-design.md`, `_docs/ui/`); Fable for engineers on layout and judgement work.
