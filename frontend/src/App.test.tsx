@@ -96,17 +96,17 @@ describe('Criteria', () => {
     ))
   })
 
-  it('typing in place and pressing Enter round-trips criteria text', async () => {
+  it('typing then Enter saves the text and runs the search in one action', async () => {
     await loginAsTestUser()
-    const box = screen.getByLabelText("What I'm looking for")
+    const box = screen.getByLabelText('What are you looking for?')
     // wait for the saved text to load, or the edit is overwritten by it
     await waitFor(() => expect(box).toHaveValue('sailing regattas in the Mediterranean, July 2026'))
     fireEvent.change(box, { target: { value: 'Atlantic tall ship races' } })
     fireEvent.keyDown(box, { key: 'Enter' })
-    await waitFor(() => {
-      expect(screen.getByText('Saved.')).toBeInTheDocument()
-    })
+    expect(screen.getByRole('button', { name: 'Searching…' })).toBeDisabled()
+    await screen.findByRole('button', { name: 'Search again' })
     expect(screen.getByTestId('criteria-text')).toHaveValue('Atlantic tall ship races')
+    expect((await mock.getCriteria()).text).toBe('Atlantic tall ship races')
     await mock.saveCriteria('sailing regattas in the Mediterranean, July 2026', 'UTC')
   })
 })
@@ -166,13 +166,11 @@ describe('Search', () => {
     })
   })
 
-  it('disables Search again when the saved criteria are empty', async () => {
+  it('disables Search again while the box is empty', async () => {
     await loginAsTestUser()
-    const box = screen.getByLabelText("What I'm looking for")
+    const box = screen.getByLabelText('What are you looking for?')
     await waitFor(() => expect(box).toHaveValue('sailing regattas in the Mediterranean, July 2026'))
     fireEvent.change(box, { target: { value: '' } })
-    fireEvent.blur(box)
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Search again' })).toBeDisabled())
-    await mock.saveCriteria('sailing regattas in the Mediterranean, July 2026', 'UTC')
+    expect(screen.getByRole('button', { name: 'Search again' })).toBeDisabled()
   })
 })

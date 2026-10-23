@@ -16,21 +16,15 @@ async function register(page: Page, user: string, pw: string) {
   await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
 }
 
-// The criteria text is edited in place: type, Enter saves.
-async function saveCriteria(page: Page) {
-  const box = page.getByLabel("What I'm looking for");
-  await expect(page.getByTestId("criteria-hint")).toBeVisible();
-  await box.fill(CRITERIA);
-  await box.press("Enter");
-  // the PUT waits behind other workers' searches on CI's single backend
-  await expect(page.getByText("Saved.")).toBeVisible({ timeout: 15_000 });
-  await expect(box).toHaveValue(CRITERIA);
-  await expect(page.getByTestId("criteria-hint")).toBeHidden();
-}
-
+// One action: type, click Search once; the text is saved and the run starts.
 async function search(page: Page) {
+  const box = page.getByLabel("What are you looking for?");
+  await box.fill(CRITERIA);
   await page.getByRole("button", { name: /Search (now|again)/ }).click();
+  await expect(page.getByRole("button", { name: "Searching…" })).toBeDisabled();
+  // the run waits behind other workers' searches on CI's single backend
   await expect(page.getByTestId("run-chronology")).toContainText(/Judged \d+ ·/, { timeout: 15_000 });
+  await expect(box).toHaveValue(CRITERIA);
 }
 
 test.describe("Journey 1: full user flow", () => {
@@ -39,11 +33,12 @@ test.describe("Journey 1: full user flow", () => {
     const pw = "testpass1";
 
     await register(page, user, pw);
-    await saveCriteria(page);
 
     // Scoring lives in the rail, folded: open it, raise Auto-accept above by 6 (90 → 96)
     // so more events land in review for the accept/reject test below
     await page.getByText("Scoring", { exact: true }).click();
+    // the saved thresholds load after the page; key presses before that land on the default
+    await expect(page.getByRole("spinbutton", { name: "Auto-accept above" })).toHaveValue("90");
     const slider = page.getByRole("slider", { name: "Auto-accept above" });
     await slider.focus();
     for (let i = 0; i < 6; i++) {
@@ -122,7 +117,6 @@ test.describe("Journey 1: full user flow", () => {
   test("phone: single column, funnel hidden, place hidden, detail as a bottom sheet", async ({ page }) => {
     await page.setViewportSize({ width: 400, height: 800 });
     await register(page, uid(), "testpass1");
-    await saveCriteria(page);
     await search(page);
     await expect(page.getByTestId("funnel")).toBeHidden();
     await expect(page.getByTestId("row-place").first()).toBeHidden();
@@ -146,7 +140,10 @@ test.describe("Journey 1: full user flow", () => {
       const ctx = await browser.newContext({ colorScheme, viewport: { width: 1280, height: 900 } });
       const page = await ctx.newPage();
       await register(page, uid(), "testpass1");
-      await saveCriteria(page);
+      const box = page.getByTestId("search-box");
+      await box.screenshot({ path: `test-results/search-box-empty-${colorScheme}.png` });
+      await page.getByLabel("What are you looking for?").fill(CRITERIA);
+      await box.screenshot({ path: `test-results/search-box-filled-${colorScheme}.png` });
       await search(page);
       await page.getByTestId(/^event-row-/).first().click();
       await expect(page.getByTestId("event-detail")).toBeVisible();
@@ -167,7 +164,6 @@ test.describe("Journey 2: user isolation", () => {
     const ctx1 = await browser.newContext();
     const page1 = await ctx1.newPage();
     await register(page1, user1, pw);
-    await saveCriteria(page1);
     await search(page1);
 
     // Confirm user 1 has rows
@@ -178,7 +174,7 @@ test.describe("Journey 2: user isolation", () => {
     const ctx2 = await browser.newContext();
     const page2 = await ctx2.newPage();
     await register(page2, user2, pw);
-    await expect(page2.getByTestId("criteria-hint")).toBeVisible();
+    await expect(page2.getByLabel("What are you looking for?")).toHaveValue("");
     await expect(page2.getByTestId("results-section")).toBeHidden();
     await expect(page2.getByTestId(/^event-row-/)).toHaveCount(0);
     await ctx2.close();
