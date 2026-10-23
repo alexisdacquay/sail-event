@@ -11,7 +11,7 @@ Summary: recall@run (found / total) and accepted-recall (accepted / total).
 Appends a dated block to work/RECALL.md.
 
 Usage:
-    python3 recall.py [base_url]
+    python3 recall.py [--base-url URL] [--triple ID]
 
 Default base_url: https://sail-event-dev.onrender.com
 One throwaway user per triple, prefixed gt_. Dev allows many registrations
@@ -19,7 +19,9 @@ and 6 searches per user per hour, so one user per triple stays within limits.
 """
 from __future__ import annotations
 
+import argparse
 import json
+import random
 import subprocess
 import sys
 import time
@@ -29,15 +31,14 @@ from datetime import UTC, date, datetime
 from difflib import SequenceMatcher
 from pathlib import Path
 
-BASE = (sys.argv[1] if len(sys.argv) > 1 else "https://sail-event-dev.onrender.com").rstrip("/")
 TRIPLES_PATH = Path(__file__).resolve().parent.parent / "tests" / "ground_truth" / "triples.json"
 RECALL_MD = Path(__file__).resolve().parent.parent.parent / "work" / "RECALL.md"
 PASSWORD = "Gt-recall-2026"
 
 
-def call(method: str, path: str, body=None, token=None, timeout=300):
+def call(base: str, method: str, path: str, body=None, token=None, timeout=300):
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(BASE + path, data=data, method=method)
+    req = urllib.request.Request(base + path, data=data, method=method)
     req.add_header("content-type", "application/json")
     if token:
         req.add_header("authorization", f"Bearer {token}")
@@ -76,7 +77,7 @@ def _date_matches(event_dt: str | None, gt_date: str) -> bool:
     return event_dt[:10] == gt_date[:10]
 
 
-def run_triple(triple: dict) -> dict:
+def run_triple(triple: dict, base: str) -> dict:
     """Run one triple and return a result dict."""
     tid = triple["id"]
     user = f"gt_{tid}"
@@ -100,40 +101,52 @@ def run_triple(triple: dict) -> dict:
         }
 
     # Register (idempotent: may already exist)
-    st, body = call("POST", "/api/auth/login", {"username": user, "password": PASSWORD}, timeout=60)
+    st, body = call(base, "POST", "/api/auth/login", {"username": user, "password": PASSWORD}, timeout=60)
     if st != 200:
-        call("POST", "/api/auth/register", {"username": user, "password": PASSWORD}, timeout=60)
-        st, body = call("POST", "/api/auth/login", {"username": user, "password": PASSWORD}, timeout=60)
+        call(base, "POST", "/api/auth/register", {"username": user, "password": PASSWORD}, timeout=60)
+        st, body = call(base, "POST", "/api/auth/login", {"username": user, "password": PASSWORD}, timeout=60)
     if st != 200:
         return {"id": tid, "error": f"login failed: {st}"}
     tok = body["token"]
 
     # Delete old events to get a clean measurement
-    call("DELETE", "/api/events", None, tok, 60)
+    call(base, "DELETE", "/api/events", None, tok, 60)
 
     # Save criteria
-    st, _ = call("PUT", "/api/criteria", {"text": criteria_text, "timeZone": tz}, tok, 90)
+    st, _ = call(base, "PUT", "/api/criteria", {"text": criteria_text, "timeZone": tz}, tok, 90)
     if st != 200:
         return {"id": tid, "error": f"criteria failed: {st}"}
 
     # Set thresholds to 90/40
-    call("PUT", "/api/thresholds", {"lowerThreshold": 40, "upperThreshold": 90}, tok, 60)
+    call(base, "PUT", "/api/thresholds", {"lowerThreshold": 40, "upperThreshold": 90}, tok, 60)
 
-    # Run search
+    # Run search — the POST response contains stageCounts directly
     t0 = time.time()
-    st, run = call("POST", "/api/search", None, tok, 600)
+    st, run_resp = call(base, "POST", "/api/search", None, tok, 600)
     elapsed = round(time.time() - t0)
-    if st not in (200, 202) or not isinstance(run, dict):
-        return {"id": tid, "error": f"search failed: {st}", "detail": str(run)[:200]}
+    if st not in (200, 202) or not isinstance(run_resp, dict):
+        return {"id": tid, "error": f"search failed: {st}", "detail": str(run_resp)[:200]}
+
+    # stageCounts from the POST response (top-level, not nested)
+    stage_counts = run_resp.get("stageCounts") or {}
+
+    # Also try last-run for the run_id (to fetch pages if available)
+    run_id = run_resp.get("runId")
 
     # Get events
-    st, events = call("GET", "/api/events", None, tok, 60)
+    st, events = call(base, "GET", "/api/events", None, tok, 60)
     if st != 200 or not isinstance(events, list):
         return {"id": tid, "error": f"events failed: {st}"}
 
-    # Get last run for stage counts
-    st, last_run = call("GET", "/api/search/last-run", None, tok, 60)
-    stage_counts = (last_run or {}).get("stageCounts", {}) if isinstance(last_run, dict) else {}
+    # If POST response had no stageCounts, try last-run (note: nested under "run")
+    if not stage_counts:
+        st2, last_run_resp = call(base, "GET", "/api/search/last-run", None, tok, 60)
+        if st2 == 200 and isinstance(last_run_resp, dict):
+            run_obj = last_run_resp.get("run") or last_run_resp
+            stage_counts = run_obj.get("stageCounts") or {}
+
+    # Try to get page list from run detail (issue 124 adds this)
+    no_event_pages = _sample_no_event_pages(base, tok, run_id)
 
     # Match ground-truth events to returned events
     matches = []
@@ -144,14 +157,12 @@ def run_triple(triple: dict) -> dict:
         best_match = None
         best_sim = 0.0
         for ev in events:
-            # Match by title similarity and date
             sim = _title_similarity(gt["title"], ev.get("title", ""))
             if sim > best_sim and sim >= 0.4:
                 if _date_matches(ev.get("dateTime"), gt["date"]):
                     best_sim = sim
                     best_match = ev
                 elif sim >= 0.7:
-                    # High title match even without exact date
                     best_sim = sim
                     best_match = ev
 
@@ -167,7 +178,6 @@ def run_triple(triple: dict) -> dict:
             if status == "accepted":
                 accepted_matches += 1
         else:
-            # Determine which stage lost it
             stage = _diagnose_miss(gt, events, stage_counts)
             misses.append({
                 "gt_title": gt["title"],
@@ -186,39 +196,92 @@ def run_triple(triple: dict) -> dict:
         "matches": matches,
         "elapsed_s": elapsed,
         "stage_counts": stage_counts,
+        "no_event_pages": no_event_pages,
     }
+
+
+def _sample_no_event_pages(base: str, tok: str, run_id: str | None) -> list[dict] | None:
+    """Try to get 5 random no-event pages from the run's page list.
+
+    Issue 124 adds `pages` to the run row and to the last-run / runs/{id}
+    endpoints. When present, sample 5 with events == 0. When absent, return None.
+    """
+    if not run_id:
+        return None
+    # Try runs/{runId} first (issue 124 adds pages there)
+    st, body = call(base, "GET", f"/api/search/runs/{run_id}", None, tok, 30)
+    pages = None
+    if st == 200 and isinstance(body, dict):
+        pages = body.get("pages")
+    if not pages:
+        # Try last-run
+        st, body = call(base, "GET", "/api/search/last-run", None, tok, 30)
+        if st == 200 and isinstance(body, dict):
+            run_obj = body.get("run") or body
+            pages = run_obj.get("pages")
+    if not pages or not isinstance(pages, list):
+        return None
+    no_event = [p for p in pages if p.get("events", 0) == 0]
+    if not no_event:
+        return []
+    return random.sample(no_event, min(5, len(no_event)))
 
 
 def _diagnose_miss(gt: dict, events: list, counts: dict) -> str:
     """Best guess at which stage lost a ground-truth event."""
-    # If there are no events at all and filtered_non_event is high,
-    # the pages were likely not read
-    if counts.get("filtered_non_event", 0) > counts.get("pages_with_events", 0):
-        return "not_fetched_or_no_event_extracted"
-    if counts.get("events_extracted", 0) == 0:
-        return "not_fetched"
-    # Check if any event with a similar title was filtered
+    # Check if any returned event has a similar title (was found but filtered/rejected)
     for ev in events:
         sim = _title_similarity(gt["title"], ev.get("title", ""))
         if sim >= 0.4:
             status = ev.get("status", "")
             if status == "rejected":
                 return "judged_out"
-    # Check filters
+
+    # Use stage counts to guess
+    extracted = counts.get("events_extracted", 0)
+    non_event = counts.get("filtered_non_event", 0)
+    fetched = counts.get("results_fetched", 0)
+
+    if extracted == 0 and fetched == 0:
+        return "not_fetched"
+    if extracted == 0 and fetched > 0:
+        return "no_event_extracted"
+    if non_event > counts.get("pages_with_events", 0):
+        return "likely_no_event_extracted"
     if counts.get("filtered_place", 0) > 0:
         return "possibly_filtered_place"
     if counts.get("filtered_date", 0) > 0:
         return "possibly_filtered_date"
     if counts.get("filtered_past", 0) > 0:
         return "possibly_filtered_past"
-    return "not_fetched_or_no_event_extracted"
+    if counts.get("filtered_incomplete", 0) > 0:
+        return "possibly_filtered_incomplete"
+    return "not_in_search_results"
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Ground-truth recall measurement")
+    parser.add_argument("--base-url", default="https://sail-event-dev.onrender.com",
+                        help="Base URL of the deployed service (default: dev)")
+    parser.add_argument("--triple", default=None,
+                        help="Run only this triple ID (e.g. berlin_jazz)")
+    # Keep positional base_url for backward compat
+    parser.add_argument("legacy_base", nargs="?", default=None,
+                        help=argparse.SUPPRESS)
+    args = parser.parse_args()
+
+    base = (args.legacy_base or args.base_url).rstrip("/")
+
     triples_data = json.loads(TRIPLES_PATH.read_text())
     triples = triples_data["triples"]
 
-    print(f"Recall measurement against {BASE}")
+    if args.triple:
+        triples = [t for t in triples if t["id"] == args.triple]
+        if not triples:
+            print(f"Triple '{args.triple}' not found in triples.json")
+            return 1
+
+    print(f"Recall measurement against {base}")
     print(f"Triples: {len(triples)}, commit: {git_sha()}\n")
 
     results = []
@@ -229,7 +292,7 @@ def main():
     for triple in triples:
         tid = triple["id"]
         print(f"  [{tid}] {triple['criteria'][:60]}...", end=" ", flush=True)
-        result = run_triple(triple)
+        result = run_triple(triple, base)
         results.append(result)
 
         if "error" in result:
@@ -251,6 +314,20 @@ def main():
         for m in result.get("misses", []):
             print(f"    MISS: {m['gt_title'][:50]} ({m['lost_at']})")
 
+    # Print sampled no-event pages
+    print("\n### Sampled no-event pages")
+    any_pages = False
+    for r in results:
+        pages = r.get("no_event_pages")
+        if pages is None:
+            continue
+        any_pages = True
+        if pages:
+            for p in pages:
+                print(f"  [{r['id']}] {p.get('title', '?')[:60]}  {p.get('url', '?')}")
+    if not any_pages:
+        print("  Page list not available on this server.")
+
     # Summary
     recall_pct = f"{total_found}/{total_gt}" if total_gt else "0/0"
     acc_pct = f"{total_accepted}/{total_gt}" if total_gt else "0/0"
@@ -265,21 +342,21 @@ def main():
     now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     sha = git_sha()
     lines = [
-        f"\n## {now} — recall measurement — {BASE} — {sha}\n",
+        f"\n## {now} -- recall measurement -- {base} -- {sha}\n",
         f"| triple | criteria | gt | found | accepted | misses |",
         f"|--------|----------|----|-------|----------|--------|",
     ]
     for r in results:
         if "error" in r:
-            lines.append(f"| {r['id']} | — | — | ERROR | {r['error'][:40]} | — |")
+            lines.append(f"| {r['id']} | -- | -- | ERROR | {r['error'][:40]} | -- |")
             continue
         if r.get("skipped"):
-            lines.append(f"| {r['id']} | {r.get('criteria', '')[:40]} | {r['gt_count']} | SKIP | {r['skipped']} | — |")
+            lines.append(f"| {r['id']} | {r.get('criteria', '')[:40]} | {r['gt_count']} | SKIP | {r['skipped']} | -- |")
             continue
         miss_text = "; ".join(f"{m['gt_title'][:30]} ({m['lost_at']})" for m in r.get("misses", []))
         lines.append(
             f"| {r['id']} | {r['criteria'][:40]} | {r['gt_future']} "
-            f"| {r['found']} | {r['accepted']} | {miss_text or '—'} |"
+            f"| {r['found']} | {r['accepted']} | {miss_text or '--'} |"
         )
     lines.append(f"\nrecall@run: **{recall_pct} ({recall_rate}%)**  ")
     lines.append(f"accepted-recall: **{acc_pct} ({acc_rate}%)**\n")

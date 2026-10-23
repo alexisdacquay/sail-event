@@ -1,6 +1,6 @@
 # Recall measurements
 
-## 2026-10-23 21:41 UTC -- recall measurement -- https://sail-event-dev.onrender.com -- fae046f
+## 2026-10-23 21:41 UTC -- recall measurement -- https://sail-event-dev.onrender.com -- fae046f (broken miss attribution: stageCounts was read from wrong nesting level)
 
 | triple | criteria | gt | found | accepted | misses |
 |--------|----------|----|-------|----------|--------|
@@ -17,3 +17,21 @@
 
 recall@run: **4/38 (10.5%)**
 accepted-recall: **1/38 (2.6%)**
+
+## 2026-10-23 22:34 UTC -- recall measurement -- https://sail-event-dev.onrender.com -- d7f840c
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| berlin_jazz | jazz in Berlin (Germany) next week | 5 | 0 | 0 | Emil Wahlgren "Autumn in Berli (judged_out); Jazzfest Berlin - Elin Forkeli (likely_no_event_extracted); STREAMLINE ORCHESTRA (likely_no_event_extracted); ZIG ZAG HALL: Kurt Elling & Th (likely_no_event_extracted); Jazzfest Berlin - Wendy Eisenb (likely_no_event_extracted) |
+| london_ai | AI meetups and tech events in London nex | 4 | 3 | 1 | The Infrastructure Decisions T (likely_no_event_extracted) |
+| lisbon_fado | fado ao vivo em Lisboa este fim de seman | 4 | 2 | 2 | Fado Performance at Pateo in B (judged_out); Ha Fado no Cais - Trio SUL (likely_no_event_extracted) |
+| valencia_regatta | regatas de vela en Valencia en noviembre | 3 | 0 | 0 | J80 Winter Series RCNV 2026-20 (likely_no_event_extracted); Trofeo Levante 2026 (ILCA 4/6/ (likely_no_event_extracted); Trofeo Varadero Valencia 2026  (judged_out) |
+| sevilla_kids | talleres infantiles y actividades para n | 4 | 1 | 0 | Black and White (magia infanti (likely_no_event_extracted); El Ratoncito Perez (mision: di (likely_no_event_extracted); Visita-taller familiar: Filmad (likely_no_event_extracted) |
+| paris_art | expositions d'art a Paris ce mois-ci | 4 | 0 | 0 | Mary Cassatt: Being Independen (likely_no_event_extracted); Stan Douglas: Parallax (likely_no_event_extracted); Gustave Fayet, Collector and C (likely_no_event_extracted); Ibrahim Mahama: Harvest season (likely_no_event_extracted) |
+| tokyo_jazz | 東京 ジャズ 11月 | 3 | 0 | 0 | AZIZA featuring Dave Holland,  (likely_no_event_extracted); Kenny Barron Trio (likely_no_event_extracted); Benny Green Trio (likely_no_event_extracted) |
+| vienna_classical | classical concerts in Vienna, 1-15 Nov 2 | 4 | 2 | 2 | Otello (Verdi) - Kaufmann, Sal (likely_no_event_extracted); Madama Butterfly (Puccini) - J (likely_no_event_extracted) |
+| amsterdam_tech | tech meetups in Amsterdam this month | 3 | 1 | 1 | FastAPI Conf 2026 (judged_out); SREday Amsterdam 2026 Q4 (judged_out) |
+| running_global | running | 4 | 0 | 0 | TCS New York City Marathon 202 (likely_no_event_extracted); 48th Istanbul Marathon 2026 (likely_no_event_extracted); 43rd Athens Authentic Marathon (likely_no_event_extracted); Fukuoka Marathon 2026 (likely_no_event_extracted) |
+
+recall@run: **9/38 (23.7%)**  
+accepted-recall: **6/38 (15.8%)**
