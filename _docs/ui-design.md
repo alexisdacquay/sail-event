@@ -47,6 +47,12 @@ Status words: **decided** (build it), **candidate** (owner leaning to it, not fi
 | 2026-10-21 | Card = title (link) / muted line `Tue 21 Oct · 21:00 · A-Trane, Berlin · Score: 95%` / action buttons / `Details ›` last, small, muted, opens the judge's sentence; closed by default, open for rejected. Band word ("fits", "mostly fits"…) and status badges removed. | Owner: "fits" means nothing to the user; "Score: 92%" does; the reason is useful for rejected events; "Details" must be the least obvious thing on the card. | issue 106, PR 107 (faadee9) · built |
 | 2026-10-21 | Results under the search box: "Results" + "Clear all", summary line, groups "In your calendar (N)", "To review (N)", "Rejected (N) · show all". Live progress line while a run goes. | Owner: results were in tabs, "not visible, very small, not obvious"; the search section showed a static wait message. | issue 104, PR 105 (2802b81) · built |
 
+## Standing rules on content
+
+| Date | Rule | Why | Where |
+|---|---|---|---|
+| 2026-10-24 | **Event times are never converted.** An event shows the time it is listed with, in its own zone, 24-hour; the zone short name is appended only when the viewer's zone differs. No viewer-local conversion anywhere (list, detail, calendar feed keeps the event zone). | Owner: "Chicago event, Chicago time, or whatever the event is listed as. Don't change the event listing details … changing the time zone is like changing a Berlin event to 1500 km east of Paris." | rule · in force |
+
 ## Rules the owner set for UI work
 
 - Propose with pictures, not prose. Several options first, then iterate on the picked one; the rest are discarded and logged here.
