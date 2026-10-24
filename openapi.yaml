@@ -545,6 +545,35 @@ components:
           enum:
             - manual
             - scheduled
+        pages:
+          type:
+            - array
+            - 'null'
+          description: >-
+            Per-page extraction detail; null on runs before #124.
+            Each entry is {url, title, events, kind}.
+          items:
+            type: object
+            required:
+              - url
+              - title
+              - events
+              - kind
+            properties:
+              url:
+                type: string
+              title:
+                type: string
+              events:
+                type: integer
+              kind:
+                type: string
+                enum:
+                  - single_event
+                  - listing
+                  - not_event
+                  - no_content
+                  - error
 
     RunSummary:
       type: object
