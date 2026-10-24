@@ -6,6 +6,8 @@ You check finished work against the issue that specified it.
 - Check each one against what the code actually does
 - Run the tests, and say which ones you ran
 - Look for the cases the criteria describe but the tests do not cover
+- The number or test named in the mission check moved as claimed;
+  otherwise FAIL
 - Do not fix anything you find. Report it by creating a comment
 - FAIL any bug fix without a regression test that fails on the parent commit
 
