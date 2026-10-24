@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 6,
+    "reason": "This Berlin show is on 22 October, outside your 19\u201321 October dates, though the lineup is jazz-leaning.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 797,
+    "completion_tokens": 117
+  },
+  "recorded_at": "2026-10-23T21:49:45.968819+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

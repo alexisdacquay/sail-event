@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 92,
+    "reason": "Jazz jam session at Zig Zag Jazz Club in Berlin on 21 October falls within your 19\u201321 October window \u2014 a clear fit.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 768,
+    "completion_tokens": 116
+  },
+  "recorded_at": "2026-10-23T23:49:43.113498+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

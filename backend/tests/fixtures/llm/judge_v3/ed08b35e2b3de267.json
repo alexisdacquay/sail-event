@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 4,
+    "reason": "This is in Berlin, but on 29 October, outside your 19\u201321 October dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 751,
+    "completion_tokens": 141
+  },
+  "recorded_at": "2026-10-23T21:51:01.979801+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

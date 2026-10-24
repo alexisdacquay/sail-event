@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 3,
+    "reason": "Jazz Under the Stars is in Chicago on 1 December 2026, not in Berlin on 19\u201321 October.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 738,
+    "completion_tokens": 126
+  },
+  "recorded_at": "2026-10-23T21:47:39.447396+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

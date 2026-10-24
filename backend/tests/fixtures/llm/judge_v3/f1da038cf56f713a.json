@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 3,
+    "reason": "This is in Minneapolis, US on 24 October, not in Berlin, Germany during 19\u201321 October 2026.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 766,
+    "completion_tokens": 74
+  },
+  "recorded_at": "2026-10-23T21:50:23.507901+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

@@ -57,6 +57,7 @@ def _run_response(run: orm.Run, db: Session) -> dict:
         "finishedAt": run.finished_at.isoformat() if getattr(run, "finished_at", None) else None,
         "durationSeconds": _duration_seconds(run),
         "trigger": run.trigger,
+        "pages": json.loads(run.pages) if getattr(run, "pages", None) else None,
     }
 
 
@@ -105,6 +106,23 @@ def get_runs(
         .all()
     )
     return {"runs": [_run_summary(r) for r in runs]}
+
+
+@router.get("/api/search/runs/{run_id}", operation_id="getRun")
+def get_run(
+    run_id: str,
+    user: orm.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return a single run by ID (own runs only)."""
+    run = (
+        db.query(orm.Run)
+        .filter(orm.Run.id == run_id, orm.Run.user_id == user.id)
+        .first()
+    )
+    if run is None:
+        return JSONResponse(status_code=404, content={"detail": "Not found"})
+    return JSONResponse(content={"run": _run_response(run, db)})
 
 
 @router.get("/api/search/last-run", operation_id="getLastRun")

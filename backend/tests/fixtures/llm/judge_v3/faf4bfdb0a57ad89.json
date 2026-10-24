@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 96,
+    "reason": "A jazz trio playing standards in Berlin on 20 October falls squarely within your 19\u201321 October window and named genre.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 770,
+    "completion_tokens": 74
+  },
+  "recorded_at": "2026-10-23T23:06:19.275132+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

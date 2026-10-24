@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 82,
+    "reason": "Jazz vocal workshop in Berlin on 21 October fits your city and dates, though it's a participatory workshop rather than a live jazz performance.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 760,
+    "completion_tokens": 91
+  },
+  "recorded_at": "2026-10-23T23:05:11.925060+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

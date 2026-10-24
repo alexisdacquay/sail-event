@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 4,
+    "reason": "SADO OPERA is in Berlin but plays on 31 October, outside your 19\u201321 October dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 757,
+    "completion_tokens": 92
+  },
+  "recorded_at": "2026-10-23T21:50:54.753297+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

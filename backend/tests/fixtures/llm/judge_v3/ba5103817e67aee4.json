@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 3,
+    "reason": "This jazz set is at Berlin in Minneapolis, US on 23 October, not in Berlin, Germany during 19\u201321 October.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 769,
+    "completion_tokens": 86
+  },
+  "recorded_at": "2026-10-23T21:50:20.443082+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

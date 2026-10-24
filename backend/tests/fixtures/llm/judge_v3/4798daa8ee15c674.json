@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 3,
+    "reason": "This jazz night is in Chicago on 1 December 2026, not in Berlin during 19\u201321 October 2026.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 735,
+    "completion_tokens": 77
+  },
+  "recorded_at": "2026-10-23T23:00:50.308266+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

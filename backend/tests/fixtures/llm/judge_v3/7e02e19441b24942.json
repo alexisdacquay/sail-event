@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "Mmeadows is in Berlin but plays on 27 October, outside your 19\u201321 October window.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 744,
+    "completion_tokens": 109
+  },
+  "recorded_at": "2026-10-23T21:51:00.228416+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

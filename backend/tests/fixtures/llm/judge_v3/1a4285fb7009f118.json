@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 22,
+    "reason": "Performing arts season, not jazz, in Berlin; its listed start on 1 October falls outside your 19\u201321 October dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 775,
+    "completion_tokens": 183
+  },
+  "recorded_at": "2026-10-23T21:50:07.623438+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

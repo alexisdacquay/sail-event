@@ -1,0 +1,26 @@
+{
+  "response": {
+    "page_kind": "single_event",
+    "events": [
+      {
+        "title": "Jazz Trio at A-Trane",
+        "start_local": "2026-10-20T21:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": null,
+        "venue": "A-Trane Jazz Club",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.a-trane.de/events/jazz-trio-2026-10-20",
+        "description": "The house trio plays classic jazz standards and modern arrangements at A-Trane Jazz Club, Berlin-Charlottenburg. Doors 20:30, show 21:00.",
+        "confidence": 0.95
+      }
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 1427,
+    "completion_tokens": 163
+  },
+  "recorded_at": "2026-10-23T21:36:43.519819+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

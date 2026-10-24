@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 4,
+    "reason": "Berlin Autumn Carnival is a funfair on 25 September, not jazz, and falls outside your 19\u201321 October dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 769,
+    "completion_tokens": 80
+  },
+  "recorded_at": "2026-10-23T21:49:52.368493+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

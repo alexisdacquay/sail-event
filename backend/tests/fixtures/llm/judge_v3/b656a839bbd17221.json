@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 15,
+    "reason": "This Berlin exhibition on Genghis Khan and the Mongols falls on 21 October but is a history exhibit, not jazz.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 763,
+    "completion_tokens": 85
+  },
+  "recorded_at": "2026-10-23T21:51:15.746256+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

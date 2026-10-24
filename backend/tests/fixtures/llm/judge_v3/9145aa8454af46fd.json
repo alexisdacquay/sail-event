@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 3,
+    "reason": "This jazz show is at a Minneapolis venue called Berlin, in the US, on 24 October \u2014 not in Berlin, Germany, during 19\u201321 October.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 770,
+    "completion_tokens": 110
+  },
+  "recorded_at": "2026-10-23T21:50:13.007993+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

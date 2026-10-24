@@ -114,3 +114,4 @@ class Run(Base):
     current_stage: Mapped[str | None] = mapped_column(String(16), nullable=True)
     stopped_at_stage: Mapped[str | None] = mapped_column(String(16), nullable=True)
     error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    pages: Mapped[str | None] = mapped_column(Text, nullable=True)

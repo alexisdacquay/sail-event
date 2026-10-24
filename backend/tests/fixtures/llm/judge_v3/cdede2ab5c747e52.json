@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "Abanamat is a Berlin jazz concert, but it's on 13 November 2026, outside the 19\u201321 October dates you asked for.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 744,
+    "completion_tokens": 89
+  },
+  "recorded_at": "2026-10-23T21:51:06.650136+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

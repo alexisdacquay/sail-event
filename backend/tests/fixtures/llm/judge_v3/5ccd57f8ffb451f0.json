@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 97,
+    "reason": "A jazz trio at A-Trane in Berlin on 20 October falls right in your 19\u201321 October window \u2014 a clear match.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 771,
+    "completion_tokens": 76
+  },
+  "recorded_at": "2026-10-23T21:47:32.612130+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

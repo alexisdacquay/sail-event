@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 4,
+    "reason": "This is an Oktoberfest folk-music event on 11 September, not jazz and not during 19\u201321 October 2026.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 793,
+    "completion_tokens": 81
+  },
+  "recorded_at": "2026-10-23T21:49:58.964227+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

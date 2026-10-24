@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "Oktoberfest beer festival in Berlin, not jazz, and dated 13 September, outside 19\u201321 October 2026.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 770,
+    "completion_tokens": 143
+  },
+  "recorded_at": "2026-10-23T21:49:51.038666+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

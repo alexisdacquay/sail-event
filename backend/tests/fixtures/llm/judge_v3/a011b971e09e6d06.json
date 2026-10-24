@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 6,
+    "reason": "This jazz show in Berlin is on 24 October, outside your 19\u201321 October dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 782,
+    "completion_tokens": 98
+  },
+  "recorded_at": "2026-10-23T21:50:40.361439+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

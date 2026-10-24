@@ -514,19 +514,21 @@ def _cycling_judge(scores):
 
 
 def _assert_bands(sc: dict) -> None:
-    assert sc["rejected_date_place"] == 2
-    assert sc["rejected_off_topic"] == 2
+    # #124: reading every page produces ~10 events judged (was 8 with snippet-only);
+    # cycling [5,20,40,95] over 10: 3×5, 3×20, 2×40, 2×95.
+    assert sc["rejected_date_place"] == 3
+    assert sc["rejected_off_topic"] == 3
     assert sc["rejected_other"] == 2
     assert sc["rejected_date_place"] + sc["rejected_off_topic"] + sc["rejected_other"] == sc["rejected"]
 
 
 def test_rejected_bands_sum_to_rejected(client, auth_headers, _db_session):
-    """Scores 5/20/40/95 over the 8 fixture events: two per band, 40 is rejected (lower threshold 40)."""
+    """Scores 5/20/40/95 over the fixture events: cycling; 40 is rejected (lower threshold 40)."""
     h = auth_headers("demo", "demo")
     with patch("app.services.pipeline.judge_event", side_effect=_cycling_judge([5, 20, 40, 95])):
         body = client.post("/api/search", headers=h).json()
     sc = body["stageCounts"]
-    assert sc["events_judged"] == 8
+    assert sc["events_judged"] == 10  # #124: more pages read → more events
     assert sc["accepted"] == 2
     _assert_bands(sc)
 

@@ -1,8 +1,9 @@
-"""Event extraction — two-pass: snippets (pass 1), raw content (pass 2).
+"""Event extraction — every fetched page read in full, in parallel.
 
-Pass 1: one call per query over its results (title + snippet each, numbered).
-Pass 2: one call per listing or incomplete page, using the 20 000-char
-         month-anchored slice of raw_content.
+Results with raw_content get a per-page model call (the pass-2 prompt);
+results without raw_content fall back to a single snippet-only call.
+Page reads run in parallel via ThreadPoolExecutor, EXTRACT_CONCURRENCY
+(env var, default 5).
 
 The guard runs only on criteria text at save; pages are never guarded.
 """
@@ -12,8 +13,11 @@ from __future__ import annotations
 import calendar
 import json
 import logging
+import os
 import re
-from dataclasses import dataclass
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
@@ -30,6 +34,7 @@ PROMPT_NAME = "extract"
 PROMPT_VERSION = "v2"
 MAX_EVENTS_PER_PAGE = 10
 CONTENT_SLICE = 20_000
+EXTRACT_CONCURRENCY = int(os.environ.get("EXTRACT_CONCURRENCY", "5"))
 
 # --- structure layer helpers (§10) ---
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
@@ -73,13 +78,23 @@ class ExtractedEvent:
 
 
 @dataclass
+class PageInfo:
+    url: str
+    title: str
+    events: int
+    kind: str  # single_event, listing, not_event, no_content, error
+
+
+@dataclass
 class ExtractionCounts:
     pages_content_pass: int = 0
     extract_truncated: int = 0
     events_extracted: int = 0
     pages_with_events: int = 0
-    filtered_non_event: int = 0  # pages only: results that yielded no event
+    filtered_non_event: int = 0  # pages whose full read returned no events
     extract_errors: int = 0
+    page_details: list[PageInfo] = field(default_factory=list)
+    _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
 
 def _read_schema() -> dict:
@@ -151,7 +166,12 @@ def extract_events(
     model,
     on_page_done=None,
 ) -> tuple[list[ExtractedEvent], ExtractionCounts]:
-    """Run extraction over a list of search results. Returns (events, counts)."""
+    """Run extraction over a list of search results. Returns (events, counts).
+
+    Every result with raw_content is read in full (pass-2 prompt), in
+    parallel up to EXTRACT_CONCURRENCY.  Results without raw_content
+    fall back to a single snippet-only call covering all of them.
+    """
     counts = ExtractionCounts()
     schema = _read_schema()
     schema_text = json.dumps(schema, indent=2)
@@ -165,10 +185,67 @@ def extract_events(
     anchors = _month_anchor(window_start, window_end, language)
 
     all_events: list[ExtractedEvent] = []
+    error_urls: set[str] = set()  # pages where the model call failed
 
-    # Pass 1: over snippets
-    if results:
-        content = _format_pass1_content(results)
+    # Split results: those with raw_content get full page reads,
+    # those without fall back to snippet-only extraction.
+    with_content = [r for r in results if r.raw_content]
+    without_content = [r for r in results if not r.raw_content]
+
+    # --- Full page reads (parallel) ---
+    if with_content:
+        concurrency = min(EXTRACT_CONCURRENCY, len(with_content))
+
+        def _read_one_page(r: SearchResult) -> tuple[SearchResult, list[ExtractedEvent] | None]:
+            """Read one page in full. Returns (result, events_or_None_on_error)."""
+            sliced, truncated = _slice_content(r.raw_content, anchors)
+            if truncated:
+                with counts._lock:
+                    counts.extract_truncated += 1
+
+            variables = {
+                "today": today,
+                "window_start": ws,
+                "window_end": we,
+                "target_city": target_city,
+                "target_country": target_country,
+                "content": f"URL: {r.url}\n\n{sliced}",
+                "schema": schema_text,
+            }
+            with tracer.start_as_current_span("page") as pspan:
+                try:
+                    response, _usage = model.complete_json(
+                        prompt_name=PROMPT_NAME,
+                        prompt_version=PROMPT_VERSION,
+                        variables=variables,
+                    )
+                    page_events = _process_pass2(response, r, counts)
+                    pspan.set_attribute("page_kind", response.get("page_kind", "unknown"))
+                    pspan.set_attribute("event_count", len(page_events))
+                    return r, page_events
+                except Exception as exc:
+                    logger.warning("extract page error for %s: %s", r.url, exc)
+                    with counts._lock:
+                        counts.extract_errors += 1
+                        error_urls.add(r.url)
+                    pspan.set_attribute("page_kind", "error")
+                    pspan.set_attribute("event_count", 0)
+                    return r, None
+
+        with ThreadPoolExecutor(max_workers=concurrency) as pool:
+            futures = {pool.submit(_read_one_page, r): r for r in with_content}
+            for future in as_completed(futures):
+                r, page_events = future.result()
+                with counts._lock:
+                    counts.pages_content_pass += 1
+                    if page_events is not None:
+                        all_events.extend(page_events)
+                if on_page_done:
+                    on_page_done(counts)
+
+    # --- Snippet-only fallback for results without raw_content ---
+    if without_content:
+        content = _format_pass1_content(without_content)
         variables = {
             "today": today,
             "window_start": ws,
@@ -184,68 +261,38 @@ def extract_events(
                 prompt_version=PROMPT_VERSION,
                 variables=variables,
             )
-            pass1_events = _process_pass1(response, results, counts)
+            pass1_events = _process_pass1(response, without_content, counts)
             all_events.extend(pass1_events)
         except Exception as exc:
-            logger.warning("extract pass 1 error: %s", exc)
+            logger.warning("extract snippet-only error: %s", exc)
             counts.extract_errors += 1
 
-    # Pass 2: per listing or incomplete page with raw_content
-    # Group events by source_url to determine which results need pass 2
+    # Deterministic order: sort by source_url so dedup in filters is stable
+    # regardless of thread completion order.
+    all_events.sort(key=lambda e: (e.source_url, e.start_local or "", e.title))
+
+    # Page counters derived once at the end
+    counts.pages_with_events = len({e.source_url for e in all_events})
+    counts.filtered_non_event = len(results) - counts.pages_with_events
+
+    # Per-page detail for the run row
     events_by_url: dict[str, list[ExtractedEvent]] = {}
     for ev in all_events:
         events_by_url.setdefault(ev.source_url, []).append(ev)
-
     for r in results:
-        if not r.raw_content:
-            continue
-        url_events = events_by_url.get(r.url, [])
-        needs_p2 = (
-            any(e.page_kind == "listing" for e in url_events)
-            or any(not e.start_local or not e.city for e in url_events)
-        )
-        if not needs_p2:
-            continue
+        evts = events_by_url.get(r.url, [])
+        if evts:
+            kind = evts[0].page_kind
+        elif r.url in error_urls:
+            kind = "error"
+        elif not r.raw_content:
+            kind = "no_content"
+        else:
+            kind = "not_event"
+        counts.page_details.append(PageInfo(
+            url=r.url, title=r.title, events=len(evts), kind=kind,
+        ))
 
-        counts.pages_content_pass += 1
-
-        with tracer.start_as_current_span("page") as pspan:
-            sliced, truncated = _slice_content(r.raw_content, anchors)
-            if truncated:
-                counts.extract_truncated += 1
-
-            variables = {
-                "today": today,
-                "window_start": ws,
-                "window_end": we,
-                "target_city": target_city,
-                "target_country": target_country,
-                "content": f"URL: {r.url}\n\n{sliced}",
-                "schema": schema_text,
-            }
-            try:
-                response, _usage = model.complete_json(
-                    prompt_name=PROMPT_NAME,
-                    prompt_version=PROMPT_VERSION,
-                    variables=variables,
-                )
-                # Replace pass-1 events for this URL with pass-2 events
-                all_events = [e for e in all_events if e.source_url != r.url]
-                pass2_events = _process_pass2(response, r, counts)
-                all_events.extend(pass2_events)
-                pspan.set_attribute("page_kind", response.get("page_kind", "unknown"))
-                pspan.set_attribute("event_count", len(pass2_events))
-            except Exception as exc:
-                logger.warning("extract pass 2 error for %s: %s", r.url, exc)
-                counts.extract_errors += 1
-                pspan.set_attribute("page_kind", "error")
-                pspan.set_attribute("event_count", 0)
-            if on_page_done:
-                on_page_done(counts)
-
-    # #112: page counters derived once at the end; source_url is always a result URL
-    counts.pages_with_events = len({e.source_url for e in all_events})
-    counts.filtered_non_event = len(results) - counts.pages_with_events
     return all_events, counts
 
 
@@ -263,7 +310,7 @@ def _process_pass1(
     results: list[SearchResult],
     counts: ExtractionCounts,
 ) -> list[ExtractedEvent]:
-    """Process a pass-1 extraction response (multiple results in one call)."""
+    """Process a snippet-only extraction response (multiple results in one call)."""
     raw_events = response.get("events", [])
 
     if not raw_events:
@@ -319,7 +366,10 @@ def _process_pass2(
     result: SearchResult,
     counts: ExtractionCounts,
 ) -> list[ExtractedEvent]:
-    """Process a pass-2 extraction response (single page)."""
+    """Process a full-page extraction response (single page).
+
+    page_kind comes from the model's answer, not inferred.
+    """
     page_kind = response.get("page_kind", "not_event")
     raw_events = response.get("events", [])
 
@@ -355,7 +405,8 @@ def _process_pass2(
             source_url=result.url,
             page_kind=page_kind,
         ))
-        counts.events_extracted += 1
+        with counts._lock:
+            counts.events_extracted += 1
 
     return extracted
 

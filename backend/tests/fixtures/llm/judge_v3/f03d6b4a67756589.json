@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "This Tresor techno bill is in Berlin but on 30 October, outside your 19\u201321 October dates, and it isn't jazz.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 782,
+    "completion_tokens": 123
+  },
+  "recorded_at": "2026-10-23T21:51:03.792517+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

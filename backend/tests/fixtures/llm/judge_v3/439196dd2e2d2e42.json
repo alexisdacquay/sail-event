@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 6,
+    "reason": "This Berlin jazz show is on 6 November 2026, not during 19\u201321 October as you asked.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 761,
+    "completion_tokens": 81
+  },
+  "recorded_at": "2026-10-23T21:50:55.813967+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}
