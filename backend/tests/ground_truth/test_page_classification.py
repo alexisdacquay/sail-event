@@ -51,8 +51,8 @@ def _extract_page_pass2(page: dict, model) -> list[dict]:
     """Run the pass-2 (raw_content) extractor directly on one page."""
     from app.adapters.search import SearchResult
     from app.services.extract import (
-        PROMPT_NAME, PROMPT_VERSION, CONTENT_SLICE,
-        _read_schema, _slice_content, _month_anchor, _process_pass2,
+        PROMPT_NAME, PROMPT_VERSION,
+        _read_schema, _process_pass2,
         ExtractionCounts,
     )
     from app.services import clock
@@ -75,8 +75,6 @@ def _extract_page_pass2(page: dict, model) -> list[dict]:
 
     schema = _read_schema()
     schema_text = json.dumps(schema, indent=2)
-    anchors = _month_anchor(window_start, window_end, None)
-    sliced, _ = _slice_content(raw_content, anchors)
 
     ws = window_start.strftime("%Y-%m-%d")
     we = window_end.strftime("%Y-%m-%d")
@@ -88,7 +86,7 @@ def _extract_page_pass2(page: dict, model) -> list[dict]:
         "window_end": we,
         "target_city": "",
         "target_country": "",
-        "content": f"URL: {page['url']}\n\n{sliced}",
+        "content": f"URL: {page['url']}\n\n{raw_content}",
         "schema": schema_text,
     }
 

@@ -131,7 +131,7 @@ def test_past_dates_do_not_stop_run(client, auth_headers, _db_session, monkeypat
         page_kind="single_event",
     )
     extract_counts = ExtractionCounts(
-        pages_content_pass=0, extract_truncated=0, events_extracted=1,
+        pages_content_pass=0, events_extracted=1,
         extract_errors=0, filtered_non_event=0,
     )
 
@@ -514,11 +514,11 @@ def _cycling_judge(scores):
 
 
 def _assert_bands(sc: dict) -> None:
-    # #124: reading every page produces ~10 events judged (was 8 with snippet-only);
-    # cycling [5,20,40,95] over 10: 3×5, 3×20, 2×40, 2×95.
+    # #134: no per-page cap → 11 events judged; cycling [5,20,40,95] over 11:
+    # 3×5, 3×20, 3×40, 2×95.
     assert sc["rejected_date_place"] == 3
     assert sc["rejected_off_topic"] == 3
-    assert sc["rejected_other"] == 2
+    assert sc["rejected_other"] == 3
     assert sc["rejected_date_place"] + sc["rejected_off_topic"] + sc["rejected_other"] == sc["rejected"]
 
 
@@ -528,7 +528,7 @@ def test_rejected_bands_sum_to_rejected(client, auth_headers, _db_session):
     with patch("app.services.pipeline.judge_event", side_effect=_cycling_judge([5, 20, 40, 95])):
         body = client.post("/api/search", headers=h).json()
     sc = body["stageCounts"]
-    assert sc["events_judged"] == 10  # #124: more pages read → more events
+    assert sc["events_judged"] == 11  # #134: no per-page cap → one more event survives
     assert sc["accepted"] == 2
     _assert_bands(sc)
 

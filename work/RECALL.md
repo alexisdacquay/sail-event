@@ -72,3 +72,192 @@ are in English while extraction returns Portuguese; dates shift by 1-2 days
 across recurring shows. The events exist in the results but the title/date
 matching is too strict for cross-language GT entries. This is a matching
 limitation, not an extraction failure.
+
+## 2026-10-24 19:52 UTC -- recall measurement -- http://localhost:8032 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| valencia_regatta | regatas de vela en Valencia en noviembre | 3 | 0 | 0 | J80 Winter Series RCNV 2026-20 (possibly_filtered_past); Trofeo Levante 2026 (ILCA 4/6/ (possibly_filtered_past); Trofeo Varadero Valencia 2026  (possibly_filtered_past) |
+
+recall@run: **0/3 (0.0%)**  
+accepted-recall: **0/3 (0.0%)**
+
+## 2026-10-24 19:55 UTC -- recall measurement -- http://localhost:8032 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| sevilla_kids | talleres infantiles y actividades para n | 4 | 1 | 0 | Black and White (magia infanti (possibly_filtered_past); El Ratoncito Perez (mision: di (possibly_filtered_past); Visita-taller familiar: Filmad (possibly_filtered_past) |
+
+recall@run: **1/4 (25.0%)**  
+accepted-recall: **0/4 (0.0%)**
+
+## 2026-10-24 19:57 UTC -- recall measurement -- http://localhost:8032 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| paris_art | expositions d'art a Paris ce mois-ci | 4 | 0 | 0 | Mary Cassatt: Being Independen (likely_no_event_extracted); Stan Douglas: Parallax (likely_no_event_extracted); Gustave Fayet, Collector and C (likely_no_event_extracted); Ibrahim Mahama: Harvest season (likely_no_event_extracted) |
+
+recall@run: **0/4 (0.0%)**  
+accepted-recall: **0/4 (0.0%)**
+
+## 2026-10-24 20:00 UTC -- recall measurement -- http://localhost:8031 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| berlin_jazz | jazz in Berlin (Germany) next week | 5 | 0 | 0 | Emil Wahlgren "Autumn in Berli (possibly_filtered_past); Jazzfest Berlin - Elin Forkeli (possibly_filtered_past); STREAMLINE ORCHESTRA (possibly_filtered_past); ZIG ZAG HALL: Kurt Elling & Th (possibly_filtered_past); Jazzfest Berlin - Wendy Eisenb (possibly_filtered_past) |
+| london_ai | AI meetups and tech events in London nex | 4 | 4 | 0 | -- |
+| lisbon_fado | fado ao vivo em Lisboa este fim de seman | 4 | 1 | 0 | Fado in the Garden of the Hous (possibly_filtered_past); Fado Performance at Pateo in B (possibly_filtered_past); Ha Fado no Cais - Trio SUL (possibly_filtered_past) |
+| valencia_regatta | regatas de vela en Valencia en noviembre | 3 | 0 | 0 | J80 Winter Series RCNV 2026-20 (possibly_filtered_past); Trofeo Levante 2026 (ILCA 4/6/ (possibly_filtered_past); Trofeo Varadero Valencia 2026  (possibly_filtered_past) |
+| sevilla_kids | talleres infantiles y actividades para n | 4 | 2 | 0 | Black and White (magia infanti (possibly_filtered_past); El Ratoncito Perez (mision: di (possibly_filtered_past) |
+| paris_art | expositions d'art a Paris ce mois-ci | 4 | 2 | 2 | Mary Cassatt: Being Independen (possibly_filtered_past); Stan Douglas: Parallax (possibly_filtered_past) |
+| tokyo_jazz | 東京 ジャズ 11月 | 3 | 0 | 0 | AZIZA featuring Dave Holland,  (possibly_filtered_past); Kenny Barron Trio (possibly_filtered_past); Benny Green Trio (possibly_filtered_past) |
+| vienna_classical | classical concerts in Vienna, 1-15 Nov 2 | 4 | 1 | 1 | Otello (Verdi) - Kaufmann, Sal (possibly_filtered_past); La Fille du regiment (Donizett (possibly_filtered_past); Madama Butterfly (Puccini) - J (possibly_filtered_past) |
+| amsterdam_tech | tech meetups in Amsterdam this month | 3 | 0 | 0 | AI Tinkerers Amsterdam: Octobe (possibly_filtered_past); FastAPI Conf 2026 (possibly_filtered_past); SREday Amsterdam 2026 Q4 (possibly_filtered_past) |
+| running_global | running | 4 | 2 | 2 | 43rd Athens Authentic Marathon (likely_no_event_extracted); Fukuoka Marathon 2026 (likely_no_event_extracted) |
+
+recall@run: **12/38 (31.6%)**  
+accepted-recall: **5/38 (13.2%)**
+
+## 2026-10-24 20:01 UTC -- recall measurement -- http://localhost:8032 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| tokyo_jazz | 東京 ジャズ 11月 | 3 | 0 | 0 | AZIZA featuring Dave Holland,  (possibly_filtered_past); Kenny Barron Trio (possibly_filtered_past); Benny Green Trio (possibly_filtered_past) |
+
+recall@run: **0/3 (0.0%)**  
+accepted-recall: **0/3 (0.0%)**
+
+## 2026-10-24 20:03 UTC -- recall measurement -- http://localhost:8032 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| vienna_classical | classical concerts in Vienna, 1-15 Nov 2 | 4 | 0 | 0 | Otello (Verdi) - Kaufmann, Sal (possibly_filtered_past); La Fille du regiment (Donizett (possibly_filtered_past); Lise Davidsen and James Bailli (possibly_filtered_past); Madama Butterfly (Puccini) - J (possibly_filtered_past) |
+
+recall@run: **0/4 (0.0%)**  
+accepted-recall: **0/4 (0.0%)**
+
+## 2026-10-24 20:04 UTC -- recall measurement -- http://localhost:8032 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| berlin_jazz | jazz in Berlin (Germany) next week | 5 | 0 | 0 | Emil Wahlgren "Autumn in Berli (not_in_search_results); Jazzfest Berlin - Elin Forkeli (not_in_search_results); STREAMLINE ORCHESTRA (not_in_search_results); ZIG ZAG HALL: Kurt Elling & Th (not_in_search_results); Jazzfest Berlin - Wendy Eisenb (not_in_search_results) |
+| london_ai | AI meetups and tech events in London nex | 4 | 1 | 0 | The London AI Conference 2026 (possibly_filtered_past); The London Startup Party 2026 (possibly_filtered_past); Trustworthy AI: From Principle (possibly_filtered_past) |
+| lisbon_fado | fado ao vivo em Lisboa este fim de seman | 4 | 1 | 0 | Fado in the Garden of the Hous (likely_no_event_extracted); Fado Performance at Pateo in B (likely_no_event_extracted); Ha Fado no Cais - Trio SUL (likely_no_event_extracted) |
+| valencia_regatta | regatas de vela en Valencia en noviembre | 3 | 0 | 0 | J80 Winter Series RCNV 2026-20 (possibly_filtered_past); Trofeo Levante 2026 (ILCA 4/6/ (possibly_filtered_past); Trofeo Varadero Valencia 2026  (possibly_filtered_past) |
+| sevilla_kids | talleres infantiles y actividades para n | 4 | 1 | 0 | Black and White (magia infanti (possibly_filtered_past); El Ratoncito Perez (mision: di (possibly_filtered_past); Visita-taller familiar: Filmad (possibly_filtered_past) |
+| paris_art | expositions d'art a Paris ce mois-ci | 4 | 0 | 0 | Mary Cassatt: Being Independen (likely_no_event_extracted); Stan Douglas: Parallax (likely_no_event_extracted); Gustave Fayet, Collector and C (likely_no_event_extracted); Ibrahim Mahama: Harvest season (likely_no_event_extracted) |
+| tokyo_jazz | 東京 ジャズ 11月 | 3 | 0 | 0 | AZIZA featuring Dave Holland,  (possibly_filtered_past); Kenny Barron Trio (possibly_filtered_past); Benny Green Trio (possibly_filtered_past) |
+| vienna_classical | classical concerts in Vienna, 1-15 Nov 2 | 4 | 0 | 0 | Otello (Verdi) - Kaufmann, Sal (not_in_search_results); La Fille du regiment (Donizett (not_in_search_results); Lise Davidsen and James Bailli (not_in_search_results); Madama Butterfly (Puccini) - J (not_in_search_results) |
+| amsterdam_tech | tech meetups in Amsterdam this month | 3 | 0 | 0 | AI Tinkerers Amsterdam: Octobe (possibly_filtered_past); FastAPI Conf 2026 (possibly_filtered_past); SREday Amsterdam 2026 Q4 (possibly_filtered_past) |
+| running_global | running | 4 | 0 | 0 | TCS New York City Marathon 202 (likely_no_event_extracted); 48th Istanbul Marathon 2026 (likely_no_event_extracted); 43rd Athens Authentic Marathon (likely_no_event_extracted); Fukuoka Marathon 2026 (likely_no_event_extracted) |
+
+recall@run: **3/38 (7.9%)**  
+accepted-recall: **0/38 (0.0%)**
+
+## 2026-10-24 20:06 UTC -- recall measurement -- http://localhost:8032 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| amsterdam_tech | tech meetups in Amsterdam this month | 3 | 0 | 0 | AI Tinkerers Amsterdam: Octobe (possibly_filtered_past); FastAPI Conf 2026 (possibly_filtered_past); SREday Amsterdam 2026 Q4 (possibly_filtered_past) |
+
+recall@run: **0/3 (0.0%)**  
+accepted-recall: **0/3 (0.0%)**
+
+## 2026-10-24 20:07 UTC -- recall measurement -- http://localhost:8032 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| running_global | running | 4 | 0 | 0 | TCS New York City Marathon 202 (likely_no_event_extracted); 48th Istanbul Marathon 2026 (likely_no_event_extracted); 43rd Athens Authentic Marathon (likely_no_event_extracted); Fukuoka Marathon 2026 (likely_no_event_extracted) |
+
+recall@run: **0/4 (0.0%)**  
+accepted-recall: **0/4 (0.0%)**
+
+## 2026-10-24 20:09 UTC -- recall measurement -- http://localhost:8031 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| berlin_jazz | jazz in Berlin (Germany) next week | 5 | 0 | 0 | Emil Wahlgren "Autumn in Berli (possibly_filtered_past); Jazzfest Berlin - Elin Forkeli (possibly_filtered_past); STREAMLINE ORCHESTRA (possibly_filtered_past); ZIG ZAG HALL: Kurt Elling & Th (possibly_filtered_past); Jazzfest Berlin - Wendy Eisenb (possibly_filtered_past) |
+
+recall@run: **0/5 (0.0%)**  
+accepted-recall: **0/5 (0.0%)**
+
+## 2026-10-24 20:12 UTC -- recall measurement -- http://localhost:8031 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| london_ai | AI meetups and tech events in London nex | 4 | 2 | 0 | The London Startup Party 2026 (possibly_filtered_past); Trustworthy AI: From Principle (possibly_filtered_past) |
+
+recall@run: **2/4 (50.0%)**  
+accepted-recall: **0/4 (0.0%)**
+
+## 2026-10-24 20:13 UTC -- recall measurement -- http://localhost:8031 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| lisbon_fado | fado ao vivo em Lisboa este fim de seman | 4 | 1 | 0 | Fado in the Garden of the Hous (likely_no_event_extracted); Fado Performance at Pateo in B (likely_no_event_extracted); Ha Fado no Cais - Trio SUL (likely_no_event_extracted) |
+
+recall@run: **1/4 (25.0%)**  
+accepted-recall: **0/4 (0.0%)**
+
+## 2026-10-24 20:15 UTC -- recall measurement -- http://localhost:8031 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| valencia_regatta | regatas de vela en Valencia en noviembre | 3 | 1 | 0 | Trofeo Levante 2026 (ILCA 4/6/ (possibly_filtered_past); Trofeo Varadero Valencia 2026  (possibly_filtered_past) |
+
+recall@run: **1/3 (33.3%)**  
+accepted-recall: **0/3 (0.0%)**
+
+## 2026-10-24 20:17 UTC -- recall measurement -- http://localhost:8031 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| sevilla_kids | talleres infantiles y actividades para n | 4 | 4 | 0 | -- |
+
+recall@run: **4/4 (100.0%)**  
+accepted-recall: **0/4 (0.0%)**
+
+## 2026-10-24 20:19 UTC -- recall measurement -- http://localhost:8031 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| paris_art | expositions d'art a Paris ce mois-ci | 4 | 2 | 1 | Mary Cassatt: Being Independen (possibly_filtered_past); Stan Douglas: Parallax (possibly_filtered_past) |
+
+recall@run: **2/4 (50.0%)**  
+accepted-recall: **1/4 (25.0%)**
+
+## 2026-10-24 20:22 UTC -- recall measurement -- http://localhost:8031 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| tokyo_jazz | 東京 ジャズ 11月 | 3 | 0 | 0 | AZIZA featuring Dave Holland,  (possibly_filtered_past); Kenny Barron Trio (possibly_filtered_past); Benny Green Trio (possibly_filtered_past) |
+
+recall@run: **0/3 (0.0%)**  
+accepted-recall: **0/3 (0.0%)**
+
+## 2026-10-24 20:24 UTC -- recall measurement -- http://localhost:8031 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| vienna_classical | classical concerts in Vienna, 1-15 Nov 2 | 4 | 1 | 1 | Otello (Verdi) - Kaufmann, Sal (possibly_filtered_past); La Fille du regiment (Donizett (possibly_filtered_past); Madama Butterfly (Puccini) - J (possibly_filtered_past) |
+
+recall@run: **1/4 (25.0%)**  
+accepted-recall: **1/4 (25.0%)**
+
+## 2026-10-24 20:25 UTC -- recall measurement -- http://localhost:8031 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| amsterdam_tech | tech meetups in Amsterdam this month | 3 | 0 | 0 | AI Tinkerers Amsterdam: Octobe (possibly_filtered_past); FastAPI Conf 2026 (possibly_filtered_past); SREday Amsterdam 2026 Q4 (possibly_filtered_past) |
+
+recall@run: **0/3 (0.0%)**  
+accepted-recall: **0/3 (0.0%)**
+
+## 2026-10-24 20:26 UTC -- recall measurement -- http://localhost:8031 -- ab21641
+
+| triple | criteria | gt | found | accepted | misses |
+|--------|----------|----|-------|----------|--------|
+| running_global | running | 4 | 2 | 2 | 43rd Athens Authentic Marathon (likely_no_event_extracted); Fukuoka Marathon 2026 (likely_no_event_extracted) |
+
+recall@run: **2/4 (50.0%)**  
+accepted-recall: **2/4 (50.0%)**

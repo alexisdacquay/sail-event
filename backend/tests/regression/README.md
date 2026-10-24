@@ -1,6 +1,7 @@
 # Regression test store
 
-One test per known past bug, run as phase 2 of the unified runner.
+One test per fixed bug: input + expected outcome + issue number, written red before the fix.
+Run as phase 2 of the unified runner.
 Seeded from every CLOSED GitHub issue labelled "bug" plus findings in
 `work/USER-TESTS-2026-10-21.md` and `work/FIELD-TESTS.md`.
 
@@ -8,9 +9,9 @@ Seeded from every CLOSED GitHub issue labelled "bug" plus findings in
 
 | Bug | File | What the test checks |
 |-----|------|---------------------|
+| #124 | test_london_ai_hub.py | Listing page whose snippet yields no events but raw_content does |
 | #125 | test_135_judge_repair.py | Extra fields dropped (not rejected); missing is_event triggers repair |
 | #112 | test_135_no_date_counter.py | Event without start_local is incomplete; never counted as a page |
-| #124 | (issue #134 creates this test) | Listing page whose snippet yields no events but raw_content does |
 
 ## Cannot reproduce yet
 

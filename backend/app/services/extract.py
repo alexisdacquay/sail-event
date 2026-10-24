@@ -10,7 +10,6 @@ The guard runs only on criteria text at save; pages are never guarded.
 
 from __future__ import annotations
 
-import calendar
 import json
 import logging
 import os
@@ -32,8 +31,6 @@ logger = logging.getLogger(__name__)
 
 PROMPT_NAME = "extract"
 PROMPT_VERSION = "v2"
-MAX_EVENTS_PER_PAGE = 10
-CONTENT_SLICE = 20_000
 EXTRACT_CONCURRENCY = int(os.environ.get("EXTRACT_CONCURRENCY", "5"))
 
 # --- structure layer helpers (§10) ---
@@ -88,7 +85,6 @@ class PageInfo:
 @dataclass
 class ExtractionCounts:
     pages_content_pass: int = 0
-    extract_truncated: int = 0
     events_extracted: int = 0
     pages_with_events: int = 0
     filtered_non_event: int = 0  # pages whose full read returned no events
@@ -101,49 +97,6 @@ def _read_schema() -> dict:
     from ..adapters.prompts.loader import _PROMPTS_DIR
     path = _PROMPTS_DIR / f"{PROMPT_NAME}_{PROMPT_VERSION}.schema.json"
     return json.loads(path.read_text())
-
-
-def _month_anchor(window_start: datetime, window_end: datetime, language: str | None) -> list[str]:
-    """Month names to search for in raw_content (English + local)."""
-    months: set[str] = set()
-    for dt in (window_start, window_end):
-        months.add(calendar.month_name[dt.month])
-        months.add(calendar.month_abbr[dt.month])
-    _LOCAL_MONTHS = {
-        "de": ["", "Januar", "Februar", "März", "April", "Mai", "Juni",
-               "Juli", "August", "September", "Oktober", "November", "Dezember"],
-        "fr": ["", "janvier", "février", "mars", "avril", "mai", "juin",
-               "juillet", "août", "septembre", "octobre", "novembre", "décembre"],
-        "es": ["", "enero", "febrero", "marzo", "abril", "mayo", "junio",
-               "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
-        "pt": ["", "janeiro", "fevereiro", "março", "abril", "maio", "junho",
-               "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"],
-        "it": ["", "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
-               "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"],
-        "nl": ["", "januari", "februari", "maart", "april", "mei", "juni",
-               "juli", "augustus", "september", "oktober", "november", "december"],
-    }
-    if language and language in _LOCAL_MONTHS:
-        table = _LOCAL_MONTHS[language]
-        for dt in (window_start, window_end):
-            months.add(table[dt.month])
-    return list(months)
-
-
-def _slice_content(raw_content: str, anchors: list[str]) -> tuple[str, bool]:
-    """Slice raw_content to CONTENT_SLICE chars, starting at the first month anchor."""
-    if len(raw_content) <= CONTENT_SLICE:
-        return raw_content, False
-    best = len(raw_content)
-    for anchor in anchors:
-        idx = raw_content.lower().find(anchor.lower())
-        if idx != -1 and idx < best:
-            best = idx
-    if best == len(raw_content):
-        best = 0
-    sliced = raw_content[best:best + CONTENT_SLICE]
-    truncated = (best + CONTENT_SLICE) < len(raw_content) or best > 0
-    return sliced, truncated
 
 
 def _format_pass1_content(results: list[SearchResult]) -> str:
@@ -182,7 +135,6 @@ def extract_events(
     ws = window_start.astimezone(tz).strftime("%Y-%m-%d")
     we = window_end.astimezone(tz).strftime("%Y-%m-%d")
     today = clock.now().astimezone(tz).strftime("%Y-%m-%d")
-    anchors = _month_anchor(window_start, window_end, language)
 
     all_events: list[ExtractedEvent] = []
     error_urls: set[str] = set()  # pages where the model call failed
@@ -198,18 +150,13 @@ def extract_events(
 
         def _read_one_page(r: SearchResult) -> tuple[SearchResult, list[ExtractedEvent] | None]:
             """Read one page in full. Returns (result, events_or_None_on_error)."""
-            sliced, truncated = _slice_content(r.raw_content, anchors)
-            if truncated:
-                with counts._lock:
-                    counts.extract_truncated += 1
-
             variables = {
                 "today": today,
                 "window_start": ws,
                 "window_end": we,
                 "target_city": target_city,
                 "target_country": target_country,
-                "content": f"URL: {r.url}\n\n{sliced}",
+                "content": f"URL: {r.url}\n\n{r.raw_content}",
                 "schema": schema_text,
             }
             with tracer.start_as_current_span("page") as pspan:
@@ -378,7 +325,7 @@ def _process_pass2(
 
     result_urls = {result.url}
     extracted: list[ExtractedEvent] = []
-    for ev in raw_events[:MAX_EVENTS_PER_PAGE]:
+    for ev in raw_events:
         confidence = ev.get("confidence", 0)
         if confidence < 0.5:
             continue
