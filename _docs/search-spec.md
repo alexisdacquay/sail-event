@@ -122,9 +122,9 @@ From one search result to zero or more events.
 | description | one line, ≤ 200 characters, from the page |
 | confidence | 0–1; below 0.5 the event is dropped and counted |
 
-- Owner rule (2026-10-18): every stored event has a title, a description, a start date-time with its time zone, a city and a country. An extracted event missing any of these is dropped and counted (`filtered_incomplete`), never stored. Language of the event is not tracked.
+- Owner rule (2026-10-18, updated 2026-10-24 #134): six mandatory fields — title, description, start date-time with time component, time zone, city, country. An event missing any of these is dropped: no start → `filtered_no_date`; date-only start (no time) → `filtered_no_time`; other missing fields → `filtered_incomplete`. The model is told to infer the country from the city when the page omits it.
 
-- A page with many events (venue programme, listing): up to 10 events whose dates fall in the window; the rest ignored.
+- A page with many events (venue programme, listing): all events are extracted (no per-page cap; the model's context window is the ceiling).
 - A page with none (article, listicle, venue homepage, radio stream): no event, counted as non-event.
 - The extractor is told today's date, the window and the target place so it picks the right occurrence from a programme page; it never decides fit.
 
@@ -134,7 +134,10 @@ Applied in code, in this order, each with a count on the run:
 
 | Filter | Rule | Count |
 |---|---|---|
-| Past | the event has ended: `end < now`, or when there is no end, `start < now` for timed events and `start day 23:59 < now` for date-only events | `filtered_past` |
+| No date | `start_local` empty | `filtered_no_date` |
+| No time | `start_local` is date-only (no time component) | `filtered_no_time` |
+| Incomplete | one of the six mandatory fields is missing | `filtered_incomplete` |
+| Past | the event has ended: `end < now`, or when there is no end, `start < now` for timed events | `filtered_past` |
 | Date window | no overlap with the window: `start > window end` or `(end or start) < window start`, compared in the event's zone; a festival 17–22 Oct overlaps a 19–21 Oct window and is kept | `filtered_date` |
 | Place | country unknown; or country ≠ criteria country; or city ≠ criteria city when no radius is given; unknown city with the right country passes to the judge | `filtered_place` |
 | Non-event | extraction returned no event, or confidence < 0.5 | `filtered_non_event` |
@@ -319,7 +322,7 @@ Golden set B — labelled candidates for C1, now = 2026-10-18 12:00 Europe/Berli
 9. "next week" resolves to the ISO week after the run date in the user's time zone; absolute dates win; a window that ended before now does not stop the run — the per-event past filter and the judge handle dates (#70).
 10. Criteria without a place and without an online format produce a run with zero queries and the report says why.
 11. Every query contains the city and the year; when the place's language is not English, at least one query is in that language; Tavily receives the country as its name (`germany`), Brave as `DE`.
-12. A listing page yields at most 10 events, each overlapping the window; a listing page seen before is extracted again on the next run and only its new occurrences are stored.
+12. A listing page yields all its events (no per-page cap); a listing page seen before is extracted again on the next run and only its new occurrences are stored.
 13. A single-event page already stored for the user costs no model call.
 14. Two candidates with the same canonical link and date, or the same date and ≥ 0.8 title overlap (subset rule only from 3 tokens), yield one stored event; two different concerts at one venue on one night stay two.
 15. A duplicate of a rejected event is not inserted and is counted.

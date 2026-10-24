@@ -1,0 +1,26 @@
+{
+  "response": {
+    "page_kind": "single_event",
+    "events": [
+      {
+        "title": "Open-air Jazz in Mauerpark",
+        "start_local": "2026-10-19T16:00",
+        "start_tz": "Europe/Berlin",
+        "end_local": "2026-10-19T18:00",
+        "venue": "Mauerpark",
+        "city": "Berlin",
+        "country": "DE",
+        "link": "https://www.berlin-events.de/open-air-jazz-mauerpark",
+        "description": "Free open-air concert by a local jazz ensemble in the Mauerpark amphitheatre, Prenzlauer Berg.",
+        "confidence": 0.92
+      }
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 1399,
+    "completion_tokens": 146
+  },
+  "recorded_at": "2026-10-23T21:36:46.370858+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}
