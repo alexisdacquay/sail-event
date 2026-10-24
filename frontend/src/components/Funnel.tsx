@@ -36,6 +36,15 @@ export function funnelNumbers(counts: Record<string, number>) {
   }
 }
 
+/** Non-zero not-judged breakdown parts, in the order the funnel draws them. */
+export function notJudgedParts(n: ReturnType<typeof funnelNumbers>): string[] {
+  const nz = (count: number, word: string) => count > 0 ? [`${count} ${word}`] : []
+  return [
+    ...nz(n.noDate, 'no date'), ...nz(n.past, 'past'), ...nz(n.duplicate, 'duplicate'), ...nz(n.date, 'date'),
+    ...nz(n.place, 'place'), ...nz(n.incomplete, 'incomplete'), ...nz(n.capped, 'capped'), ...nz(n.judgeErrors, 'errors'),
+  ]
+}
+
 const MAIN = { fill: 'var(--foreground)', fontWeight: 500 }
 const SUB = { fill: 'var(--muted-foreground)' }
 
@@ -112,10 +121,7 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
     { key: 'judged', count: n.judged, fill: '#2563eb', ribbonFill: '#3b82f6', ribbonOpacity: 0.55, label: `${n.judged} judged`, subs: [] },
     {
       key: 'notJudged', count: n.notJudged, fill: '#64748b', ribbonFill: '#94a3b8', ribbonOpacity: 0.4, label: `${n.notJudged} not judged`,
-      subs: wrap([
-        ...nz(n.noDate, 'no date'), ...nz(n.past, 'past'), ...nz(n.duplicate, 'duplicate'), ...nz(n.date, 'date'),
-        ...nz(n.place, 'place'), ...nz(n.incomplete, 'incomplete'), ...nz(n.capped, 'capped'), ...nz(n.judgeErrors, 'errors'),
-      ], CHARS[1]),
+      subs: wrap(notJudgedParts(n), CHARS[1]),
     },
     { key: 'notAccounted', count: notAccounted, fill: '#64748b', ribbonFill: '#94a3b8', ribbonOpacity: 0.4, label: `${notAccounted} not accounted`, subs: ['run before 22 Oct, counters added later'] },
   ], 1, s, centre)

@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { MainPage, groupByDay, mostlyReason, runHeader, stageFraction, stageLines, stageText } from './MainPage'
+import { notJudgedParts, funnelNumbers } from '@/components/Funnel'
 import type { Event, SearchResult } from '@/services/api'
 
 function renderMainPage() {
@@ -50,7 +51,7 @@ describe('Stream page from mock data', () => {
     expect(tl).toHaveTextContent('Searched the web, 31 pages')
     expect(tl).toHaveTextContent('Read 31 pages, found 12 events')
     expect(tl).toHaveTextContent('Skipped 2 pages that were not events')
-    expect(tl).toHaveTextContent('Not judged: 5')
+    expect(tl).toHaveTextContent('Not judged: 5 (2 no date · 2 past · 1 duplicate)')
     expect(tl).toHaveTextContent('Judged 7 · 2 in calendar, 3 to review, 2 out')
     expect(screen.getByRole('button', { name: 'Search again' })).toBeInTheDocument()
     const funnel = screen.getByTestId('funnel')
@@ -367,7 +368,7 @@ describe('stageLines', () => {
     expect(stageLines(finished)).toEqual([
       'Searched the web, 20 pages',
       'Read 20 pages, found 31 events',
-      'Not judged: 9',
+      'Not judged: 9 (4 past · 3 duplicate · 2 place)',
       'Judged 22 · 2 in calendar, 1 to review, 19 out',
     ])
   })
@@ -383,7 +384,7 @@ describe('stageLines', () => {
       'Searched the web, 22 pages',
       'Read 22 pages, found 10 events',
       'Skipped 12 pages that were not events',
-      'Not judged: 2',
+      'Not judged: 2 (1 incomplete · 1 errors)',
       'Judged 8 · 3 in calendar, 1 to review, 4 out',
     ])
     const num = (re: RegExp) => Number(lines.join('\n').match(re)![1])
@@ -410,7 +411,7 @@ describe('stageLines', () => {
     expect(stageLines({ ...finished, eventsNew: 0, currentStage: 'judge', finishedAt: null, stageCounts: { ...finished.stageCounts, events_to_judge: 10, events_judged: 3 } })).toEqual([
       'Searched the web, 20 pages',
       'Read 20 pages, found 31 events',
-      'Not judged: 9',
+      'Not judged: 9 (4 past · 3 duplicate · 2 place)',
       'Judging 3 of 10 events…',
     ])
   })
@@ -418,6 +419,30 @@ describe('stageLines', () => {
   it('shows only the stop line for a run stopped at search', () => {
     expect(stageLines({ ...finished, stageCounts: { queries_planned: 2 }, stoppedAtStage: 'search', error: 'budget: search' }))
       .toEqual(['Stopped at search: budget: search.'])
+  })
+
+  it('not-judged line carries its breakdown, or reads 0 when all parts are zero', () => {
+    const withBreakdown = {
+      ...finished.stageCounts,
+      filtered_past: 65, filtered_duplicate: 13, judge_errors: 1,
+      filtered_place: 0, events_extracted: 101,
+    }
+    const lines = stageLines({ ...finished, stageCounts: withBreakdown })
+    expect(lines).toContain('Not judged: 79 (65 past · 13 duplicate · 1 errors)')
+
+    const allZero = { ...finished.stageCounts, filtered_past: 0, filtered_place: 0, filtered_duplicate: 0, events_extracted: 22 }
+    const lines2 = stageLines({ ...finished, stageCounts: allZero })
+    expect(lines2).toContain('Not judged: 0')
+    expect(lines2.find((l) => l.startsWith('Not judged'))).not.toContain('(')
+  })
+
+  it('notJudgedParts is the single source for the funnel label and the chronology line', () => {
+    const c = { ...finished.stageCounts!, filtered_past: 65, filtered_duplicate: 13, judge_errors: 1, filtered_place: 0, events_extracted: 101 }
+    const parts = notJudgedParts(funnelNumbers(c))
+    expect(parts).toEqual(['65 past', '13 duplicate', '1 errors'])
+    // the chronology line uses the same parts
+    const line = stageLines({ ...finished, stageCounts: c }).find((l) => l.startsWith('Not judged'))!
+    expect(line).toBe(`Not judged: 79 (${parts.join(' · ')})`)
   })
 
   it('shows Starting up… before the first stage', () => {
