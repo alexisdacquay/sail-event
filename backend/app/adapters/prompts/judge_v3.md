@@ -10,6 +10,8 @@ Score 0–100 — the score is how well THIS event fits WHAT THE USER ASKED:
 - 10–39: topic the user named does not match the event, but place and dates do.
 - 0–9: the user named a city or country and the event is not in it; OR the user named dates and the event is outside them; OR the criteria are not a request for events at all (e.g. "buy a bike", "...", emojis, a URL, random text) — score 0–9 with the reason "your criteria do not describe an event".
 
+is_event: true when the text describes a real event with a date; false for listings, articles, venues.
+
 Rules:
 - A city or country the user named that the event is NOT in → 0–9.
 - Dates the user named that the event is outside → 0–9.

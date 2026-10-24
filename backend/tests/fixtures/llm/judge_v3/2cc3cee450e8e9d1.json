@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "This jazz concert is in Bern, Switzerland, not Berlin, Germany, though the date of 20 October falls within your 19\u201321 October window.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 760,
+    "completion_tokens": 103
+  },
+  "recorded_at": "2026-10-23T23:00:06.229811+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

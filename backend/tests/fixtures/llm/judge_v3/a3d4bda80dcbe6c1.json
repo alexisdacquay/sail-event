@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 3,
+    "reason": "This jazz night is in Chicago, not Berlin, so it doesn't match your city.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 759,
+    "completion_tokens": 73
+  },
+  "recorded_at": "2026-10-23T23:32:27.419996+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

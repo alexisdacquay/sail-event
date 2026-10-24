@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "Jazz fits, but this takes place in Chicago, US, not Berlin, Germany as you asked.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 762,
+    "completion_tokens": 94
+  },
+  "recorded_at": "2026-10-23T23:00:01.947966+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

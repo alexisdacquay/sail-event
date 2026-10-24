@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 82,
+    "reason": "Jazz workshop in Berlin on 21 October fits your dates and city, though it's a participatory workshop rather than a jazz concert.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 768,
+    "completion_tokens": 98
+  },
+  "recorded_at": "2026-10-23T22:59:59.889312+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

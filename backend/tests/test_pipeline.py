@@ -580,3 +580,60 @@ def test_early_stop_defaults_no_date_and_pages_with_events(client, auth_headers)
     """A run that stops before extract still carries both counters (0)."""
     sc = client.post("/api/search", headers=auth_headers("nocrit", "nocritpw")).json()["stageCounts"]
     assert (sc["filtered_no_date"], sc["pages_with_events"]) == (0, 0)
+
+
+# ---------- Judge repair counter (#125) ----------
+
+
+def test_judge_repaired_counted_in_stage_counts(client, auth_headers, _db_session):
+    """When judge_event repairs a response, pipeline records judge_repaired in stage_counts."""
+    from app.services.judge import Verdict
+
+    repaired_verdict = Verdict(
+        score=80, reason="jazz in Berlin on 20 Oct", fit={},
+        is_event=True, capped=False, repaired=True,
+    )
+
+    call_count = [0]
+    original_judge = None
+
+    def _fake_judge(event, *, criteria_text, facets, window_start, window_end, user_tz, model):
+        call_count[0] += 1
+        return repaired_verdict
+
+    h = auth_headers("demo", "demo")
+    with patch("app.services.pipeline.judge_event", side_effect=_fake_judge):
+        body = client.post("/api/search", headers=h).json()
+
+    sc = body["stageCounts"]
+    assert sc.get("judge_repaired", 0) > 0, f"expected judge_repaired > 0, got {sc}"
+    assert sc.get("judge_errors", 0) == 0
+
+
+def test_utc_user_judge_errors_zero(client, auth_headers, _db_session):
+    """A UTC user (no timeZone sent) judges all events without errors (#125).
+
+    Catches missing or broken judge_v3 fixtures for the UTC path.
+    """
+    import hashlib
+    h = auth_headers("utcuser", "utcpw")
+    text = "jazz in Berlin (Germany) next week (19-21st October 2026)"
+    client.put("/api/criteria", json={"text": text}, headers=h)
+    user = _db_session.query(User).filter(User.username == "utcuser").first()
+    assert user.time_zone == "UTC"  # default, no timeZone sent
+    crit = _db_session.query(Criteria).filter(Criteria.user_id == user.id).first()
+    crit.facets_json = json.dumps({
+        "place": {"city": "Berlin", "country": "DE", "online": False},
+        "date": {"start": "2026-10-19", "end": "2026-10-21", "relative": "next_week"},
+        "topics": ["jazz"], "language": "de", "input_language": "en",
+    })
+    crit.facets_version = "criteria_v2"
+    crit.facets_text_sha = hashlib.sha256(text.encode()).hexdigest()
+    _db_session.commit()
+
+    body = client.post("/api/search", headers=h).json()
+    sc = body["stageCounts"]
+    assert sc.get("judge_errors", 0) == 0, f"UTC judge_errors should be 0: {sc}"
+    assert sc.get("events_judged", 0) == sc.get("events_to_judge", 0), (
+        f"UTC: judged {sc.get('events_judged')} != to_judge {sc.get('events_to_judge')}"
+    )

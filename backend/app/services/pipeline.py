@@ -175,13 +175,14 @@ def run_pipeline(
                 orm.Event.status == "new",
             ).all()
             if leftover:
-                llm_c, tok_in, tok_out, j_err = _judge_and_triage(
+                llm_c, tok_in, tok_out, j_err, j_rep = _judge_and_triage(
                     leftover, criteria_row, criteria_text, user_tz, user, model, db,
                 )
                 llm_calls += llm_c
                 llm_tokens_in += tok_in
                 llm_tokens_out += tok_out
                 counts["judge_errors"] = counts.get("judge_errors", 0) + j_err
+                counts["judge_repaired"] = counts.get("judge_repaired", 0) + j_rep
                 db.commit()
 
             # --- Stage 1: understand criteria ---
@@ -495,7 +496,7 @@ def run_pipeline(
                     counts["events_judged"] = judged_so_far
                     _update_run_stage(run, db, "judge", counts)
 
-                llm_c, tok_in, tok_out, j_err = _judge_and_triage(
+                llm_c, tok_in, tok_out, j_err, j_rep = _judge_and_triage(
                     inserted, criteria_row, criteria_text, user_tz, user, model, db,
                     on_event_done=_on_event_done,
                 )
@@ -504,6 +505,7 @@ def run_pipeline(
                 llm_tokens_out += tok_out
                 judge_errs = counts.get("judge_errors", 0) + j_err
                 counts["judge_errors"] = judge_errs
+                counts["judge_repaired"] = counts.get("judge_repaired", 0) + j_rep
                 if j_err and not error_detail:
                     error_detail = f"judge: errors on {j_err} event(s)"
                 db.commit()
@@ -556,8 +558,8 @@ def _judge_and_triage(
     model,
     db: Session,
     on_event_done=None,
-) -> tuple[int, int, int, int]:
-    """Judge events and triage.  Returns (llm_calls, tokens_in, tokens_out, judge_errors)."""
+) -> tuple[int, int, int, int, int]:
+    """Judge events and triage.  Returns (llm_calls, tokens_in, tokens_out, judge_errors, judge_repaired)."""
     facets = json.loads(criteria_row.facets_json) if criteria_row and criteria_row.facets_json else {}
     date_facets = facets.get("date", {}) or {}
 
@@ -567,6 +569,7 @@ def _judge_and_triage(
     tokens_in = 0
     tokens_out = 0
     judge_errors = 0
+    judge_repaired = 0
 
     from ..services.extract import ExtractedEvent
 
@@ -624,6 +627,10 @@ def _judge_and_triage(
                     continue
 
                 if isinstance(result, Verdict):
+                    if result.repaired:
+                        judge_repaired += 1
+                        llm_calls += 1  # repair cost one extra call
+                        _llm_calls_counter.add(1, {"prompt": "judge", "provider": getattr(model, "model_id", "unknown")})
                     espan.set_attribute("score", result.score)
                     espan.set_attribute("capped", result.capped)
                     try:
@@ -661,7 +668,7 @@ def _judge_and_triage(
             else:
                 evt.status = "queued"
 
-    return llm_calls, tokens_in, tokens_out, judge_errors
+    return llm_calls, tokens_in, tokens_out, judge_errors, judge_repaired
 
 
 # #118: shape of stage_counts. 1 = before the reject bands, 2 = before filtered_no_date, 3 = now.

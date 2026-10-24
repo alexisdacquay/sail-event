@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 15,
+    "reason": "Techno at Berghain in Berlin on 20 October is in the right city and week, but jazz is what you asked for, not techno.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 770,
+    "completion_tokens": 84
+  },
+  "recorded_at": "2026-10-23T23:32:33.016232+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

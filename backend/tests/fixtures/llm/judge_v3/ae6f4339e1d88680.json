@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 95,
+    "reason": "Leftover Jazz is in Berlin on 20 October 2026, matching your jazz search within the 19\u201321 October window.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 749,
+    "completion_tokens": 87
+  },
+  "recorded_at": "2026-10-23T00:00:00+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

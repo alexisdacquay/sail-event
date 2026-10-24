@@ -143,6 +143,10 @@ Writes to `backend/tests/fixtures/llm/` under the same hash the
 `FakeLanguageModel` replays. Set `FAKE_NOW` so hashes match test
 expectations.
 
+The integration and e2e users register without a time zone and default to
+UTC, so every re-recording must be done for both `--tz Europe/Berlin`
+(unit tests) and `--tz UTC` (integration/e2e).
+
 **Batch suite (10 texts):**
 
 ```
