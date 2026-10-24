@@ -210,6 +210,13 @@ def run_triple(triple: dict, base: str) -> dict:
                 "lost_at": stage,
             })
 
+    # Summary of all events the run extracted (for debugging matching)
+    extracted = [
+        {"title": ev.get("title", "?"), "date": (ev.get("dateTime") or "?")[:10],
+         "status": ev.get("status", "?"), "score": ev.get("score")}
+        for ev in events
+    ]
+
     return {
         "id": tid,
         "criteria": criteria_text,
@@ -219,6 +226,7 @@ def run_triple(triple: dict, base: str) -> dict:
         "accepted": accepted_matches,
         "misses": misses,
         "matches": matches,
+        "extracted_events": extracted,
         "elapsed_s": elapsed,
         "stage_counts": stage_counts,
         "no_event_pages": no_event_pages,
@@ -326,7 +334,10 @@ def main():
         total_accepted += accepted
 
         recall = f"{found}/{gt_future}"
-        print(f"recall {recall}, accepted {accepted}, {result['elapsed_s']}s")
+        extracted = result.get("extracted_events", [])
+        print(f"recall {recall}, accepted {accepted}, {len(extracted)} events, {result['elapsed_s']}s")
+        for ev in extracted:
+            print(f"    {ev['status']:>8} {ev['score'] or '?':>3}  {ev['date']}  {ev['title'][:50]}")
         for m in result.get("misses", []):
             print(f"    MISS: {m['gt_title'][:50]} ({m['lost_at']})")
 

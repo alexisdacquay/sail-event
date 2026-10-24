@@ -60,5 +60,11 @@ stageCounts from the wrong nesting level (every miss read "not_fetched").
 recall@run: **7/38 (18.4%)**  
 accepted-recall: **2/38 (5.3%)**
 
-Page classification 29/38 = 76% on current main (deepseek-v4.1-flash),
+Page classification 33/40 = 82.5% on current main (deepseek-v4.1-flash),
 target 90%, red until issue 124 lands.
+
+lisbon_fado 0/4 diagnostic (2026-10-24): 14 events extracted, but GT titles
+are in English while extraction returns Portuguese; dates shift by 1-2 days
+across recurring shows. The events exist in the results but the title/date
+matching is too strict for cross-language GT entries. This is a matching
+limitation, not an extraction failure.
