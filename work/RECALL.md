@@ -1,5 +1,9 @@
 # Recall measurements
 
+Superseded by `work/RUN-LOG.md` (unified runner phase 4, issue #135).
+
+## Before 2026-10-25
+
 ## 2026-10-23 21:41 UTC -- recall measurement -- https://sail-event-dev.onrender.com -- fae046f (broken miss attribution: stageCounts was read from wrong nesting level)
 
 | triple | criteria | gt | found | accepted | misses |

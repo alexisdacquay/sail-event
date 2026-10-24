@@ -1,5 +1,10 @@
 # Field tests — ledger and run log
 
+Superseded by `work/RUN-LOG.md` (unified runner, issue #135).
+Procedure: `backend/tests/field/runner.py`. Invariants: `backend/tests/field/invariants.py`.
+
+## Before 2026-10-25
+
 Procedure: `.claude/skills/field-test/SKILL.md`. Tool and invariants: `backend/tests/field/`.
 One block per run. Findings are grouped by invariant; one issue per (invariant, layer) cluster.
 
