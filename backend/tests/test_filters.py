@@ -186,18 +186,19 @@ class TestFilterPipeline:
         assert len(kept) == 0
         assert counts.filtered_past == 1
 
-    def test_past_date_only_2359_rule(self):
-        """Date-only event on Oct 17 (yesterday): ends at 23:59:59, before now (Oct 18 12:00)."""
+    def test_past_date_only_filtered_no_time(self):
+        """Date-only event on Oct 17: #134 drops it as filtered_no_time before the past check."""
         ev = _make_event(start_local="2026-10-17")
         kept, counts = _filter_one(ev)
         assert len(kept) == 0
-        assert counts.filtered_past == 1
+        assert counts.filtered_no_time == 1
 
-    def test_date_only_today_kept(self):
-        """Date-only event on Oct 18 (today): ends at 23:59:59, after now (12:00)."""
+    def test_date_only_today_filtered_no_time(self):
+        """Date-only event on Oct 18: #134 drops it as filtered_no_time (no time component)."""
         ev = _make_event(start_local="2026-10-18")
         kept, counts = _filter_one(ev)
-        assert len(kept) == 1  # no date-window filter, not past
+        assert len(kept) == 0
+        assert counts.filtered_no_time == 1
 
     def test_outside_window_not_filtered(self):
         """Date-window filter removed; events outside the window are kept for the judge."""
