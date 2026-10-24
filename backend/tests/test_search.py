@@ -443,7 +443,7 @@ def test_runs_summary_fields_and_set_aside(client, auth_headers):
     assert summary["queued"] == sc["queued"]
     assert summary["rejected"] == sc["rejected"]
     assert summary["setAside"] == (
-        sc["filtered_no_date"] + sc["filtered_incomplete"] + sc["filtered_past"] + sc["filtered_date"]
+        sc["filtered_no_date"] + sc.get("filtered_no_time", 0) + sc["filtered_incomplete"] + sc["filtered_past"] + sc["filtered_date"]
         + sc["filtered_place"] + sc["filtered_duplicate"] + sc["events_capped"] + sc["judge_errors"]
     )
     assert summary["setAside"] > 0
@@ -542,8 +542,8 @@ def test_runs_invariant_holds_with_incomplete_capped_and_unjudged(client, auth_h
     monkeypatch.delenv("MAX_EVENTS_PER_RUN")
 
     assert sc["filtered_incomplete"] == 1
-    # #124: reading every page produces more events; 10 survive to judge, MAX=3 → 7 capped
-    assert sc["events_capped"] == 7
+    # #134: no per-page cap → 11 survive to judge, MAX=3 → 8 capped
+    assert sc["events_capped"] == 8
     assert sc["judge_errors"] == 1
     assert sc["accepted"] == 2
     s = client.get("/api/search/runs", headers=h).json()["runs"][0]

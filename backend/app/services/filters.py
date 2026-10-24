@@ -44,6 +44,7 @@ class FilterCounts:
     filtered_date: int = 0
     filtered_place: int = 0
     filtered_no_date: int = 0
+    filtered_no_time: int = 0
     filtered_duplicate: int = 0
 
 
@@ -246,6 +247,11 @@ def filter_events(
         # #112: no start date gets its own counter, before the generic incomplete check
         if not ev.start_local:
             counts.filtered_no_date += 1
+            continue
+
+        # #134: date present but no time component → filtered_no_time
+        if _is_date_only(ev.start_local):
+            counts.filtered_no_time += 1
             continue
 
         # 0. Incomplete: required fields missing

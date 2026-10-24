@@ -376,7 +376,6 @@ def run_pipeline(
                     _llm_calls_counter.add(extract_llm, {"prompt": "extract", "provider": getattr(model, "model_id", "unknown")})
 
                 counts["pages_content_pass"] = extract_counts.pages_content_pass
-                counts["extract_truncated"] = extract_counts.extract_truncated
                 counts["events_extracted"] = extract_counts.events_extracted
                 counts["extract_errors"] = extract_counts.extract_errors
                 if extract_counts.extract_errors > 0 and not error_detail:
@@ -427,6 +426,7 @@ def run_pipeline(
                 counts["filtered_date"] = filter_counts.filtered_date
                 counts["filtered_place"] = filter_counts.filtered_place
                 counts["filtered_no_date"] = filter_counts.filtered_no_date
+                counts["filtered_no_time"] = filter_counts.filtered_no_time
                 counts["filtered_duplicate"] = filter_counts.filtered_duplicate
 
                 # §9 stage_items metrics
@@ -435,6 +435,7 @@ def run_pipeline(
                 _stage_items.add(filter_counts.filtered_date, {"stage": "filter", "outcome": "date"})
                 _stage_items.add(filter_counts.filtered_place, {"stage": "filter", "outcome": "place"})
                 _stage_items.add(filter_counts.filtered_no_date, {"stage": "filter", "outcome": "no_date"})
+                _stage_items.add(filter_counts.filtered_no_time, {"stage": "filter", "outcome": "no_time"})
                 _stage_items.add(filter_counts.filtered_duplicate, {"stage": "filter", "outcome": "duplicate"})
                 _stage_items.add(len(kept), {"stage": "filter", "outcome": "kept"})
 
@@ -703,7 +704,7 @@ def _finalise_run(
     run = db.merge(run)
     # #108/#112: the funnel reads these on every finished run, also when it stopped early
     for k in ("rejected_date_place", "rejected_off_topic", "rejected_other",
-              "filtered_no_date", "pages_with_events"):
+              "filtered_no_date", "filtered_no_time", "pages_with_events"):
         counts.setdefault(k, 0)
     counts["counts_version"] = COUNTS_VERSION
     run.finished_at = datetime.now(UTC)
