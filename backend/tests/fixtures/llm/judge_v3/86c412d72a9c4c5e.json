@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "Jazz in Berlin fits, but 22 October falls outside your 19\u201321 October window.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 768,
+    "completion_tokens": 79
+  },
+  "recorded_at": "2026-10-24T11:02:24.083564+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

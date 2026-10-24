@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 97,
+    "reason": "Jazz trio at A-Trane in Berlin on 20 October 2026 falls squarely within your 19\u201321 October window.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 796,
+    "completion_tokens": 66
+  },
+  "recorded_at": "2026-10-24T11:02:04.369229+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

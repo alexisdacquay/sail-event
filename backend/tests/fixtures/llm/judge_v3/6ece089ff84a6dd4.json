@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 3,
+    "reason": "Jazzfest Berlin is in Berlin, but it's on 5 November, not during 19\u201321 October 2026.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 763,
+    "completion_tokens": 78
+  },
+  "recorded_at": "2026-10-24T11:02:34.093546+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

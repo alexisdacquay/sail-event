@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 90,
+    "reason": "Jazz jam session at a Berlin jazz club on 21 October, inside your 19\u201321 October window and in the right city.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 791,
+    "completion_tokens": 94
+  },
+  "recorded_at": "2026-10-24T11:02:19.794767+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

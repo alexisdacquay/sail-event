@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "This jazz night is in Potsdam, not Berlin; the date fits your 19\u201321 October window but the city doesn't.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 765,
+    "completion_tokens": 123
+  },
+  "recorded_at": "2026-10-24T11:02:18.025358+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

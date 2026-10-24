@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 95,
+    "reason": "Open-air jazz concert in Berlin on 19 October 2026 matches your jazz, city, and date criteria.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 779,
+    "completion_tokens": 64
+  },
+  "recorded_at": "2026-10-24T11:02:11.127736+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}
