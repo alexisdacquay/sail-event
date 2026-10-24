@@ -33,3 +33,24 @@ class TestFakeLanguageModel:
     def test_model_id(self):
         model = FakeLanguageModel()
         assert model.model_id == "fake:recorded"
+
+
+class TestFixtureIntegrity:
+    """Every committed fixture must be a real model recording, never hand-written."""
+
+    def test_no_placeholder_fixtures(self):
+        import json
+        from pathlib import Path
+
+        fixtures_root = Path(__file__).parent / "fixtures" / "llm"
+        bad = []
+        for f in fixtures_root.rglob("*.json"):
+            data = json.loads(f.read_text())
+            reason = data.get("response", {}).get("reason", "")
+            recorded = data.get("recorded", "")
+            recorded_at = data.get("recorded_at", "")
+            if reason == "unused fixture":
+                bad.append(f"{f.relative_to(fixtures_root)}: reason is 'unused fixture'")
+            if recorded == "live" and not recorded_at:
+                bad.append(f"{f.relative_to(fixtures_root)}: recorded=live without recorded_at")
+        assert not bad, "Fixture integrity failures:\n" + "\n".join(bad)
