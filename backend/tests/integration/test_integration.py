@@ -193,7 +193,10 @@ def test_ics_feed(http: httpx.Client):
         json={"lowerThreshold": 20, "upperThreshold": 80},
         headers=headers,
     )
-    http.post("/api/search", headers=headers)
+    r = http.post("/api/search", headers=headers)
+    sc = r.json().get("stageCounts", {})
+    assert sc.get("judge_errors", 0) == 0, f"judge_errors must be 0: {sc}"
+    assert sc.get("extract_errors", 0) == 0, f"extract_errors must be 0: {sc}"
 
     # get calendar URL
     r = http.get("/api/calendar-url", headers=headers)
