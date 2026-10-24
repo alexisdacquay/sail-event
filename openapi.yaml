@@ -475,7 +475,10 @@ components:
             pages already stored from earlier runs. events_to_judge is the number
             of events entering the judge stage, set when currentStage becomes judge;
             the frontend uses it as the live progress total since eventsNew is only
-            written at finalise. counts_version is the shape
+            written at finalise. judge_repaired counts events whose first judge
+            response failed validation but whose repair retry succeeded; these
+            events are scored normally and not counted in judge_errors.
+            counts_version is the shape
             version (see countsVersion); for a run below the current version the
             bands are recomputed from the run's events at read time.
         countsVersion:

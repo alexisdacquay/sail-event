@@ -578,3 +578,31 @@ def test_early_stop_defaults_no_date_and_pages_with_events(client, auth_headers)
     """A run that stops before extract still carries both counters (0)."""
     sc = client.post("/api/search", headers=auth_headers("nocrit", "nocritpw")).json()["stageCounts"]
     assert (sc["filtered_no_date"], sc["pages_with_events"]) == (0, 0)
+
+
+# ---------- Judge repair counter (#125) ----------
+
+
+def test_judge_repaired_counted_in_stage_counts(client, auth_headers, _db_session):
+    """When judge_event repairs a response, pipeline records judge_repaired in stage_counts."""
+    from app.services.judge import Verdict
+
+    repaired_verdict = Verdict(
+        score=80, reason="jazz in Berlin on 20 Oct", fit={},
+        is_event=True, capped=False, repaired=True,
+    )
+
+    call_count = [0]
+    original_judge = None
+
+    def _fake_judge(event, *, criteria_text, facets, window_start, window_end, user_tz, model):
+        call_count[0] += 1
+        return repaired_verdict
+
+    h = auth_headers("demo", "demo")
+    with patch("app.services.pipeline.judge_event", side_effect=_fake_judge):
+        body = client.post("/api/search", headers=h).json()
+
+    sc = body["stageCounts"]
+    assert sc.get("judge_repaired", 0) > 0, f"expected judge_repaired > 0, got {sc}"
+    assert sc.get("judge_errors", 0) == 0
