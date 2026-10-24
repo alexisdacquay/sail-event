@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 8,
+    "reason": "Jazzfest Berlin is in Berlin and is jazz, but it takes place on 5 November 2026, outside your 19\u201321 October dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 766,
+    "completion_tokens": 151
+  },
+  "recorded_at": "2026-10-24T11:02:16.314572+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

@@ -29,7 +29,7 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `LLM_MODEL` | `deepseek-flash` |
 | `LLM_API_KEY` | DeepSeek API key (required when `LLM_PROVIDER=openai_compatible`) |
 | `LLM_JSON_MODE` | `json_object` (DeepSeek) or `json_schema` |
-| `FAKE_NOW` | ISO-8601 instant; set in dev/CI/compose (`2026-10-18T12:00:00+02:00`), unset in prod |
+| `FAKE_NOW` | ISO-8601 instant; set in CI and compose only (`2026-10-18T12:00:00+02:00`); dev and prod run the real clock (leave unset or empty string) |
 | `MAX_SCHEDULED_USERS` | `50` — max users per scheduled search |
 | `REGISTER_RATE_LIMIT_PER_HOUR` | `5` — successful registrations per IP per hour |
 | `REGISTRATION_CODE` | optional — invite code for registration; unset = open |

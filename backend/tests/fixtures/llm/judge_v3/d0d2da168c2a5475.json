@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 95,
+    "reason": "A jazz trio show in Berlin on 20 October 2026 falls squarely within your dates and city.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 793,
+    "completion_tokens": 65
+  },
+  "recorded_at": "2026-10-24T11:02:22.119271+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

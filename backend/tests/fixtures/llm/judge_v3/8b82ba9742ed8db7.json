@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 15,
+    "reason": "Techno at Berghain in Berlin on 20 October, not jazz, so the music genre doesn't match.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 770,
+    "completion_tokens": 41
+  },
+  "recorded_at": "2026-10-24T11:02:07.562588+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}
