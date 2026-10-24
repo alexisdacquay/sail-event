@@ -6,7 +6,7 @@ import { ConfirmAction } from '@/components/ConfirmAction'
 import { COL, EventRow, ROW_GRID, formatDay } from '@/components/EventCard'
 import { EventDetail } from '@/components/EventDetail'
 import { EarlierRuns, fmtStamp } from '@/components/EarlierRuns'
-import { Funnel, funnelNumbers } from '@/components/Funnel'
+import { Funnel, funnelNumbers, notJudgedParts } from '@/components/Funnel'
 import { MonthCalendar } from '@/components/MonthCalendar'
 import {
   getCriteria,
@@ -98,7 +98,7 @@ export function stageLines(run: SearchResult): string[] {
       ? `Searched the web: ${n.pages} pages, ${n.pagesKnown} already known from earlier runs, ${n.pages - n.pagesKnown} new`
       : `Searched the web, ${n.pages} pages`],
     [`Read ${n.pages - n.pagesKnown} pages, found ${n.found} events`, ...(n.nonEvent > 0 ? [`Skipped ${n.nonEvent} pages that were not events`] : [])],
-    [`Not judged: ${n.notJudged}`],
+    [n.notJudged > 0 ? `Not judged: ${n.notJudged} (${notJudgedParts(n).join(' · ')})` : `Not judged: ${n.notJudged}`],
     [`Judged ${c.events_judged ?? 0} · ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} out`],
   ]
   const stage = run.currentStage ?? run.stoppedAtStage
