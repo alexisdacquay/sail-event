@@ -39,3 +39,9 @@ Rules
 - The engineer does not close the issue, QA does not fix the code
 - Do not commit until the tests pass
 - Only the orchestrator closes issues
+
+Batch and recall reports
+
+Every batch run (`remote_batch.py`) or recall report (`recall.py`) prints
+five randomly sampled pages counted as "no events" with their URL and
+title, so a human reads them and catches extraction failures.

@@ -67,17 +67,17 @@ def one(i, text):
         rst, _ = call("POST", "/api/auth/register", {"username": user, "password": pw}, timeout=60)
         st, body = call("POST", "/api/auth/login", {"username": user, "password": pw}, timeout=60)
     if st != 200:
-        return (i, text, f"login {st} (register {rst})", "", "", "")
+        return (i, text, f"login {st} (register {rst})", "", "", "", [])
     tok = body["token"]
     st, body = call("PUT", "/api/criteria", {"text": text, "timeZone": "Europe/Berlin"}, tok, 90)
     if st != 200:
-        return (i, text, f"criteria {st}", (body or {}).get("detail", "") if isinstance(body, dict) else "", "", "")
+        return (i, text, f"criteria {st}", (body or {}).get("detail", "") if isinstance(body, dict) else "", "", "", [])
     call("PUT", "/api/thresholds", {"lowerThreshold": 40, "upperThreshold": 90}, tok, 60)
     t0 = time.time()
     st, run = call("POST", "/api/search", None, tok, 600)
     secs = round(time.time() - t0)
     if st != 200 or not isinstance(run, dict):
-        return (i, text, f"search {st}", str(run)[:80], "", f"{secs}s")
+        return (i, text, f"search {st}", str(run)[:80], "", f"{secs}s", [])
     counts = run.get("stageCounts") or {}
     status = run.get("stoppedAtStage") or "ok"
     err = run.get("error") or ""
@@ -87,7 +87,25 @@ def one(i, text):
     top = "; ".join(f"{e.get('title','')[:28]} · {e.get('city')}, {e.get('country')} · {str(e.get('dateTime') or '')[:10]} · {e.get('score')}" for e in kept[:3])
     dup = counts.get('filtered_duplicate', 0) + counts.get('results_known', 0)
     flow = f"{counts.get('results_fetched', '-')} res → {counts.get('events_extracted', '-')} ext → {counts.get('events_judged', 0)} judged → {counts.get('accepted', 0)} acc / {counts.get('queued', 0)} queued / {counts.get('rejected', 0)} rej" + (f" (already known {dup})" if dup else "")
-    return (i, text, status, err, flow, f"{secs}s", top)
+    # Try to get page list from the run (issue 124 adds `pages` to the response)
+    run_id = run.get("runId")
+    page_list = run.get("pages")
+    if not page_list and run_id:
+        # Try runs/{runId} endpoint
+        pst, pbody = call("GET", f"/api/search/runs/{run_id}", None, tok, 30)
+        if pst == 200 and isinstance(pbody, dict):
+            page_list = pbody.get("pages")
+    if not page_list:
+        # Try last-run (nested under "run")
+        pst, pbody = call("GET", "/api/search/last-run", None, tok, 30)
+        if pst == 200 and isinstance(pbody, dict):
+            run_obj = pbody.get("run") or pbody
+            page_list = run_obj.get("pages")
+    run_meta = {
+        "no_event_count": counts.get("filtered_non_event", 0),
+        "page_list": page_list,  # None when not available
+    }
+    return (i, text, status, err, flow, f"{secs}s", top, run_meta)
 
 
 with ThreadPoolExecutor(max_workers=10) as ex:
@@ -96,6 +114,28 @@ with ThreadPoolExecutor(max_workers=10) as ex:
 print(f"| # | text | status | error | flow | s | kept (top 3) |")
 print("|---|---|---|---|---|---|---|")
 for r in rows:
-    r = list(r) + [""] * (7 - len(r))
-    text = r[1] if len(r[1]) <= 48 else r[1][:45] + "..."
-    print(f"| {r[0]} | {text} | {r[2]} | {r[3]} | {r[4]} | {r[5]} | {r[6]} |")
+    padded = list(r) + [""] * (8 - len(r))
+    text = padded[1] if len(padded[1]) <= 48 else padded[1][:45] + "..."
+    print(f"| {padded[0]} | {text} | {padded[2]} | {padded[3]} | {padded[4]} | {padded[5]} | {padded[6]} |")
+
+# §126: sample 5 pages counted as "no events" for human review
+all_no_event_pages = []
+page_list_available = False
+total_no_event_count = 0
+for r in rows:
+    meta = r[7] if len(r) > 7 and isinstance(r[7], dict) else {}
+    total_no_event_count += meta.get("no_event_count", 0)
+    pl = meta.get("page_list")
+    if pl and isinstance(pl, list):
+        page_list_available = True
+        all_no_event_pages.extend(p for p in pl if p.get("events", 0) == 0)
+
+print(f"\n### No-event page audit ({total_no_event_count} pages with no events)")
+if page_list_available and all_no_event_pages:
+    sampled = random.sample(all_no_event_pages, min(5, len(all_no_event_pages)))
+    for p in sampled:
+        print(f"  {p.get('title', '?')[:60]}  {p.get('url', '?')}")
+elif page_list_available:
+    print("  All fetched pages produced at least one event.")
+else:
+    print("  Page list not available on this server.")
