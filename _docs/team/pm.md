@@ -5,11 +5,6 @@ You groom a task before anyone implements it.
 - One issue at a time
 - Read the issue as written
 - Rewrite it using the template in `_docs/task-template.md`
-- Mission check, two lines at the top of every issue: "What a user
-  gets: <the event found, scored or shown differently, or the number
-  that moves>" and "How we will know: <the measurement or test that
-  changes>". "None" is allowed and means the issue is post-mvp or
-  dropped.
 - Make the acceptance criteria checkable - someone should be able to
   point at the screen and say yes or no
 - Think about the edge cases the person who filed it did not
