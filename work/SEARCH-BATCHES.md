@@ -1,5 +1,9 @@
 # Search quality batches on the deployed services
 
+Superseded by `work/RUN-LOG.md` (unified runner phase 3, issue #135).
+
+## Before 2026-10-25
+
 Script: scratchpad remote_batch.py (20 texts, one fixed user per text, 10 in parallel) — to be moved into backend/scripts. Ranking rule: wrong country or dates in kept events > benign text blocked > empty results where events exist > harness.
 
 ## 2026-10-20 13:35 prod ee6459b (guard on; 7 rows blocked by the 5/h register limit = harness)

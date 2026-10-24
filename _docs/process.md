@@ -40,8 +40,11 @@ Rules
 - Do not commit until the tests pass
 - Only the orchestrator closes issues
 
-Batch and recall reports
+Test runner — four phases
 
-Every batch run (`remote_batch.py`) or recall report (`recall.py`) prints
-five randomly sampled pages counted as "no events" with their URL and
-title, so a human reads them and catches extraction failures.
+One runner (`backend/tests/field/runner.py --base-url URL --phase N`) runs phases 1..N:
+1. Invariants battery (13 checks, quick) — are the core promises kept?
+2. Regression tests (`backend/tests/regression/`) — do past bugs stay fixed?
+3. Breadth batch (20 dissimilar searches, quick) — does the system handle variety?
+4. Recall ground truth (38 events) — does it find what exists?
+Each run logs numbers and deltas to `work/RUN-LOG.md`.

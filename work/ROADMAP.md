@@ -18,3 +18,7 @@ Not before P1: anything that adds fields named after env vars or columns.
 | Q | Answered: Grafana is the operator view; no admin page | — |
 - Live on dev (auto-deploy). Prod stays on 93ad48f until the owner runs the promote workflow with the merge commit.
 - Open design calls recorded for the owner: light-mode primaries are navy (teal fails text contrast); dark mode follows the OS, no toggle; one Google Fonts request per page load (Geist fallback).
+
+## Deferred
+
+- **CI red-before-green gate**: a workflow step that runs the new regression tests on the fix's parent commit and fails if they pass there (~60 lines). Needs test and fix in separate commits. Deferred by the owner on 2026-10-24 until the single runner (issue #135) exists.

@@ -1,4 +1,4 @@
-# Field-test personas: one cell of the matrix each. battery.py runs them in this order.
+# Field-test personas: one cell of the matrix each. runner.py runs them in this order.
 #
 # Axes covered: language (en es pt de fr ja), place (city / region / none / ambiguous),
 # time (day / weekend / month / none / past), specificity (word / sentence / paragraph /
