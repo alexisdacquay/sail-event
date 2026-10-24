@@ -32,6 +32,7 @@ class FakeLanguageModel:
         variables: dict[str, str],
         schema: dict | None = None,
         repair_messages: list[dict] | None = None,
+        validate: bool = True,
     ) -> tuple[dict, Usage]:
         rendered, _schema = load_prompt(prompt_name, prompt_version, variables)
         hash_input = rendered
@@ -54,5 +55,6 @@ class FakeLanguageModel:
             tokens_out=usage_raw.get("completion_tokens", 0),
         )
         effective_schema = schema if schema is not None else _schema
-        validate_response(prompt_name, response, effective_schema)
+        if validate:
+            validate_response(prompt_name, response, effective_schema)
         return response, usage

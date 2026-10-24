@@ -118,20 +118,27 @@ def call_with_repair(
 ) -> tuple[dict, Any, bool]:
     """Call model.complete_json; on schema violation, retry once with the error.
 
+    The repair conversation replays the model's rejected answer as an
+    assistant turn so the model sees what it wrote:
+    ``[user: prompt] [assistant: bad JSON] [user: "Your answer was rejected: …"]``
+
     Returns (response, usage, repaired).  *repaired* is True when the first
-    call failed validation but the repair succeeded.  Extract and judge use
+    call failed validation but the repair succeeded.  Judge and extract use
     this helper; the caller adds its own domain checks after.
     """
+    # First call: skip built-in validation so we can capture the raw response
+    response, usage = model.complete_json(
+        prompt_name=prompt_name,
+        prompt_version=prompt_version,
+        variables=variables,
+        validate=False,
+    )
     try:
-        response, usage = model.complete_json(
-            prompt_name=prompt_name,
-            prompt_version=prompt_version,
-            variables=variables,
-        )
-        return response, usage, False
+        validate_response(prompt_name, response, load_prompt(prompt_name, prompt_version, variables)[1])
     except RuntimeError as exc:
         if "schema violation" not in str(exc):
             raise
+        bad_json = json.dumps(response)
         repair_msg = (
             f"Your answer was rejected: {exc}. "
             f"Answer again with exactly the fields: {repair_hint}."
@@ -140,6 +147,10 @@ def call_with_repair(
             prompt_name=prompt_name,
             prompt_version=prompt_version,
             variables=variables,
-            repair_messages=[{"role": "user", "content": repair_msg}],
+            repair_messages=[
+                {"role": "assistant", "content": bad_json},
+                {"role": "user", "content": repair_msg},
+            ],
         )
         return response, usage, True
+    return response, usage, False

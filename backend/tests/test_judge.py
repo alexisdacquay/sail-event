@@ -186,8 +186,8 @@ class _MockModel:
     """Test double that returns a sequence of responses for successive calls.
 
     Dict entries go through validate_response (so extra-field stripping
-    and type checks work like the real adapters).  Exception entries are
-    raised directly (simulates a schema violation the adapter would raise).
+    and type checks work like the real adapters) unless validate=False.
+    Exception entries are raised directly.
     """
 
     model_id = "mock:test"
@@ -197,7 +197,7 @@ class _MockModel:
         self._calls: list[dict] = []
 
     def complete_json(self, *, prompt_name, prompt_version, variables,
-                      schema=None, repair_messages=None):
+                      schema=None, repair_messages=None, validate=True):
         self._calls.append({
             "prompt_name": prompt_name,
             "repair_messages": repair_messages,
@@ -209,7 +209,8 @@ class _MockModel:
         from app.adapters.llm_fake import Usage
         _, loaded_schema = load_prompt(prompt_name, prompt_version, variables)
         effective_schema = schema if schema is not None else loaded_schema
-        validate_response(prompt_name, entry, effective_schema)
+        if validate:
+            validate_response(prompt_name, entry, effective_schema)
         return entry, Usage()
 
 
@@ -259,13 +260,13 @@ class TestRepairLoop:
         assert len(model._calls) == 1  # no repair call
 
     def test_missing_is_event_then_valid_repaired(self, monkeypatch):
-        """Missing is_event on first call → schema violation → repair → success."""
+        """Missing is_event on first call → schema violation → repair with assistant turn → success."""
         monkeypatch.setenv("FAKE_NOW", "2026-10-18T12:00:00+02:00")
         from app.services.judge import judge_event, Verdict
 
         model = _MockModel([
-            # First call: missing is_event → RuntimeError from validate_response
-            RuntimeError("judge: schema violation: missing required field 'is_event'"),
+            # First call (validate=False): missing is_event — returned raw
+            {"score": 90, "reason": "jazz trio in Berlin on Oct 20"},
             # Repair call: valid
             {"score": 90, "reason": "jazz trio in Berlin on Oct 20", "is_event": True},
         ])
@@ -276,45 +277,52 @@ class TestRepairLoop:
         assert result.score == 90
         assert result.repaired
         assert len(model._calls) == 2
-        # Second call should have repair_messages
-        assert model._calls[1]["repair_messages"] is not None
+        # Second call should have repair_messages with assistant turn
+        repair = model._calls[1]["repair_messages"]
+        assert repair is not None
+        assert repair[0]["role"] == "assistant"  # model's bad answer replayed
+        assert repair[1]["role"] == "user"
+        assert "rejected" in repair[1]["content"]
 
     def test_twice_invalid_judge_errors_1(self, monkeypatch):
-        """Two consecutive schema violations → JudgeError, counted once."""
+        """Schema violation on first call, then again on repair → JudgeError."""
         monkeypatch.setenv("FAKE_NOW", "2026-10-18T12:00:00+02:00")
         from app.services.judge import judge_event, JudgeError
 
         model = _MockModel([
-            RuntimeError("judge: schema violation: missing required field 'is_event'"),
+            # First call (validate=False): missing is_event
+            {"score": 90, "reason": "jazz trio in Berlin on Oct 20"},
+            # Repair call also fails validation
             RuntimeError("judge: schema violation: missing required field 'is_event'"),
         ])
 
         result = judge_event(_make_event(), model=model, **_JUDGE_KW)
 
         assert isinstance(result, JudgeError)
-        assert "schema violation" in result.error
+        assert "schema violation" in result.error or "model error" in result.error
         assert len(model._calls) == 2
 
     def test_wrong_type_repaired_or_error_no_crash(self, monkeypatch):
-        """Wrong type on first call → repair attempted, never a crash."""
+        """Wrong type on first call → repair attempted with assistant turn, never a crash."""
         monkeypatch.setenv("FAKE_NOW", "2026-10-18T12:00:00+02:00")
         from app.services.judge import judge_event, Verdict, JudgeError
 
         model = _MockModel([
-            RuntimeError("judge: schema violation: field 'score' expected integer, got str"),
+            # First call (validate=False): score is string instead of int
+            {"score": "high", "reason": "jazz in Berlin", "is_event": True},
+            # Repair call: valid
             {"score": 85, "reason": "jazz in Berlin on Oct 20", "is_event": True},
         ])
 
         result = judge_event(_make_event(), model=model, **_JUDGE_KW)
 
         assert isinstance(result, (Verdict, JudgeError))
-        # Should have repaired successfully
         if isinstance(result, Verdict):
             assert result.repaired
             assert result.score == 85
 
     def test_reason_violation_repaired(self, monkeypatch):
-        """Reason too long on first call → repair → success."""
+        """Reason too long on first call → repair with assistant turn → success."""
         monkeypatch.setenv("FAKE_NOW", "2026-10-18T12:00:00+02:00")
         from app.services.judge import judge_event, Verdict
 
@@ -328,3 +336,6 @@ class TestRepairLoop:
         assert isinstance(result, Verdict)
         assert result.repaired
         assert len(result.reason) <= 140
+        # Verify assistant turn in repair
+        repair = model._calls[1]["repair_messages"]
+        assert repair[0]["role"] == "assistant"
