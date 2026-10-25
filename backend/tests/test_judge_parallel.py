@@ -72,13 +72,14 @@ def test_parallel_judge_is_faster_and_identical(_db_session, monkeypatch):
         )
         return time.monotonic() - t0, out, _rows(events), progress
 
-    wall, out5, rows5, progress5 = judge(5)
+    wall5, out5, rows5, progress5 = judge(5)
     for e in events:
         e.score = e.score_reason = e.decided_by = None
         e.status = "new"
-    _, out1, rows1, _ = judge(1)
+    wall1, out1, rows1, _ = judge(1)
 
-    assert wall < 20 * 0.1 / 2, f"judging 20 events took {wall:.2f}s"
+    # Relative, not fixed seconds: a loaded machine slows both runs alike; 5 workers ideally take 1/5
+    assert wall5 <= wall1 / 3, f"5 workers took {wall5:.2f}s, 1 worker {wall1:.2f}s"
     assert rows5 == rows1
     assert out5 == out1
     llm_calls, tokens_in, tokens_out, _, _ = out5
