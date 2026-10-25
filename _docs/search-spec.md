@@ -105,7 +105,7 @@ Result budget per run:
 | Queries per run | 6 | 2, rotating through the planned list across hours |
 | Results per query | 6 | same |
 | Results sent to extraction | 36, minus links already known for the user | same |
-| Events judged | `MAX_EVENTS_PER_RUN` = 50 | same |
+| Events judged | every event that passes the filters (no per-search cap) | same |
 
 ## 5. Event extraction
 
@@ -125,7 +125,7 @@ From one search result to zero or more events.
 - Owner rule (2026-10-18, updated 2026-10-24 #134): six mandatory fields — title, description, start date-time with time component, time zone, city, country. An event missing any of these is dropped: no start → `filtered_no_date`; date-only start (no time) → `filtered_no_time`; other missing fields → `filtered_incomplete`. The model is told to infer the country from the city when the page omits it.
 
 - A page with many events (venue programme, listing): all events are extracted (no per-page cap; the model's context window is the ceiling).
-- Detail-page hop (#139): for every listing-page event whose link differs from the source URL, is same-site HTTP(S), and is not the listing page itself, the pipeline fetches that page and re-extracts the event. The judge receives the record built from the detail page (title, description, city, country, date, time). Events from `single_event` pages or with off-site links keep the listing record unchanged. Fetches use `urllib.request` with `DETAIL_FETCH_TIMEOUT` (default 10 s) and `DETAIL_FETCH_MAX_BYTES` (default 2 MB), in the existing `EXTRACT_CONCURRENCY` pool. Failed fetches keep the listing record and increment `detail_fetch_errors`. Counters: `pages_detail_fetched`, `detail_fetch_errors`.
+- Detail-page hop (#139): for every listing-page event whose link differs from the source URL, is same-site HTTP(S), and is not the listing page itself, the pipeline fetches that page and re-extracts the event. The judge receives the record built from the detail page (title, description, city, country, date, time). Events from `single_event` pages or with off-site links keep the listing record unchanged. Fetches use `urllib.request` with `DETAIL_FETCH_TIMEOUT` (default 10 s) and `DETAIL_FETCH_MAX_BYTES` (default 2 MB), in the existing `EXTRACT_CONCURRENCY` pool. Failed fetches keep the listing record, increment `detail_fetch_errors` and log a WARNING with the URL and the HTTP status or exception. A fetched page whose re-extraction call fails keeps the listing record and increments `detail_extract_errors`. Counters: `pages_detail_fetched`, `detail_fetch_errors`, `detail_extract_errors`.
 - A page with none (article, listicle, venue homepage, radio stream): no event, counted as non-event.
 - The extractor is told today's date, the window and the target place so it picks the right occurrence from a programme page; it never decides fit.
 
@@ -225,7 +225,7 @@ Run report (after "Search now" and on the last scheduled run):
 |---|---|---|---|
 | Search calls | per run | queries per run (above) | n/a, planned |
 | Search calls | per day, whole deployment | 600 | run stops before search; report says `budget: search` |
-| Model calls | per run | ≤ 1 (criteria) + queries (snippet extraction) + listing or incomplete pages (content extraction) + `MAX_EVENTS_PER_RUN` (judge) | n/a, planned |
+| Model calls | per run | ≤ 1 (criteria) + queries (snippet extraction) + listing or incomplete pages (content extraction) + event pages read + up to 3 per event that passes the filters (judge) | n/a, planned |
 | Model calls | per day, whole deployment | 5000 | run stops at the stage that would exceed it; judged events keep their state; unjudged stay `new` and are judged on the next run |
 | "Search now" | per user | 6 per hour | HTTP 429 with `Retry-After`; nothing runs |
 | Money | per day | derived from calls × configured unit prices; unset = not computed | reported, not enforced |
@@ -316,7 +316,7 @@ Golden set B — labelled candidates for C1, now = 2026-10-18 12:00 Europe/Berli
 2. The reference criteria yields no event that does not overlap 2026-10-19 → 2026-10-21 in accepted or queued; a 17–22 Oct festival is kept.
 3. No event that has already ended at run time is inserted; a date-only event counts as ending at 23:59 of its day.
 4. Every stored event has a start with a time zone or an explicit "unknown zone", a city, a country, the page it came from and its own link.
-5. Every stored event has a score, a reason sentence ≤ 140 characters passing the pattern check, a judge model and a judge version.
+5. Every stored event has a score, a reason sentence ≤ 200 characters (the prompt asks for 140) passing the pattern check, a judge model and a judge version.
 6. The reason sentence names at least the date and the place, in the language of the criteria text.
 7. The smoke script with three repeats prints the score spread per event; the owner reads it against ±5 (measurement, not a CI assertion).
 8. Facets are parsed once per criteria text (hash) or prompt version change. Relative date words resolve against now on every run in `window.py`; absolute dates are fixed and the past filter and the judge handle them.

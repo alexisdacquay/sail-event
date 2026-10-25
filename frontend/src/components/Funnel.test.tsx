@@ -200,7 +200,7 @@ describe('Funnel', () => {
   })
 
   it('no two labels overlap and nothing is clipped, with every breakdown and thin nodes', () => {
-    const many = { ...counts, filtered_date: 1, filtered_incomplete: 1, events_capped: 1, judge_errors: 1, rejected_other: 1, rejected: 3, events_extracted: 17 }
+    const many = { ...counts, filtered_date: 1, filtered_incomplete: 1, judge_errors: 1, rejected_other: 1, rejected: 3, events_extracted: 16 }
     const { container } = render(<Funnel counts={many} />)
     expectStructure(container, many)
     expectLabelsClear(container)

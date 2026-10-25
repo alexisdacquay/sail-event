@@ -44,7 +44,7 @@ class TestValidateReason:
         assert validate_reason("Jazz trio in Berlin on 20 Oct: fits your dates") is None
 
     def test_too_long(self):
-        err = validate_reason("x" * 141)
+        err = validate_reason("x" * 201)
         assert err is not None
         assert "too long" in err
 
@@ -58,9 +58,16 @@ class TestValidateReason:
         assert err is not None
         assert "markup" in err
 
-    def test_exactly_140_chars(self):
-        reason = "Jazz trio in Berlin on 20 Oct: fits" + " " * (140 - 35)
-        reason = reason[:140]
+    def test_150_char_reason_is_accepted(self):
+        """Owner decision B, 2026-10-25: the prompt asks for 140, the check accepts up to 200."""
+        reason = ("In London on 28 October, so place and date fit, but this is an economics education "
+                  "conference where AI is only one mentioned subtopic, not an AI-focused event")[:150]
+        assert len(reason) == 150
+        assert validate_reason(reason) is None
+
+    def test_exactly_200_chars(self):
+        reason = "Jazz trio in Berlin on 20 Oct: fits" + " " * (200 - 35)
+        reason = reason[:200]
         assert validate_reason(reason) is None
 
 
@@ -327,7 +334,7 @@ class TestRepairLoop:
         from app.services.judge import judge_event, Verdict
 
         model = _MockModel([
-            {"score": 80, "reason": "x" * 141, "is_event": True},  # too long
+            {"score": 80, "reason": "x" * 201, "is_event": True},  # too long
             {"score": 80, "reason": "jazz in Berlin on Oct 20", "is_event": True},
         ])
 
@@ -335,7 +342,31 @@ class TestRepairLoop:
 
         assert isinstance(result, Verdict)
         assert result.repaired
-        assert len(result.reason) <= 140
+        assert len(result.reason) <= 200
         # Verify assistant turn in repair
         repair = model._calls[1]["repair_messages"]
         assert repair[0]["role"] == "assistant"
+
+    def test_long_reason_after_schema_repair_gets_its_own_retry(self, monkeypatch):
+        """Dev 2026-10-25 12:54:56, run 74f43005: the schema repair named only the missing
+        is_event, the model kept its over-long reason, and the reason retry was skipped
+        because `repaired` was already True, so the event ended as JudgeError, unscored."""
+        monkeypatch.setenv("FAKE_NOW", "2026-10-18T12:00:00+02:00")
+        from app.services.judge import judge_event, Verdict
+
+        long_reason = ("In London on 28 October, so place and date fit, but this is an economics education "
+                       "conference where AI is only one mentioned subtopic, not an AI-focused event, "
+                       "so it does not really match what you asked for.")
+        assert len(long_reason) > 200
+        model = _MockModel([
+            {"score": 55, "reason": long_reason},                    # no is_event, reason too long
+            {"score": 55, "reason": long_reason, "is_event": True},  # schema repaired, reason unchanged
+            {"score": 55, "reason": "London, 28 Oct; economics conference, AI only a subtopic", "is_event": True},
+        ])
+
+        result = judge_event(_make_event(), model=model, **_JUDGE_KW)
+
+        assert isinstance(result, Verdict), getattr(result, "error", result)
+        assert result.score == 55
+        assert len(model._calls) == 3
+        assert "reason too long" in model._calls[2]["repair_messages"][1]["content"]

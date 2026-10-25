@@ -2,7 +2,7 @@
 
 For every event extracted from a page the model classed as `listing`,
 when the event's link differs from source_url, is same-site HTTP(S),
-the pipeline fetches that page and re-extracts the event.  The judge
+the pipeline fetches that page, reduces its HTML to text, and re-extracts the event.  The judge
 receives the record from the detail page (richer: title, time, description).
 
 Fetches run in parallel via the existing EXTRACT_CONCURRENCY pool.
@@ -14,12 +14,14 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import threading
 import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime
+from html.parser import HTMLParser
 from urllib.parse import urlparse
 
 from ..services.extract import (
@@ -43,6 +45,7 @@ DETAIL_FETCH_MAX_BYTES = int(os.environ.get("DETAIL_FETCH_MAX_BYTES", str(2 * 10
 class HopCounts:
     pages_detail_fetched: int = 0
     detail_fetch_errors: int = 0
+    detail_extract_errors: int = 0  # model re-extraction failed; the page itself was fetched
     detail_llm_calls: int = 0
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
@@ -62,8 +65,66 @@ def _needs_hop(ev: ExtractedEvent) -> bool:
     return True
 
 
+_SKIP_TAGS = {"script", "style", "noscript", "svg", "template"}
+_BLOCK_TAGS = {
+    "address", "article", "aside", "blockquote", "br", "dd", "div", "dl", "dt",
+    "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6",
+    "header", "hr", "li", "main", "nav", "ol", "p", "pre", "section", "table",
+    "td", "th", "title", "tr", "ul",
+}
+# meta/microdata whose content often carries the date and time (Musikverein: only there)
+_CONTENT_KEYS = {"description", "og:title", "og:description", "startdate", "enddate", "doortime"}
+
+
+class _TextParser(HTMLParser):
+    """Visible text, <title>, JSON-LD and date-bearing meta; drops tags, scripts, styles, svg."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+        self._skip = 0  # depth inside elements whose content is dropped
+        self._ld = False  # inside <script type="application/ld+json">
+        self._seen: set[str] = set()  # description and og:description are usually equal
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        key = (a.get("name") or a.get("property") or a.get("itemprop") or "").lower()
+        if not self._skip and a.get("content") and key in _CONTENT_KEYS and a["content"] not in self._seen:
+            self._seen.add(a["content"])
+            self.parts.append(f"\n{a['content']}\n")
+        if not self._skip and tag == "time" and a.get("datetime"):
+            self.parts.append(f" {a['datetime']} ")
+        if tag == "script" and (a.get("type") or "").strip().lower() == "application/ld+json":
+            self._ld = True  # script content is CDATA to html.parser: no nested tags
+        elif tag in _SKIP_TAGS:
+            self._skip += 1
+        self.parts.append("\n" if tag in _BLOCK_TAGS else " ")
+
+    def handle_endtag(self, tag):
+        if tag == "script" and self._ld:
+            self._ld = False
+        elif tag in _SKIP_TAGS and self._skip:
+            self._skip -= 1
+        self.parts.append("\n" if tag in _BLOCK_TAGS else " ")
+
+    def handle_data(self, data):
+        if self._ld or not self._skip:
+            self.parts.append(data)
+
+
+def _html_to_text(html: str) -> str:
+    parser = _TextParser()
+    parser.feed(html)
+    parser.close()
+    text = re.sub(r"[^\S\n]+", " ", "".join(parser.parts))
+    return re.sub(r"\s*\n\s*", "\n", text).strip()
+
+
 def _fetch_detail(url: str) -> str | None:
-    """Fetch a detail page.  Returns HTML text or None on failure."""
+    """Fetch a detail page.  Returns its text (not HTML) or None on failure.
+
+    Raw HTML was 98.2% of a London search's input tokens; text is ~5% of the HTML.
+    """
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "sail-event/1.0"})
         with urllib.request.urlopen(req, timeout=DETAIL_FETCH_TIMEOUT) as resp:
@@ -71,6 +132,7 @@ def _fetch_detail(url: str) -> str | None:
                 return None
             ct = resp.headers.get_content_type() if hasattr(resp.headers, "get_content_type") else ""
             if ct and "html" not in ct:
+                logger.warning("detail fetch failed for %s: content type %s", url, ct)
                 return None
             # urlopen's timeout is per socket read; a slow-drip server needs a total deadline
             deadline = time.monotonic() + DETAIL_FETCH_TIMEOUT
@@ -83,10 +145,11 @@ def _fetch_detail(url: str) -> str | None:
                     break
                 body += chunk
             if len(body) > DETAIL_FETCH_MAX_BYTES:
+                logger.warning("detail fetch failed for %s: over %d bytes", url, DETAIL_FETCH_MAX_BYTES)
                 return None
-            return body.decode("utf-8", errors="replace")
+            return _html_to_text(body.decode("utf-8", errors="replace"))
     except Exception as exc:
-        logger.debug("detail fetch failed for %s: %s", url, exc)
+        logger.warning("detail fetch failed for %s: %s", url, exc)
         return None
 
 
@@ -127,8 +190,8 @@ def detail_hop(
 
     def _hop_one(idx: int, ev: ExtractedEvent) -> tuple[int, ExtractedEvent | None]:
         """Fetch detail page and re-extract.  Returns (index, new_event_or_None)."""
-        html = _fetch_detail(ev.link)
-        if html is None:
+        text = _fetch_detail(ev.link)
+        if text is None:
             with counts._lock:
                 counts.detail_fetch_errors += 1
             return idx, None
@@ -143,7 +206,7 @@ def detail_hop(
             "window_end": we,
             "target_city": target_city,
             "target_country": target_country,
-            "content": f"URL: {ev.link}\n\n{html}",
+            "content": f"URL: {ev.link}\n\n{text}",
             "schema": schema_text,
         }
         try:
@@ -157,7 +220,7 @@ def detail_hop(
         except Exception as exc:
             logger.warning("detail extract error for %s: %s", ev.link, exc)
             with counts._lock:
-                counts.detail_fetch_errors += 1
+                counts.detail_extract_errors += 1
             return idx, None
 
         # Pick the best event from the detail page response

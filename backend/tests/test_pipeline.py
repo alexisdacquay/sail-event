@@ -317,17 +317,21 @@ def test_event_has_band_and_source_url(client, auth_headers, _db_session):
         assert e["band"] in ("fits", "mostly fits", "open question", "off topic", "not a fit")
 
 
-# ---------- MAX_EVENTS_PER_RUN cap ----------
+# ---------- no per-search cap ----------
 
 
-def test_max_events_per_run_cap(client, auth_headers, _db_session, monkeypatch):
+def test_every_kept_event_is_judged(client, auth_headers, _db_session, monkeypatch):
+    """MAX_EVENTS_PER_RUN is gone: a leftover env var caps nothing, every kept event is judged."""
     monkeypatch.setenv("MAX_EVENTS_PER_RUN", "2")
     h = auth_headers("capped", "capped")
     client.put("/api/criteria", headers=h, json={
         "text": "jazz in Berlin (Germany) next week (19-21st October 2026)",
     })
     body = client.post("/api/search", headers=h).json()
-    assert body["eventsNew"] <= 2
+    sc = body["stageCounts"]
+    assert "events_capped" not in sc
+    assert body["eventsNew"] == sc["events_to_judge"] > 2
+    assert sc["events_judged"] + sc["judge_errors"] == sc["events_to_judge"]
 
 
 # ---------- #65: Provider exception reaches the API response ----------

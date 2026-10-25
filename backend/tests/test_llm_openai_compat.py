@@ -114,6 +114,11 @@ class TestRequestBody:
                     )
                 assert captured["max_tokens"] == expected
 
+    def test_extract_has_room_for_large_listing_pages(self):
+        """Reasoning plus a 114-event JSON array needed up to 30,109 tokens; 16000 cut it."""
+        body = _make_model()._build_body("extract", "page", {"type": "object"})
+        assert body["max_tokens"] == 64000
+
     def test_bearer_auth_header(self):
         model = _make_model()
         captured_headers = {}
@@ -278,6 +283,28 @@ class TestSchemaValidation:
 
         with patch("app.adapters.llm_openai_compat.urllib.request.urlopen", fake_urlopen):
             with pytest.raises(RuntimeError, match="guard: schema violation: malformed JSON"):
+                model.complete_json(
+                    prompt_name="guard",
+                    prompt_version="v2",
+                    variables={"text": "test"},
+                )
+
+    def test_cut_at_max_tokens_raises_truncated_not_malformed(self):
+        """finish_reason=length: the JSON is cut, not malformed; say so, with the token counts."""
+        model = _make_model()
+
+        def fake_urlopen(req, timeout=None):
+            return _make_response("chat_completions_length.json")
+
+        # The fixture is a real deepseek-flash reply recorded at max_tokens=1500: reasoning ended,
+        # then the JSON content was cut mid-array (the dev bug). max_tokens=16000 below is guard's
+        # budget in this request body; the token counts come from the fixture.
+        with patch("app.adapters.llm_openai_compat.urllib.request.urlopen", fake_urlopen):
+            with pytest.raises(
+                RuntimeError,
+                match=r"guard: output truncated at max_tokens=16000 "
+                r"\(completion_tokens=1500, reasoning_tokens=982\)",
+            ):
                 model.complete_json(
                     prompt_name="guard",
                     prompt_version="v2",

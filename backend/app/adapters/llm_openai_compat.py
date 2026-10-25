@@ -17,9 +17,10 @@ logger = logging.getLogger(__name__)
 
 # max_tokens per prompt name — reasoning models (DeepSeek) spend thinking
 # tokens that count against max_tokens, so all prompts need headroom.
+# extract: large listing pages measured up to 30,109 tokens (DeepSeek's max output is 384K).
 MAX_TOKENS: dict[str, int] = {
     "criteria": 16000,
-    "extract": 16000,
+    "extract": 64000,
     "judge": 16000,
     "guard": 16000,
 }
@@ -106,6 +107,14 @@ class OpenAICompatibleModel:
                 timeout = int(os.environ.get("LLM_TIMEOUT_SECONDS", "120"))
                 with urllib.request.urlopen(req, timeout=timeout) as resp:
                     data = json.loads(resp.read())
+
+                if data["choices"][0].get("finish_reason") == "length":
+                    usage = data.get("usage", {})
+                    raise RuntimeError(
+                        f"{prompt_name}: output truncated at max_tokens={body['max_tokens']} "
+                        f"(completion_tokens={usage.get('completion_tokens')}, reasoning_tokens="
+                        f"{usage.get('completion_tokens_details', {}).get('reasoning_tokens')})"
+                    )
 
                 content = data["choices"][0]["message"].get("content") or ""
                 if not content.strip():

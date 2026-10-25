@@ -72,13 +72,14 @@ def test_parallel_judge_is_faster_and_identical(_db_session, monkeypatch):
         )
         return time.monotonic() - t0, out, _rows(events), progress
 
-    wall, out5, rows5, progress5 = judge(5)
+    wall5, out5, rows5, progress5 = judge(5)
     for e in events:
         e.score = e.score_reason = e.decided_by = None
         e.status = "new"
-    _, out1, rows1, _ = judge(1)
+    wall1, out1, rows1, _ = judge(1)
 
-    assert wall < 20 * 0.1 / 2, f"judging 20 events took {wall:.2f}s"
+    # Relative, not fixed seconds: a loaded machine slows both runs alike; 5 workers ideally take 1/5
+    assert wall5 <= wall1 / 3, f"5 workers took {wall5:.2f}s, 1 worker {wall1:.2f}s"
     assert rows5 == rows1
     assert out5 == out1
     llm_calls, tokens_in, tokens_out, _, _ = out5
@@ -232,10 +233,9 @@ def test_two_concurrent_runs_never_overspend(tmp_path, monkeypatch):
     n = {k: r[2]["events_to_judge"] for k, r in cal_res.items()}
     assert min(n.values()) > 0 and all(r[1] is None for r in cal_res.values())
 
-    # Cap one call below what both runs spend today: the first run's worst case fits, both do not
-    cap = total - 1
-    for k, (calls, _, _) in cal_res.items():
-        assert calls + n[k] <= cap, "precondition: one run's worst case must fit"
+    # Cap at the larger run's worst case (3 calls per event): either run fits alone, both do not
+    cap = max(calls + 2 * n[k] for k, (calls, _, _) in cal_res.items())
+    assert total + 2 * sum(n.values()) > cap, "precondition: both worst cases must not fit"
     monkeypatch.setenv("LLM_DAILY_CALLS", str(cap))
 
     Session = _file_db(tmp_path / "race.db")

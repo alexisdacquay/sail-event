@@ -57,7 +57,7 @@ One Alembic migration `backend/alembic/versions/<rev>_search_v2.py`, first issue
 | events | extraction_confidence | Float | yes | 0–1 |
 | events | judge_model | String | yes | renamed from `scorer_model` (`op.alter_column(new_column_name=...)`) |
 | events | judge_version | String(16) | yes | e.g. `judge_v2` |
-| runs | stage_counts | Text | yes | JSON: `queries_planned, results_fetched, results_known, pages_content_pass, events_extracted, pages_detail_fetched, detail_fetch_errors, filtered_no_date, filtered_no_time, filtered_incomplete, filtered_past, filtered_date, filtered_place, filtered_non_event, filtered_duplicate, events_judged, accepted, rejected, queued, search_errors, extract_errors, judge_errors` |
+| runs | stage_counts | Text | yes | JSON: `queries_planned, results_fetched, results_known, pages_content_pass, events_extracted, pages_detail_fetched, detail_fetch_errors, detail_extract_errors, filtered_no_date, filtered_no_time, filtered_incomplete, filtered_past, filtered_date, filtered_place, filtered_non_event, filtered_duplicate, events_judged, accepted, rejected, queued, search_errors, extract_errors, judge_errors` |
 | runs | search_calls | Integer | no, default 0 | credits since #77 |
 | runs | llm_calls | Integer | no, default 0 | |
 | runs | llm_tokens_in | Integer | no, default 0 | 0 when the API returns no usage |
@@ -134,7 +134,6 @@ class LanguageModel(Protocol):
 | `FAKE_NOW` | CI, e2e, compose, dev service | ISO-8601 instant; `2026-10-18T12:00:00+02:00` everywhere fixtures run; unset in prod |
 | `MAX_QUERIES_PER_RUN` | `.env.example` | 6 manual; scheduled runs use `MAX_QUERIES_SCHEDULED` = 2 |
 | `MAX_RESULTS_PER_QUERY` | `.env.example` | 6 |
-| `MAX_EVENTS_PER_RUN` | existing | 50 |
 | `SEARCH_DAILY_CALLS`, `LLM_DAILY_CALLS` | `.env.example` | 600, 5000 (sized for 10 users, §8) |
 | `SEARCH_NOW_PER_HOUR` | `.env.example` | 6 per user |
 | `GUARDRAIL`, `LAKERA_API_KEY` | Render, `.env.example` | `lakera` + key in prod (key already on Render); `none` in dev and CI (§11) |
@@ -201,7 +200,7 @@ Prompt content rules (own your prompts: the `.md` is the whole instruction, no t
 - `judge_v2.md`: role, the rubric table from spec §7 verbatim including the one price rule (price unknown with a stated budget → 70–89; no budget → no effect), the sentence pattern and the example sentence, "write the sentence in {input_language}", "write to the user: your dates, your budget", "flags are facts, the score is your judgement", three few-shot examples from golden set B with full output: E1 → 94, `Jazz trio at A-Trane in Berlin on Tue 20 Oct, 18 EUR: fits your dates and topic` flags place/date/topic yes, budget unknown (no budget stated); E20 → 12, `Techno night at Berghain in Berlin on 20 Oct: right place and dates, not jazz`, topic no; E4 → 78, `Jazz vocal workshop in Berlin on 21 Oct: fits your dates and topic, a workshop rather than a concert`. E1, E4 and E20 are therefore not CI judge rows (§10).
 - `guard_v2.md`: §11.
 
-Code after the judge (`judge.py`): apply the caps table from spec §7 to `score`; `is_event = false` → score 0 and the event is dropped with `filtered_non_event`; `reason` checked for length ≤ 140 and the pattern (contains a date token and a place token, ends without a URL, no markup); a failing reason → `judge_errors`, event stays `new`.
+Code after the judge (`judge.py`): apply the caps table from spec §7 to `score`; `is_event = false` → score 0 and the event is dropped with `filtered_non_event`; `reason` checked for length ≤ 200 (the prompt asks for 140; owner decision, 2026-10-25) and the pattern (contains a date token and a place token, ends without a URL, no markup); a failing reason → `judge_errors`, event stays `new`.
 
 ## 5. Query rule (revised 2026-10-18, owner decision)
 
@@ -239,7 +238,7 @@ Consequences: `planner.py`, `PlannedQuery`, the local-language month and event-w
 - `budget.py`: `daily_used(db, column) = SUM(runs.<column>) WHERE started_at >= today 00:00 UTC`; checked before search (`search_credits_used + credits_per_call > SEARCH_DAILY_CALLS`) and before each model call (`llm_calls + 1 > LLM_DAILY_CALLS`). `SEARCH_DAILY_CALLS` counts credits, not calls (#77): advanced = `SEARCH_CREDITS_ADVANCED` (default 2, verified at docs.tavily.com/documentation/api-credits), basic = 1; `runs.search_calls` stores credits; scheduled runs default to basic depth (`TAVILY_SEARCH_DEPTH_SCHEDULED`), manual runs keep advanced.
 - On breach: the stage stops, `Run.stopped_at_stage` set, `Run.error = "budget: search"` or `"budget: llm"`, run finishes normally, HTTP 200 with the report; events already inserted as `new` wait for the next run's recovery.
 - Cap sizing, assumption 10 users (#77: 1 query per run, basic on schedule, advanced on manual): scheduled 24 runs × 10 users × 1 credit = 240 credits/day; ~10 manual runs × 2 credits = 20 credits/day; 4–16 model calls per scheduled run → 960–3 840 model calls/day plus ~270 from manual. Totals ~260 credits, ~4 100 model calls. Defaults 600 / 5 000. Tavily plan: ~1 500 searches per user per month. At 50 users multiply by five and raise the caps, or the day ends early.
-- Per-run caps: `MAX_QUERIES_*`, `MAX_RESULTS_PER_QUERY`, extraction pass 1 ≤ queries, pass 2 ≤ results after known-page removal, judge ≤ `MAX_EVENTS_PER_RUN` (the rest stay `new`, recovered next run).
+- Per-run caps: `MAX_QUERIES_*`, `MAX_RESULTS_PER_QUERY`, extraction pass 1 ≤ queries, pass 2 ≤ results after known-page removal, judge: every event that passes the filters, no per-search cap (the daily model-call budget still applies; what does not fit stays `new`).
 - Backoff: provider or model HTTP 429/5xx → one retry after 2 s; second failure skips that item (query, page or event) and counts `search_errors` / `extract_errors` / `judge_errors`; a judge failure leaves the event `new` and the run completes.
 - "Search now" (`POST /api/search`): `SEARCH_NOW_PER_HOUR` = 6 per user, counted from `runs` with `trigger = 'manual'` in the last hour; the 7th gets 429 with `Retry-After` = seconds until the oldest of the six is an hour old.
 - Hourly job (`POST /api/search/all`): the endpoint selects users with criteria, skips any whose latest run started < 55 minutes ago and has no `finished_at`, orders the rest by oldest last run (never-run first), caps at `MAX_SCHEDULED_USERS`, writes a Run row per queued user at enqueue time (`started_at = now`, `finished_at = NULL`, `trigger = "scheduled"`) so the 55-minute skip sees queued-but-not-yet-started users (#73), enqueues one `run_pipeline` per user on FastAPI `BackgroundTasks` (passing the run id so the pipeline reuses the row), and returns 202 `{usersQueued, usersSkipped}` within seconds. `hourly-search.yml` accepts 202 and prints `usersQueued`. Background runs execute sequentially in the worker; the 55-minute rule stops the next hour's job from stacking a second run on a user still running.
@@ -338,7 +337,7 @@ Issues in dependency order; each one engineer session; new files only until F2.
 
 ### Issue F1 — Judge, caps, golden B verdicts
 1. `judge_v2.md` + schema with the rubric, the one price rule, "write the sentence in {input_language}", few-shot E1/E4/E20; `judge.py` applies the caps table; `is_event=false` → dropped.
-2. Reason check: ≤ 140 characters, date and place tokens present, no URL, no markup; failure → error result, not an exception (the caller counts `judge_errors`).
+2. Reason check: ≤ 200 characters (the prompt asks for 140), date and place tokens present, no URL, no markup; failure → error result, not an exception (the caller counts `judge_errors`).
 3. Band word function for spec §8 (`fits`, `mostly fits`, `open question`, `off topic`, `not a fit`) exposed for the API.
 4. Golden set B judge rows E2, E3, E21, E22 pass with recorded verdicts; E1/E4/E20 excluded by name in the test.
 5. Not wired into the pipeline yet; all existing tests still pass.
