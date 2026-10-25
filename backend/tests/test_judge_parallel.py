@@ -232,10 +232,9 @@ def test_two_concurrent_runs_never_overspend(tmp_path, monkeypatch):
     n = {k: r[2]["events_to_judge"] for k, r in cal_res.items()}
     assert min(n.values()) > 0 and all(r[1] is None for r in cal_res.values())
 
-    # Cap one call below what both runs spend today: the first run's worst case fits, both do not
-    cap = total - 1
-    for k, (calls, _, _) in cal_res.items():
-        assert calls + n[k] <= cap, "precondition: one run's worst case must fit"
+    # Cap at the larger run's worst case (3 calls per event): either run fits alone, both do not
+    cap = max(calls + 2 * n[k] for k, (calls, _, _) in cal_res.items())
+    assert total + 2 * sum(n.values()) > cap, "precondition: both worst cases must not fit"
     monkeypatch.setenv("LLM_DAILY_CALLS", str(cap))
 
     Session = _file_db(tmp_path / "race.db")

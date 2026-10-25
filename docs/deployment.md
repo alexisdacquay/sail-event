@@ -34,7 +34,7 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `REGISTER_RATE_LIMIT_PER_HOUR` | `5` — successful registrations per IP per hour |
 | `REGISTRATION_CODE` | optional — invite code for registration; unset = open |
 | `SEARCH_DAILY_CALLS` | `600` — daily search-credit budget across all users (advanced = 2 credits, basic = 1) |
-| `LLM_DAILY_CALLS` | `5000` — daily LLM-call budget across all users; the judge reserves 2 calls per event before it starts |
+| `LLM_DAILY_CALLS` | `5000` — daily LLM-call budget across all users; the judge reserves 3 calls per event before it starts |
 | `EXTRACT_CONCURRENCY` | `5` — page reads in parallel per run |
 | `JUDGE_CONCURRENCY` | `5` — judge calls in parallel per run; `1` = sequential |
 | `LLM_USD_PER_1K_IN` | cost per 1 000 input tokens; set all three price vars to enable `cost_usd` |

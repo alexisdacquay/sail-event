@@ -183,36 +183,34 @@ def _judge(
             capped=False, repaired=repaired,
         )
 
-    # Reason validation — retry once with assistant turn, then error
+    # Reason validation — retry once with assistant turn, then error.
+    # Runs even after a schema repair: that repair message names only the schema error.
     reason_err = validate_reason(reason)
     if reason_err is not None:
-        if not repaired:
-            bad_json = json.dumps(response)
-            repair_msg = (
-                f"Your answer was rejected: {reason_err}. "
-                f"Answer again with exactly the fields: {_REPAIR_FIELDS}."
+        bad_json = json.dumps(response)
+        repair_msg = (
+            f"Your answer was rejected: {reason_err}. "
+            f"Answer again with exactly the fields: {_REPAIR_FIELDS}."
+        )
+        try:
+            response, usage = model.complete_json(
+                prompt_name=PROMPT_NAME,
+                prompt_version=PROMPT_VERSION,
+                variables=variables,
+                repair_messages=[
+                    {"role": "assistant", "content": bad_json},
+                    {"role": "user", "content": repair_msg},
+                ],
             )
-            try:
-                response, usage = model.complete_json(
-                    prompt_name=PROMPT_NAME,
-                    prompt_version=PROMPT_VERSION,
-                    variables=variables,
-                    repair_messages=[
-                        {"role": "assistant", "content": bad_json},
-                        {"role": "user", "content": repair_msg},
-                    ],
-                )
-            except Exception as exc:
-                return JudgeError(event=event, error=f"model error: {exc}")
-            reason = response.get("reason", "")
-            reason_err2 = validate_reason(reason)
-            if reason_err2 is not None:
-                return JudgeError(event=event, error=f"reason check: {reason_err2}")
-            raw_score = response.get("score", 0)
-            is_event = response.get("is_event", True)
-            repaired = True
-        else:
-            return JudgeError(event=event, error=f"reason check: {reason_err}")
+        except Exception as exc:
+            return JudgeError(event=event, error=f"model error: {exc}")
+        reason = response.get("reason", "")
+        reason_err2 = validate_reason(reason)
+        if reason_err2 is not None:
+            return JudgeError(event=event, error=f"reason check: {reason_err2}")
+        raw_score = response.get("score", 0)
+        is_event = response.get("is_event", True)
+        repaired = True
 
     return Verdict(
         score=raw_score, reason=reason, fit={}, is_event=True,

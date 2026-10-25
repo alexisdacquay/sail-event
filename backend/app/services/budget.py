@@ -54,7 +54,7 @@ _reserve_lock = threading.Lock()
 
 
 def reserve_llm_calls(db: Session, run: orm.Run, spent: int, n_events: int) -> int:
-    """#142: reserve the judge's worst case (2 calls per event) on the run row.
+    """#142: reserve the judge's worst case (3 calls per event: first, schema repair, reason retry) on the run row.
 
     Writes ``spent`` + the reservation to ``run.llm_calls`` and commits, so
     concurrent runs see it.  Returns how many events fit; _finalise_run
@@ -65,7 +65,7 @@ def reserve_llm_calls(db: Session, run: orm.Run, spent: int, n_events: int) -> i
         run.llm_calls = spent
         db.flush()
         remaining = cap - daily_used(db, "llm_calls")
-        fit = max(0, min(n_events, remaining // 2))
-        run.llm_calls = spent + 2 * fit
+        fit = max(0, min(n_events, remaining // 3))
+        run.llm_calls = spent + 3 * fit
         db.commit()
     return fit
