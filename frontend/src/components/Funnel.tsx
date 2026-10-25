@@ -1,7 +1,8 @@
 import { cn } from 'cn'
 
 /** One definition shared with the chronology and the backend: found = judged + notJudged (drawn as "screened out"),
- *  judged = accepted + queued + rejected; filtered_non_event are pages, not events. */
+ *  judged = accepted + queued + rejected + judgeErrors (drawn as "not scored yet": the event stays `new` and the
+ *  next search's recovery judges it); filtered_non_event are pages, not events. */
 export function funnelNumbers(counts: Record<string, number>) {
   const c = (k: string) => counts[k] ?? 0
   const pages = c('results_fetched')
@@ -19,7 +20,7 @@ export function funnelNumbers(counts: Record<string, number>) {
     detailFetchErrors: c('detail_fetch_errors'),
     found: c('events_extracted'),
     nonEvent: c('filtered_non_event'),
-    judged: accepted + queued + rejected,
+    judged: accepted + queued + rejected + judgeErrors,
     accepted,
     queued,
     rejected,
@@ -34,7 +35,7 @@ export function funnelNumbers(counts: Record<string, number>) {
     place,
     incomplete,
     judgeErrors,
-    notJudged: noDate + noTime + past + duplicate + date + place + incomplete + judgeErrors,
+    notJudged: noDate + noTime + past + duplicate + date + place + incomplete,
   }
 }
 
@@ -117,7 +118,7 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
       key: 'notJudged', count: n.notJudged, fill: '#64748b', ribbonFill: '#94a3b8', ribbonOpacity: 0.4, label: `${n.notJudged} screened out`,
       subs: wrap([
         ...nz(n.past, 'already over'), ...nz(n.duplicate, 'duplicate', 'duplicates'), ...nz(n.noTime, 'no start time'), ...nz(n.noDate, 'no start date'),
-        ...nz(n.date, 'wrong dates'), ...nz(n.place, 'wrong place'), ...nz(n.incomplete, 'missing details'), ...nz(n.judgeErrors, 'judge error', 'judge errors'),
+        ...nz(n.date, 'wrong dates'), ...nz(n.place, 'wrong place'), ...nz(n.incomplete, 'missing details'),
       ], CHARS[1]),
     },
     { key: 'notAccounted', count: notAccounted, fill: '#64748b', ribbonFill: '#94a3b8', ribbonOpacity: 0.4, label: `${notAccounted} not accounted`, subs: ['run before 22 Oct, counters added later'] },
@@ -130,6 +131,8 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
       key: 'rejected', count: n.rejected, fill: '#dc2626', ribbonFill: '#ef4444', ribbonOpacity: 0.6, label: `${n.rejected} rejected`,
       subs: wrap([...nz(n.rejectedDatePlace, 'wrong date or place'), ...nz(n.rejectedOffTopic, 'off topic'), ...nz(n.rejectedOther, 'below your threshold')], CHARS[2]),
     },
+    // owner 2026-10-25: neutral, no verdict yet; the slate of "screened out"
+    { key: 'notScored', count: n.judgeErrors, fill: '#64748b', ribbonFill: '#94a3b8', ribbonOpacity: 0.4, label: `${n.judgeErrors} not scored yet`, subs: [] },
   ], 2, s, judged ? judged.y + judged.h / 2 : centre)
 
   // ribbons leave their source node top to bottom in the order of the target column
@@ -152,7 +155,7 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
     <svg
       data-testid="funnel"
       role="img"
-      aria-label={`Funnel: ${n.found} events found, ${n.notJudged} screened out, ${n.judged} judged: ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} rejected`}
+      aria-label={`Funnel: ${n.found} events found, ${n.notJudged} screened out, ${n.judged} judged: ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} rejected${n.judgeErrors > 0 ? `, ${n.judgeErrors} not scored yet` : ''}`}
       viewBox={`0 0 ${width} ${height}`}
       className={cn('w-full font-mono text-[10px]', className)}
     >

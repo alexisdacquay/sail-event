@@ -383,12 +383,26 @@ describe('stageLines', () => {
       'Searched the web, 22 pages',
       'Read 22 pages, found 10 events',
       'Skipped 12 pages that were not events',
-      'Screened out: 2',
-      'Judged 8 · 3 in calendar, 1 to review, 4 rejected',
+      'Screened out: 1',
+      'Judged 9 · 3 in calendar, 1 to review, 4 rejected, 1 not scored yet',
     ])
     const num = (re: RegExp) => Number(lines.join('\n').match(re)![1])
     expect(num(/found (\d+) events/)).toBe(num(/Screened out: (\d+)/) + num(/Judged (\d+)/))
-    expect(num(/Judged (\d+)/)).toBe(num(/(\d+) in calendar/) + num(/(\d+) to review/) + num(/(\d+) rejected/))
+    expect(num(/Judged (\d+)/)).toBe(num(/(\d+) in calendar/) + num(/(\d+) to review/) + num(/(\d+) rejected/) + num(/(\d+) not scored yet/))
+  })
+
+  // dev 2026-10-25 "Screened out: 307 (44 detail fetch errors)": a failed event-page fetch keeps the listing's
+  // record and goes on to the screen; it is a page count of the event-page stage, not a screening reason
+  it('reports failed event-page fetches on the event-page line only, out of every page it opened', () => {
+    const counts = { ...finished.stageCounts, events_extracted: 329, filtered_no_time: 298, pages_detail_fetched: 229, detail_fetch_errors: 44 }
+    const lines = stageLines({ ...finished, stageCounts: counts })
+    expect(lines[2]).toBe('Opened 273 event pages, 44 failed')
+    expect(lines[3]).toBe('Screened out: 307') // 4 already over + 2 wrong place + 3 duplicates + 298 no start time
+    expect(lines.join('\n')).not.toMatch(/fetch error|detail/)
+    // every page failed: the line still says so
+    const allFailed = stageLines({ ...finished, stageCounts: { ...finished.stageCounts, detail_fetch_errors: 5 } })
+    expect(allFailed[2]).toBe('Opened 5 event pages, 5 failed')
+    expect(stageLines({ ...finished, stageCounts: { ...counts, detail_fetch_errors: 0 } })[2]).toBe('Opened 229 event pages')
   })
 
   it('says how many pages were already known from earlier runs', () => {
