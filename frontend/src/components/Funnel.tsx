@@ -1,6 +1,6 @@
 import { cn } from 'cn'
 
-/** One definition shared with the chronology and the backend: found = judged + notJudged,
+/** One definition shared with the chronology and the backend: found = judged + notJudged (drawn as "screened out"),
  *  judged = accepted + queued + rejected; filtered_non_event are pages, not events. */
 export function funnelNumbers(counts: Record<string, number>) {
   const c = (k: string) => counts[k] ?? 0
@@ -64,7 +64,7 @@ function ribbon(x0: number, yL0: number, yL1: number, x1: number, yR0: number, y
   return `M${x0} ${yL0} C${cx} ${yL0} ${cx} ${yR0} ${x1} ${yR0} L${x1} ${yR1} C${cx} ${yR1} ${cx} ${yL1} ${x0} ${yL1} Z`
 }
 
-/** "5 no date · 9 duplicate · …" cut into lines no wider than the gap between two columns. */
+/** "4 already over · 9 duplicates · …" cut into lines no wider than the gap between two columns. */
 function wrap(parts: string[], chars: number): string[] {
   const lines: string[] = []
   for (const p of parts) {
@@ -97,7 +97,7 @@ function stack(nodes: Node[], col: number, s: number, centre: number): Placed[] 
 export function Funnel({ counts, countsVersion = 3, className }: { counts: Record<string, number>; countsVersion?: number; className?: string }) {
   const n = funnelNumbers(counts)
   if (n.found === 0) return null
-  const nz = (count: number, word: string) => (count > 0 ? [`${count} ${word}`] : [])
+  const nz = (count: number, word: string, plural = word) => (count > 0 ? [`${count} ${count === 1 ? word : plural}`] : [])
   const s = HEIGHT / n.found
   const centre = TOP + HEIGHT / 2
   // an older run stored fewer counters: the events they would have counted are drawn, not dropped or shown as 0
@@ -113,10 +113,11 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
   const col2 = stack([
     { key: 'judged', count: n.judged, fill: '#2563eb', ribbonFill: '#3b82f6', ribbonOpacity: 0.55, label: `${n.judged} judged`, subs: [] },
     {
-      key: 'notJudged', count: n.notJudged, fill: '#64748b', ribbonFill: '#94a3b8', ribbonOpacity: 0.4, label: `${n.notJudged} not judged`,
+      // owner 2026-10-25: a gatekeeper screens these out by fixed rules before the judge
+      key: 'notJudged', count: n.notJudged, fill: '#64748b', ribbonFill: '#94a3b8', ribbonOpacity: 0.4, label: `${n.notJudged} screened out`,
       subs: wrap([
-        ...nz(n.noDate, 'no date'), ...nz(n.noTime, 'no time'), ...nz(n.past, 'past'), ...nz(n.duplicate, 'duplicate'), ...nz(n.date, 'date'),
-        ...nz(n.place, 'place'), ...nz(n.incomplete, 'incomplete'), ...nz(n.judgeErrors, 'errors'),
+        ...nz(n.past, 'already over'), ...nz(n.duplicate, 'duplicate', 'duplicates'), ...nz(n.noTime, 'no start time'), ...nz(n.noDate, 'no start date'),
+        ...nz(n.date, 'wrong dates'), ...nz(n.place, 'wrong place'), ...nz(n.incomplete, 'missing details'), ...nz(n.judgeErrors, 'judge error', 'judge errors'),
       ], CHARS[1]),
     },
     { key: 'notAccounted', count: notAccounted, fill: '#64748b', ribbonFill: '#94a3b8', ribbonOpacity: 0.4, label: `${notAccounted} not accounted`, subs: ['run before 22 Oct, counters added later'] },
@@ -126,8 +127,8 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
     { key: 'accepted', count: n.accepted, fill: '#059669', ribbonFill: '#10b981', ribbonOpacity: 0.75, label: `${n.accepted} in calendar`, subs: [] },
     { key: 'queued', count: n.queued, fill: '#d97706', ribbonFill: '#f59e0b', ribbonOpacity: 0.85, label: `${n.queued} to review`, subs: [] },
     {
-      key: 'rejected', count: n.rejected, fill: '#dc2626', ribbonFill: '#ef4444', ribbonOpacity: 0.6, label: `${n.rejected} out`,
-      subs: wrap([...nz(n.rejectedDatePlace, 'date or place'), ...nz(n.rejectedOffTopic, 'topic'), ...nz(n.rejectedOther, 'other')], CHARS[2]),
+      key: 'rejected', count: n.rejected, fill: '#dc2626', ribbonFill: '#ef4444', ribbonOpacity: 0.6, label: `${n.rejected} rejected`,
+      subs: wrap([...nz(n.rejectedDatePlace, 'wrong date or place'), ...nz(n.rejectedOffTopic, 'off topic'), ...nz(n.rejectedOther, 'below your threshold')], CHARS[2]),
     },
   ], 2, s, judged ? judged.y + judged.h / 2 : centre)
 
@@ -151,7 +152,7 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
     <svg
       data-testid="funnel"
       role="img"
-      aria-label={`Funnel: ${n.found} events found, ${n.judged} judged: ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} out`}
+      aria-label={`Funnel: ${n.found} events found, ${n.notJudged} screened out, ${n.judged} judged: ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} rejected`}
       viewBox={`0 0 ${width} ${height}`}
       className={cn('w-full font-mono text-[10px]', className)}
     >

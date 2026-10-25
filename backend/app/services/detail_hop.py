@@ -162,10 +162,12 @@ def detail_hop(
     window_end: datetime,
     target_city: str,
     target_country: str,
+    on_page_done=None,
 ) -> tuple[list[ExtractedEvent], HopCounts]:
     """Replace listing events with their detail-page re-extraction where possible.
 
     Events that don't need a hop, or whose hop fails, pass through unchanged.
+    on_page_done(done, total) is called once with 0 before the first page and after each page.
     """
     counts = HopCounts()
 
@@ -262,9 +264,13 @@ def detail_hop(
     concurrency = min(EXTRACT_CONCURRENCY, len(to_hop))
     with ThreadPoolExecutor(max_workers=concurrency) as pool:
         futures = {pool.submit(_hop_one, idx, ev): idx for idx, ev in to_hop}
-        for future in as_completed(futures):
+        if on_page_done:
+            on_page_done(0, len(to_hop))
+        for done, future in enumerate(as_completed(futures), 1):
             idx, new_ev = future.result()
             if new_ev is not None:
                 result_events[idx] = new_ev
+            if on_page_done:
+                on_page_done(done, len(to_hop))
 
     return result_events, counts
