@@ -94,6 +94,7 @@ class SearchProvider(Protocol):
 | Implementation | File | Request | Mapping |
 |---|---|---|---|
 | `TavilyProvider` | `adapters/search_tavily_v2.py` (new file; the old `search_tavily.py` stays until the swap) | POST `https://api.tavily.com/search` body `{query, search_depth: "basic", max_results, country: <name>, language, include_raw_content: true}`. Tavily's `country` takes a fixed list of country **names** (`"germany"`) and is a ranking boost, not a filter: a 12-entry ISO-2 → name table lives in the adapter; unknown code → parameter omitted. `language` sent for the local-language queries. Tavily does have `time_range`, `start_date`/`end_date`; they are not sent by choice (listing pages are old pages updated often). | `results[].url/title/content/raw_content/published_date` |
+| `ExaProvider` (default since 2026-10-25, owner) | `adapters/search_exa.py` | POST `https://api.exa.ai/search`, header `x-api-key`, body `{query, numResults: max_results, type: "auto", contents: {text: true, maxAgeHours: 0}}`; `maxAgeHours: 0` always crawls the live page (Tavily served an 11 Sep copy of a page updated since); 20 results take 7–13 s, timeout 60 s | `results[].url/title/text/publishedDate`; `text` → raw_content; snippet empty (Exa sends none); `publishedDate` often absent |
 | `BraveProvider` | `adapters/search_brave.py` (new) | GET `https://api.search.brave.com/res/v1/web/search?q&country=DE&search_lang&count&extra_snippets=true`, header `X-Subscription-Token`; `freshness=YYYY-MM-DDtoYYYY-MM-DD` supported but not sent, same reason | `web.results[].url/title/description + extra_snippets joined` as snippet; `raw_content` null; `page_age` → published_at, best-effort (unverified field, the contract test tolerates its absence) |
 | `FixtureProvider` | `adapters/fixture_v2.py` (new; old `fixture.py` stays until the swap) | reads `adapters/fixtures_v2.json` | a list of `SearchResult`s shaped like the golden set B pages, dated inside the fixed clock's window (§10) |
 
@@ -126,8 +127,8 @@ class LanguageModel(Protocol):
 
 | Variable | Where | Values / default |
 |---|---|---|
-| `SEARCH_PROVIDER` | Render, `.env.example` | `fixture` (default outside prod), `tavily`, `brave` |
-| `TAVILY_API_KEY`, `BRAVE_API_KEY` | Render only | required by the selected provider; startup fails without it |
+| `SEARCH_PROVIDER` | Render, `.env.example` | `fixture` (default outside prod), `exa`, `tavily`, `brave` |
+| `EXA_API_KEY`, `TAVILY_API_KEY`, `BRAVE_API_KEY` | Render only | required by the selected provider; startup fails without it |
 | `LLM_PROVIDER` | Render, `.env.example` | `fake` (default outside prod), `openai_compatible` |
 | `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` | Render; `.env.example` shows the three with DeepSeek values | `https://api.deepseek.com`, key, `deepseek-flash`; all three required for `openai_compatible` |
 | `LLM_JSON_MODE` | Render, `.env.example` | `json_object` (DeepSeek) or `json_schema`; required for `openai_compatible` |
