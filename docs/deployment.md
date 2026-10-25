@@ -18,8 +18,8 @@ Hourly search runs against prod from GitHub Actions `hourly-search.yml` (see `do
 | `PORT` | `8000` |
 | `JWT_SECRET` | random |
 | `SEARCH_ALL_API_KEY` | random; the same value is the GitHub Actions secret `SEARCH_ALL_API_KEY` |
-| `SEARCH_PROVIDER`, `TAVILY_API_KEY` | `tavily` + key for real web search; unset = fixtures |
-| `TAVILY_SEARCH_DEPTH` | `advanced` (default) or `basic`; manual runs |
+| `SEARCH_PROVIDER`, `EXA_API_KEY` | `exa` + key for real web search (live page text, no cached copies); `tavily` + `TAVILY_API_KEY` still works; unset = fixtures |
+| `TAVILY_SEARCH_DEPTH` | `advanced` (default) or `basic`; manual runs; Tavily only, but it still sets the budget credits per call for every provider |
 | `TAVILY_SEARCH_DEPTH_SCHEDULED` | `basic` (default); hourly scheduled runs |
 | `SEARCH_CREDITS_ADVANCED` | `2` — credits per advanced call (basic = 1; verified at docs.tavily.com/documentation/api-credits) |
 | `MAX_RESULTS_PER_QUERY` | `20` (default, Tavily max) |

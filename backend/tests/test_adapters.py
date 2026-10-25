@@ -17,6 +17,13 @@ class TestFactories:
         from app.adapters.fixture import FixtureProvider
         assert isinstance(provider, FixtureProvider)
 
+    def test_get_search_provider_exa(self, monkeypatch):
+        monkeypatch.setenv("SEARCH_PROVIDER", "exa")
+        monkeypatch.setenv("EXA_API_KEY", "test-key")
+        provider = get_search_provider()
+        from app.adapters.search_exa import ExaProvider
+        assert isinstance(provider, ExaProvider)
+
     def test_get_search_provider_raises_on_unknown(self, monkeypatch):
         monkeypatch.setenv("SEARCH_PROVIDER", "unknown")
         with pytest.raises(ValueError, match="unknown"):
