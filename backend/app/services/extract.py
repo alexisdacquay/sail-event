@@ -10,6 +10,7 @@ The guard runs only on criteria text at save; pages are never guarded.
 
 from __future__ import annotations
 
+import contextvars
 import json
 import logging
 import os
@@ -180,7 +181,8 @@ def extract_events(
                     return r, None
 
         with ThreadPoolExecutor(max_workers=concurrency) as pool:
-            futures = {pool.submit(_read_one_page, r): r for r in with_content}
+            # #142: copy the OTel context per task so page spans keep their parent
+            futures = {pool.submit(contextvars.copy_context().run, _read_one_page, r): r for r in with_content}
             for future in as_completed(futures):
                 r, page_events = future.result()
                 with counts._lock:

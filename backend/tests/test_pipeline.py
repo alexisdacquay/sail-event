@@ -500,15 +500,22 @@ def test_events_to_judge_in_stage_counts_during_judge(_db_session):
 # ---------- #108: rejected bands in stage_counts ----------
 
 
+# The 11 fixture events in judge order (source_url, date_time, title, id)
+_FIXTURE_TITLES = [
+    "Open-air jazz", "Outdoor Photography Meetup", "Jazz vocal workshop", "Jazz Trio at A-Trane",
+    "Techno night at Berghain", "Sunday Jazz Brunch", "Open-air Jazz in Mauerpark",
+    "Jazz Under the Stars", "Jazzfest Berlin", "Jazz in Bern", "Jazz night Potsdam",
+]
+
+
 def _cycling_judge(scores):
-    """judge_event stand-in that hands out *scores* in turn."""
-    from itertools import cycle
+    """judge_event stand-in: *scores* in turn over the fixture titles, keyed by title (#142: thread order cannot change them)."""
     from app.services.judge import Verdict
 
-    it = cycle(scores)
+    by_title = {t: scores[i % len(scores)] for i, t in enumerate(_FIXTURE_TITLES)}
 
     def _judge(event, **kwargs):
-        return Verdict(score=next(it), reason="test", fit={}, is_event=True, capped=False)
+        return Verdict(score=by_title[event.title], reason="test", fit={}, is_event=True, capped=False)
 
     return _judge
 
@@ -522,8 +529,9 @@ def _assert_bands(sc: dict) -> None:
     assert sc["rejected_date_place"] + sc["rejected_off_topic"] + sc["rejected_other"] == sc["rejected"]
 
 
-def test_rejected_bands_sum_to_rejected(client, auth_headers, _db_session):
+def test_rejected_bands_sum_to_rejected(client, auth_headers, _db_session, monkeypatch):
     """Scores 5/20/40/95 over the fixture events: cycling; 40 is rejected (lower threshold 40)."""
+    monkeypatch.setattr("app.services.pipeline.JUDGE_CONCURRENCY", 5)
     h = auth_headers("demo", "demo")
     with patch("app.services.pipeline.judge_event", side_effect=_cycling_judge([5, 20, 40, 95])):
         body = client.post("/api/search", headers=h).json()
@@ -533,8 +541,9 @@ def test_rejected_bands_sum_to_rejected(client, auth_headers, _db_session):
     _assert_bands(sc)
 
 
-def test_scheduled_run_has_same_rejected_bands(_db_session):
+def test_scheduled_run_has_same_rejected_bands(_db_session, monkeypatch):
     """Hourly runs go through the same run_pipeline, so the bands match the manual run."""
+    monkeypatch.setattr("app.services.pipeline.JUDGE_CONCURRENCY", 5)
     user = _db_session.query(User).filter(User.username == "demo").first()
     with patch("app.services.pipeline.judge_event", side_effect=_cycling_judge([5, 20, 40, 95])):
         run = run_pipeline(user, _db_session, trigger="scheduled")
@@ -585,21 +594,18 @@ def test_early_stop_defaults_no_date_and_pages_with_events(client, auth_headers)
 # ---------- Judge repair counter (#125) ----------
 
 
-def test_judge_repaired_counted_in_stage_counts(client, auth_headers, _db_session):
+def test_judge_repaired_counted_in_stage_counts(client, auth_headers, _db_session, monkeypatch):
     """When judge_event repairs a response, pipeline records judge_repaired in stage_counts."""
     from app.services.judge import Verdict
 
-    repaired_verdict = Verdict(
-        score=80, reason="jazz in Berlin on 20 Oct", fit={},
-        is_event=True, capped=False, repaired=True,
-    )
-
-    call_count = [0]
-    original_judge = None
+    monkeypatch.setattr("app.services.pipeline.JUDGE_CONCURRENCY", 5)
 
     def _fake_judge(event, *, criteria_text, facets, window_start, window_end, user_tz, model):
-        call_count[0] += 1
-        return repaired_verdict
+        # Same verdict for every event: order-free under threads
+        return Verdict(
+            score=80, reason="jazz in Berlin on 20 Oct", fit={},
+            is_event=True, capped=False, repaired=True, calls=2,
+        )
 
     h = auth_headers("demo", "demo")
     with patch("app.services.pipeline.judge_event", side_effect=_fake_judge):
