@@ -1,0 +1,2732 @@
+    <!doctype html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <link rel="stylesheet" href="https://musikverein.at/wp-content/cache/minify/1f53a.css?x87249" media="all" />
+
+                <link rel="preconnect" href="https://spielplan.musikverein.at" crossorigin>
+<link rel="dns-prefetch" href="https://spielplan.musikverein.at">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<meta name='robots' content='index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' />
+    <link rel="preload" href="https://musikverein.at/wp-content/plugins/IDL-Functions/fonts/tiempos-text-web-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://musikverein.at/wp-content/plugins/IDL-Functions/fonts/founders-grotesk-web-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+
+  // Consent schema version — mirrors PHP CCP_CONSENT_VERSION / cookie-banner.js.
+  var CCP_CONSENT_VERSION = 1;
+
+  // ---- CONSENT DEFAULTS ----
+  gtag('consent', 'default', {
+    analytics_storage: 'denied',
+    ad_storage: 'denied',
+    functionality_storage: 'denied',
+    security_storage: 'granted'
+  });
+
+  // ---- read consent from ccp_consent (written by cookie-banner.js) ----
+  function loadCcpConsent(){
+    try {
+      const raw = localStorage.getItem('ccp_consent');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !parsed.timestamp) return null;
+      // invalidate consent stored under an older schema version (numeric compare)
+      if (Number(parsed.version) !== CCP_CONSENT_VERSION) {
+        localStorage.removeItem('ccp_consent');
+        return null;
+      }
+      // expire after 180 days, mirroring cookie-banner.js
+      const age = Date.now() - parsed.timestamp;
+      if (age > 180 * 24 * 60 * 60 * 1000) {
+        localStorage.removeItem('ccp_consent');
+        return null;
+      }
+      return parsed;
+    } catch(e) { return null; }
+  }
+
+  // ---- translate ccp_consent → Google Consent Mode object ----
+  function toConsentMode(c){
+    return {
+      analytics_storage: c.statistics ? 'granted' : 'denied',
+      ad_storage:        c.marketing  ? 'granted' : 'denied'
+    };
+  }
+
+  // ---- GTM loader (only once) ----
+  function loadGTM(){
+    if (window.__GTM_LOADED__) return;
+    window.__GTM_LOADED__ = true;
+
+    (function(w,d,s,l,i){
+      w[l] = w[l] || [];
+      w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'});
+      var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s);
+      j.async = true;
+      j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i;
+      f.parentNode.insertBefore(j, f);
+    })(window, document, 'script', 'dataLayer', 'GTM-5NJZS6M');
+  }
+
+  // ---- apply stored consent on page load ----
+  const stored = loadCcpConsent();
+  const qs = (typeof location !== 'undefined' ? location.search : '') || '';
+  const isPreview = /[?&](gtm_debug|gtm_preview|gtm_auth)=/.test(qs);
+
+  if (stored) {
+    const cm = toConsentMode(stored);
+    gtag('consent', 'update', cm);
+    loadGTM();
+
+    if (stored.statistics) {
+      dataLayer.push({ event: 'consent_analytics_granted' });
+    }
+    if (stored.marketing) {
+      dataLayer.push({ event: 'consent_marketing_granted' });
+    }
+  } else if (isPreview) {
+    // Allow Tag Assistant / Preview to connect without consent state.
+    loadGTM();
+  }
+
+  // -------------------------
+  // Called from cookie-banner.js
+  // -------------------------
+  window.enableAnalytics = function(){
+    gtag('consent', 'update', { analytics_storage: 'granted' });
+    loadGTM();
+    dataLayer.push({ event: 'consent_analytics_granted' });
+  };
+
+  window.enableMarketing = function(){
+    gtag('consent', 'update', { ad_storage: 'granted' });
+    loadGTM();
+    dataLayer.push({ event: 'consent_marketing_granted' });
+
+    if (typeof window.unlockEmbeds === 'function') {
+      window.unlockEmbeds();
+    }
+  };
+
+  window.disableAllTracking = function(){
+    gtag('consent', 'update', {
+      analytics_storage: 'denied',
+      ad_storage: 'denied'
+    });
+    dataLayer.push({ event: 'consent_denied' });
+  };
+</script>
+
+	<!-- This site is optimized with the Yoast SEO Premium plugin v28.7 (Yoast SEO v28.7) - https://yoast.com/product/yoast-seo-premium-wordpress/ -->
+	
+	<meta name="description" content="Lise Davidsen • James Baillieu on 7 November 2026 at 19:30, Großer Saal, Musikverein. Franz Schubert." />
+	<link rel="canonical" href="https://musikverein.at/en/konzert/lise-davidsen-james-baillieu-0006accc/" />
+	<meta property="og:locale" content="de_DE" />
+	<meta property="og:type" content="article" />
+	<meta property="og:title" content="Concert | 7 November 2026 | Lise Davidsen • James Baillieu | Musikverein" />
+	<meta property="og:description" content="Lise Davidsen • James Baillieu on 7 November 2026 at 19:30, Großer Saal, Musikverein. Franz Schubert." />
+	<meta property="og:url" content="https://musikverein.at/en/konzert/lise-davidsen-james-baillieu-0006accc/" />
+	<meta property="og:site_name" content="Musikverein Wien" />
+	<meta property="article:publisher" content="https://www.facebook.com/musikverein.wien" />
+	<meta property="article:modified_time" content="2026-10-21T10:22:51+00:00" />
+	<meta property="og:image" content="https://musikverein.at/wp-json/idl/v1/konzert-og-image?id=0006accc" />
+	<meta property="og:image:width" content="1000" />
+	<meta property="og:image:height" content="1000" />
+	<meta property="og:image:type" content="image/jpeg" />
+	<script type="application/ld+json" class="yoast-schema-graph">{"@context":"https:\/\/schema.org","@graph":[{"@type":"WebPage","@id":"https:\/\/musikverein.at\/konzert\/","url":"https:\/\/musikverein.at\/konzert\/","name":"Konzert - Musikverein Wien","isPartOf":{"@id":"https:\/\/musikverein.at\/#website"},"primaryImageOfPage":{"@id":"https:\/\/musikverein.at\/konzert\/#primaryimage"},"image":{"@id":"https:\/\/musikverein.at\/konzert\/#primaryimage"},"thumbnailUrl":"https:\/\/musikverein.at\/wp-content\/uploads\/2025\/08\/Boston-Symphony-Orchestra-Andris-Nelsons-Baiba-Skride_c_Julia-Wesely_2.jpg","datePublished":"2025-06-18T10:04:09+00:00","dateModified":"2026-10-21T10:22:51+00:00","description":"Besuchen Sie den Musikverein – das traditionsreiche Konzerthaus Wiens und tauchen Sie in die Welt der klassischen & modernen Musik ein!","breadcrumb":{"@id":"https:\/\/musikverein.at\/konzert\/#breadcrumb"},"inLanguage":"de","potentialAction":[{"@type":"ReadAction","target":["https:\/\/musikverein.at\/konzert\/"]}]},{"@type":"ImageObject","inLanguage":"de","@id":"https:\/\/musikverein.at\/konzert\/#primaryimage","url":"https:\/\/musikverein.at\/wp-content\/uploads\/2025\/08\/Boston-Symphony-Orchestra-Andris-Nelsons-Baiba-Skride_c_Julia-Wesely_2.jpg","contentUrl":"https:\/\/musikverein.at\/wp-content\/uploads\/2025\/08\/Boston-Symphony-Orchestra-Andris-Nelsons-Baiba-Skride_c_Julia-Wesely_2.jpg","width":1500,"height":1000,"caption":"Aufnahme eines Konzertes im goldenen Saal - fotografiert von Julia Wesely"},{"@type":"BreadcrumbList","@id":"https:\/\/musikverein.at\/konzert\/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Startseite","item":"https:\/\/musikverein.at\/"},{"@type":"ListItem","position":2,"name":"Konzert"}]},{"@type":"WebSite","@id":"https:\/\/musikverein.at\/#website","url":"https:\/\/musikverein.at\/","name":"Musikverein Wien","description":"Einzigartige Konzerte erleben","publisher":{"@id":"https:\/\/musikverein.at\/#organization"},"alternateName":"Einzigartige Konzerte erleben!","potentialAction":[{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https:\/\/musikverein.at\/?s={search_term_string}"},"query-input":{"@type":"PropertyValueSpecification","valueRequired":true,"valueName":"search_term_string"}}],"inLanguage":"de"},{"@type":"Organization","@id":"https:\/\/musikverein.at\/#organization","name":"Musikverein Wien","alternateName":"Einzigartige Konzerte erleben!","url":"https:\/\/musikverein.at\/","logo":{"@type":"ImageObject","inLanguage":"de","@id":"https:\/\/musikverein.at\/#\/schema\/logo\/image\/","url":"https:\/\/musikverein.at\/wp-content\/uploads\/2025\/08\/Screenshot-2025-08-24-at-09.45.55.png","contentUrl":"https:\/\/musikverein.at\/wp-content\/uploads\/2025\/08\/Screenshot-2025-08-24-at-09.45.55.png","width":201,"height":141,"caption":"Musikverein Wien"},"image":{"@id":"https:\/\/musikverein.at\/#\/schema\/logo\/image\/"},"sameAs":["https:\/\/www.facebook.com\/musikverein.wien","https:\/\/x.com\/Musikverein","https:\/\/www.youtube.com\/@musikvereinwien3686?cbrd=1&ucbcb=1","https:\/\/www.instagram.com\/accounts\/login\/?next=httpswww.instagram.commusikverein.wien&is_from_rle"]}]}</script>
+	<!-- / Yoast SEO Premium plugin. -->
+
+
+<link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="https://musikverein.at/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fmusikverein.at%2Fen%2Fkonzert%2F" />
+<link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="https://musikverein.at/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fmusikverein.at%2Fen%2Fkonzert%2F&#038;format=xml" />
+<style id="wp-img-auto-sizes-contain-inline-css">
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+
+
+<link rel="stylesheet" href="https://musikverein.at/wp-content/cache/minify/09a2f.css?x87249" media="all" />
+
+
+
+
+
+<script id="jquery-core-js" src="https://musikverein.at/wp-includes/js/jquery/jquery.min.js?x87249&amp;ver=3.7.1"></script>
+<link rel="https://api.w.org/" href="https://musikverein.at/wp-json/" /><link rel="alternate" title="JSON" type="application/json" href="https://musikverein.at/wp-json/wp/v2/pages/2319" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://musikverein.at/xmlrpc.php?rsd" />
+<meta name="generator" content="WordPress 7.1.3" />
+<link rel='shortlink' href='https://musikverein.at/?p=2319' />
+<style>.language-switcher a[data-lang-switch]{ pointer-events:auto !important; }</style><link rel="alternate" hreflang="de" href="https://musikverein.at/de/konzert/lise-davidsen-james-baillieu-0006accc/" />
+<link rel="alternate" hreflang="en" href="https://musikverein.at/en/konzert/lise-davidsen-james-baillieu-0006accc/" />
+<link rel="alternate" hreflang="x-default" href="https://musikverein.at/konzert/lise-davidsen-james-baillieu-0006accc/" />
+<title>Concert | 7 November 2026 | Lise Davidsen • James Baillieu | Musikverein</title>
+<link rel="icon" href="https://musikverein.at/wp-content/uploads/2025/08/cropped-Groser-Saal_c-Wolf-Dieter-Grabner-32x32.webp" sizes="32x32" />
+<link rel="icon" href="https://musikverein.at/wp-content/uploads/2025/08/cropped-Groser-Saal_c-Wolf-Dieter-Grabner-192x192.webp" sizes="192x192" />
+<link rel="apple-touch-icon" href="https://musikverein.at/wp-content/uploads/2025/08/cropped-Groser-Saal_c-Wolf-Dieter-Grabner-180x180.webp" />
+<meta name="msapplication-TileImage" content="https://musikverein.at/wp-content/uploads/2025/08/cropped-Groser-Saal_c-Wolf-Dieter-Grabner-270x270.webp" />
+<style id="mv-meldung-schalter">.mv-meldung{display:none !important;}</style>
+<style id='idl-visibility-css'>.idl-reselling{display:none !important;}.idl-variant-b{display:none !important;}</style><!-- [HEADER ASSETS] -->
+<link rel="stylesheet" href="https://musikverein.at/wp-content/cache/minify/ae876.css?x87249" media="all" />
+
+
+
+
+
+
+
+
+
+<!-- [/EOF HEADER ASSETS] -->
+    </head>
+    
+    <body class="wp-singular page-template-default page page-id-2319 wp-theme-oxygen-zero oxygen mv-meldung-aus"><a class="skip-link" href="#inhalt">Skip to content</a>
+        <script>
+  (function(){
+    try{
+      const c = JSON.parse(localStorage.getItem('ccp_consent') || 'null');
+      if (!c) return;
+      if (!c.statistics && !c.marketing) return;
+
+      var ifr = document.createElement('iframe');
+      ifr.src = 'https://www.googletagmanager.com/ns.html?id=GTM-5NJZS6M';
+      ifr.height = 0;
+      ifr.width = 0;
+      ifr.style.display = 'none';
+      ifr.style.visibility = 'hidden';
+      document.body.appendChild(ifr);
+    } catch(e){}
+  })();
+</script>
+<div id="ccp-banner" class="ccp-hidden reveal" role="region" aria-label="Cookie notice"></div><div id="ccp-modal" class="ccp-hidden"></div><button type="button" id="ccp-reopen-settings" class="ccp-reopen" aria-label="Cookie settings">&#127850;</button>            <header class="oxy-container-19720-100 oxy-container menu-section menu-fade fixed"><div class="oxy-container-19720-266 oxy-container push-menu-toggle push-menu"><div class="oxy-container-19720-770 oxy-container column-center-center relative"><div class="oxy-svg-icon-19720-771 oxy-svg-icon menu-close t-r" aria-label="Close menu">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc. --><path d="M192 32c17.7 0 32 14.3 32 32V199.5l111.5-66.9c15.2-9.1 34.8-4.2 43.9 11s4.2 34.8-11 43.9L254.2 256l114.3 68.6c15.2 9.1 20.1 28.7 11 43.9s-28.7 20.1-43.9 11L224 312.5V448c0 17.7-14.3 32-32 32s-32-14.3-32-32V312.5L48.5 379.4c-15.2 9.1-34.8 4.2-43.9-11s-4.2-34.8 11-43.9L129.8 256 15.5 187.4c-15.2-9.1-20.1-28.7-11-43.9s28.7-20.1 43.9-11L160 199.5V64c0-17.7 14.3-32 32-32z"/></svg>
+</div><div class="oxy-container-19720-772 oxy-container container-logo"><a class="oxy-container-link-19720-773 oxy-container-link" href="https://www.musikverein.at/" target="_self"><div class="oxy-container-19720-774 oxy-container front-plus-2 logo-in-menu"><img class="oxy-image-19720-775 oxy-image" src="https://musikverein.at/wp-content/uploads/2025/06/Asset-1-8-1.webp" alt="Logo des Wiener Musikvereins." loading="lazy" srcset="https://musikverein.at/wp-content/uploads/2025/06/Asset-1-8-1.webp 383w, https://musikverein.at/wp-content/uploads/2025/06/Asset-1-8-1-300x166.webp 300w" sizes="(max-width: 383px) 100vw, 383px"></div></a></div><div class="oxy-container-19720-776 oxy-container container-hidden-menu"><div class="oxy-container-19720-777 oxy-container menu-small max-w-menu"><div class="oxy-container-19720-778 oxy-container space-between-column phone-landscape-column-xl sz2"><div class="oxy-php-code-19720-779 oxy-php-code menu-bold">
+<ul id="menu-all-bold-26-27-en" class="menu"><li id="menu-item-18347" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-18347"><a href="/en/spielplan/">Programme</a></li>
+<li id="menu-item-18350" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-18350"><a href="/en/2026-27/">Season 26/27</a></li>
+<li id="menu-item-18348" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-18348"><a href="/en/fuehrungen/">Guided Tours</a></li>
+<li id="menu-item-18349" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-18349"><a href="/en/foerdern/mitgliedschaft/">Membership</a></li>
+</ul>
+</div><div class="oxy-container-19720-780 oxy-container"><h2 class="oxy-text-19720-781 oxy-text grotesk-medium t-beige dropdown-header-menu hide phone-landscape-show">
+Service
+</h2><div class="oxy-php-code-19720-783 oxy-php-code t-beige dropdown-content-menu hide phone-landscape-show">
+<ul id="menu-menu-mobile-en-1" class="menu"><li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-13525"><a href="/en/konzertbesuch/">Concert Visit</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-13526"><a href="/en/musik-schenken/">Give the Gift of Music</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-13527"><a href="/en/u30/">U30</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-13528"><a href="/en/archiv/start/">Archive</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-14382"><a href="https://shop.musikverein.at/account">My Account</a></li>
+</ul>
+</div></div><div class="oxy-container-19720-784 oxy-container column-xs"><h2 class="oxy-text-19720-824 oxy-text grotesk-medium t-beige dropdown-header-menu phone-landscape-show sz">
+Contact
+</h2><div class="oxy-rich-text-19720-788 oxy-rich-text t-beige t-s t-16">
+<p>+43 1 505 8190<br /><a href="mailto:tickets@musikverein.at">tickets@musikverein.at</a></p>
+</div></div></div><div class="oxy-container-19720-789 oxy-container space-between-column max-w-menu"><div class="oxy-container-19720-790 oxy-container stretch phone-landscape-w-100 phone-landscape-wrap phone-landscape-gap-x w-100 space-between-flex gap-xxl padding-b-s force-hide jdh"><div class="oxy-container-19720-791 oxy-container flex-column-left gap-r phone-landscape-100 tablet-portrait-50"><nav class="oxy-container-19720-792 oxy-container dropdown-menu m-spacer"><h2 class="oxy-text-19720-793 oxy-text grotesk-medium t-beige dropdown-header-menu phone-landscape-hide">
+Service
+</h2><div class="oxy-php-code-19720-794 oxy-php-code t-beige dropdown-content-menu phone-landscape-hide">
+<ul id="menu-all-der-musikverein-en" class="menu"><li id="menu-item-15691" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-15691"><a href="/en/kontakt-und-team/">Contact and team</a></li>
+<li id="menu-item-15692" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-15692"><a href="/en/konzertbesuch/">Concert Visit</a></li>
+<li id="menu-item-15693" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-15693"><a href="/en/stellenangebote/">Job offers</a></li>
+<li id="menu-item-15694" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-15694"><a href="/en/foerdern">Support</a></li>
+<li id="menu-item-15695" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-15695"><a href="/en/vermietung/">Rental</a></li>
+<li id="menu-item-15696" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-15696"><a href="/en/presse/">Press</a></li>
+</ul>
+</div></nav></div><div class="oxy-container-19720-795 oxy-container flex-column-left gap-r phone-landscape-100 tablet-portrait-50"><nav class="oxy-container-19720-796 oxy-container dropdown-menu phone-landscape-hide m-spacer"><h2 class="oxy-text-19720-797 oxy-text grotesk-medium t-beige dropdown-header-menu">
+TICKETS
+</h2><div class="oxy-php-code-19720-798 oxy-php-code t-beige dropdown-content-menu">
+<ul id="menu-menu-programm-und-karten-en" class="menu"><li id="menu-item-15698" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-15698"><a href="/en/konzertbesuch/#kartenkauf">Ticket Purchase</a></li>
+<li id="menu-item-11919" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11919"><a href="/en/musik-schenken/">Give the gift of music</a></li>
+<li id="menu-item-11920" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11920"><a href="/en/konzertbesuch#kartenkauf">Programme</a></li>
+<li id="menu-item-13520" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-13520"><a href="/en/u30">U30</a></li>
+</ul>
+</div></nav></div><div class="oxy-container-19720-799 oxy-container flex-column-left gap-r phone-landscape-100 tablet-portrait-50"><nav class="oxy-container-19720-800 oxy-container dropdown-menu phone-landscape-hide m-spacer"><h2 class="oxy-text-19720-801 oxy-text grotesk-medium t-beige dropdown-header-menu">
+Saison
+</h2><div class="oxy-php-code-19720-802 oxy-php-code t-beige dropdown-content-menu">
+<ul id="menu-footer-saison-26-27-en" class="menu"><li id="menu-item-18335" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-18335"><a href="/en/2026-27/">Season 26/27</a></li>
+<li id="menu-item-18336" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-18336"><a href="/en/2026-27/abonnements/">• Subscriptions</a></li>
+<li id="menu-item-18339" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-18339"><a href="/en/2026-27/kinder-jugend-familien/">• Children, Youth &#038; Families</a></li>
+<li id="menu-item-18337" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-18337"><a href="/en/2026-27/schwerpunkte/neue-formate/">• New Formats</a></li>
+<li id="menu-item-18338" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-18338"><a href="/en/2026-27/schwerpunkte/">• Focal Points</a></li>
+</ul>
+</div></nav></div><div class="oxy-container-19720-803 oxy-container flex-column-left gap-r phone-landscape-100 tablet-portrait-50"><nav class="oxy-container-19720-804 oxy-container dropdown-menu phone-landscape-hide m-spacer"><h2 class="oxy-text-19720-805 oxy-text grotesk-medium t-beige dropdown-header-menu">
+Archiv
+</h2><div class="oxy-php-code-19720-806 oxy-php-code t-beige dropdown-content-menu">
+<ul id="menu-footer-archiv-en" class="menu"><li id="menu-item-11929" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11929"><a href="/en/archiv/start/">Archive</a></li>
+<li id="menu-item-11930" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11930"><a href="/en/archiv/forschen/">Research</a></li>
+<li id="menu-item-11931" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11931"><a href="/en/archiv/katalog/">Catalogue</a></li>
+<li id="menu-item-12423" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-12423"><a href="/en/archiv/konzertarchiv/">Concert Archive</a></li>
+</ul>
+</div></nav></div></div><div id="down" class="oxy-container-19720-807 oxy-container phone-landscape-w-100 phone-landscape-wrap phone-landscape-gap-x"><nav class="oxy-container-19720-808 oxy-container dropdown-menu phone-landscape-hide w-50-fix tablet-landscape-w-100 t-l-w-100-fix"><h2 class="oxy-text-19720-810 oxy-text grotesk-medium dropdown-header-menu t-coral border-coral">
+Multimedia
+</h2><div class="oxy-php-code-19720-811 oxy-php-code t-beige dropdown-content-menu row">
+<ul id="menu-footer-multimedia-en" class="menu"><li id="menu-item-16082" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-16082"><a href="https://multimedia.musikverein.at/">All</a></li>
+<li id="menu-item-11953" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11953"><a href="https://www.musikverein.at/tag/artikel/">Articles</a></li>
+<li id="menu-item-11954" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11954"><a href="https://multimedia.musikverein.at/tag/video/">Impressions</a></li>
+<li id="menu-item-11955" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11955"><a href="https://multimedia.musikverein.at/tag/podcast/">Podcast</a></li>
+<li id="menu-item-11956" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11956"><a href="https://multimedia.musikverein.at/tag/video/">Videos</a></li>
+</ul>
+</div></nav></div></div></div></div><div class="oxy-container-19720-812 oxy-container front-plus-1 menu-video"><div class="oxy-container-19720-813 oxy-container bg-gradient-menu-dark-copy-1"></div><div class="oxy-container-19720-814 oxy-container bg-gradient-menu-dark"></div><div class="oxy-container-19720-815 oxy-container bg-gradient-video bg-blue-dark"></div></div></div></div><div class="oxy-container-19720-116 oxy-container column w-100"><div class="oxy-container-19720-388 oxy-container c-menu"><div class="oxy-container-19720-102 oxy-container c-top-menu"><div class="oxy-container-19720-103 oxy-container logo-blue front-plus-2 logo--shadow logo-b"><a class="oxy-container-link-19720-527 oxy-container-link" href="https://musikverein.at/en/" target="_self" aria-label="Website Musikverein Wien"><img class="oxy-image-19720-104 oxy-image" src="https://musikverein.at/wp-content/uploads/2025/06/Asset-1-8-1.webp" alt="Logo des Wiener Musikvereins." loading="lazy" srcset="https://musikverein.at/wp-content/uploads/2025/06/Asset-1-8-1.webp 383w, https://musikverein.at/wp-content/uploads/2025/06/Asset-1-8-1-300x166.webp 300w" sizes="(max-width: 383px) 100vw, 383px"></a></div></div><div class="oxy-container-19720-545 oxy-container menu-top m-1"><a class="oxy-text-link-19720-827 oxy-text-link menu-item-top transition grotesk-medium t-beige phone-landscape-m-l-auto m-right no-show-menu-desk m-sp" href="https://musikverein.at/en/spielplan/" target="_self">
+Programme
+</a><div class="oxy-container-19720-546 oxy-container row-center push-menu-toggle tablet-portrait-row"><div class="oxy-svg-icon-19720-547 oxy-svg-icon icon-light t-beige padding-l-x icon-menu tablet-portrait-p-tb-xs phone-landscape-hide">
+<svg xmlns="http://www.w3.org/2000/svg" id="icon-menu3" viewBox="0 0 44 32">
+<path d="M0 6h28v6h-28v-6zM0 14h28v6h-28v-6zM0 22h28v6h-28v-6z"/>
+<path d="M31 14l6 6 6-6z"/>
+</svg>
+</div><a class="oxy-text-link-19720-548 oxy-text-link menu-item-top transition grotesk-medium t-beige phone-landscape-m-l-auto m-right m-sp sp" target="_self" data-interactions="[{&quot;trigger&quot;:&quot;mouse_enter&quot;,&quot;actions&quot;:[{&quot;name&quot;:&quot;add_class&quot;,&quot;css_class&quot;:&quot;menu-border-bottom&quot;,&quot;target&quot;:&quot;this_element&quot;}]},{&quot;trigger&quot;:&quot;mouse_leave&quot;,&quot;target&quot;:&quot;this_element&quot;,&quot;actions&quot;:[{&quot;name&quot;:&quot;remove_class&quot;,&quot;css_class&quot;:&quot;menu-border-bottom&quot;}]}]">
+Menu
+</a></div><a class="oxy-text-link-19720-549 oxy-text-link menu-item-top transition grotesk-medium t-beige phone-landscape-hide" href="/en/spielplan" target="_self" data-interactions="[{&quot;trigger&quot;:&quot;mouse_enter&quot;,&quot;actions&quot;:[{&quot;name&quot;:&quot;add_class&quot;,&quot;css_class&quot;:&quot;menu-border-bottom&quot;,&quot;target&quot;:&quot;this_element&quot;}]},{&quot;trigger&quot;:&quot;mouse_leave&quot;,&quot;target&quot;:&quot;this_element&quot;,&quot;actions&quot;:[{&quot;name&quot;:&quot;remove_class&quot;,&quot;css_class&quot;:&quot;menu-border-bottom&quot;}]}]">
+Programme
+</a><a class="oxy-text-link-19720-552 oxy-text-link menu-item-top transition grotesk-medium t-beige phone-landscape-hide tablet-portrait-hide" href="/en/foerdern" target="_self" data-interactions="[{&quot;trigger&quot;:&quot;mouse_enter&quot;,&quot;actions&quot;:[{&quot;name&quot;:&quot;add_class&quot;,&quot;css_class&quot;:&quot;menu-border-bottom&quot;,&quot;target&quot;:&quot;this_element&quot;}]},{&quot;trigger&quot;:&quot;mouse_leave&quot;,&quot;target&quot;:&quot;this_element&quot;,&quot;actions&quot;:[{&quot;name&quot;:&quot;remove_class&quot;,&quot;css_class&quot;:&quot;menu-border-bottom&quot;}]}]">
+Support
+</a><a class="oxy-text-link-19720-551 oxy-text-link menu-item-top transition grotesk-medium t-beige tablet-landscape-hide" href="/en/archiv/start/" target="_self" data-interactions="[{&quot;trigger&quot;:&quot;mouse_enter&quot;,&quot;actions&quot;:[{&quot;name&quot;:&quot;add_class&quot;,&quot;css_class&quot;:&quot;menu-border-bottom&quot;,&quot;target&quot;:&quot;this_element&quot;}]},{&quot;trigger&quot;:&quot;mouse_leave&quot;,&quot;target&quot;:&quot;this_element&quot;,&quot;actions&quot;:[{&quot;name&quot;:&quot;remove_class&quot;,&quot;css_class&quot;:&quot;menu-border-bottom&quot;}]}]">
+Archive
+</a><a class="oxy-text-link-19720-550 oxy-text-link menu-item-top transition grotesk-medium t-beige phone-landscape-hide" href="https://multimedia.musikverein.at/" target="_self" data-interactions="[{&quot;trigger&quot;:&quot;mouse_enter&quot;,&quot;actions&quot;:[{&quot;name&quot;:&quot;add_class&quot;,&quot;css_class&quot;:&quot;menu-border-bottom&quot;,&quot;target&quot;:&quot;this_element&quot;}]},{&quot;trigger&quot;:&quot;mouse_leave&quot;,&quot;target&quot;:&quot;this_element&quot;,&quot;actions&quot;:[{&quot;name&quot;:&quot;remove_class&quot;,&quot;css_class&quot;:&quot;menu-border-bottom&quot;}]}]">
+Multimedia
+</a><a class="oxy-text-link-19720-567 oxy-text-link menu-item-top transition grotesk-medium t-beige phone-portrait-t-s right padding-r-xl phone-landscape-hide" href="https://shop.musikverein.at/account/login" target="_self" data-interactions="[{&quot;trigger&quot;:&quot;mouse_enter&quot;,&quot;actions&quot;:[{&quot;name&quot;:&quot;add_class&quot;,&quot;css_class&quot;:&quot;menu-border-bottom&quot;,&quot;target&quot;:&quot;this_element&quot;}]},{&quot;trigger&quot;:&quot;mouse_leave&quot;,&quot;target&quot;:&quot;this_element&quot;,&quot;actions&quot;:[{&quot;name&quot;:&quot;remove_class&quot;,&quot;css_class&quot;:&quot;menu-border-bottom&quot;}]}]">
+My Account
+</a><a class="oxy-container-link-19720-831 oxy-container-link user-container menu-item-top hdsfsd" href="https://shop.musikverein.at/account/login" target="_self"><div class="oxy-svg-icon-19720-829 oxy-svg-icon user">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc. --><path d="M256 288A144 144 0 1 0 256 0a144 144 0 1 0 0 288zm-94.7 32C72.2 320 0 392.2 0 481.3c0 17 13.8 30.7 30.7 30.7H481.3c17 0 30.7-13.8 30.7-30.7C512 392.2 439.8 320 350.7 320H161.3z"/></svg>
+</div></a></div><div class="oxy-container-19720-533 oxy-container phone-landscape-hide"><div class="oxy-html-code-19720-531 oxy-html-code rolex logo-b">
+<iframe src="https://static.rolex.com/clocks/2021/musikverein_all_at_HTML_80x80/rolex.html"
+        title="Werbung: Rolex"
+        width="80" height="80" frameborder="0" scrolling="no"></iframe>
+</div></div></div><div class="oxy-container-19720-389 oxy-container menu-top m-1 background-menu bg-blue-dark phone-landscape-bg-blue-dark tablet-portrait-bg-blue-dark"></div></div></header><div id="mask" class="oxy-container-19720-474 oxy-container preloader column-center-center"><div class="oxy-container-19720-478 oxy-container row-r"><div class="oxy-text-19720-479 oxy-text grotesk-bold h2-1 t-beige t-xl hide phone-landscape-t-m">
+musikverein
+</div><div id="random-number" class="oxy-text-19720-476 oxy-text t-beige t-l t-xxxl tablet-portrait-t-xxl phone-landscape-t-xl">
+0
+</div></div></div><div class="oxy-container-6364-100-6364-1 oxy-container menu-backdrop oxy-container-6364-100"></div><div class="oxy-php-code-19720-532 oxy-php-code language-switcher">
+<ul class="language-switcher"><li><a data-lang-switch="1" href="https://musikverein.at/konzert/lise-davidsen-james-baillieu-0006accc">DE</a></li><li class="active"><a data-lang-switch="1" href="https://musikverein.at/en/konzert/lise-davidsen-james-baillieu-0006accc">EN</a></li></ul>
+</div><div id="scrollTopBtn" class="oxy-container-19720-820 oxy-container"><div class="oxy-svg-icon-19720-823 oxy-svg-icon STT-Icon t-size-r">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc. --><path d="M214.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 141.2V448c0 17.7 14.3 32 32 32s32-14.3 32-32V141.2L329.4 246.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z"/></svg>
+</div></div><div class="oxy-html-code-2319-314 oxy-html-code">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js"
+        integrity="sha512-hcV6DX35BKgiTiWYrJgPbu3FxS6CsCjKgmrsPRpUPkXWbvPiKxvSVSdhWX0yXcPctOI2FJ4WP6N1zH+17B/sAA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1/locale/de-at.js"></script>
+</div><main id="has-id-content" class="oxy-container-2319-329 oxy-container section-contain-rest"><div id="inhalt" class="oxy-container-2319-330 oxy-container flex-top-center container phone-landscape-p-lr-s padding-b-xxxl padding-t-xxxl phone-landscape-t-m-fix container-konzert-26" tabindex="-1"><div class="oxy-container-2319-331 oxy-container container-konzert"><div class="oxy-container-2319-332 oxy-container konzert-box"><div class="oxy-container-2319-333 oxy-container bg-white flex-top-center tablet-portrait-item-full relative"><div class="oxy-html-code-2319-334 oxy-html-code">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/simplelightbox/2.14.3/simple-lightbox.min.js" integrity="sha512-Vtot07oogPy4e0JzAfUgyvia0fATgR1PWWNG89EeQgPXmaIhjGQIFijUVxRn0TScCMCH57Y7eJSixmYYDJkJ1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/simplelightbox/2.14.3/simple-lightbox.css" integrity="sha512-5gTxhbmgsOKfPP2+TeKslkMmyxF0Cmyr2YrJrfaXD/ChLHavFXGzDDG9ZiOca1P/2/5nXuujkB2BWymVKu1pPg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<script>
+window.addEventListener('load', function () {
+  var checkExist = setInterval(function () {
+    if (jQuery('.imageGallery1 a').length) {
+      new SimpleLightbox('.imageGallery1 a');
+      clearInterval(checkExist);
+    }
+  }, 100);
+});
+</script>
+
+<style>
+  .imageGallery1 {
+    justify-content: center;
+  }
+  #gallery-container img {
+    max-height: 600px;
+  }
+@media only screen and (max-width: 980px) {
+   #gallery-container img {
+    max-height: unset;
+  }
+}
+  .imageGallery1 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.imageGallery1 a:first-child img {
+  width: 100%;
+  max-width: 600px; /* adjust main image size */
+  height: auto;
+  display: block;
+  padding: var(--value-r);
+}
+
+.imageGallery1 a:not(:first-child) img {
+  width: 50px;   /* thumbnail size */
+  height: auto;
+  margin: 0 var(--value-xxs) var(--value-xxs) 0;
+  cursor: pointer;
+}
+
+.imageGallery1-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+</style>
+</div><div id="gallery-container" class="oxy-container-2319-335 oxy-container digitalisat"></div><div class="oxy-container-2319-336 oxy-container height-100"><div class="oxy-html-code-2319-337 oxy-html-code bg-img">
+<img class="konzert-img"  src="https://spielplan.musikverein.at/media/pages/enrichment/uploads/pictures/tease_big/e2c616816f-1695309835/MV2019___Wolf-Dieter_Grabner.jpg" id="heroimage"alt="">
+</div></div><div class="oxy-container-2319-338 oxy-container width-100 apart flex-bottom-right front-plus-0"><div class="oxy-text-2319-339 oxy-text t-beige photo-credit t-align-right padding-b-xs padding-r-xs">
+
+</div></div></div><div class="oxy-container-2319-340 oxy-container column-xl bg-white padding-xxl column-center-center tablet-portrait-item-full relative bg-blue-dark"><div id="date_start" class="oxy-text-2319-341 oxy-text box-label front-plus-0 grotesk-bold h2-1 bg-blue-dark t-beige box-label-copy-1">
+{start_date}
+</div><div id="activity_status_description" class="oxy-text-2319-342 oxy-text box-label-bottom front-plus-0 grotesk-bold h2-1 bg-blue-dark t-beige lhj">
+{Kategorie}
+</div><div class="oxy-container-2319-343 oxy-container column-r padding-tb-xxl"><div class="oxy-container-2319-344 oxy-container konzert-h1"><div class="oxy-container-2319-345 oxy-container column-xs"><div id="place_time" class="oxy-text-2319-346 oxy-text t-center t-r t-beige">
+{place_time}
+</div><h1 id="name_1_web" class="oxy-text-2319-347 oxy-text italic t-center t-xl t-xxl tablet-portrait-t-xxl break-word t-gold daasd">
+name_1_web
+</h1><div class="oxy-container-2319-348 oxy-container"><div id="name_3_web" class="oxy-text-2319-349 oxy-text t-center t-r tablet-landscape-t-s tablet-portrait-t-r titel2 t-beige">
+name_3_web
+</div><div id="name_2_web" class="oxy-text-2319-350 oxy-text t-center titel2 t-beige">
+name_2_web
+</div></div></div></div><a id="ticket_link" class="oxy-text-2319-351 oxy-text button-small button-big t-beige bg-blue-dark gdfg">
+TICKETS
+</a><a id="btn_waitinglist" class="oxy-text-2319-352 oxy-text button-small button-big bg-blue t-beige">
+Warteliste
+</a><a id="btn_reminder" class="oxy-text-2319-353 oxy-text button-small button-big bg-blue t-beige">
+Erinnerung
+</a><div id="booking_status_note" class="oxy-text-2319-354 oxy-text t-center t-xs t-r t-beige">
+NAME NAME NAME <br>Was wird gespielt? Wie oft wurde es schon aufgeführt<br>
+</div></div></div><div id="interpret-wrapper" class="oxy-container-2319-355 oxy-container bg-white padding-xxl item-1 column-x-center bg-blue-dark"><h2 class="oxy-text-2319-356 oxy-text grotesk-medium padding-b-s t-gold">
+Interpret:innen
+</h2><div id="interpret" class="oxy-text-2319-357 oxy-text t-center t-r phone-landscape-t-r t-concert">
+cast
+</div></div><div id="program_wrapper" class="oxy-container-2319-358 oxy-container bg-white padding-xxl item-1 column-x-center bg-blue-dark"><div class="oxy-container-2319-359 oxy-container column column-xs"><h2 class="oxy-text-2319-360 oxy-text grotesk-medium t-gold">
+Programm
+</h2><div id="program" class="oxy-text-2319-361 oxy-text t-center t-r t-beige phone-landscape-t-s">
+
+</div><div id="end_time_wrapper" class="oxy-text-2319-362 oxy-text t-center t-beige phone-landscape-t-s">
+<p>Ende ca. <span id="end_time"></span> Uhr</p>
+</div></div></div><div id="infotext-wrapper" class="oxy-container-2319-363 oxy-container bg-white padding-xxl item-1 column-center-center column-xs bg-blue-dark"><h2 class="oxy-text-2319-364 oxy-text grotesk-medium t-gold">
+Über die Veranstaltung
+</h2><div class="oxy-container-2319-365 oxy-container column-xs max-600"><div id="comm_descr_short_1_ch_1_D" class="oxy-text-2319-366 oxy-text phone-t-center t-center t-r phone-landscape-t-r t-beige">
+Enter your text. <strong>HTML</strong> is supported.
+</div><div id="comm_descr_long_1_HTML_ch_1_D" class="oxy-text-2319-367 oxy-text phone-t-center t-center t-r t-beige">
+Enter your text. <strong>HTML</strong> is supported.
+</div><div id="comm_descr_coop_1_HTML_ch_1_D" class="oxy-text-2319-368 oxy-text phone-t-center t-center t-r t-beige">
+Enter your text. <strong>HTML</strong> is supported.
+</div><div id="comm_important_note_1_ch_0_html_D" class="oxy-text-2319-369 oxy-text phone-t-center t-center t-r t-beige">
+Enter your text. <strong>HTML</strong> is supported.
+</div></div></div><div id="information-wrapper" class="oxy-container-2319-381 oxy-container bg-white padding-xxl phone-grid-100 column-center-center column-xs bg-blue-dark"><h2 class="oxy-text-2319-382 oxy-text grotesk-medium t-gold">
+Information
+</h2><div id="ev_note_communication" class="oxy-text-2319-383 oxy-text t-center phone-landscape-t-r t-r t-beige">
+Enter your text. <strong>HTML</strong> is supported.
+</div></div><div id="teilvon-wrapper" class="oxy-container-2319-370 oxy-container bg-white padding-xxl phone-grid-100 column-center-center column-xs bg-blue-dark"><h2 class="oxy-text-2319-371 oxy-text grotesk-medium t-center t-gold">
+Dieses Konzert ist Teil von
+</h2><div id="distributionChannels" class="oxy-text-2319-372 oxy-text t-center t-r phone-landscape-t-r t-beige">
+Meisterinterpret:innen I<br>Künstler im Fokus: Christian Thielemann
+</div></div><div id="kooperation-wrapper" class="oxy-container-2319-374 oxy-container bg-white padding-xxl phone-grid-100 column-center-center column-xs bg-blue-dark"><h2 class="oxy-text-2319-375 oxy-text grotesk-medium t-center t-gold">
+Unterstützt von | In Kooperation mit
+</h2><div class="oxy-html-code-2319-376 oxy-html-code">
+<style>
+@media print {
+  #sp_image {
+    max-width: 4cm; 
+    width: auto;
+    height: auto;
+  }
+}
+</style>
+<img id="sp_image" alt="" />
+</div><div id="sp_link" class="oxy-text-2319-377 oxy-text t-center phone-landscape-t-r t-r">
+
+</div></div><div class="oxy-container-2319-378 oxy-container bg-white padding-xxl phone-grid-100 column-center-center column-xs bg-blue-dark"><h2 class="oxy-text-2319-379 oxy-text grotesk-medium t-center t-gold">
+Veranstalter
+</h2><div id="event_host" class="oxy-text-2319-380 oxy-text t-center t-r phone-landscape-t-r t-beige">
+Event Host
+</div></div><div class="oxy-container-2319-384 oxy-container bg-white padding-xxl phone-grid-100 column-center-center column-xs bg-blue-dark"><h2 class="oxy-text-2319-385 oxy-text grotesk-medium t-gold">
+Links
+</h2><div class="oxy-html-code-2319-386 oxy-html-code">
+<!-- MVK Konzertseite – „Links": Kalender-Download + Buffet in EINEM Code-Block.
+     Ersetzt die bisherigen getrennten Oxygen-Elemente. Wichtig: alte
+     #saveToCalendar- und #buffet_wrapper/#buffetLink-Elemente entfernen,
+     damit keine doppelten IDs entstehen.
+     Verhalten bleibt: Ticketing blendet #saveToCalendar + #buffet_wrapper bei
+     vergangenen Events aus; das Programm-Modul zeigt #buffet_wrapper nur bei Pause
+     (Klasse jq-hide). Der Kalender-Button ruft window.saveToCalendar() (Modul 10). -->
+<div class="mvk-links">
+  <a id="saveToCalendar" href="#" onclick="saveToCalendar(); return false;">Kalender-Download</a>
+
+  <div id="buffet_wrapper" class="jq-hide">
+    <a id="buffetLink" css="t-center t-r phone-landscape-t-r t-concert" href="https://musikverein.gerstner.at/" target="_blank" rel="noopener">Buffet-Vorbestellung für die Pause</a>
+  </div>
+</div>
+
+<style>
+  .mvk-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  /* Lesbar auf dunklem Grund: beige, unterstrichen, 20px */
+  #saveToCalendar,
+  #buffetLink {
+    color: var(--beige, #FCFAF6);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+</style>
+</div><div class="oxy-text-2319-387 oxy-text t-center phone-landscape-t-r t-xs jq-hide hide">
+Bitte entnehmen Sie die Pausen-Information dem Programm.
+</div></div></div></div><div id="related-wrapper" class="oxy-container-2319-388 oxy-container w-100 related"><h2 class="oxy-text-2319-390 oxy-text t-gold w-100 h2-1 grotesk-bold t-center">
+More concerts
+</h2><div id="related-grid" class="oxy-container-2319-391 oxy-container w-100"><div id="related-card" class="oxy-container-2319-392 oxy-container column-top-center page-section card-01 tablet-landscape-r-50 phone-landscape-w-100-fix mobile-45vh"><div class="oxy-container-2319-393 oxy-container row-right container-full height-100"><div class="oxy-container-2319-394 oxy-container apart"><div class="oxy-container-2319-395 oxy-container apart bg-blue"><div class="oxy-container-2319-396 oxy-container"><div class="oxy-container-2319-397 oxy-container bg-gradient-abo-selector opacity-80"></div><div class="oxy-container-2319-398 oxy-container div-img-w-100 card-media-thumbnail" data-mvk="image"></div></div></div></div><div class="oxy-container-2319-399 oxy-container column-center-center front-plus-9 height-100 w-100 card-extra-p padding-tb-xxl-copy-1"><div class="oxy-container-2319-400 oxy-container"><div class="oxy-container-2319-401 oxy-container column-xxs up-ex-p"><h2 class="oxy-text-2319-402 oxy-text italic t-beige line-height-11 t-center tablet-portrait-t-xl card-title phone-landscape-t-xxl t-xl phone-portrait-t-l hyphens" data-mvk="title">
+Titel
+</h2><div class="oxy-container-2319-403 oxy-container"><div class="oxy-text-2319-404 oxy-text t-beige t-s hyphens t-center card-untertitel phone-landscape-t-m" data-mvk="room">
+
+</div><div class="oxy-text-2319-405 oxy-text t-beige t-s hyphens t-center card-date phone-landscape-t-m" data-mvk="date">
+
+</div></div><div class="oxy-container-2319-406 oxy-container row-m container-schwerpunkte-button"><a class="oxy-container-link-2319-409 oxy-container-link button-link-clean" target="_self" data-mvk="link"><div class="oxy-text-2319-410 oxy-text button-small bg-2425 t-blue grotesk-bold">
+more
+</div></a></div></div></div></div></div></div></div></div><div class="oxy-container-2319-411 oxy-container concert-media-section"></div></div></main><div class="oxy-container-2319-470 oxy-container apart back-2"><div class="oxy-container-2319-471 oxy-container apart bg-blue bg-gradient-black fixed"><div class="oxy-container-2319-472 oxy-container"><div class="oxy-container-2319-473 oxy-container bg-gradient-konzert-r"></div><div class="oxy-container-2319-474 oxy-container bg-gradient-konzert-l-copy-1"></div><div class="oxy-html-code-2319-475 oxy-html-code div-img-w-66 w-100 opacity-10">
+<img class="bckg-img" src="https://spielplan.musikverein.at/media/pages/enrichment/uploads/pictures/tease_big/e2c616816f-1695309835/MV2019___Wolf-Dieter_Grabner.jpg" alt="">
+</div></div></div></div><main id="no-id-content" class="oxy-container-2319-476 oxy-container section-contain-rest vh100 bg-blue"><div id="inhalt-404" class="oxy-container-2319-477 oxy-container container-sm c-404" tabindex="-1"><div class="oxy-container-2319-478 oxy-container column-r"><div class="oxy-text-2319-479 oxy-text h2-1 grotesk-bold t-gold w-100 padding-t-xxxl">
+404
+</div><div class="oxy-text-2319-481 oxy-text italic t-beige h-article">
+This page does not exist.
+</div><div class="oxy-php-code-2319-482 oxy-php-code width-100">
+<p id="breadcrumbs"><span><span><a href="https://musikverein.at/en/">Startseite</a></span> <span class="separator">»</span> <span class="breadcrumb_last" aria-current="page">Konzert</span></span></p>
+</div></div></div></main><div class="oxy-container-12723-100 oxy-container section-contain-rest bg-blue sds"><div class="oxy-container-12723-101 oxy-container container"><div class="oxy-container-12723-102 oxy-container footer-spielplan"><div class="oxy-container-12723-103 oxy-container footer-col"><div class="oxy-container-12723-104 oxy-container"><div class="oxy-php-code-12723-145 oxy-php-code t-beige menu-title padding-x">
+<footer>© 2026 Musikverein</footer>
+</div></div></div></div></div></div><div class="oxy-html-code-12723-146 oxy-html-code">
+<!-- Lightbox -->
+<div class="lightbox-popup" style="display:none;">
+  <button class="lightbox-prev" aria-label="Previous">‹</button>
+  <img src="" alt="" />
+  <button class="lightbox-next" aria-label="Next">›</button>
+  <button class="lightbox-close" aria-label="Close">×</button>
+</div>
+
+<div class="lightbox-popup-caption" style="display:none;"></div>
+</div>        <script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/plugins/oxygen/plugin/themeless/themes/oxygen-zero/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const cards = document.querySelectorAll('.veranstaltungen-grid .wpgb-card');
+        cards.forEach((card, index) => {
+            const classNum = String(index + 1).padStart(2, '0');
+            card.classList.add(`veranstaltungen-${classNum}`);
+        });
+    });
+    </script>
+        <script>
+    (function () {
+        document.addEventListener('click', function (e) {
+            var a = e.target && e.target.closest && e.target.closest('a[data-lang-switch]');
+            if (!a) return;
+            try { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); } catch (err) {}
+            window.location.assign(a.href);
+        }, true);
+    })();
+    </script>
+    <script id="idl-code-js-extra">
+var idlSettings = {"lang":"en"};
+//# sourceURL=idl-code-js-extra
+</script>
+<script defer id="idl-code-js" src="https://musikverein.at/wp-content/plugins/IDL-Functions/idl-code.js?x87249&amp;ver=1789386760"></script>
+<script defer id="dayjs-core-js" src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js"></script>
+<script defer id="dayjs-de-locale-js" src="https://cdn.jsdelivr.net/npm/dayjs@1/locale/de-at.js"></script>
+<script id="ls-schedule-js" src="https://musikverein.at/wp-content/plugins/IDL-Functions/ls-schedule-button.js?x87249&amp;ver=1782199832"></script>
+<script defer id="gsap-js" src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script defer id="gsap-scrolltrigger-js" src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+<script id="ccp-script-js-extra">
+var ccp_data = {"headline":"Cookies & Privacy","text":"We use cookies to optimise content and analyse usage. By clicking \"Accept,\" you agree to the use of cookies.","accept":"Accept","decline":"Decline","settings":"Settings","settings_headline":"Choose your cookies","settings_text":"Here you can specify which cookies may be used on the website. Necessary cookies are required for the operation of the website and cannot be deactivated. Statistics cookies help us understand how visitors use the website. Marketing cookies make it possible to integrate external content and services.","save":"Save","close":"Close","label_necessary":"Technically necessary cookies","label_statistics":"Statistical Cookies","label_marketing":"Marketing Cookies","consent_version":"1"};
+//# sourceURL=ccp-script-js-extra
+</script>
+<script defer id="ccp-script-js" src="https://musikverein.at/wp-content/plugins/Identity%20Lab%20-%20Cookie%20Managmenet/cookie-banner.js?x87249&amp;ver=1786965862"></script>
+<script id="mv-sponsor-logo-js-extra">
+var MVK_LOGO = {"endpoint":"https://musikverein.at/wp-json/idl/v1/logo","prefix":"/enrichment/uploads/logos/","host":"spielplan.musikverein.at","active":"1"};
+//# sourceURL=mv-sponsor-logo-js-extra
+</script>
+<script id="mv-sponsor-logo-js" src="https://musikverein.at/wp-content/plugins/Identity%20Lab%20-%20Sponsor%20Logos/mv-sponsor-logo.js?x87249&amp;ver=2.0"></script>
+<script data-wp-strategy="defer" defer id="mv-a11y-additiv-js" src="https://musikverein.at/wp-content/plugins/IDL-Functions/mv-a11y-additiv.js?x87249&amp;ver=1791275070"></script>
+<script data-wp-strategy="defer" defer id="mv-anchor-offset-js" src="https://musikverein.at/wp-content/plugins/IDL-Functions/mv-anchor-offset.js?x87249&amp;ver=1789387035"></script>
+<script src='https://musikverein.at/wp-content/plugins/oxygen/plugin/global-scripts/oxygen-utils.js?x87249&amp;bd_ver=6.1.3' defer></script>
+<script src='https://musikverein.at/wp-content/plugins/oxygen/subplugins/breakdance-elements/dependencies-files/breakdance-interactions@1/dist/interactions.umd.js?x87249&amp;bd_ver=6.1.3' defer></script>
+<script>document.addEventListener('DOMContentLoaded', function(){         if (!window.BreakdanceFrontend) {
+            window.BreakdanceFrontend = {}
+        }
+
+        window.BreakdanceFrontend.data = {"homeUrl":"https:\/\/musikverein.at","ajaxUrl":"https:\/\/musikverein.at\/wp-admin\/admin-ajax.php","elementsPluginUrl":"https:\/\/musikverein.at\/wp-content\/plugins\/oxygen\/subplugins\/breakdance-elements\/","BASE_BREAKPOINT_ID":"breakpoint_base","breakpoints":[{"id":"breakpoint_base","label":"Desktop","defaultPreviewWidth":"100%"},{"id":"breakpoint_tablet_landscape","label":"Tablet Landscape","defaultPreviewWidth":1024,"maxWidth":1119},{"id":"breakpoint_tablet_portrait","label":"Tablet Portrait","defaultPreviewWidth":768,"maxWidth":1023},{"id":"breakpoint_phone_landscape","label":"Phone Landscape","defaultPreviewWidth":480,"maxWidth":767},{"id":"breakpoint_phone_portrait","label":"Phone Portrait","defaultPreviewWidth":400,"maxWidth":479}],"subscriptionMode":"pro"}
+
+        if (!window.OxygenFrontend) {
+            window.OxygenFrontend = {}
+        }
+
+        window.OxygenFrontend.data = {"homeUrl":"https:\/\/musikverein.at","ajaxUrl":"https:\/\/musikverein.at\/wp-admin\/admin-ajax.php","elementsPluginUrl":"https:\/\/musikverein.at\/wp-content\/plugins\/oxygen\/subplugins\/breakdance-elements\/","BASE_BREAKPOINT_ID":"breakpoint_base","breakpoints":[{"id":"breakpoint_base","label":"Desktop","defaultPreviewWidth":"100%"},{"id":"breakpoint_tablet_landscape","label":"Tablet Landscape","defaultPreviewWidth":1024,"maxWidth":1119},{"id":"breakpoint_tablet_portrait","label":"Tablet Portrait","defaultPreviewWidth":768,"maxWidth":1023},{"id":"breakpoint_phone_landscape","label":"Phone Landscape","defaultPreviewWidth":480,"maxWidth":767},{"id":"breakpoint_phone_portrait","label":"Phone Portrait","defaultPreviewWidth":400,"maxWidth":479}],"subscriptionMode":"pro"} }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+(function ($) {
+  $(document).ready(function () {
+    // Re-init guard (Oxygen / AJAX can run this twice)
+    if (window.__pushMenuInit) return;
+    window.__pushMenuInit = true;
+
+    const $container   = $(".container-menu");
+    // Visible button only — the panel ALSO carries .push-menu-toggle,
+    // so without :not(.push-menu) the toggle handler binds to the panel
+    // and tears the menu down on inside clicks.
+    const $menuTrigger = $(".push-menu-toggle").not(".push-menu");
+    const $menu        = $(".push-menu");
+    const $topItem     = $(".menu-top, .logo-b");
+    const $toggle      = $(".toggle");
+    const $backdrop    = $(".menu-backdrop");
+    const $logoShadow  = $(".logo--shadow");
+    const $closeBtn    = $menu.find(".menu-close");
+
+    let isAnimating = false;
+    const SCROLL_CLOSE_THRESHOLD = 80; // px; ignores mobile address-bar jitter
+    let openScrollY = 0;
+
+    const isOpen = () => $menu.hasClass("push-menu-active");
+
+    // --- a11y: make div-based controls keyboard operable -------------
+    $menuTrigger.attr({ role: "button", tabindex: "0", "aria-expanded": "false" });
+    $closeBtn.attr({ role: "button", tabindex: "0", "aria-label": "Menü schließen" });
+    $menu.attr("aria-hidden", "true");
+
+    // ----------------------------------------------------------------
+    function openMenu() {
+      if (isOpen() || isAnimating) return;
+      isAnimating = true;
+      openScrollY = window.scrollY;
+
+      $menu.addClass("push-menu-active").attr("aria-hidden", "false");
+      $menuTrigger.attr("aria-expanded", "true");
+      $backdrop.addClass("active");
+      $logoShadow.addClass("no-shadow");
+
+      $topItem.stop(true, true).fadeTo(300, 0, function () {
+        $(this).css("visibility", "hidden");
+      });
+      $toggle.stop(true, true).fadeTo(300, 0, function () {
+        $(this).css("visibility", "hidden");
+      });
+
+      $menu.stop(true, true).slideDown(900, function () {
+        isAnimating = false;
+        $menu.find("a[href]").filter(":visible").first().trigger("focus");
+      });
+    }
+
+    function closeMenu() {
+      if (!isOpen() || isAnimating) return;
+      isAnimating = true;
+
+      $menu.removeClass("push-menu-active").attr("aria-hidden", "true");
+      $menuTrigger.attr("aria-expanded", "false");
+      $backdrop.removeClass("active");
+      $logoShadow.removeClass("no-shadow");
+
+      $menu.stop(true, true).slideUp(900, function () {
+        isAnimating = false;
+        $topItem.css("visibility", "visible").stop(true, true).fadeTo(300, 1);
+        $toggle.css("visibility", "visible").stop(true, true).fadeTo(300, 1);
+        $menuTrigger.trigger("focus"); // return focus to trigger
+      });
+    }
+
+    function toggleMenu() {
+      if (isOpen()) closeMenu();
+      else openMenu();
+    }
+
+    // --- Trigger: click + keyboard ----------------------------------
+    $menuTrigger.on("click.pushmenu", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleMenu();
+    });
+    $menuTrigger.on("keydown.pushmenu", function (e) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleMenu();
+      }
+    });
+
+    // Clicks inside the menu don't bubble to the outside-click handler
+    $menu.on("click.pushmenu", function (e) {
+      e.stopPropagation();
+    });
+
+    // Close button: click + keyboard
+    $menu.on("click.pushmenu", ".menu-close", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeMenu();
+    });
+    $closeBtn.on("keydown.pushmenu", function (e) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        closeMenu();
+      }
+    });
+
+    // Close on click outside (container + menu)
+    $(document).on("click.pushmenu", function (e) {
+      if (!$container.length || !isOpen()) return;
+      const inContainer =
+        $container.is(e.target) || $container.has(e.target).length > 0;
+      const inMenu = $menu.is(e.target) || $menu.has(e.target).length > 0;
+      if (!inContainer && !inMenu) closeMenu();
+    });
+
+    // ESC closes
+    $(document).on("keydown.pushmenu", function (e) {
+      if (e.key === "Escape" && isOpen()) closeMenu();
+    });
+
+    // Focus trap while open
+    $menu.on("keydown.pushmenu", function (e) {
+      if (e.key !== "Tab" || !isOpen()) return;
+      const $f = $menu
+        .find("a[href], button, .menu-close, [tabindex='0']")
+        .filter(":visible");
+      if (!$f.length) return;
+      const first = $f[0], last = $f[$f.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    });
+
+    // Close on scroll — only past a threshold, so mobile chrome
+    // show/hide doesn't slam it shut.
+    $(window).on("scroll.pushmenu", function () {
+      if (!isOpen() || isAnimating) return;
+      if (Math.abs(window.scrollY - openScrollY) > SCROLL_CLOSE_THRESHOLD) {
+        closeMenu();
+      }
+    });
+
+    // ----------------------------------------------------------------
+    // OPTIONAL safety net: force navigation for menu links.
+    // Root cause of the original "critical fix" was the panel carrying
+    // .push-menu-toggle (toggleMenu fired on link clicks). The
+    // :not(.push-menu) selector above removes that. Test the menu links
+    // with this block deleted — they should navigate normally. Kept here
+    // only as a fallback; it passes through anchors, downloads, new tabs.
+    // ----------------------------------------------------------------
+    const menuEl = $menu.get(0);
+    if (menuEl) {
+      menuEl.addEventListener(
+        "click",
+        function (ev) {
+          const a = ev.target.closest("a[href]");
+          if (!a) return;
+          if (ev.button !== 0) return;
+          if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+          if (a.hasAttribute("download")) return;
+          if (a.target && a.target !== "_self") return;
+          const href = (a.getAttribute("href") || "").trim();
+          if (!href || href.startsWith("#")) return;
+          if (href.toLowerCase().startsWith("javascript:")) return;
+          ev.preventDefault();
+          ev.stopPropagation();
+          window.location.assign(a.href);
+        },
+        true
+      );
+    }
+  });
+})(jQuery);
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+(function () {
+  if (window.__menuFadeInit) return;
+  window.__menuFadeInit = true;
+  if (typeof gsap === "undefined" || typeof ScrollTrigger === "undefined") return;
+  gsap.registerPlugin(ScrollTrigger);
+
+  const EDGE = 0.10;
+  const EL   = ".menu-fade";
+  let isShown = null;
+
+  const setMenu = (show, hard = false) => {
+    if (!hard && isShown === show) return;
+    isShown = show;
+    if (hard) {
+      gsap.set(EL, { opacity: show ? 1 : 0, pointerEvents: show ? "auto" : "none" });
+    } else {
+      gsap.set(EL, { pointerEvents: show ? "auto" : "none" });
+      gsap.to(EL, { opacity: show ? 1 : 0, duration: 0.2, overwrite: "auto", ease: "power2.out" });
+    }
+  };
+
+  // Pure helper — no outer-variable dependency, no TDZ risk
+  const atEdgeStop = (progress, scroll) => scroll <= 1 || progress > 0.999;
+
+  const st = ScrollTrigger.create({
+    trigger: document.documentElement,
+    start: "top top",
+    end: "bottom bottom",
+    scrub: true,
+    invalidateOnRefresh: true,
+    onUpdate(self) {
+      if (atEdgeStop(self.progress, self.scroll())) { setMenu(true, true); return; }
+      const p = self.progress;
+      setMenu(p < EDGE || p > 1 - EDGE);
+    }
+  });
+
+  const enforceEdges = () => {
+    if (atEdgeStop(st.progress, window.scrollY)) setMenu(true, true);
+  };
+  window.addEventListener("load", enforceEdges);
+  ScrollTrigger.addEventListener("refresh", enforceEdges);
+  ScrollTrigger.addEventListener("scrollEnd", enforceEdges);
+  enforceEdges();
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+let numberInterval;
+let currentProgress = 0;
+
+function startProgressAnimation() {
+    const $number = jQuery("#random-number");
+    currentProgress = 0;
+
+    numberInterval = setInterval(() => {
+        currentProgress += 1;
+        if (currentProgress > 100) {
+            currentProgress = 100;
+            clearInterval(numberInterval);
+        }
+        $number.text(`${currentProgress}%`);
+    }, 50); // ~5 seconds to 100%
+}
+
+function stopProgressAnimation() {
+    clearInterval(numberInterval);
+    jQuery("#random-number").text("100%");
+}
+
+jQuery(document).ready(function () {
+    startProgressAnimation(); // ✅ start counting up
+
+    const videos = document.querySelectorAll("video");
+    let loadedCount = 0;
+    let hasLoaded = false;
+
+    if (videos.length === 0) {
+        allVideosLoaded();
+    } else {
+        videos.forEach((video) => {
+            video.addEventListener("canplaythrough", () => {
+                loadedCount++;
+                if (loadedCount === videos.length) {
+                    allVideosLoaded();
+                }
+            });
+        });
+
+        // Fallback: in case videos take too long
+        setTimeout(() => {
+            if (!hasLoaded) {
+                console.warn("Some videos didn’t load in time. Proceeding anyway...");
+                allVideosLoaded();
+            }
+        }, 7000); // ⏱ 7-second fallback
+    }
+
+    function allVideosLoaded() {
+        if (hasLoaded) return;
+        hasLoaded = true;
+
+        jQuery("#mask").fadeOut(400, function () {
+            stopProgressAnimation(); // ✅ stop and set to 100%
+            jQuery(this).css("display", "none");
+
+            jQuery("body").addClass("page-loaded");
+        });
+    }
+});
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+(function () {
+  if (window.__scrollTopInit) return;
+  window.__scrollTopInit = true;
+
+  const THRESHOLD = 200;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const getY = () => window.pageYOffset || document.documentElement.scrollTop || 0;
+
+  function run() {
+    const btn = document.getElementById('scrollTopBtn');
+    if (!btn) return;
+
+    const toggle = () => {
+      const show = getY() > THRESHOLD;
+      btn.classList.toggle('is-visible', show);
+      btn.classList.toggle('expanded', show);
+    };
+    toggle(); // initial state
+
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { toggle(); ticking = false; });
+    }, { passive: true });
+
+    // a11y: div behaves like a button
+    btn.setAttribute('role', 'button');
+    btn.setAttribute('tabindex', '0');
+    if (!btn.getAttribute('aria-label')) btn.setAttribute('aria-label', 'Zum Seitenanfang');
+
+    const scrollUp = (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    };
+    btn.addEventListener('click', scrollUp);
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') scrollUp(e);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run, { once: true });
+  } else {
+    run();
+  }
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – GATE / Weiche (Modul 00)
+ * Stand: 2026-09-14 (T7: Ueberschrift im Fallback-Zweig; T6b: Sprungziel)
+ * Einbau: ZUERST – noch vor 01-mvk-core (gleicher Block oder davor).
+ *
+ * Aufgabe: Entscheidet anhand der Event-id, welche Seitenvariante bleibt:
+ *   - id vorhanden -> Konzert-Inhalt (#has-id-content) bleibt, Fallback weg
+ *   - keine id     -> Fallback (#no-id-content, z.B. 404) bleibt, Konzert weg
+ *
+ * Die id kommt aus ?id=<hex8> ODER aus der Pretty-URL /…/<slug>-<hex8>/
+ * (identisch zu 01-mvk-core: getId). WICHTIG: Pfad MIT prüfen, sonst zeigt
+ * die Pretty-URL fälschlich den Fallback.
+ *
+ * Entfernt die jeweils andere Sektion per .remove() (endgültig, keine
+ * leeren Platzhalter).
+ *
+ * Sprungziel (T6b, 09.09.2026): beide Sektionen tragen im Quelltext ein
+ * <main>. Das Sprungziel des sitewide Skip-Links liegt als id="inhalt" im
+ * Konzert-Zweig, im Fallback-Zweig als id="inhalt-404". Bleibt der Fallback
+ * stehen, wird "inhalt-404" hier in "inhalt" umbenannt. So steht im
+ * ausgelieferten HTML nie eine doppelte id und zur Laufzeit existiert
+ * immer genau ein #inhalt.
+ *
+ * Ueberschrift (T7, 14.09.2026): Der Fallback-Zweig hatte KEINE Ueberschrift.
+ * Gemessen am 14.09.2026 an /konzert/ (ohne id): einziges Heading im
+ * Accessibility-Baum war die h3 des Cookie-Dialogs, die Seite lief ohne h1.
+ * Die Meldung "Diese Seite existiert leider nicht." bekommt hier
+ * role="heading" + aria-level="1". Bewusst per ARIA statt Tag-Wechsel im
+ * Oxygen-Template: der Knoten 2319-480 traegt Typo-Klassen, ein echtes <h1>
+ * haette die Optik veraendert (dieselbe Falle wie h3 -> h2 in T6b).
+ * Sprachneutral - der Text kommt aus dem Template (DE bzw. /en/).
+ * ============================================================= */
+(function () {
+  "use strict";
+
+  function hasEventId() {
+    if (new URLSearchParams(window.location.search).has("id")) return true;
+    return /-[0-9a-fA-F]{8}\/?$/.test(window.location.pathname);
+  }
+
+  /* Die Meldung des Fallback-Zweigs als Ueberschrift Ebene 1 ausweisen.
+     Primaer ueber den Oxygen-Knoten 2319-480, mit Textheuristik als
+     Auffangnetz, falls der Knoten neu nummeriert wird. Ein vorhandenes
+     <h1> bzw. role="heading" wird nicht angetastet. */
+  function markHeading(fallback) {
+    if (fallback.querySelector("h1, [role='heading'][aria-level='1']")) return;
+
+    // DE = Knoten 2319-480, EN = 2319-481 (gemessen 14.09.2026). Pro
+    // Seitenaufruf rendert der Server nur die Variante der Sprache; der
+    // Textfilter faengt den Fall ab, dass doch beide im DOM stehen.
+    var msg = null;
+    var named = fallback.querySelectorAll(".oxy-text-2319-480, .oxy-text-2319-481");
+    for (var n = 0; n < named.length; n++) {
+      if (named[n].textContent.replace(/\s+/g, " ").trim().length > 6) { msg = named[n]; break; }
+    }
+    if (!msg) {
+      var texts = fallback.querySelectorAll(".oxy-text");
+      for (var i = 0; i < texts.length; i++) {
+        var t = texts[i].textContent.replace(/\s+/g, " ").trim();
+        if (t.length > 6 && t !== "404") { msg = texts[i]; break; }
+      }
+    }
+    if (!msg) return;
+
+    msg.setAttribute("role", "heading");
+    msg.setAttribute("aria-level", "1");
+
+    /* Der Knoten enthaelt ein <br>. In der Textfolge des DOM stossen die
+       Woerter dadurch ohne Leerzeichen aneinander ("Diese Seiteexistiert"),
+       und genau daraus bildet sich der zugaengliche Name. Deshalb den Namen
+       aus der gerenderten Zeilenfolge setzen - nur, wenn ein <br> im Spiel
+       ist und der Text sonst verklebt waere. */
+    if (msg.querySelector("br")) {
+      var label = (msg.innerText || "").replace(/\s+/g, " ").trim();
+      if (label) msg.setAttribute("aria-label", label);
+    }
+  }
+
+  function gate() {
+    var concert = document.getElementById("has-id-content");
+    var fallback = document.getElementById("no-id-content");
+    if (!concert || !fallback) return;
+
+    if (hasEventId()) {
+      // Konzert-Zweig: der Fallback verschwindet samt #inhalt-404.
+      fallback.remove();
+    } else {
+      // Fallback-Zweig: Sprungziel übernehmen, sonst zeigt der
+      // Skip-Link "Zum Inhalt springen" hier ins Leere.
+      concert.remove();
+      var alt = document.getElementById("inhalt-404");
+      if (alt) alt.id = "inhalt";
+      markHeading(fallback);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", gate);
+  } else {
+    gate();
+  }
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – CORE (Modul 01)
+ * Einbau: EINMAL pro Seite, VOR allen anderen Modulen.
+ *         (z.B. globaler Code-Block im Page-Header oder als erstes
+ *          Snippet der Konzert-Sektion.)
+ *
+ * Aufgabe:
+ *   - dayjs laden/konfigurieren
+ *   - Event-ID aus URL lesen
+ *   - JSON GENAU EINMAL laden
+ *   - Sprache (LANG) zentral bestimmen
+ *   - Daten + Helfer global bereitstellen (window.MVK)
+ *   - "mvk:ready" feuern und MVK.ready-Promise auflösen
+ *   - .konzert-box ein-/ausblenden (auch bei Fehler sichtbar)
+ *
+ * Vertrag für alle Render-Module:
+ *   MVK.ready.then(({ data, booking, related }) => { ... });
+ *   MVK.f(obj, 'name_1_web')   -> _D/_E je nach Sprache
+ *   MVK.write(html, 'id'); MVK.hide('id'); MVK.show('id');
+ * ============================================================= */
+(function () {
+  "use strict";
+
+  // ---- Konfiguration -----------------------------------------
+  var CONFIG = {
+    jsonBase: "https://spielplan.musikverein.at/e/",
+    assetBase: "https://spielplan.musikverein.at",
+    // Pretty-URLs (Adressleiste auf /<seite>/<slug>-<id>/ umschreiben).
+    // ERST auf true setzen, wenn die WordPress-Rewrite-Regel
+    // (wordpress-pretty-urls.php) aktiv UND Permalinks geflusht sind –
+    // sonst führt ein Reload/Teilen der Pretty-URL zu 404.
+    // Override auch per window.MVK_PRETTY_URLS = true möglich.
+    prettyUrls: true
+  };
+
+  // ---- Sprache: 'D' (default) oder 'E' -----------------------
+  // Reihenfolge: window.MVK_LANG override > <html lang> > 'D'
+  function detectLang() {
+    if (window.MVK_LANG === "D" || window.MVK_LANG === "E") return window.MVK_LANG;
+    var htmlLang = (document.documentElement.lang || "").toLowerCase();
+    return htmlLang.indexOf("en") === 0 ? "E" : "D";
+  }
+  var LANG = detectLang();
+
+  // ---- DOM-Helfer (null-sicher) ------------------------------
+  function write(html, id) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+    return el;
+  }
+  function hide(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = "none";
+  }
+  function show(id, display) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = display || "";
+  }
+  // Feld in aktueller Sprache, Fallback auf _D, sonst ""
+  function f(obj, baseKey) {
+    if (!obj) return "";
+    var v = obj[baseKey + "_" + LANG];
+    if (v == null || v === "") v = obj[baseKey + "_D"];
+    return v == null ? "" : v;
+  }
+
+  function setBoxOpacity(value) {
+    var box = document.querySelector(".konzert-box");
+    if (box) box.style.opacity = value;
+  }
+
+  /* ---- A11y: Ladezustand und Fehlermeldung (T6/B7, 08.09.2026) ----------
+     BEFUND: `.konzert-box` läuft von `opacity: 0` auf `1`. Der Inhalt steht
+     dabei die ganze Zeit im DOM – unsichtbar, aber im Accessibility-Baum und
+     fokussierbar. Wer die Seite mit der Tastatur oder einem Screenreader
+     betritt, während die JSON noch lädt, arbeitet also durch leere Felder
+     und Platzhalter. `aria-busy` sagt genau das aus und ist dafür da.
+
+     Und schlägt der Abruf fehl, wird die Box trotzdem sichtbar geschaltet
+     (Zeile im `.catch` unten, bewusst so) – die Seite zeigt dann leere
+     Felder ohne jeden Hinweis. Für Sehende ist das erkennbar, für einen
+     Screenreader nicht: nichts ändert sich, nichts wird angesagt.
+     `role="status"` schließt das (4.1.3).
+     ------------------------------------------------------------------- */
+  function setBusy(state) {
+    var box = document.querySelector(".konzert-box");
+    if (box) box.setAttribute("aria-busy", state ? "true" : "false");
+  }
+
+  /* Region einmal anlegen und LEER im Dokument stehen lassen. Ein
+     Live-Bereich, der erst im Fehlerfall entsteht, wird nicht vorgelesen –
+     er muss vorher im Baum sein, damit die Änderung auffällt. */
+  function statusRegion() {
+    var el = document.getElementById("mvk-status");
+    if (el) return el;
+    var box = document.querySelector(".konzert-box");
+    if (!box || !box.parentNode) return null;
+    el = document.createElement("p");
+    el.id = "mvk-status";
+    el.className = "mvk-status";
+    el.setAttribute("role", "status");
+    box.parentNode.insertBefore(el, box);
+    return el;
+  }
+
+  function meldeFehler() {
+    var el = statusRegion();
+    if (!el) return;
+    el.textContent = LANG === "E"
+      ? "The event details could not be loaded. Please reload the page."
+      : "Die Veranstaltungsdaten konnten nicht geladen werden. Bitte laden Sie die Seite neu.";
+  }
+
+  // ---- Event-ID ----------------------------------------------
+  // Quelle 1: ?id=<hex8>  (Back-Compat / alte Links)
+  // Quelle 2: Pretty-URL  /…/<slug>-<hex8>/  -> id am Ende des Pfads
+  // Kein Fallback-Event: ohne id kein Konzert-Kontext (Gate entfernt den Block).
+  function getId() {
+    var q = new URLSearchParams(window.location.search).get("id");
+    if (q) return q;
+    var m = window.location.pathname.match(/-([0-9a-fA-F]{8})\/?$/);
+    return m ? m[1] : null;
+  }
+  var id = getId();
+
+  // Titel -> URL-Slug (Umlaute/Sonderzeichen sauber)
+  function slugify(s) {
+    s = (s || "").toLowerCase()
+      .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss");
+    if (String.prototype.normalize) {
+      s = s.normalize("NFD").replace(/[̀-ͯ]/g, ""); // restliche Diakritika
+    }
+    return s.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+
+  // Adressleiste auf Pretty-URL umschreiben (ohne Reload), id bleibt am Slug-Ende.
+  // Setzt voraus, dass die WordPress-Rewrite-Regel /<seite>/<slug>-<id>/ bedient.
+  function upgradeUrl(title) {
+    var enabled = CONFIG.prettyUrls || window.MVK_PRETTY_URLS === true;
+    if (!enabled) return;                 // aus = Adressleiste bleibt bei ?id= (kein 404-Risiko)
+    if (!id || !window.history || !history.replaceState) return;
+    var slug = slugify(title);
+    if (!slug) return;
+    // Basis = aktueller Pfad ohne evtl. bereits vorhandenes "<slug>-<hex8>/"
+    var base = window.location.pathname.replace(/[^/]*-[0-9a-fA-F]{8}\/?$/, "");
+    if (base.charAt(base.length - 1) !== "/") base += "/";
+    var pretty = base + slug + "-" + id.toLowerCase() + "/";
+    if (window.location.pathname !== pretty) {
+      history.replaceState(null, "", pretty);
+    }
+    return pretty;
+  }
+
+  // Pretty-Pfad für ein (anderes) Event bauen – gleiche Seiten-Basis wie aktuell.
+  // eid = 8-stellige Hex-id (z.B. aus booking.ID nach ":").
+  function eventPath(eid, title) {
+    var base = window.location.pathname.replace(/[^/]*-[0-9a-fA-F]{8}\/?$/, "");
+    if (base.charAt(base.length - 1) !== "/") base += "/";
+    var slug = slugify(title);
+    return base + (slug ? slug + "-" : "") + String(eid).toLowerCase() + "/";
+  }
+
+  // ---- Globaler Namespace + ready-Promise --------------------
+  var resolveReady, rejectReady;
+  var ready = new Promise(function (res, rej) { resolveReady = res; rejectReady = rej; });
+
+  window.MVK = {
+    CONFIG: CONFIG,
+    LANG: LANG,
+    id: id,
+    data: null,
+    booking: null,
+    ready: ready,
+    write: write,
+    hide: hide,
+    show: show,
+    f: f,
+    slugify: slugify,
+    eventPath: eventPath,
+    asset: function (path) { return path ? CONFIG.assetBase + path : ""; }
+  };
+
+  // ---- dayjs sicherstellen, dann laden -----------------------
+  function start() {
+    // Ohne id: kein Fetch (Gate hat den Konzert-Block entfernt)
+    if (!id) return;
+
+    if (window.dayjs && dayjs.locale) {
+      try { dayjs.locale(LANG === "E" ? "en" : "de-at"); } catch (e) {}
+    }
+
+    setBoxOpacity("0");
+    setBusy(true);
+    statusRegion();          // leer anlegen, damit sie im Fehlerfall wirkt
+
+    fetch(CONFIG.jsonBase + id + ".json")
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        var booking = data && data.booking && data.booking.data && data.booking.data[0];
+        MVK.data = data;
+        MVK.booking = booking || {};
+        MVK.related = (data.related && data.related.data) || [];
+
+        // Pretty-URL: Adressleiste auf /<seite>/<titel-slug>-<id>/ umschreiben
+        MVK.prettyUrl = upgradeUrl(f(MVK.booking, "name_1_web"));
+
+        setBoxOpacity("1");
+        setBusy(false);
+        // WICHTIG: mit dem vollen MVK auflösen, damit Module im
+        // .then(render) Zugriff auf MVK.f / write / hide / show / asset haben
+        // (nicht nur auf data/booking). MVK trägt data/booking/related bereits.
+        resolveReady(MVK);
+        document.dispatchEvent(new CustomEvent("mvk:ready", { detail: MVK }));
+      })
+      .catch(function (err) {
+        // Box trotzdem sichtbar machen, damit die Seite nicht leer wirkt
+        setBoxOpacity("1");
+        setBusy(false);
+        meldeFehler();
+        if (window.console) console.warn("[MVK] Laden fehlgeschlagen:", err);
+        rejectReady(err);
+        document.dispatchEvent(new CustomEvent("mvk:error", { detail: err }));
+      });
+  }
+
+  start();
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – HEADER (Modul 02)
+ * Einbau: Code-Block in der Kopf-/Hero-Sektion.
+ * Rendert: date_start, place_time, end_time(+wrapper),
+ *          activity_status_description (Kategorie),
+ *          name_1_web, name_2_web, name_3_web (Titel 1–3),
+ *          heroimage / .photo-credit / gallery-container (Bild & Archiv-Galerie),
+ *          Tickets/Verkaufsstatus (ticket_link, btn_waitinglist, btn_reminder,
+ *          booking_status_note, buffet_wrapper, saveToCalendar, end_time_wrapper)
+ * Kontext Bild: Konzert nutzt enrichments[PICTURE]; Archiv nutzt archiveMedia
+ *               (enrichments=false) -> Hero aus, Galerie gefüllt.
+ * Kontext Tickets: Zukunft = Verkauf/Vorverkauf; Vergangenheit/Archiv = Statushinweis.
+ * Abhängig von: 01-mvk-core, dayjs
+ * ============================================================= */
+(function () {
+  "use strict";
+
+  var SELLING_PRESALE   = "000001ad:0000001d"; // im Vorverkauf
+  var SELLING_CANCELLED = "000001ad:0000002a"; // abgesagt
+
+  // Echte Uhrzeit vorhanden? Archiv-/Kulturerbe-Events haben 00:00:00
+  // (kein realer Zeitpunkt) -> dann KEINE Zeit ausgeben.
+  function hasRealTime(dateStr) {
+    if (!dateStr) return false;
+    var d = new Date(dateStr);
+    return !(d.getHours() === 0 && d.getMinutes() === 0);
+  }
+
+  /* ---- <time>-Hilfen (T6/B7, 08.09.2026) --------------------------------
+     Datum und Uhrzeit standen als reiner Text im DOM: 0 `<time>`-Elemente
+     auf der Seite gemessen. Für 1.3.1 muss die Information, die optisch
+     als Datum erkennbar ist, auch maschinenlesbar sein – Screenreader und
+     Kalenderdienste lesen `datetime`, nicht „Mittwoch, 12. August 2026".
+     Ohne Zeitzonen-Suffix, weil die JSON lokale Wiener Zeiten liefert und
+     ein falsches Z den Termin um zwei Stunden verschöbe.
+     -------------------------------------------------------------------- */
+  function p2(n) { return (n < 10 ? "0" : "") + n; }
+
+  function isoDate(s) {
+    var d = new Date(s);
+    if (isNaN(d.getTime())) return "";
+    return d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate());
+  }
+
+  function isoDateTime(s) {
+    var d = new Date(s);
+    if (isNaN(d.getTime())) return "";
+    return isoDate(s) + "T" + p2(d.getHours()) + ":" + p2(d.getMinutes());
+  }
+
+  // Nur auszeichnen, wenn ein gültiger Wert herauskommt – ein leeres
+  // `datetime` wäre schlechter als gar keins.
+  function timeTag(iso, text) {
+    return iso ? '<time datetime="' + iso + '">' + text + "</time>" : text;
+  }
+
+  // Titel aus der JSON landet in einem Attribut – Anführungszeichen darin
+  // würden es aufbrechen.
+  function attr(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function buildGallery(items, MVK) {
+    var titel = MVK ? MVK.f(MVK.booking, "name_1_web") : "";
+    var echte = [];
+    for (var k = 0; k < items.length; k++) {
+      if (items[k].filellink_azure) echte.push(items[k].filellink_azure);
+    }
+    var html = '<div class="imageGallery1">';
+    for (var i = 0; i < echte.length; i++) {
+      /* Alt-Text war für alle Bilder identisch „Archivbild" – bei fünf
+         Bildern hört man fünfmal dasselbe und weiß nicht, welcher Link
+         wohin führt (1.1.1 / 2.4.4). Nummer und Titel unterscheiden sie. */
+      var alt = (MVK && MVK.LANG === "E" ? "Archive image " : "Archivbild ") +
+                (i + 1) + " " + (MVK && MVK.LANG === "E" ? "of" : "von") + " " +
+                echte.length + (titel ? " – " + titel : "");
+      html += '<a href="' + attr(echte[i]) + '">' +
+              '<img src="' + attr(echte[i]) + '" alt="' + attr(alt) + '" loading="lazy" /></a>';
+    }
+    return html + "</div>";
+  }
+
+  /* ---- „Links"-Kasten (20.10.2026, Karte Rosi Frais) -------------------
+     Die Box mit Überschrift „Links" enthält nur #saveToCalendar und
+     #buffet_wrapper. Bei vergangenen/abgesagten Events werden beide
+     ausgeblendet, die Oxygen-Box (ohne ID) samt Überschrift blieb leer
+     stehen. Box = nächster Vorfahre unter .konzert-box.
+     -------------------------------------------------------------------- */
+  function hideLinksBox() {
+    var links = document.querySelector(".mvk-links");
+    var box = links && links.closest(".konzert-box > .oxy-container");
+    if (box) box.style.display = "none";
+  }
+
+  function normalizeUrl(raw) {
+    raw = (raw || "").trim();
+    return raw.slice(0, 2) === "ht" ? raw : "http://" + raw;
+  }
+
+  function renderHeader(MVK) {
+    var b = MVK.booking;
+    var locale = MVK.LANG === "E" ? "en-GB" : "de-AT";
+    var clock = MVK.LANG === "E" ? "" : " Uhr";
+
+    // --- Datum (lang) ---
+    if (b.date_start) {
+      var datumText = new Date(b.date_start).toLocaleDateString(locale, {
+        weekday: "long", year: "numeric", month: "long", day: "numeric"
+      });
+      MVK.write(timeTag(isoDate(b.date_start), datumText), "date_start");
+    } else {
+      MVK.hide("date_start");
+    }
+
+    // --- Ort (+ Startzeit, falls vorhanden) ---
+    if (b.room_description) {
+      var room = b.room_description;
+      var venue = b.venue_description || "";
+      // Venue nur anhängen, wenn nicht "Musikverein" und nicht bereits im
+      // room_description enthalten (verhindert Archiv-Dopplung "X Prag, X").
+      var showVenue = venue && venue !== "Musikverein" && room.indexOf(venue) === -1;
+      var label = room + (showVenue ? ", " + venue : "");
+
+      if (hasRealTime(b.date_start)) {
+        var startTime = new Date(b.date_start).toLocaleTimeString(locale, {
+          hour: "numeric", minute: "numeric"
+        });
+        // Nur die Uhrzeit auszeichnen, nicht Saal + Uhrzeit zusammen:
+        // `datetime` beschreibt einen Zeitpunkt, kein „Großer Saal | 20:15".
+        label += " | " + timeTag(isoDateTime(b.date_start), startTime + clock);
+      }
+      MVK.write(label, "place_time");
+    } else {
+      MVK.hide("place_time");
+    }
+
+    // --- Endzeit (nur bei realer Uhrzeit) ---
+    if (b.date_end && hasRealTime(b.date_end)) {
+      var endeText = new Date(b.date_end).toLocaleTimeString(locale, {
+        hour: "numeric", minute: "numeric"
+      });
+      MVK.write(timeTag(isoDateTime(b.date_end), endeText), "end_time");
+    } else {
+      MVK.hide("end_time");
+    }
+
+    // --- Kategorie ---
+    if (b.activity_status_description) {
+      MVK.write(b.activity_status_description, "activity_status_description");
+    } else {
+      MVK.hide("activity_status_description");
+    }
+
+    // --- Titel 1–3 (sprachabhängig) ---
+    ["name_1_web", "name_2_web", "name_3_web"].forEach(function (key) {
+      var val = MVK.f(b, key);
+      if (val) MVK.write(val, key);
+      else MVK.hide(key);
+    });
+
+    // --- Bild / Archiv-Galerie ---
+    var data = MVK.data;
+    var hero = document.getElementById("heroimage");
+    var credit = document.querySelector(".photo-credit");
+    var enrichments = (data.enrichments && data.enrichments.data) || [];
+    var archiveMedia = (data.archiveMedia && data.archiveMedia.data) || [];
+
+    var picture = enrichments.filter(function (e) { return e.type === "PICTURE"; })[0];
+    if (picture && hero) {
+      hero.src = MVK.asset(picture.enrichment_url);
+      if (picture.alt_text) hero.alt = picture.alt_text; // A11y: echtes alt aus JSON
+      if (picture.copyright && credit) credit.textContent = picture.copyright;
+    }
+
+    /* ---- Hintergrundbild ohne alt (T6/B7, 08.09.2026) -------------------
+       BEFUND: Das Template trägt `id="heroimage"` ZWEIMAL – einmal auf
+       `img.konzert-img` (694 px, alt aus der JSON) und einmal auf
+       `img.bckg-img` (1053 × 800 px, alt fehlt vollständig). Das ist der
+       `image-alt`-Verstoß aus dem Audit vom 12.08. und zugleich eine
+       doppelte ID (4.1.1). `getElementById` liefert nur das erste Element,
+       deshalb hat die Zeile oben das zweite nie erreicht.
+
+       Hier wird nur der A11y-Teil geheilt: das Hintergrundbild ist Dekor,
+       es wiederholt das Motiv des Hero-Bildes. `alt=""` plus
+       `role="presentation"` nimmt es aus dem Baum. Nur wenn kein alt
+       gesetzt ist – ein echtes alt aus dem Template gewinnt.
+
+       DIE DOPPELTE ID BLEIBT und muss im Oxygen-Template (Seite 2319)
+       aufgelöst werden; JS kann eine ID nicht sinnvoll umbenennen, ohne
+       fremde Selektoren zu brechen. Siehe T6-Doku, Punkt K6. */
+    var deko = document.querySelectorAll("img.bckg-img");
+    for (var d = 0; d < deko.length; d++) {
+      if (deko[d].getAttribute("alt") === null) {
+        deko[d].setAttribute("alt", "");
+        deko[d].setAttribute("role", "presentation");
+      }
+    }
+
+    /* Auffangnetz für das Hero-Bild (nachgetragen 08.09.2026 nach der
+       Live-Prüfung). Bei Archiv-/Kulturerbe-Events liefert die JSON kein
+       PICTURE-Enrichment (`enrichments = false`), die Zeile oben läuft also
+       nicht – und `img.konzert-img` steht ohne `alt` im DOM. Gemessen an
+       `000682eb`: 1 Bild ohne alt.
+
+       Im Archivfall ist es `display: none` und damit aus dem
+       Accessibility-Baum, also kein 1.1.1-Verstoß. Es bleibt aber die Lücke
+       für den Fall, dass weder PICTURE noch archiveMedia geliefert werden:
+       dann steht das Bild sichtbar ohne alt da, und Screenreader lesen den
+       Dateinamen vor. `alt=""` ist dafür die richtige Notlösung – lieber
+       stumm als ein vorgelesener Pfad.
+
+       Sauber wäre `alt=""` im statischen Oxygen-Markup (Template 2319); das
+       JS überschreibt es ja, sobald echte Daten da sind. Steht auf der
+       Oxygen-Liste. */
+    if (hero && hero.getAttribute("alt") === null) {
+      hero.setAttribute("alt", "");
+    }
+
+    // Archiv-Galerie hat Vorrang -> Hero ausblenden, Galerie füllen
+    if (archiveMedia.length && archiveMedia[0].filellink_azure) {
+      if (hero) hero.style.display = "none";
+      MVK.write(buildGallery(archiveMedia, MVK), "gallery-container");
+    }
+  }
+
+  // --- Tickets & Verkaufsstatus -------------------------------
+  function renderTicketing(MVK) {
+    var b = MVK.booking;
+    var data = MVK.data;
+    var addresses = (data.addresses && data.addresses.data) || [];
+    var now = dayjs();
+    var isFuture = dayjs(b.date_end) > now;
+
+    var L = MVK.LANG === "E" ? {
+      cancelled: "This event has been cancelled.",
+      moved: "This event has been postponed.",
+      past: "This event has already taken place.",
+      presaleMember: function (d) { return "Pre-sale for members starts on " + d + " at 9:00."; },
+      presaleGeneral: function (d) { return "General pre-sale starts on " + d + " at 9:00."; }
+    } : {
+      cancelled: "Diese Veranstaltung wurde abgesagt.",
+      moved: "Diese Veranstaltung wurde verschoben.",
+      past: "Diese Veranstaltung hat bereits stattgefunden.",
+      presaleMember: function (d) { return "Der Vorverkauf für Mitglieder beginnt am " + d + " um 9.00 Uhr."; },
+      presaleGeneral: function (d) { return "Der allgemeine Vorverkauf beginnt am " + d + " um 9.00 Uhr."; }
+    };
+
+    var note = "";
+    MVK.hide("btn_waitinglist");
+
+    // Absage hat Vorrang – greift bei zukünftigen UND vergangenen Events,
+    // unabhängig vom Verkaufsstatus. booking_status_is_cancelled ist String "True".
+    var isCancelled = b.booking_status_is_cancelled === "True" ||
+                      b.ref_ev_selling_status === SELLING_CANCELLED;
+    if (isCancelled) {
+      var box = document.querySelector(".konzert-box");
+      if (box) box.classList.add("is-cancelled");
+      var cEl = document.getElementById("booking_status_note");
+      if (cEl) { cEl.innerHTML = L.cancelled; cEl.style.display = "block"; }
+      MVK.hide("ticket_link");
+      MVK.hide("btn_reminder");
+      MVK.hide("saveToCalendar");
+      MVK.hide("buffet_wrapper");
+      MVK.hide("end_time_wrapper");
+      hideLinksBox();
+      return; // restliche Verkaufs-/Vorverkaufslogik überspringen
+    }
+
+    if (isFuture) {
+      if (b.ref_ev_selling_status === SELLING_PRESALE) {
+        // Vorverkauf läuft: Ticketlink nur bei gültigem Verkaufszustand zeigen
+        var presaleNotYetOpen =
+          dayjs(b.date_of_preselling) > now && dayjs(b.date_of_preselling2) > now;
+        var ticketAvailable = b.secutix_id !== "" && !presaleNotYetOpen;
+        if (!ticketAvailable) MVK.hide("ticket_link");
+      } else {
+        // Kein aktiver MV-Verkauf -> Hinweis statt Ticketlink
+        MVK.hide("ticket_link");
+        var firstAddr = addresses[0];
+        if (b.selling_status_D === "Karten direkt beim Veranstalter" &&
+            firstAddr && firstAddr.webaddress) {
+          note = '<a href="' + normalizeUrl(firstAddr.webaddress) + '">' +
+                 MVK.f(b, "selling_status") + "</a>";
+        } else {
+          note = MVK.f(b, "selling_status");
+        }
+      }
+    } else {
+      // Vergangenheit / Archiv
+      if (b.ref_ev_selling_status === SELLING_CANCELLED) note = L.cancelled;
+      else if (b.ref_ev_booking_moved !== "") note = L.moved;
+      else note = L.past;
+
+      MVK.hide("end_time_wrapper");
+      MVK.hide("saveToCalendar");
+      MVK.hide("ticket_link");
+      MVK.hide("buffet_wrapper");
+      hideLinksBox();
+    }
+
+    // Vorverkaufs-Hinweise (gelten nur, wenn Daten in der Zukunft liegen)
+    if (dayjs(b.date_of_preselling) > now) {
+      note += "<br> " + L.presaleMember(dayjs(b.date_of_preselling).format("D.M.YYYY"));
+      var rem = document.getElementById("btn_reminder");
+      if (rem) {
+        rem.style.display = "block";
+        rem.href = MVK.CONFIG.assetBase + "/reminder?id=" + MVK.id;
+      }
+    } else {
+      MVK.hide("btn_reminder");
+    }
+
+    if (dayjs(b.date_of_preselling2) > now) {
+      note += "<br> " + L.presaleGeneral(dayjs(b.date_of_preselling2).format("D.M.YYYY"));
+    }
+
+    // Statushinweis setzen/ausblenden (Zeilenumbrüche -> Leerzeichen,
+    // ersetzt das frühere globale .booking_status_note-Cleanup)
+    var noteEl = document.getElementById("booking_status_note");
+    if (noteEl) {
+      if (note.trim() !== "") {
+        noteEl.innerHTML = note.replace(/\n/g, " ");
+        noteEl.style.display = "block";
+      } else {
+        noteEl.style.display = "none";
+      }
+    }
+
+    // Ticketlink-Ziel (Shop) setzen
+    var ticketAnchors = document.querySelectorAll("#ticket_link");
+    for (var i = 0; i < ticketAnchors.length; i++) {
+      ticketAnchors[i].href =
+        "https://shop.musikverein.at/selection/event/seat?perfId=" + b.secutix_id;
+    }
+  }
+
+  if (window.MVK && MVK.ready) {
+    MVK.ready.then(function (ctx) {
+      renderHeader(MVK);
+      renderTicketing(MVK);
+    }).catch(function () {});
+  }
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – INTERPRET:INNEN (Modul 03)
+ * Einbau: Code-Block in der Interpret:innen-Sektion.
+ * Rendert: #interpret  (+ blendet #interpret-wrapper aus, wenn leer)
+ * Logik: Sortierung nach order, Zeilenumbrüche bei Ensemble-Wechsel,
+ *        performer_display_mode 'H' = mit Profession/Rolle.
+ * Abhängig von: 01-mvk-core
+ *
+ * A11y-Ergänzung 08.09.2026 (T6 / B7, SC 1.3.1):
+ *   Die Besetzung war ein einziger Textblock, die Einträge nur durch <br>
+ *   getrennt. Für einen Screenreader ist das ein Absatz – keine Anzahl,
+ *   keine Position, kein Sprung von Eintrag zu Eintrag. Jetzt
+ *   <ul role="list"> mit einem <li> je Person.
+ *
+ *   Die früheren Gruppen-Leerzeilen (Ensemble-Wechsel) sind keine <br>
+ *   mehr, sondern die Klasse `is-gruppenstart` mit Abstand nach oben
+ *   (konzertseite.css). Ein <br> zwischen zwei <li> wäre ungültiges
+ *   Markup und würde die Liste in manchen Engines aufbrechen.
+ *
+ *   `role="list"` ausdrücklich, weil `list-style: none` in WebKit die
+ *   Listen-Semantik entfernt – siehe Modul 04, gleiche Begründung.
+ * ============================================================= */
+(function () {
+  "use strict";
+
+  function render(MVK) {
+    var data = MVK.data;
+    var cast = (data.cast && data.cast.data) || [];
+
+    if (!cast.length) {
+      MVK.hide("interpret-wrapper");
+      return;
+    }
+
+    var sorted = cast.slice().sort(function (a, b) {
+      return parseInt(a.order, 10) - parseInt(b.order, 10);
+    });
+
+    /* Die alte Fassung setzte die Leerzeile VOR dem nächsten Eintrag bzw.
+       NACH dem aktuellen. In einer Liste gehört der Abstand an das Element,
+       das die neue Gruppe eröffnet – deshalb wird der Umbruch beim Vorgänger
+       ermittelt und auf den Nachfolger angewendet. Optisch dasselbe. */
+    function eroeffnetGruppe(i) {
+      if (i === 0) return false;
+      var vor = sorted[i - 1];
+      var jetzt = sorted[i];
+      // Fall 1: freier Eintrag, danach beginnt ein Ensemble
+      if (vor.ref_ensemble_member === "" && jetzt.ref_ensemble_member !== "") return true;
+      // Fall 2: Wechsel zwischen zwei Ensemble-Mitgliedern
+      if (vor.ref_ensemble_member !== "" &&
+          vor.ref_ensemble_member !== jetzt.ref_ensemble_member) return true;
+      return false;
+    }
+
+    var html = sorted.map(function (e, i) {
+      var out = "";
+      var prefix = e.performer_prefix ? e.performer_prefix + " " : "";
+      out += prefix + "<strong>" + MVK.f(e, "name") + "</strong>";
+
+      var isHead = e.performer_display_mode === "H";
+      var profession = MVK.f(e, "profession");
+      var role = MVK.f(e, "role");
+
+      if (isHead && profession) out += ", " + profession;
+      if (role) out += (isHead ? ", " : "") + " (" + role + ")";
+
+      return '<li' + (eroeffnetGruppe(i) ? ' class="is-gruppenstart"' : "") + ">" +
+             out + "</li>";
+    }).join("");
+
+    MVK.write('<ul class="mvk-cast" role="list">' + html + "</ul>", "interpret");
+  }
+
+  if (window.MVK && MVK.ready) MVK.ready.then(render).catch(function () {});
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – PROGRAMM (Modul 04)
+ * Einbau: Code-Block in der Programm-Sektion.
+ * Rendert: #program  (+ blendet #program_wrapper aus, wenn leer)
+ * Markierungen: Pause (composer_author === "***"), Zugabe (is_encore)
+ * Zusätzlich: blendet .jq-hide-Elemente nur ein, wenn das Programm eine
+ *   Pause enthält (datengetrieben, sprachunabhängig – ersetzt das alte
+ *   jQuery-Snippet, das per text().includes('Pause') prüfte).
+ * Abhängig von: 01-mvk-core
+ *
+ * A11y-Ergänzung 08.09.2026 (T6 / B7, SC 1.3.1):
+ *   Das Programm war eine Folge von <h4> und <p> ohne Listen-Semantik –
+ *   gemessen 0 <ul>/<ol>/<dl> auf der ganzen Seite. Ein Screenreader
+ *   nennt damit weder die Anzahl der Werke noch die Position im Ablauf
+ *   („4 von 7"), und man kann die Liste nicht als Einheit überspringen.
+ *   Jetzt <ol role="list">, ein <li> je Eintrag; Pause und Zugabe sind
+ *   eigene Einträge, weil sie Teil des Ablaufs sind.
+ *
+ *   `role="list"` steht ausdrücklich da: `list-style: none` (nötig, damit
+ *   die Optik unverändert bleibt, siehe konzertseite.css) nimmt WebKit die
+ *   Listen-Semantik weg. Ohne die Rolle wäre das Markup korrekt und die
+ *   Ansage trotzdem verloren.
+ *
+ *   Die Komponisten-Überschriften bleiben <h4> im Markup, bekommen ihre
+ *   Ebene aber per `aria-level` aus der Abschnittsüberschrift – dieselbe
+ *   Technik wie mv-a11y-additiv.js v2.7/v2.8. Damit stimmt die Gliederung
+ *   auch nach dem Oxygen-Eingriff, der die Abschnittstitel von h3 auf h2
+ *   hebt (T7), ohne dass dieses Modul erneut angefasst werden muss.
+ * ============================================================= */
+(function () {
+  "use strict";
+
+  // .jq-hide sichtbar nur bei vorhandener Pause.
+  // WICHTIG: CSS setzt `.jq-hide { display:none }`. Inline `display:""` würde
+  // darauf zurückfallen (bliebe versteckt) -> zum Einblenden die KLASSE entfernen,
+  // damit die natürliche Darstellung greift. Ohne Pause bleibt die Klasse (CSS versteckt).
+  function togglePauseHints(hasPause) {
+    if (!hasPause) return;
+    document.querySelectorAll(".jq-hide").forEach(function (el) {
+      el.classList.remove("jq-hide");
+    });
+  }
+
+  function render(MVK) {
+    var data = MVK.data;
+    var program = (data.program && data.program.data) || [];
+
+    var hasPause = program.some(function (e) { return e.composer_author === "***"; });
+    togglePauseHints(hasPause);
+
+    if (!program.length) {
+      MVK.hide("program_wrapper");
+      return;
+    }
+
+    var L = {
+      pause: MVK.LANG === "E" ? "– Intermission –" : "– Pause –",
+      encore: MVK.LANG === "E" ? "– Encore –" : "– Zugabe –"
+    };
+
+    var sorted = program.slice().sort(function (a, b) { return a.order - b.order; });
+
+    var eintraege = [];
+
+    sorted.forEach(function (entry, i) {
+      var prev = sorted[i - 1];
+      var title = MVK.f(entry, "opus_titel");
+      var composer = entry.composer_author || "";
+
+      // Zugabe-Trenner ist ein eigener Eintrag. Das <br> bleibt darin
+      // stehen, weil es den Abstand macht – ohne es würde der Block
+      // optisch zusammenrutschen.
+      var isEncore = i > 0 && entry.is_encore == 1 && prev && prev.is_encore == 0;
+      if (isEncore) {
+        eintraege.push('<li class="mvk-program__marke"><br><p>' + L.encore + "</p></li>");
+      }
+
+      var out;
+      if (composer === "***") {
+        // Pause: kein <br>, stattdessen padding-top .4rem (wie Komponisten-h4)
+        out = '<li class="mvk-program__marke">' +
+              "<p style='padding-top:.4rem'>" + L.pause + "</p></li>";
+      } else if (i > 0 && prev && composer === prev.composer_author && !isEncore) {
+        // gleicher Komponist wie zuvor -> Name nicht wiederholen
+        out = "<li><p style='padding:0'>" + title + "</p></li>";
+      } else if (composer === "") {
+        out = "<li><p style='padding:0'>" + title + "</p></li>";
+      } else {
+        out = "<li><h4 style='padding-top:.4rem'>" + composer + "</h4>" +
+              "<p style='padding:0'>" + title + "</p></li>";
+      }
+      eintraege.push(out);
+    });
+
+    MVK.write('<ol class="mvk-program" role="list">' + eintraege.join("") + "</ol>", "program");
+    setzeEbenen();
+  }
+
+  /* Ebene der Komponisten-Überschriften aus der Abschnittsüberschrift
+     ableiten, statt sie fest auf h4 zu verdrahten. Läuft nach jedem
+     Render; ändert nichts, wenn die Tag-Ebene schon stimmt. */
+  function setzeEbenen() {
+    var block = document.getElementById("program");
+    if (!block || !block.querySelectorAll) return;
+
+    var alle = document.querySelectorAll("h1,h2,h3,h4,h5,h6");
+    var titel = null;
+    for (var i = 0; i < alle.length; i++) {
+      // Nur echte Vorgänger; Überschriften IM Block sind Nachfahren und
+      // liefern DOCUMENT_POSITION_CONTAINED_BY, nicht PRECEDING.
+      if (block.compareDocumentPosition(alle[i]) & Node.DOCUMENT_POSITION_PRECEDING) {
+        titel = alle[i];
+      }
+    }
+    if (!titel) return;
+
+    var basis = parseInt(titel.getAttribute("aria-level") || titel.tagName.charAt(1), 10);
+    if (!basis) return;
+    var soll = Math.min(basis + 1, 6);
+
+    var hs = block.querySelectorAll("h1,h2,h3,h4,h5,h6");
+    for (var k = 0; k < hs.length; k++) {
+      if (parseInt(hs[k].tagName.charAt(1), 10) === soll) hs[k].removeAttribute("aria-level");
+      else hs[k].setAttribute("aria-level", String(soll));
+    }
+  }
+
+  if (window.MVK && MVK.ready) {
+    MVK.ready.then(render).catch(function () {});
+  }
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – ÜBER DIE VERANSTALTUNG (Modul 05)
+ * Einbau: Code-Block in der "Über die Veranstaltung"-Sektion.
+ * Rendert (sprachabhängig via MVK.f):
+ *   #infotext-wrapper (Container) + die 4 Beschreibungsfelder
+ * Hinweis: Der separate "Information"-Block (#information-wrapper /
+ *   #ev_note_communication) liegt in Modul 09-mvk-information.
+ * Element-IDs tragen historisch das Suffix _D, der Inhalt ist aber
+ * sprachabhängig (MVK.f liefert _D/_E).
+ * Abhängig von: 01-mvk-core
+ * ============================================================= */
+(function () {
+  "use strict";
+
+  // baseKey = Feldname ohne Sprachsuffix; elId = vorhandene Element-ID
+  var FIELDS = [
+    { baseKey: "comm_descr_short_1_ch_1",        elId: "comm_descr_short_1_ch_1_D" },
+    { baseKey: "comm_descr_long_1_HTML_ch_1",    elId: "comm_descr_long_1_HTML_ch_1_D" },
+    { baseKey: "comm_descr_coop_1_HTML_ch_1",    elId: "comm_descr_coop_1_HTML_ch_1_D" },
+    { baseKey: "comm_important_note_1_ch_0_html", elId: "comm_important_note_1_ch_0_html_D" }
+  ];
+
+  function render(MVK) {
+    var b = MVK.booking;
+
+    var values = FIELDS.map(function (fld) { return MVK.f(b, fld.baseKey); });
+    var hasAny = values.some(function (v) { return v && v !== ""; });
+
+    if (!hasAny) {
+      MVK.hide("infotext-wrapper");
+    } else {
+      FIELDS.forEach(function (fld, i) {
+        if (values[i]) MVK.write(values[i], fld.elId);
+        else MVK.hide(fld.elId);
+      });
+    }
+  }
+
+  if (window.MVK && MVK.ready) MVK.ready.then(render).catch(function () {});
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – "DIESES KONZERT IST TEIL VON" (Modul 06)
+ * Einbau: Code-Block in der Distribution-/Reihen-Sektion.
+ * Rendert: #distributionChannels (+ Wrapper #teilvon-wrapper)
+ *
+ * Verlinkung: description_D ist der Linktext; die Ziel-URL kommt
+ * DATENGETRIEBEN aus dem Feld comm_descr_short_1_ch_1_D des Kanals
+ * (= Parent-/Übersichtsseite des jeweiligen Abos/Schwerpunkts).
+ * Kein Feld bzw. keine gültige URL -> Klartext, kein Link.
+ *
+ * BUGFIX ggü. Altcode: doppelte DOMContentLoaded/resize-Listener entfernt
+ * (riefen update ohne Argument -> Block verschwand sporadisch). Einmaliges
+ * Rendern. Archiv: distributionChannels kann `false` sein -> Wrapper aus.
+ * Abhängig von: 01-mvk-core
+ * ============================================================= */
+(function () {
+  "use strict";
+
+  function escAttr(s) { return String(s).replace(/"/g, "&quot;"); }
+  function isUrl(s) { return /^https?:\/\//i.test((s || "").trim()); }
+
+  function render(MVK) {
+    var data = MVK.data;
+    var raw = (data.distributionChannels && data.distributionChannels.data) || [];
+
+    if (!raw.length) {
+      MVK.hide("teilvon-wrapper");
+      return;
+    }
+
+    var sorted = raw.slice().sort(function (a, b) {
+      return parseInt(a.order, 10) - parseInt(b.order, 10);
+    });
+
+    var out = "";
+    sorted.forEach(function (ch) {
+      var desc = MVK.f(ch, "description");
+      // Einträge, die mit "-" beginnen, sind interne Marker -> auslassen
+      if (!desc || desc.charAt(0) === "-") return;
+
+      // Ziel-URL = comm_descr_short_1_ch_1 (Parent-Seite des Abos/Schwerpunkts)
+      var url = MVK.f(ch, "comm_descr_short_1_ch_1");
+      if (isUrl(url)) {
+        out += '<a href="' + escAttr(url.trim()) + '">' + desc + "</a><br>";
+      } else {
+        out += desc + "<br>";
+      }
+    });
+
+    if (!out.trim()) {
+      MVK.hide("teilvon-wrapper");
+      return;
+    }
+
+    MVK.show("teilvon-wrapper");
+    MVK.write(out, "distributionChannels");
+  }
+
+  if (window.MVK && MVK.ready) MVK.ready.then(render).catch(function () {});
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – UNTERSTÜTZT VON / LOGO (Modul 07)
+ * Einbau: Code-Block in der Sponsoren-/Kooperations-Sektion.
+ * Rendert: #sp_image, #sp_link (Wrapper #kooperation-wrapper)
+ * Quelle: enrichments[type=LOGO]. Keine -> Wrapper ausblenden.
+ * Abhängig von: 01-mvk-core
+ * ============================================================= */
+(function () {
+  "use strict";
+
+  function render(MVK) {
+    var data = MVK.data;
+    var enrichments = (data.enrichments && data.enrichments.data) || [];
+    var logo = enrichments.filter(function (e) { return e.type === "LOGO"; })[0];
+
+    var img = document.getElementById("sp_image");
+    var link = document.getElementById("sp_link");
+
+    if (!logo) {
+      MVK.hide("kooperation-wrapper");
+      return;
+    }
+
+    MVK.show("kooperation-wrapper");
+    if (img) img.src = MVK.asset(logo.enrichment_url);
+    if (link) link.href = logo.web_link || "#";
+  }
+
+  if (window.MVK && MVK.ready) MVK.ready.then(render).catch(function () {});
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – VERANSTALTER (Modul 08)
+ * Einbau: Code-Block in der Veranstalter-Sektion.
+ * Rendert: #event_host (Wrapper #event_host_wrapper optional/guarded)
+ * Verlinkt Veranstalter, falls in addresses eine webaddress existiert.
+ * Abhängig von: 01-mvk-core
+ * ============================================================= */
+(function () {
+  "use strict";
+
+  function normalizeUrl(raw) {
+    raw = (raw || "").trim();
+    if (!raw) return "";
+    return raw.indexOf("http") === 0 ? raw : "http://" + raw;
+  }
+
+  function render(MVK) {
+    var data = MVK.data;
+    var promoters = (data.promoter && data.promoter.data) || [];
+    var addresses = (data.addresses && data.addresses.data) || [];
+    var hostEl = document.getElementById("event_host");
+
+    if (!promoters.length) {
+      MVK.hide("event_host_wrapper"); // guarded, falls Wrapper fehlt
+      if (hostEl && !document.getElementById("event_host_wrapper")) {
+        hostEl.style.display = "none";
+      }
+      return;
+    }
+
+    MVK.show("event_host_wrapper");
+
+    var html = promoters.map(function (p) {
+      var display = p.publish_promoterdisplay || "";
+      var addr = (p.ref_address && addresses.length)
+        ? addresses.filter(function (d) { return d.ID == p.ref_address; })[0]
+        : null;
+      if (addr && addr.webaddress && addr.webaddress.trim() !== "") {
+        var href = normalizeUrl(addr.webaddress);
+        return '<a href="' + href + '" target="_blank" rel="noopener">' + display + "</a>";
+      }
+      return display;
+    }).join("<br>");
+
+    if (hostEl) hostEl.innerHTML = html;
+  }
+
+  if (window.MVK && MVK.ready) MVK.ready.then(render).catch(function () {});
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – INFORMATION (Modul 09)
+ * Einbau: Code-Block in der "Information"-Sektion.
+ * Rendert: #ev_note_communication (Textziel),
+ *          #information-wrapper (Wrapper -> ausblenden, wenn leer)
+ * Quelle: booking.ev_note_communication
+ * Abhängig von: 01-mvk-core
+ * ============================================================= */
+(function () {
+  "use strict";
+
+  function render(MVK) {
+    var note = MVK.booking.ev_note_communication;
+    if (!note || note === "") MVK.hide("information-wrapper");
+    else MVK.write(note, "ev_note_communication");
+  }
+
+  if (window.MVK && MVK.ready) MVK.ready.then(render).catch(function () {});
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – KALENDER-DOWNLOAD / ICS (Modul 10)
+ * Einbau: Code-Block in der Links-/Kalender-Sektion.
+ * Stellt window.saveToCalendar() bereit – der Button im Template ruft
+ * dieses via inline onclick="saveToCalendar()" auf.
+ * Sichtbarkeit des Buttons (#saveToCalendar) steuert Modul 11 (Vergangenheit).
+ * #d-link ist optional (in den aktuellen Templates nicht vorhanden) -> guarded.
+ * Abhängig von: 01-mvk-core, dayjs
+ * ============================================================= */
+(function () {
+  "use strict";
+
+  function fmt(dateStr, what) {
+    var d = dayjs(dateStr);
+    return what === "date" ? d.format("YYYYMMDD") : d.format("HHmm");
+  }
+
+  function buildIcs(ev) {
+    var stamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    var dt = function (date, time) { return date + "T" + time + "00"; };
+    return [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Musikverein//Konzert//DE",
+      "BEGIN:VTIMEZONE",
+      "TZID:Europe/Vienna",
+      "X-LIC-LOCATION:Europe/Vienna",
+      "BEGIN:DAYLIGHT",
+      "TZOFFSETFROM:+0100", "TZOFFSETTO:+0200", "TZNAME:CEST",
+      "DTSTART:19700329T020000", "RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3",
+      "END:DAYLIGHT",
+      "BEGIN:STANDARD",
+      "TZOFFSETFROM:+0200", "TZOFFSETTO:+0100", "TZNAME:CET",
+      "DTSTART:19701025T030000", "RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10",
+      "END:STANDARD",
+      "END:VTIMEZONE",
+      "BEGIN:VEVENT",
+      "DTSTAMP:" + stamp,
+      "DTSTART;TZID=Europe/Vienna:" + dt(ev.startDate, ev.startTime),
+      "DTEND;TZID=Europe/Vienna:" + dt(ev.endDate, ev.endTime),
+      "SUMMARY:" + ev.title,
+      "DESCRIPTION:Informationen zu dieser Veranstaltung: " + window.location.href,
+      "LOCATION:" + ev.room,
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].join("\r\n");
+  }
+
+  // Global, weil per inline onclick aufgerufen
+  window.saveToCalendar = function () {
+    var MVK = window.MVK;
+    var dLink = document.getElementById("d-link"); // optional
+
+    if (!MVK || !MVK.booking || !MVK.booking.date_start) {
+      if (dLink) dLink.style.display = "none";
+      return;
+    }
+    var b = MVK.booking;
+
+    var ev = {
+      startDate: fmt(b.date_start, "date"),
+      startTime: fmt(b.date_start, "time"),
+      endDate: fmt(b.date_end, "date"),
+      endTime: fmt(b.date_end, "time"),
+      title: MVK.f(b, "name_1_web"),
+      room: (b.venue_description || "") + " | " + (b.room_description || "")
+    };
+
+    if (!ev.title || !ev.startDate || !ev.startTime || !ev.endDate || !ev.endTime) {
+      if (dLink) dLink.style.display = "none";
+      return;
+    }
+    if (dLink) dLink.style.display = "block";
+
+    var uri = "data:text/calendar;charset=utf8," + encodeURIComponent(buildIcs(ev));
+    var a = document.createElement("a");
+    a.href = uri;
+    a.download = "konzert.ics";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – TAB-TITEL (Modul 11)
+ * Einbau: einmal pro Seite (Reihenfolge egal, braucht nur den Core).
+ * Setzt nur document.title (sichtbarer Browser-Tab) aus
+ *   booking.comm_meta_title_1_ch_0.
+ *
+ * Hinweis: canonical, og:url, og:title/description/image und der
+ *   <title> für Crawler werden SERVERSEITIG gesetzt
+ *   (wordpress-konzert-seo.php) — bewusst NICHT hier, um doppelte
+ *   Quellen / Konflikte zu vermeiden. Dieses Modul ist nur ein
+ *   leichtes Client-Fallback für den sichtbaren Tab.
+ * Abhängig von: 01-mvk-core
+ * ============================================================= */
+(function () {
+  "use strict";
+
+  function render(MVK) {
+    var title = MVK.booking.comm_meta_title_1_ch_0;
+    if (title) document.title = title;
+  }
+
+  if (window.MVK && MVK.ready) MVK.ready.then(render).catch(function () {});
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – VERWANDTE VERANSTALTUNGEN (Modul 12)
+ * Einbau: Code-Block in der „Verwandte Veranstaltungen"-Sektion.
+ *
+ * DOM-Vertrag (in Oxygen anlegen):
+ *   #related-wrapper  – ganze Sektion (wird ausgeblendet, wenn keine related)
+ *   #related-grid     – Container, in den die Cards eingehängt werden
+ *   #related-card     – EINE Card als Template, versteckt via CSS:
+ *                       #related-card { display:none; }  (ID-Selektor!)
+ *   In der Template-Card Daten-Hooks per Attribut:
+ *     [data-mvk="image"] (img) · [data-mvk="title"] · [data-mvk="room"]
+ *     [data-mvk="date"] · [data-mvk="link"] (a, href)
+ *
+ * Quelle: data.related[] + relatedEnrichments[] + relatedEnrichmentsReferences[]
+ * Anzahl ist beliebig (1, 2, 3, 4 …) – pro Eintrag wird die Card geklont.
+ * Sortierung: nach date_start aufsteigend.
+ * Abhängig von: 01-mvk-core
+ *
+ * Stand 2026-09-14 (T7/B7), drei Aenderungen am Karten-Rendering:
+ *   a) Kartentitel: der Template-Knoten ist ein <h2> und lag damit auf
+ *      derselben Ebene wie der Abschnittstitel "Weitere Veranstaltungen".
+ *      Jetzt aria-level="3" - Muster wie Modul 04 (h4 mit aria-level 3).
+ *      Tag und Optik bleiben unveraendert.
+ *   b) Kartenlink: der Template-Text ist "mehr" und wiederholt sich pro
+ *      Karte. Der Link bekommt ein aria-label aus Titel und Datum
+ *      (2.4.4 Link Purpose), sichtbarer Text bleibt "mehr".
+ *   c) Kartendatum: steht jetzt in <time datetime="..."> wie die Termine
+ *      im Seitenkopf (date_start, place_time, end_time).
+ * ============================================================= */
+(function () {
+  "use strict";
+
+  function eventId(booking) {
+    var id = booking.ID || "";
+    var i = id.indexOf(":");
+    return i >= 0 ? id.slice(i + 1) : id;
+  }
+
+  function fmtDate(MVK, dateStr) {
+    if (!dateStr) return "";
+    var locale = MVK.LANG === "E" ? "en-GB" : "de-AT";
+    var d = new Date(dateStr);
+    var datePart = d.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+    var hasTime = !(d.getHours() === 0 && d.getMinutes() === 0);
+    if (!hasTime) return datePart;
+    var time = d.toLocaleTimeString(locale, { hour: "numeric", minute: "numeric" });
+    return datePart + " – " + time;
+  }
+
+  /* Maschinenlesbarer Wert fuer <time datetime="...">.
+     EVIS liefert "YYYY-MM-DD HH:MM:SS" in Ortszeit ohne Zonenangabe; die
+     Seite gibt denselben lokalen Wert aus wie der Seitenkopf - "floating
+     time" ist im HTML-Format zulaessig. Ohne Uhrzeit nur das Datum. */
+  function isoDate(dateStr) {
+    if (!dateStr) return "";
+    var m = String(dateStr).match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})/);
+    if (!m) {
+      var d = String(dateStr).match(/^(\d{4}-\d{2}-\d{2})/);
+      return d ? d[1] : "";
+    }
+    if (m[2] === "00" && m[3] === "00") return m[1];
+    return m[1] + "T" + m[2] + ":" + m[3];
+  }
+
+  // ref_ev_booking -> Bild-Enrichment auflösen
+  function buildImageMap(data) {
+    var refs = (data.relatedEnrichmentsReferences && data.relatedEnrichmentsReferences.data) || [];
+    var enr = (data.relatedEnrichments && data.relatedEnrichments.data) || [];
+    var byId = {};
+    enr.forEach(function (e) { byId[e.ID] = e; });
+    var map = {};
+    // FIX 25.09.2026: pro Booking kommen mehrere Enrichments (PICTURE + LOGO/sponsor).
+    // Vorher gewann das letzte in der Liste -> Sponsor-Logo statt Foto (Sietzen/VERBUND).
+    // Jetzt nur type PICTURE, erstes gewinnt.
+    refs.forEach(function (r) {
+      var e = byId[r.ref_enrichment];
+      if (!r.ref_ev_booking || !e || e.type !== "PICTURE") return;
+      if (!map[r.ref_ev_booking]) map[r.ref_ev_booking] = e;
+    });
+    return map;
+  }
+
+  function fill(card, name, cb) {
+    var el = card.querySelector('[data-mvk="' + name + '"]');
+    if (el) cb(el);
+  }
+
+  // Layout je nach Anzahl: 1=100%, 2=50%, 3=33%; ab 4 -> Slider mit Pfeilen.
+  // Breiten/Responsive stecken in CSS (Klassen mvk-rel-1/2/3/slider).
+  function applyLayout(grid, cards) {
+    var n = cards.length;
+    if (n <= 1) {
+      grid.classList.add("mvk-rel-1");   // statisch volle Breite, kein Slider
+      return;
+    }
+    // Ab 2 Karten Slider-Gerüst bauen (Shell + Pfeile + Punkte).
+    // Darstellung steuert das CSS per Breakpoint + Bucket-Klasse:
+    //   Desktop ≥768: n2/n3 statische Reihe, n4plus Slider
+    //   Mobil  <768:  immer 1-Karten-Slider
+    buildSlider(grid, cards);
+    var shell = grid.parentElement; // .mvk-rel-shell
+    if (shell) shell.classList.add(n >= 4 ? "mvk-rel-n4plus" : "mvk-rel-n" + n);
+  }
+
+  function arrowBtn(dir, symbol, label) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "mvk-rel-arrow mvk-rel-" + dir;
+    b.setAttribute("aria-label", label);
+    // Chevron kommt aus CSS (::after), kein Text-Glyph – matcht Swiper.
+    return b;
+  }
+
+  // Slider: Pfeile als Flex-Geschwister NEBEN dem Grid (außerhalb → klickbar),
+  // darunter Punkt-Legende.
+  //
+  // FIX 13.08.2026: Punkte zählen SCROLL-POSITIONEN, nicht Karten.
+  //   vorher: 1 Punkt je Karte → 4 Karten bei 3 sichtbaren = 4 Punkte,
+  //           aber nur 1 möglicher Klick → Punkt 3+4 nie aktiv.
+  //   jetzt:  Seiten = round(maxScroll / step) + 1  (4 Karten @3 sichtbar → 2)
+  // Nichts scrollbar (maxScroll ≈ 0) → Punkte UND Pfeile weg.
+  // Am Anfang/Ende → jeweiliger Pfeil unsichtbar (visibility, nicht display,
+  // damit die Shell-Breite und damit die Kartenbreite konstant bleibt).
+  function buildSlider(grid, cards) {
+    // schon gebaut?
+    if (grid.parentElement && grid.parentElement.classList.contains("mvk-rel-shell")) return;
+
+    var shell = document.createElement("div");
+    shell.className = "mvk-rel-shell";
+    grid.parentNode.insertBefore(shell, grid);
+
+    var prev = arrowBtn("prev", "‹", "Zurück");
+    var next = arrowBtn("next", "›", "Weiter");
+    shell.appendChild(prev);
+    shell.appendChild(grid);
+    shell.appendChild(next);
+
+    // Legende (Punkte) – Anzahl wird in update() dynamisch gesetzt
+    var dots = document.createElement("div");
+    dots.className = "mvk-rel-dots";
+    shell.parentNode.insertBefore(dots, shell.nextSibling);
+
+    function step() {
+      if (!cards[0]) return grid.clientWidth || 1;
+      var gap = parseFloat(getComputedStyle(grid).columnGap);
+      if (isNaN(gap)) gap = 16;
+      return cards[0].getBoundingClientRect().width + gap;
+    }
+    function maxScroll() {
+      return Math.max(0, grid.scrollWidth - grid.clientWidth);
+    }
+    function pageCount() {
+      var m = maxScroll();
+      if (m <= 1) return 1;                       // nichts zu scrollen
+      var s = step();
+      return s > 0 ? Math.round(m / s) + 1 : 1;
+    }
+
+    function syncDots(n) {
+      while (dots.children.length > n) dots.removeChild(dots.lastChild);
+      while (dots.children.length < n) {
+        var d = document.createElement("button");
+        d.type = "button";
+        d.className = "mvk-rel-dot";
+        d.setAttribute("aria-label", "Position " + (dots.children.length + 1));
+        d.addEventListener("click", function () {
+          var idx = [].indexOf.call(dots.children, this);
+          grid.scrollTo({ left: Math.min(idx * step(), maxScroll()), behavior: "smooth" });
+        });
+        dots.appendChild(d);
+      }
+    }
+
+    function update() {
+      var pages = pageCount();
+      var scrollable = pages > 1;
+
+      shell.classList.toggle("mvk-rel-static", !scrollable);
+      dots.hidden = !scrollable;
+      syncDots(scrollable ? pages : 0);
+      if (!scrollable) return;
+
+      var m = maxScroll();
+      var x = grid.scrollLeft;
+      var atStart = x <= 1;
+      var atEnd = x >= m - 1;
+
+      prev.classList.toggle("is-off", atStart);
+      next.classList.toggle("is-off", atEnd);
+      prev.disabled = atStart;
+      next.disabled = atEnd;
+
+      var active = Math.min(pages - 1, Math.max(0, Math.round(x / step())));
+      [].forEach.call(dots.children, function (d, i) { d.classList.toggle("is-active", i === active); });
+    }
+
+    prev.addEventListener("click", function () { grid.scrollBy({ left: -step(), behavior: "smooth" }); });
+    next.addEventListener("click", function () { grid.scrollBy({ left: step(), behavior: "smooth" }); });
+
+    var raf = 0;
+    function schedule() {
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(function () { raf = 0; update(); });
+    }
+    grid.addEventListener("scroll", schedule);
+    window.addEventListener("resize", schedule);   // Breakpoint 3 sichtbar ↔ 1 sichtbar
+    window.addEventListener("load", schedule);     // Bilder geladen → Breiten final
+    if (window.ResizeObserver) new ResizeObserver(schedule).observe(grid);
+    update();
+  }
+
+  function render(MVK) {
+    var data = MVK.data;
+    var related = (data.related && data.related.data) || [];
+    var tpl = document.getElementById("related-card");
+    var grid = document.getElementById("related-grid");
+
+    if (!related.length || !tpl || !grid) {
+      MVK.hide("related-wrapper");
+      return;
+    }
+
+    var imgMap = buildImageMap(data);
+    var sorted = related.slice().sort(function (a, b) {
+      return new Date(a.date_start) - new Date(b.date_start);
+    });
+
+    var cards = [];
+    sorted.forEach(function (b) {
+      var card = tpl.cloneNode(true);
+      card.removeAttribute("id");
+      card.style.display = ""; // falls Template inline versteckt war
+
+      var id = eventId(b);
+      var title = MVK.f(b, "name_1_web");
+      var href = MVK.eventPath(id, title);
+      var pic = imgMap[b.ID];
+
+      fill(card, "image", function (el) {
+        if (!pic) return;
+        var url = MVK.asset(pic.enrichment_url);
+        if (el.tagName === "IMG") {
+          el.src = url;
+          if (pic.alt_text) el.alt = pic.alt_text;
+        } else {
+          // Oxygen „Div als Bild" -> background-image, full-bleed + zentriert
+          el.style.backgroundImage = 'url("' + url + '")';
+          el.style.backgroundSize = "cover";
+          el.style.backgroundPosition = "center";
+          el.style.backgroundRepeat = "no-repeat";
+          if (pic.alt_text) {
+            el.setAttribute("role", "img");
+            el.setAttribute("aria-label", pic.alt_text);
+          }
+        }
+      });
+      var dateText = fmtDate(MVK, b.date_start);
+      var dateIso  = isoDate(b.date_start);
+
+      fill(card, "title", function (el) {
+        el.textContent = title;
+        // Gliederung: Karten liegen unter "Weitere Veranstaltungen" (h2).
+        if (/^H[1-6]$/.test(el.tagName) || el.getAttribute("role") === "heading") {
+          el.setAttribute("aria-level", "3");
+        }
+      });
+      fill(card, "room", function (el) { el.textContent = b.room_description || ""; });
+      fill(card, "date", function (el) {
+        el.textContent = "";
+        if (!dateText) return;
+        if (!dateIso) { el.textContent = dateText; return; }
+        var t = document.createElement("time");
+        t.setAttribute("datetime", dateIso);
+        t.textContent = dateText;
+        el.appendChild(t);
+      });
+      fill(card, "link", function (el) {
+        el.setAttribute("href", href);
+        // "mehr" allein benennt das Ziel nicht (2.4.4). Sichtbarer Text
+        // bleibt, der zugaengliche Name wird konkret.
+        var name = dateText ? title + ", " + dateText : title;
+        el.setAttribute("aria-label", name);
+      });
+
+      grid.appendChild(card);
+      cards.push(card);
+    });
+
+    applyLayout(grid, cards);
+    MVK.show("related-wrapper");
+  }
+
+  if (window.MVK && MVK.ready) MVK.ready.then(render).catch(function () {});
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – MEDIEN / Content-Anreicherung (Modul 13)
+ * Einbau: Code-Block in der Medien-Sektion.
+ *
+ * Nutzt das vorhandene Oxygen-Design (gleiches Markup wie das Plugin
+ * „Identity Lab: Multimedia Section", aber OHNE dieses Plugin):
+ *   #idl-mm-section-1  = 1-up (1 Karte)
+ *   #idl-mm-section-2  = 2-up (2 Karten)
+ *   Karten: .idl-mm-card  ·  Bild: .idl-mm-thumb  ·  Titel: .idl-mm-title
+ *           Link: a.oxy-container-link / a.idl-mm-link / a
+ * Show/Hide über das `hidden`-Attribut (CSS: [hidden]{display:none!important}).
+ *
+ * Inhalt kommt aus der Spielplan-JSON: enrichments[type="URL"] mit web_link
+ * (z.B. Multimedia-Artikel). 0 Links -> alles versteckt; 1 -> 1-up; ≥2 -> 2-up.
+ * Hinweis: URL-Enrichments liefern i.d.R. KEIN Bild (enrichment_url leer) ->
+ * Thumbnail bleibt der Design-Platzhalter; bei vorhandenem Bild wird es gesetzt.
+ * Abhängig von: 01-mvk-core
+ * ============================================================= */
+(function () {
+  "use strict";
+
+  function isUrl(s) { return /^https?:\/\//i.test((s || "").trim()); }
+  function show(el) { if (el) el.removeAttribute("hidden"); }
+  function hide(el) { if (el) el.setAttribute("hidden", "hidden"); }
+
+  function setImage(host, src) {
+    if (!host || !src) return;
+    var img = document.createElement("img");
+    img.src = src; img.alt = ""; img.loading = "lazy"; img.decoding = "async";
+    img.style.width = "100%"; img.style.height = "100%"; img.style.objectFit = "cover";
+    host.innerHTML = "";
+    host.appendChild(img);
+  }
+
+  // Featured-Image über den Server-Proxy holen (multimedia wp-json ist 401/CORS).
+  // Endpoint überschreibbar via window.MVK_MM_PROXY.
+  function loadImage(host, webLink) {
+    if (!host || !webLink) return;
+    var proxy = (window.MVK_MM_PROXY || "/wp-admin/admin-ajax.php?action=mvk_mm_image") +
+                "&url=" + encodeURIComponent(webLink);
+    fetch(proxy, { credentials: "omit" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        var src = j && j.data && j.data.image;
+        if (src) setImage(host, src);
+      })
+      .catch(function () {});
+  }
+
+  function fillCard(card, item, MVK) {
+    if (!card || !item) return;
+    var thumb = card.querySelector(".idl-mm-thumb");
+    if (thumb) {
+      if (item.enrichment_url) setImage(thumb, MVK.asset(item.enrichment_url));
+      else if (item.web_link) loadImage(thumb, item.web_link); // via Server-Proxy
+    }
+
+    var titleEl = card.querySelector(".idl-mm-title");
+    if (titleEl) titleEl.textContent = item.title || item.description || "";
+
+    var a = card.querySelector("a.oxy-container-link") ||
+            card.querySelector("a.idl-mm-link") ||
+            card.querySelector("a");
+    if (a) a.setAttribute("href", item.web_link.trim());
+  }
+
+  function render(MVK) {
+    var enr = (MVK.data.enrichments && MVK.data.enrichments.data) || [];
+    var links = enr.filter(function (e) { return e.type === "URL" && isUrl(e.web_link); });
+
+    var one = document.getElementById("idl-mm-section-1");
+    var two = document.getElementById("idl-mm-section-2");
+    hide(one);
+    hide(two);
+
+    if (!links.length) return;
+
+    if (links.length >= 2) {
+      show(two);
+      var cards2 = two ? two.querySelectorAll(".idl-mm-card") : [];
+      if (cards2[0]) fillCard(cards2[0], links[0], MVK);
+      if (cards2[1]) fillCard(cards2[1], links[1], MVK);
+    } else {
+      show(one);
+      var cards1 = one ? one.querySelectorAll(".idl-mm-card") : [];
+      if (cards1[0]) fillCard(cards1[0], links[0], MVK);
+    }
+  }
+
+  if (window.MVK && MVK.ready) MVK.ready.then(render).catch(function () {});
+})();
+ }) </script>
+<script>document.addEventListener('DOMContentLoaded', function(){ 
+/* =============================================================
+ * MVK Konzertseite – Modul 14: Adaptives Raster (Auto-Full)
+ * -------------------------------------------------------------
+ * Zweck
+ *   Die Detailfelder der Konzertseite liegen in .konzert-box, einem
+ *   zweispaltigen CSS-Grid. Grid-Items strecken sich auf die Höhe der
+ *   höchsten Zelle ihrer Zeile. Steht neben einem langen Feld ein kurzes,
+ *   reißt das Layout auf – das kurze Feld bekommt eine große leere Fläche.
+ *
+ *   Dieses Modul misst die natürliche Höhe der beobachteten Felder bei
+ *   50 % Breite. Überschreitet eines davon den Schwellwert, geht das
+ *   gesamte Paar auf volle Rasterbreite (Klasse .mvk-full).
+ *
+ * Warum das Paar und nicht nur das lange Feld
+ *   Ein einzelnes Item auf grid-column: 1 / -1 zu setzen lässt eine
+ *   Rasterlücke stehen, sobald es in der rechten Spalte sitzt. Bricht das
+ *   Paar gemeinsam um, bleibt das Raster lückenlos und – wichtig für
+ *   Screenreader – die visuelle Reihenfolge identisch mit der DOM-Reihenfolge.
+ *   Deshalb ausdrücklich KEIN grid-auto-flow: dense.
+ *
+ * Warum Höhe und nicht Zeichenanzahl
+ *   Die Zeichenanzahl ist ein schlechter Proxy. Gemessen am Realbestand
+ *   (04.09.2026, Spaltenbreite 694 px):
+ *     Interpret:innen           72 Zeichen → 203 px
+ *     Programm                 266 Zeichen → 260 px   (viele kurze Zeilen)
+ *     Über die Veranstaltung  1412 Zeichen → 720 px
+ *   Gemessen wird also das, was das Problem tatsächlich verursacht.
+ *
+ * Flackerfreiheit
+ *   Reset, Messung und Anwendung laufen synchron in EINEM JS-Task. Der
+ *   Browser rendert innerhalb eines Tasks nicht, der Zwischenzustand
+ *   (.mvk-measuring) wird nie gemalt.
+ *
+ * Abhängigkeiten: keine (kein jQuery – siehe Projektnotiz zu jQuery/defer).
+ * Gehört zu: konzertseite.css, Abschnitt „Adaptives Raster (Auto-Full)".
+ * ============================================================= */
+
+(function () {
+  'use strict';
+
+  var BOX_SELECTOR = '.konzert-box';
+
+  /* Felder, deren Höhe den Umbruch auslösen darf. Alle anderen Felder
+     (Bild, Titelblock, Teil von, Kooperation, Veranstalter, Links) werden
+     mitgeführt, lösen aber selbst nichts aus. */
+  var WATCHED = [
+    '#interpret-wrapper',   // Interpret:innen
+    '#program_wrapper',     // Programm
+    '#infotext-wrapper',    // Über die Veranstaltung
+    '#information-wrapper'  // Information
+  ];
+
+  var CLASS_FULL      = 'mvk-full';
+  var CLASS_MEASURING = 'mvk-measuring';
+
+  /* Fallback, falls --mvk-full-threshold im CSS fehlt (z. B. weil das
+     Stylesheet noch nicht geladen ist). */
+  var FALLBACK_THRESHOLD = 400;
+
+  // ---------------------------------------------------------------
+  // Hilfsfunktionen
+  // ---------------------------------------------------------------
+
+  function threshold(box) {
+    var raw = getComputedStyle(box).getPropertyValue('--mvk-full-threshold');
+    var px = parseFloat(raw);
+    return (isFinite(px) && px > 0) ? px : FALLBACK_THRESHOLD;
+  }
+
+  /* Aus-Schalter aus dem CSS (--mvk-autofull: 0). Wird unter 768 px gesetzt:
+     dort ist das Raster zwar technisch noch zweispaltig, das Mobile-Layout
+     ist aber Bestand und soll von diesem Modul nicht verändert werden. */
+  function enabled(box) {
+    var raw = getComputedStyle(box).getPropertyValue('--mvk-autofull').trim();
+    return raw !== '0' && raw !== 'off';
+  }
+
+  /* Anzahl der tatsächlich gerenderten Rasterspalten. Bei einer Spalte ist
+     der Mechanismus gegenstandslos. */
+  function columnCount(box) {
+    var tpl = getComputedStyle(box).gridTemplateColumns;
+    if (!tpl || tpl === 'none') { return 1; }
+    return tpl.trim().split(/\s+/).filter(Boolean).length;
+  }
+
+  /* Nur sichtbare Kinder zählen für die Paarbildung – ein per display:none
+     ausgeblendetes Feld (z. B. #kooperation-wrapper ohne Sponsoren) belegt
+     keine Rasterzelle und darf die Paare nicht verschieben. */
+  function visibleItems(box) {
+    return Array.prototype.filter.call(box.children, function (el) {
+      return getComputedStyle(el).display !== 'none';
+    });
+  }
+
+  function isWatched(el) {
+    for (var i = 0; i < WATCHED.length; i++) {
+      if (el.matches(WATCHED[i])) { return true; }
+    }
+    return false;
+  }
+
+  // ---------------------------------------------------------------
+  // Kern
+  // ---------------------------------------------------------------
+
+  function apply(box) {
+    var items = visibleItems(box);
+    if (!items.length) { return; }
+
+    /* Zustand vor dem Lauf sichern – wird nur geschrieben, wenn sich das
+       Ergebnis unterscheidet (verhindert unnötige Reflows und schließt eine
+       Rückkopplung über den ResizeObserver aus). */
+    var before = items.map(function (el) { return el.classList.contains(CLASS_FULL); });
+
+    // 1. Zurück auf das reine 50-%-Raster, damit unverfälscht gemessen wird.
+    items.forEach(function (el) { el.classList.remove(CLASS_FULL); });
+
+    // Einspaltig oder abgeschaltet: Reset stehen lassen, sonst nichts tun.
+    if (columnCount(box) < 2 || !enabled(box)) {
+      return;
+    }
+
+    // 2. Natürliche Höhen messen (Grid-Stretch für die Messung aufheben).
+    box.classList.add(CLASS_MEASURING);
+    var heights = items.map(function (el) {
+      return el.getBoundingClientRect().height;   // erzwingt Reflow, kein Paint
+    });
+    box.classList.remove(CLASS_MEASURING);
+
+    // 3. Paarweise entscheiden.
+    var limit   = threshold(box);
+    var watched = items.map(isWatched);
+    var after   = items.map(function () { return false; });
+
+    for (var i = 0; i < items.length; i += 2) {
+      var a = i;
+      var b = i + 1;                              // kann fehlen (ungerade Anzahl)
+      var hasB = b < items.length;
+
+      var overflows =
+        (watched[a] && heights[a] > limit) ||
+        (hasB && watched[b] && heights[b] > limit);
+
+      if (overflows) {
+        after[a] = true;
+        if (hasB) { after[b] = true; }
+        /* Beide belegen je eine eigene Zeile, das nächste Paar beginnt
+           wieder in Spalte 1 – die Schleife bleibt im Takt. */
+      }
+    }
+
+    // 4. Nur bei Abweichung schreiben.
+    var changed = false;
+    for (var j = 0; j < items.length; j++) {
+      if (after[j] !== before[j]) { changed = true; }
+      if (after[j]) { items[j].classList.add(CLASS_FULL); }
+    }
+    return changed;
+  }
+
+  // ---------------------------------------------------------------
+  // Auslöser
+  // ---------------------------------------------------------------
+
+  function init(box) {
+    var pending = false;
+
+    function schedule() {
+      if (pending) { return; }
+      pending = true;
+      requestAnimationFrame(function () {
+        pending = false;
+        apply(box);
+      });
+    }
+
+    apply(box);
+
+    /* a) Inhalte kommen aus EVIS und werden nachträglich in die Wrapper
+          geschrieben. attributes bewusst NICHT beobachten – sonst löst die
+          eigene Klassenänderung den Observer erneut aus. */
+    new MutationObserver(schedule).observe(box, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
+
+    /* b) Breitenänderung (Fenster, Zoom, Breakpoint). Höhenänderungen
+          werden ignoriert – sie sind die Folge des eigenen Eingriffs. */
+    if (typeof ResizeObserver === 'function') {
+      var lastWidth = Math.round(box.getBoundingClientRect().width);
+      new ResizeObserver(function () {
+        var w = Math.round(box.getBoundingClientRect().width);
+        if (w === lastWidth) { return; }
+        lastWidth = w;
+        schedule();
+      }).observe(box);
+    } else {
+      window.addEventListener('resize', schedule);
+    }
+
+    /* c) Webfonts und spät geladene Bilder verändern die Höhe. */
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(schedule);
+    }
+    window.addEventListener('load', schedule);
+
+    /* d) Vor dem Drucken neu rechnen (Druck-Stylesheet ändert Maße). */
+    if (window.matchMedia) {
+      var mq = window.matchMedia('print');
+      if (mq.addEventListener) { mq.addEventListener('change', schedule); }
+    }
+  }
+
+  function boot() {
+    var box = document.querySelector(BOX_SELECTOR);
+    if (box) { init(box); }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+ }) </script>
+    </body>
+
+    </html>
+
+<!--
+Performance optimized by W3 Total Cache. Learn more: https://www.boldgrid.com/w3-total-cache/?utm_source=w3tc&utm_medium=footer_comment&utm_campaign=free_plugin
+
+Object Caching 258/269 objects using APC
+Page Caching using Disk: Enhanced 
+Minified using Disk
+
+Served from: musikverein.at @ 2026-10-25 11:02:12 by W3 Total Cache
+-->
