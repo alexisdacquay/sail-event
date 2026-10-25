@@ -479,6 +479,32 @@ def test_extract_and_judge_write_intermediate_counts(_db_session):
         )
 
 
+def test_detail_hop_writes_done_and_total_while_it_runs(_db_session):
+    """Dev 2026-10-25: the event-page stage showed "Working…" for minutes; its counts were
+    written only when the stage started and ended, so the UI had no done / total to show."""
+    user = _db_session.query(User).filter(User.username == "demo").first()
+    from app.services.pipeline import _update_run_stage
+    snapshots: list[tuple[str, dict]] = []
+
+    def _spy(run, db, stage, counts):
+        snapshots.append((stage, dict(counts)))
+        _update_run_stage(run, db, stage, counts)
+
+    # every extracted event needs its own page; each fetch fails fast, so no network and no model call
+    with patch("app.services.pipeline._update_run_stage", side_effect=_spy), \
+            patch("app.services.detail_hop._needs_hop", return_value=True), \
+            patch("app.services.detail_hop._fetch_detail", return_value=None):
+        run_pipeline(user, _db_session, trigger="manual")
+
+    hop = [c for s, c in snapshots if s == "detail_hop"]
+    totals = {c["detail_pages_to_open"] for c in hop if "detail_pages_to_open" in c}
+    assert len(totals) == 1, f"one total for the whole stage, got {totals}"
+    total = totals.pop()
+    assert total > 1
+    done = [c["detail_pages_done"] for c in hop if "detail_pages_done" in c]
+    assert done == list(range(total + 1)), f"done must climb 0..{total} one page at a time, got {done}"
+
+
 def test_events_to_judge_in_stage_counts_during_judge(_db_session):
     """#122: events_to_judge is set in stage_counts when the judge stage starts."""
     user = _db_session.query(User).filter(User.username == "demo").first()

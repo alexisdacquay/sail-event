@@ -405,6 +405,11 @@ def run_pipeline(
             current_stage = "detail_hop"
             _update_run_stage(run, db, current_stage, counts)
             with tracer.start_as_current_span("detail_hop"):
+                def _on_detail_page_done(done, total):
+                    counts["detail_pages_done"] = done
+                    counts["detail_pages_to_open"] = total
+                    _update_run_stage(run, db, "detail_hop", counts)
+
                 extracted, hop_counts = detail_hop(
                     extracted,
                     model=model,
@@ -413,6 +418,7 @@ def run_pipeline(
                     window_end=window.end_utc,
                     target_city=target_city,
                     target_country=target_country,
+                    on_page_done=_on_detail_page_done,
                 )
                 counts["pages_detail_fetched"] = hop_counts.pages_detail_fetched
                 counts["detail_fetch_errors"] = hop_counts.detail_fetch_errors

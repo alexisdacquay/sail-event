@@ -73,7 +73,8 @@ test.describe("Journey 1: full user flow", () => {
     await expect(funnel).toContainText(/\d+ pages read/);
     await expect(funnel).toContainText(/\d+ found/);
     await expect(funnel).toContainText(/\d+ judged/);
-    await expect(funnel).not.toContainText(/set aside|rejected|not accounted/);
+    // owner 2026-10-25: "screened out" before the judge, "rejected" is the judge's verdict
+    await expect(funnel).not.toContainText(/set aside|not judged|\d+ out\b|not accounted/);
     await expect(page.getByTestId("funnel-node-judged")).toBeVisible();
     await expect(page.getByTestId("funnel-node-accepted")).toBeVisible();
 

@@ -50,13 +50,13 @@ describe('Stream page from mock data', () => {
     expect(tl).toHaveTextContent('Searched the web, 31 pages')
     expect(tl).toHaveTextContent('Read 31 pages, found 12 events')
     expect(tl).toHaveTextContent('Skipped 2 pages that were not events')
-    expect(tl).toHaveTextContent('Not judged: 5')
-    expect(tl).toHaveTextContent('Judged 7 · 2 in calendar, 3 to review, 2 out')
+    expect(tl).toHaveTextContent('Screened out: 5')
+    expect(tl).toHaveTextContent('Judged 7 · 2 in calendar, 3 to review, 2 rejected')
     expect(screen.getByRole('button', { name: 'Search again' })).toBeInTheDocument()
     const funnel = screen.getByTestId('funnel')
     expect(funnel).toHaveTextContent('12 found')
     expect(funnel).toHaveTextContent('from 8 of 31 pages read')
-    expect(document.body.textContent).not.toMatch(/set aside|rejected/i)
+    expect(document.body.textContent).not.toMatch(/set aside|not judged/i)
     // the mock has three runs; the current one (run-001) is not an earlier run
     expect(screen.getAllByTestId('earlier-run')).toHaveLength(2)
     expect(screen.getByTestId('month-calendar')).toBeInTheDocument()
@@ -275,7 +275,7 @@ describe('Stream page live run', () => {
     vi.spyOn(api, 'getLastRun').mockResolvedValue({ run: running })
     renderMainPage()
     const live = await screen.findByTestId('search-progress')
-    expect(live).toHaveTextContent('Reading pages 7 of 20…')
+    expect(live).toHaveTextContent('Reading pages 7 / 20…')
     const tl = screen.getByTestId('run-chronology')
     expect(tl).toHaveTextContent('automatic run · running…')
     expect(tl).toHaveTextContent('Searched the web, 20 pages')
@@ -367,12 +367,12 @@ describe('stageLines', () => {
     expect(stageLines(finished)).toEqual([
       'Searched the web, 20 pages',
       'Read 20 pages, found 31 events',
-      'Not judged: 9',
-      'Judged 22 · 2 in calendar, 1 to review, 19 out',
+      'Screened out: 9',
+      'Judged 22 · 2 in calendar, 1 to review, 19 rejected',
     ])
   })
 
-  it('found = not judged + judged, and non-events are a separate line', () => {
+  it('found = screened out + judged, and non-events are a separate line', () => {
     const real = {
       results_fetched: 22, pages_content_pass: 0, events_extracted: 10, filtered_non_event: 12,
       filtered_incomplete: 1, judge_errors: 1, events_judged: 8,
@@ -383,12 +383,12 @@ describe('stageLines', () => {
       'Searched the web, 22 pages',
       'Read 22 pages, found 10 events',
       'Skipped 12 pages that were not events',
-      'Not judged: 2',
-      'Judged 8 · 3 in calendar, 1 to review, 4 out',
+      'Screened out: 2',
+      'Judged 8 · 3 in calendar, 1 to review, 4 rejected',
     ])
     const num = (re: RegExp) => Number(lines.join('\n').match(re)![1])
-    expect(num(/found (\d+) events/)).toBe(num(/Not judged: (\d+)/) + num(/Judged (\d+)/))
-    expect(num(/Judged (\d+)/)).toBe(num(/(\d+) in calendar/) + num(/(\d+) to review/) + num(/(\d+) out/))
+    expect(num(/found (\d+) events/)).toBe(num(/Screened out: (\d+)/) + num(/Judged (\d+)/))
+    expect(num(/Judged (\d+)/)).toBe(num(/(\d+) in calendar/) + num(/(\d+) to review/) + num(/(\d+) rejected/))
   })
 
   it('says how many pages were already known from earlier runs', () => {
@@ -400,7 +400,7 @@ describe('stageLines', () => {
 
   it('the reading total is fetched minus known: 17 fetched, 1 known → of 16', () => {
     const counts = { ...finished.stageCounts, results_fetched: 17, results_known: 1, pages_content_pass: 9 }
-    expect(stageText({ ...finished, currentStage: 'extract', finishedAt: null, stageCounts: counts })).toBe('Reading pages 9 of 16…')
+    expect(stageText({ ...finished, currentStage: 'extract', finishedAt: null, stageCounts: counts })).toBe('Reading pages 9 / 16…')
     const lines = stageLines({ ...finished, stageCounts: counts })
     expect(lines[0]).toBe('Searched the web: 17 pages, 1 already known from earlier runs, 16 new')
     expect(lines[1]).toBe('Read 16 pages, found 31 events')
@@ -410,8 +410,8 @@ describe('stageLines', () => {
     expect(stageLines({ ...finished, eventsNew: 0, currentStage: 'judge', finishedAt: null, stageCounts: { ...finished.stageCounts, events_to_judge: 10, events_judged: 3 } })).toEqual([
       'Searched the web, 20 pages',
       'Read 20 pages, found 31 events',
-      'Not judged: 9',
-      'Judging 3 of 10 events…',
+      'Screened out: 9',
+      'Judging events 3 / 10…',
     ])
   })
 
@@ -456,11 +456,23 @@ describe('stageText', () => {
   })
 
   it('shows reading pages with counts for extract stage', () => {
-    expect(stageText({ ...finished, currentStage: 'extract', finishedAt: null, stageCounts: { results_fetched: 20, pages_content_pass: 7 } })).toBe('Reading pages 7 of 20…')
+    expect(stageText({ ...finished, currentStage: 'extract', finishedAt: null, stageCounts: { results_fetched: 20, pages_content_pass: 7 } })).toBe('Reading pages 7 / 20…')
+  })
+
+  // dev 2026-10-25: the event-page stage showed "Working…" for minutes
+  it('shows opening event pages done / total for the detail_hop stage', () => {
+    const hop = { ...finished, currentStage: 'detail_hop', finishedAt: null }
+    expect(stageText({ ...hop, stageCounts: { detail_pages_done: 87, detail_pages_to_open: 236 } })).toBe('Opening event pages 87 / 236…')
+    expect(stageText({ ...hop, stageCounts: { results_fetched: 20 } })).toBe('Opening event pages…')
+    expect(stageLines({ ...hop, stageCounts: { ...finished.stageCounts, detail_pages_done: 0, detail_pages_to_open: 5 } })).toEqual([
+      'Searched the web, 20 pages',
+      'Read 20 pages, found 31 events',
+      'Opening event pages 0 / 5…',
+    ])
   })
 
   it('shows done summary when finished', () => {
-    expect(stageText(finished)).toBe('Done: 2 added to your calendar, 1 to review, 19 out')
+    expect(stageText(finished)).toBe('Done: 2 added to your calendar, 1 to review, 19 rejected')
   })
 })
 
@@ -474,6 +486,11 @@ describe('stageFraction', () => {
     expect(stageFraction({ ...finished, currentStage: 'judge', finishedAt: null, stageCounts: { events_to_judge: 10, events_judged: 3 } })).toBeCloseTo(3 / 10)
     // falls back to eventsNew when the key is absent (finalised run)
     expect(stageFraction({ ...finished, currentStage: 'judge', finishedAt: null, eventsNew: 10, stageCounts: { events_judged: 3 } })).toBeCloseTo(3 / 10)
+  })
+
+  it('returns done/total for detail_hop, the same numbers as its text', () => {
+    expect(stageFraction({ ...finished, currentStage: 'detail_hop', finishedAt: null, stageCounts: { detail_pages_done: 87, detail_pages_to_open: 236 } })).toBeCloseTo(87 / 236)
+    expect(stageFraction({ ...finished, currentStage: 'detail_hop', finishedAt: null, stageCounts: {} })).toBeNull()
   })
 
   it('returns null when the total is unknown', () => {

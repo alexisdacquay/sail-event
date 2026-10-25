@@ -26,6 +26,19 @@ import type { Event, RunSummary, SearchResult } from '@/services/api'
 
 const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
+/** [done, total] of the live stage when it counts items; the text and the hairline both read it. */
+function stageProgress(run: SearchResult): [number, number] | null {
+  const c = run.stageCounts ?? {}
+  switch (run.currentStage) {
+    // the extractor iterates results after known-page removal
+    case 'extract': return [c.pages_content_pass ?? 0, (c.results_fetched ?? 0) - (c.results_known ?? 0)]
+    case 'detail_hop': return [c.detail_pages_done ?? 0, c.detail_pages_to_open ?? 0]
+    // events_to_judge is in stageCounts during the live run; eventsNew only after finalise
+    case 'judge': return [c.events_judged ?? 0, c.events_to_judge ?? run.eventsNew ?? 0]
+    default: return null
+  }
+}
+
 /** Human-readable progress text from a run's currentStage and stageCounts. */
 export function stageText(run: SearchResult): string {
   const stage = run.currentStage
@@ -35,9 +48,11 @@ export function stageText(run: SearchResult): string {
     const accepted = c.accepted ?? 0
     const queued = c.queued ?? 0
     const rejected = c.rejected ?? 0
-    return `Done: ${accepted} added to your calendar, ${queued} to review, ${rejected} out`
+    return `Done: ${accepted} added to your calendar, ${queued} to review, ${rejected} rejected`
   }
 
+  const p = stageProgress(run)
+  const counted = (what: string) => (p && p[1] > 0 ? `${what} ${p[0]} / ${p[1]}…` : `${what}…`)
   switch (stage) {
     case 'adapters':
     case 'criteria':
@@ -45,23 +60,14 @@ export function stageText(run: SearchResult): string {
       return 'Starting up…'
     case 'search':
       return 'Searching the web…'
-    case 'extract': {
-      const done = c.pages_content_pass ?? 0
-      // the extractor iterates results after known-page removal
-      const total = (c.results_fetched ?? 0) - (c.results_known ?? 0)
-      return total > 0
-        ? `Reading pages ${done} of ${total}…`
-        : 'Reading pages…'
-    }
+    case 'extract':
+      return counted('Reading pages')
+    case 'detail_hop':
+      return counted('Opening event pages')
     case 'filter':
       return 'Filtering events…'
-    case 'judge': {
-      const judged = c.events_judged ?? 0
-      const total = c.events_to_judge ?? run.eventsNew ?? 0
-      return total > 0
-        ? `Judging ${judged} of ${total} events…`
-        : 'Judging events…'
-    }
+    case 'judge':
+      return counted('Judging events')
     default:
       return 'Working…'
   }
@@ -69,20 +75,8 @@ export function stageText(run: SearchResult): string {
 
 /** 0–1 fraction of the live stage, or null when the total is unknown. */
 export function stageFraction(run: SearchResult): number | null {
-  const c = run.stageCounts ?? {}
-  switch (run.currentStage) {
-    case 'extract': {
-      const total = (c.results_fetched ?? 0) - (c.results_known ?? 0)
-      return total > 0 ? (c.pages_content_pass ?? 0) / total : null
-    }
-    case 'judge': {
-      // events_to_judge is in stageCounts during the live run; eventsNew only after finalise
-      const total = c.events_to_judge ?? run.eventsNew ?? 0
-      return total > 0 ? (c.events_judged ?? 0) / total : null
-    }
-    default:
-      return null
-  }
+  const p = stageProgress(run)
+  return p && p[1] > 0 ? p[0] / p[1] : null
 }
 
 const STAGES = ['search', 'extract', 'detail_hop', 'filter', 'judge']
@@ -91,7 +85,7 @@ const STAGES = ['search', 'extract', 'detail_hop', 'filter', 'judge']
 export function stageLines(run: SearchResult): string[] {
   const c = run.stageCounts ?? {}
   const n = funnelNumbers(c)
-  // one entry per stage; found = not judged + judged, non-events are pages, not events
+  // one entry per stage; found = screened out + judged, non-events are pages, not events
   // shortcut: new = fetched - known ignores duplicate URLs removed in between; upgrade if the backend ever counts them
   const done = [
     [n.pagesKnown > 0
@@ -99,8 +93,8 @@ export function stageLines(run: SearchResult): string[] {
       : `Searched the web, ${n.pages} pages`],
     [`Read ${n.pages - n.pagesKnown} pages, found ${n.found} events`, ...(n.nonEvent > 0 ? [`Skipped ${n.nonEvent} pages that were not events`] : [])],
     [...(n.pagesDetailFetched > 0 ? [`Fetched ${n.pagesDetailFetched} detail pages${n.detailFetchErrors > 0 ? `, ${n.detailFetchErrors} failed` : ''}`] : [])],
-    [`Not judged: ${n.notJudged}${n.detailFetchErrors > 0 ? ` (${n.detailFetchErrors} detail fetch errors)` : ''}`],
-    [`Judged ${c.events_judged ?? 0} · ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} out`],
+    [`Screened out: ${n.notJudged}${n.detailFetchErrors > 0 ? ` (${n.detailFetchErrors} detail fetch errors)` : ''}`],
+    [`Judged ${c.events_judged ?? 0} · ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} rejected`],
   ]
   const stage = run.currentStage ?? run.stoppedAtStage
   const at = stage ? STAGES.indexOf(stage) : run.finishedAt ? STAGES.length : 0
