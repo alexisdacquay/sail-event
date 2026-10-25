@@ -1,0 +1,509 @@
+AI Events in London (Oct 2026): Workshops & Meetups | AISA
+
+Updated 25 October 2026 · 45 upcoming
+
+# AI Events in London
+
+Every upcoming AI event in London worth your evening, in one list: hands-on AI workshops, community meetups, talks, hackathons and conferences for people who want to get better at AI. Checked and refreshed every day.
+
+## The AI Floor: free hands-on AI events in London
+
+Hands-on AI workshops, builder pitches and real networking with people who use AI every day. Free entry, backed by AISA.
+
+The next date goes to The AI Floor mailing list first.
+
+## Upcoming AI events in London
+
+Filter by when, format and price. Each event links to its own page to register.
+
+Next week
+
+- Oct 26 Mon
+
+### London | Claude & Coffee Meetup
+
+Mon 26 Oct, 10:00–13:00
+
+A relaxed morning session for anyone curious about Claude, with hands-on time to explore it, ask questions and work on personal projects. Suits complete beginners and existing users alike.
+
+Workshop Free by Claude Community Events
+- Oct 26 Mon
+
+### SoTA Extreme Weather Frontiers Night
+
+Mon 26 Oct, 18:00–21:00
+
+Speakers from Google DeepMind, the Alan Turing Institute and others present live demos on using AI to predict and understand extreme weather events. Suitable for those working at the intersection of machine learning and atmospheric science.
+
+Talk£10
+- Oct 27 Tue
+
+### The London AI Conference 2026
+
+Tue 27 Oct, 18:00–21:00 · London – Venue to be confirmed
+
+An evening AI conference in London for business, product and technology leaders, with talks and networking from 6pm to 9pm.
+
+Conference by Startup Network Europe
+- Oct 27 Tue
+
+### The Agentic Web Explained
+
+Tue 27 Oct, 18:00–20:30 · AutogenAI, 123 Pentonville Rd, London N1 9LG, UK
+
+A recurring AI meetup with a talk on the agentic web and WebMCP, exploring how AI agents interact with websites and what that means for developers.
+
+Meetup Free by AI for the rest of us
+- Oct 28 Wed
+
+### Build Mobile Apps with AI — No Coding Needed! (Vibe Coding)
+
+Wed 28 Oct, 18:30–20:00 · zero2hero Technology Training Center, Unit 15, Castle Square, 40 Elephant Rd, London SE17 1EU
+
+A 90-minute hands-on session showing how to build mobile apps using AI tools without any coding knowledge. Suitable for beginners who want to turn ideas into working apps using generative AI.
+
+Workshop by zero2hero - AI-powered Tech Training Centre
+- Oct 29 Thu
+
+### shipped #2 - London's FDE Meetup
+
+Thu 29 Oct, 17:30–20:00 · Databricks, 11-14 Windmill St, London W1T 2JG, UK
+
+Monthly London meetup for Forward Deployed Engineers with a talk on AI agent failures in enterprise settings, followed by a panel of FDE leaders from Databricks, OpenAI and others.
+
+Meetup Free by shipped - London's FDE MeetUp
+- Oct 31 Sat
+
+### Halloween At Imperial: Gemini Edition
+
+Sat 31 Oct, 10:00–18:00
+
+A Halloween-themed hackathon at Imperial College London where participants build AI agents or applications using Google DeepMind's Gemini models, with morning keynotes and expert mentorship.
+
+Hackathon Free by UK AI Agents Lab
+- Oct 31 Sat
+
+### TS26 x Whimsi x Lovable: Haunted Hack
+
+Sat 31 Oct, 14:00–15:30
+
+A Halloween-themed afternoon build session using Lovable where attendees make an app, game or creative project and share it with the room. Beginners welcome; a Tech Summit 2026 ticket is required to attend.
+
+Hackathon Free by Lovable London Community
+
+November 2026
+
+- Nov 2 Mon
+
+### Data & AI Conference Europe 2026
+
+Mon 2 Nov to Fri 6 Nov · etc.venues Fenchurch Street, 8 Fenchurch Place, London
+
+A five-day event combining workshops and a main conference focused on responsible data and AI, aimed at data leaders, AI innovators and analytics professionals. Runs 2 to 6 November 2026.
+
+Conference by IRM UK
+- Nov 3 Tue
+
+### Twilio Assemble London: The Future of Comms + AI
+
+Tue 3 Nov, 17:00–21:30 · CodeNode, 10 South Pl, London EC2M 7EB, UK
+
+An evening for developers and founders exploring how AI agents can operate through customer communication channels, including a talk and a hands-on build challenge. Suits developers building AI-powered communication tools.
+
+Workshop Free by Twilio UK
+- Nov 3 Tue
+
+### Seedance 2.5 London Creator Night
+
+Tue 3 Nov, 18:00–22:00 · Kaleidoscope, 4 Lindsey St, Barbican, London EC1A 9HP, UK
+
+A hands-on evening exploring ByteDance's Seedance 2.5 video model, with a technical walkthrough from the Seed team and live generation sessions. Suited to filmmakers, motion designers and developers building on video AI.
+
+Workshop Free by Noetic
+- Nov 3 Tue
+
+### Biocomputing Hack
+
+Tue 3 Nov, 18:30–22:00
+
+A hands-on evening where participants programme biological brain cells to control robots and drones, with tutorials from Callosum and Frontier Computing followed by a judged pitch session.
+
+Hackathon Free by Outlier Labs
+- Nov 4 Wed
+
+### FT Live: Future of AI 2026
+
+Wed 4 Nov to Thu 5 Nov · Convene – 22 Bishopsgate, 22 Bishopsgate, City of London, London EC2N 4BQ
+
+A two-day Financial Times summit with 80+ speakers covering AI strategy, governance, regulation, infrastructure and workforce topics. Suited to senior professionals and decision-makers working with AI across industries.
+
+Conference From £430.80 by Financial Times Live
+- Nov 4 Wed
+
+### Scaling Startups with Gemini 4 Argon
+
+Wed 4 Nov, 15:00–18:00 · London AI Hub, 140 Goswell Rd., London EC1V 7DY, UK
+
+An afternoon of keynotes, live demos and a founder panel covering Gemini 4 Argon's capabilities for building and scaling AI products, followed by networking drinks. Aimed at founders and technical leaders.
+
+Talk Free by London AI Hub
+- Nov 4 Wed
+
+### HACKATHON - Agent Eval Harness
+
+Wed 4 Nov, 17:30–21:00 · 230 Blackfriars Rd, London SE1 8NW, UK
+
+A hands-on evening where teams build an evaluation harness for an AI customer support agent, writing tests, automated checks and an AI judge to measure performance.
+
+Hackathon Free by The Friendly Data Meetup London
+- Nov 4 Wed
+
+### Accelerating Inference
+
+Wed 4 Nov, 18:30–21:30
+
+A fireside event bringing founders, engineers and researchers together to discuss inference, compute and scaling AI in production, co-hosted with OpenAI. Suits technical builders and researchers working on AI infrastructure.
+
+Talk Free by Reasoning Project
+- Nov 6 Fri
+
+### AI for Health 2026
+
+Fri 6 Nov, 09:30–17:00 · BCS, The Chartered Institute for IT, 25 Copthall Avenue, London EC2R 7BP
+
+A paid one-day event with talks on AI in medical diagnosis and mental healthcare, AI regulation, quantum tech for health, and a hands-on low-code AI agents tutorial. Open to anyone interested in AI for health.
+
+Conference£42–£108 (incl. fees; BCS members £50+VAT, non-members £90+VAT, students £35+VAT) by BCS, The Chartered Institute for IT
+- Nov 7 Sat
+
+### AI Movie Awards London (AIMA London 2026)
+
+Sat 7 Nov to Sun 8 Nov · Institution of Engineering and Technology
+
+A two-day event for filmmakers, creatives and AI professionals featuring panel discussions, workshops, film screenings and networking on the first day, followed by a gala awards ceremony on the second.
+
+Conference£75–£170 by AI Movie Awards
+- Nov 9 Mon
+
+### London Consumer AI Hackathon with AI Tinkerers, ElevenLabs, and a16z
+
+Mon 9 Nov to Tue 10 Nov
+
+A two-day in-person hackathon where participants build consumer AI projects using partner tools and models. Suits developers and creators who want hands-on experience with AI products and a chance to win prizes.
+
+Hackathon by ElevenLabs, a16z, AI Tinkerers London
+- Nov 10 Tue
+
+### AI and Games Conference 2026
+
+Tue 10 Nov to Wed 11 Nov · HERE EAST, Olympic Park, Here East, Queen Elizabeth Olympic Park, London
+
+Two-day conference on AI in video games with talks aimed at game AI developers, researchers, and enthusiasts. Tickets start at £75 and the event accommodates over 500 attendees.
+
+Conference From £75 by AI and Games Conference
+- Nov 10 Tue
+
+### AI Builders London – Nov 10
+
+Tue 10 Nov, 18:00–21:00 · Civo Tech Junction, First Floor, 32-37 Cowper St, London EC2A 4AW
+
+Informal evening meetup for AI builders and developers in Shoreditch, featuring AI tool demos, agent framework discussions and networking over pizza. Topics include RAG, vibe coding and Claude Code.
+
+Meetup by AI Builders Club
+- Nov 10 Tue
+
+### Internet Icons: Jeffrey Veen
+
+Tue 10 Nov, 18:00–20:30
+
+A conversation with designer and entrepreneur Jeffrey Veen covering his career building tools for creators and how AI is changing design and work. Open to anyone who registers.
+
+Talk Free by Granola
+- Nov 11 Wed
+
+### AI Creative Summit
+
+Wed 11 Nov, 09:00–19:00 · BFI Southbank, Belvedere Rd, London SE1 8XT
+
+A one-day event on AI in media and broadcast, with masterclasses, technical workshops and tool demonstrations across three streams. Suits creative and technical professionals working with AI in media.
+
+Conference by Broadcast Tech / AI Creative Summit
+- Nov 11 Wed
+
+### Great Digital for Good conference 2026: AI realities
+
+Wed 11 Nov, 09:30–17:00 · Woburn House Conference Centre, Tavistock Square, London WC1H 9HQ
+
+A conference for digital practitioners exploring how AI is used in practice today, covering both the benefits and pitfalls of real-world AI adoption.
+
+Conference by Numiko
+- Nov 11 Wed
+
+### In Silico #006
+
+Wed 11 Nov, 18:00–21:00
+
+A recurring evening of short talks on AI and computation in the biomolecular sciences, covering topics like molecular modelling and drug development, followed by pizza, drinks and informal discussion.
+
+Meetup Free
+- Nov 12 Thu
+
+### King's AI Summit: Agents of Science
+
+Thu 12 Nov, 09:00–17:30 · The London Institute for Healthcare Engineering - LIHE, 100 Lambeth Palace Road, London SE1 7AR
+
+A free one-day summit on AI agents in research and innovation, covering trust, safety, governance and human oversight. Open to researchers, technologists, healthcare professionals and innovators.
+
+Conference Free by King's Institute for Artificial Intelligence
+- Nov 17 Tue
+
+### Mindstone London November AI Meetup
+
+Tue 17 Nov, 18:00–21:00 · Inspire St James, Inspire Saint James, Clerkenwell Close, London EC1R 0EA
+
+Mindstone's monthly AI meetup with three talks on building with LLMs, AI productivity and applied AI, followed by networking. Open to anyone via the Mindstone community platform.
+
+Meetup by Mindstone
+- Nov 17 Tue
+
+### GTM Hackathon by Granola x Gemini
+
+Tue 17 Nov, 18:00–20:30
+
+An evening hackathon at Granola HQ where GTM and marketing professionals use Gemini API credits to build AI-powered tools, no coding background required. Teams demo their work to judges at the end of the night.
+
+Hackathon Free by Granola
+- Nov 19 Thu
+
+### AI in Business Conference • Nov 2026 • Exploring Enterprise AI
+
+Thu 19 Nov, 08:15–17:30 · Venue Announced Soon, Central London, London SW1A 2DR
+
+A full-day paid conference in central London on how enterprise AI moves from experimentation to real business impact, with expert speakers and networking opportunities.
+
+Conference by Roar Media
+- Nov 19 Thu
+
+### BSI Trust in AI Conference 2026
+
+Thu 19 Nov, 09:15–17:00 · The Royal Institution, 21 Albemarle Street, London W1S 4BS
+
+A one-day conference at The Royal Institution where business leaders, regulators and AI practitioners explore AI governance, assurance and standards. Suits professionals working on responsible AI adoption.
+
+Conference by BSI Conferences
+- Nov 21 Sat
+
+### HACKCEPTION: A hack within a hack 🌀
+
+Sat 21 Nov, 09:30–17:30
+
+A one-day hackathon where participants pitch and prototype their most ambitious or unconventional hack concept, with team formation on the day and prizes for the best pitches. Open to solo hackers and small teams.
+
+Hackathon Free by Lovable London Community
+- Nov 21 Sat
+
+### The Future of AI is tiny and physical
+
+Sat 21 Nov, 19:00–20:30 · The Royal Institution, 21 Albemarle Street, London W1S 4BS
+
+An evening talk at the Royal Institution examining how small-scale AI can make environments safer and more responsive. Suits anyone curious about the future of embedded and physical AI.
+
+Talk by The Royal Institution
+- Nov 25 Wed
+
+### AI World Congress 2026
+
+Wed 25 Nov to Thu 26 Nov · The Great Hall, Kensington Conference and Events Centre, Hornton St, Kensington, London W8 7NX
+
+Two-day AI conference with keynotes, panels, demos and networking at the Kensington Conference and Events Centre. Paid tickets at various price points include sessions, materials and lunch.
+
+Conference Early Bird £495, VIP £695, Full Price £2,295
+- Nov 25 Wed
+
+### AE Global Summit 2026: Open Problems for AI
+
+Wed 25 Nov to Fri 27 Nov · Friends House, 173-177 Euston Road, London, NW1 2BJ
+
+A multi-day summit where researchers, founders and policymakers discuss open problems in AI, safety and productivity. Speakers come from Google DeepMind, Meta, Microsoft and leading universities.
+
+Conference From £49.46 by Thinking About Thinking
+- Nov 25 Wed
+
+### Data & AI London Meetup #18
+
+Wed 25 Nov, 18:00 · 100 Liverpool Street, London
+
+A recurring London meetup with talks on data quality in the AI era and running open-source LLMs locally. Suits data and AI practitioners looking to learn and connect over free drinks and pizza.
+
+Meetup by Data & AI London
+- Nov 26 Thu
+
+### Fireside: AI with Prod Data - Hype vs Reality
+
+Thu 26 Nov, 19:00–21:00 · 230 Blackfriars Rd, London SE1 8NW, UK
+
+Three practitioners share honest accounts of deploying AI with real production data, covering failures, testing, costs and trade-offs, followed by audience Q&A.
+
+Talk Free by The Friendly Data Meetup London
+- Nov 27 Fri
+
+### London Tech Meetup: Building Your First GenAI Solution
+
+Fri 27 Nov, 18:30 · Warren Centre Basement, Basement 1 - 8 Suffolk House, London W1T 5JU
+
+A free in-person meetup covering how to build with generative AI, including a keynote, market trends and open discussion. Suits developers and tech professionals curious about getting started with GenAI.
+
+Meetup Free by Bincom Dev Center
+- Nov 28 Sat
+
+### Ripple x Lovable: Build for a Stranger
+
+Sat 28 Nov, 14:00–18:00
+
+A free build night where participants are paired with a stranger, identify a real problem that person has, and use Lovable to build a working solution for them in one session. No technical background needed.
+
+Workshop Free by Ripple Social Club
+- Nov 29 Sun
+
+### Ai Vision World Forum London 2026
+
+Sun 29 Nov, 09:00–12:00 · Cavendish Venues - 1 Basinghall Avenue, 1 Basinghall Avenue, London EC2V 5DD
+
+A large international forum bringing together AI researchers, policymakers, investors and startups to discuss AI across healthcare, education, cybersecurity and other sectors, with 80+ speakers.
+
+Conference by Ai Vision Institute & University
+
+December 2026
+
+- Dec 1 Tue
+
+### Generative AI Summit London (AIAI London)
+
+Tue 1 Dec · InterContinental London – The O2, 1 Waterview Drive, London
+
+A paid AI summit for engineers, developers, and executives covering generative AI, agentic AI, and enterprise AI strategy, with workshops, breakout sessions, and networking.
+
+Conference by AI Accelerator Institute
+- Dec 1 Tue
+
+### Legal AI London
+
+Tue 1 Dec to Wed 2 Dec · 10 Upper Bank Street, Canary Wharf, London
+
+A two-day conference on AI adoption in legal practice, covering governance, regulation, agentic AI and enterprise case studies. Suited to law firm leaders, legal ops directors and in-house counsel.
+
+Conference From £995 by Inside Practice
+- Dec 2 Wed
+
+### Conversations in the AI era | Builder Community Meetup | London 💂
+
+Wed 2 Dec, 18:00–21:00
+
+A recurring London meetup for developers, tech leads and founders building with AI, featuring short tech talks on conversational AI and networking over food and drinks.
+
+Meetup Free by Twilio UK
+- Dec 3 Thu
+
+### AI Futureproofing: London's Practical AI Conference
+
+Thu 3 Dec, 09:00–17:30 · Coin Street Neighbourhood Centre, London
+
+A practical AI conference for business owners and leaders, with masterclasses from speakers at Anthropic, PwC and UpSkill Universe on applying AI in real contexts.
+
+Conference by Strategic Events
+- Dec 3 Thu
+
+### Hackathon: Artificial Intelligence and the Future of Work
+
+Thu 3 Dec to Sat 5 Dec · Imperial College Business School
+
+A three-day hackathon run by Imperial College Business School where participants work together on challenges around how AI is reshaping the future of work. Runs 3 to 5 December 2026.
+
+Hackathon by Imperial College Business School
+- Dec 7 Mon
+
+### Knowledge & Retrieval Hackathon // Dec 7th
+
+Mon 7 Dec, 10:00–21:00 · Senna Building, Shoreditch Exchange with Oneder, Gorsuch Pl, Senna Building, Shoreditch, London E2 8JF
+
+One-day hackathon focused on knowledge retrieval, vector search, and AI agents with over £5,000 in prizes. Teams of up to four build original projects on the day; applications are open but reviewed on a rolling basis.
+
+Hackathon by AI Tinkerers London
+
+### AI workshops and courses in London
+
+The most hands-on way to build AI skills: you bring a laptop and leave having made something. Courses run across several sessions for structured training.
+
+See 5 upcoming
+
+### AI meetups and networking in London
+
+Practitioner talks, founder evenings and informal community nights. The easiest first step into London’s AI scene, and the best place to meet people building with AI.
+
+See 8 upcoming
+
+### AI talks and conferences in London
+
+An evening with researchers and practitioners on stage, or one or more days of speakers, workshops and an expo. Good for the bigger picture and what is coming next.
+
+See 23 upcoming
+
+### AI hackathons in London
+
+A few hours or a full day building with new models and tools in small teams. Where London’s AI builders ship, often with sponsor credits to spend.
+
+See 9 upcoming
+
+## Free AI events in London
+
+20 of the 45 upcoming AI events in London on this page are free to attend, from community meetups to full-day hackathons. The AI Floor is free too.
+
+## London AI communities to follow
+
+The groups behind London’s AI events, with what they have coming up.
+
+- The AI Floor Free hands-on AI events, backed by AISA
+- Granola 2 upcoming · next: Internet Icons: Jeffrey Veen
+- Lovable London Community 2 upcoming · next: TS26 x Whimsi x Lovable: Haunted Hack
+- The Friendly Data Meetup London 2 upcoming · next: HACKATHON - Agent Eval Harness
+- Twilio UK 2 upcoming · next: Twilio Assemble London: The Future of Comms + AI
+- AI Accelerator Institute 1 upcoming · next: Generative AI Summit London (AIAI London)
+- AI and Games Conference 1 upcoming · next: AI and Games Conference 2026
+- AI Builders Club 1 upcoming · next: AI Builders London – Nov 10
+- AI for the rest of us 1 upcoming · next: The Agentic Web Explained
+- AI Movie Awards 1 upcoming · next: AI Movie Awards London (AIMA London 2026)
+- AI Tinkerers London 1 upcoming · next: Knowledge & Retrieval Hackathon // Dec 7th
+- Ai Vision Institute & University 1 upcoming · next: Ai Vision World Forum London 2026
+- BCS, The Chartered Institute for IT 1 upcoming · next: AI for Health 2026
+
+## Know your AI level before your next London AI event
+
+AISA’s free AI fluency assessment is a 20–40 minute conversation that shows where you stand and what to learn next, with a full report and a certificate. Take it before your next event and you will know which workshops will stretch you.
+
+## AI events in London: FAQ
+
+What AI events are on in London this week?+
+
+The next AI events in London are London | Claude & Coffee Meetup (Mon 26 Oct), SoTA Extreme Weather Frontiers Night (Mon 26 Oct) and The London AI Conference 2026 (Tue 27 Oct). The full list on this page is refreshed every day.
+
+Are there free AI events in London?+
+
+Yes. 20 of the 45 upcoming AI events in London on this page are free to attend, including London | Claude & Coffee Meetup, The Agentic Web Explained and shipped #2 - London's FDE Meetup. Tick "Free only" to see every free event.
+
+Where can I find hands-on AI workshops in London?+
+
+Workshops and hackathons are the most hands-on AI events in London: you build something rather than listen. There are 14 coming up on this page, including London | Claude & Coffee Meetup (Mon 26 Oct) and Build Mobile Apps with AI — No Coding Needed! (Vibe Coding) (Wed 28 Oct). The AI Floor also runs free hands-on sessions.
+
+Which AI meetups in London should I join?+
+
+London AI communities with meetups coming up include AI for the rest of us, shipped - London's FDE MeetUp, AI Builders Club and Mindstone, alongside The AI Floor. The communities section on this page lists every organiser with an upcoming event.
+
+How are the events on this page chosen?+
+
+Every event listed is in person in London, open to the public, and about learning, building or working with AI. The list is checked and refreshed every day, and past events drop off automatically.
+
+The Science Behind AISA
+
+In 2026, Anthropic published the AI Fluency Index — the largest empirical study of AI fluency to date, analysing nearly 10,000 conversations. AISA covers 93% of the behaviours Anthropic identified as markers of AI fluency and goes even deeper with 4 additional criteria. The U.S. Department of Labor's AI Literacy Framework (TEN 07-25) defines what every worker needs to know about AI — AISA covers 100% of its 25 sub-competencies. Read our analysis: Anthropic's AI Fluency Study & AISA · DOL AI Literacy Framework & AISA
+
+AISA's framework is developed by a team with deep roots in tech, behavioural science, and AI product leadership — the rubric is informed by backgrounds spanning the Metropolitan Police, Harvard, Crowdbotics (Silicon Valley), and the European School of Economics.
