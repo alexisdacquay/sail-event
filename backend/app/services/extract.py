@@ -32,7 +32,8 @@ logger = logging.getLogger(__name__)
 
 PROMPT_NAME = "extract"
 PROMPT_VERSION = "v2"
-EXTRACT_CONCURRENCY = int(os.environ.get("EXTRACT_CONCURRENCY", "50"))
+# 10, not 50: at 50 the model calls opened in 50-connection bursts and timed out on connect (PR 144).
+EXTRACT_CONCURRENCY = int(os.environ.get("EXTRACT_CONCURRENCY", "10"))
 
 # --- structure layer helpers (§10) ---
 _HTML_TAG_RE = re.compile(r"<[^>]+>")

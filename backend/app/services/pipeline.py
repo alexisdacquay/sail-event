@@ -30,7 +30,8 @@ from .. import orm
 logger = logging.getLogger("sail-event.pipeline")
 tracer = trace.get_tracer("sail-event.pipeline")
 meter = metrics.get_meter("sail-event.pipeline")
-JUDGE_CONCURRENCY = int(os.environ.get("JUDGE_CONCURRENCY", "50"))
+# 10, not 50: see EXTRACT_CONCURRENCY in extract.py.
+JUDGE_CONCURRENCY = int(os.environ.get("JUDGE_CONCURRENCY", "10"))
 
 # --- §9 metrics ---
 
