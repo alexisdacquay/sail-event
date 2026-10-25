@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 PROMPT_NAME = "extract"
 PROMPT_VERSION = "v2"
-EXTRACT_CONCURRENCY = int(os.environ.get("EXTRACT_CONCURRENCY", "5"))
+EXTRACT_CONCURRENCY = int(os.environ.get("EXTRACT_CONCURRENCY", "50"))
 
 # --- structure layer helpers (§10) ---
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
