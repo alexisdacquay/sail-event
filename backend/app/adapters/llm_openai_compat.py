@@ -107,6 +107,14 @@ class OpenAICompatibleModel:
                 with urllib.request.urlopen(req, timeout=timeout) as resp:
                     data = json.loads(resp.read())
 
+                if data["choices"][0].get("finish_reason") == "length":
+                    usage = data.get("usage", {})
+                    raise RuntimeError(
+                        f"{prompt_name}: output truncated at max_tokens={body['max_tokens']} "
+                        f"(completion_tokens={usage.get('completion_tokens')}, reasoning_tokens="
+                        f"{usage.get('completion_tokens_details', {}).get('reasoning_tokens')})"
+                    )
+
                 content = data["choices"][0]["message"].get("content") or ""
                 if not content.strip():
                     if attempt == 0:
