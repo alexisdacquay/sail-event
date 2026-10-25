@@ -22,7 +22,7 @@ from ..services.budget import check_search_budget, check_llm_budget, reserve_llm
 from ..services.criteria import needs_parse, parse_criteria, parse_metadata
 from ..services.window import resolve
 from ..services.extract import extract_events
-from ..services.detail_hop import detail_hop
+from ..services.detail_hop import detail_hop, page_links
 from ..services.filters import attach_offset, filter_events
 from ..services.judge import judge_event, Verdict, JudgeError, band_word
 from ..services.dedup import DUPLICATE_PREFIX, dedup_run
@@ -377,6 +377,8 @@ def run_pipeline(
                     user_tz=user_tz,
                     model=model,
                     on_page_done=_on_page_done,
+                    # fixture pages are offline stand-ins: never fetch their URLs
+                    page_links=None if provider_name == "fixture" else page_links,
                 )
                 # Count LLM calls: 1 per full-page read + 1 if snippet-only fallback ran
                 snippet_only = len([r for r in all_results if not r.raw_content])

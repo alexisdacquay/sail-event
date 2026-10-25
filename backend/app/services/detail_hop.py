@@ -1,8 +1,9 @@
 """Detail-page hop — fetch each listing event's own page, re-extract.
 
 For every event extracted from a page the model classed as `listing`,
-when the event's link differs from source_url, is same-site HTTP(S),
-the pipeline fetches that page, reduces its HTML to text, and re-extracts the event.  The judge
+when the event's link differs from source_url and is HTTP(S) on the listing's host
+or a public one (extract only accepts links found on the listing page), the pipeline
+fetches that page, reduces its HTML to text, and re-extracts the event.  The judge
 receives the record from the detail page (richer: title, time, description).
 
 Fetches run in parallel via the existing EXTRACT_CONCURRENCY pool.
@@ -11,6 +12,7 @@ Fetches run in parallel via the existing EXTRACT_CONCURRENCY pool.
 
 from __future__ import annotations
 
+import ipaddress
 import json
 import logging
 import os
@@ -22,7 +24,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime
 from html.parser import HTMLParser
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
+
+from ..adapters.search import canonical_url
 
 from ..services.extract import (
     ExtractedEvent,
@@ -51,18 +55,20 @@ class HopCounts:
 
 
 def _needs_hop(ev: ExtractedEvent) -> bool:
-    """True when the event came from a listing and has a same-site detail link."""
+    """True when the event came from a listing and has its own link, on any public host."""
     if ev.page_kind != "listing":
         return False
-    if not ev.link or ev.link == ev.source_url:
+    if not ev.link or canonical_url(ev.link) == canonical_url(ev.source_url):
         return False
     parsed_link = urlparse(ev.link)
-    parsed_source = urlparse(ev.source_url)
     if parsed_link.scheme not in ("http", "https"):
         return False
-    if parsed_link.netloc != parsed_source.netloc:
-        return False
-    return True
+    if parsed_link.hostname == urlparse(ev.source_url).hostname:
+        return True
+    try:  # another host came from the listing page's links; never let one point the hop at a private address
+        return ipaddress.ip_address(parsed_link.hostname or "").is_global
+    except ValueError:
+        return parsed_link.hostname not in (None, "localhost")
 
 
 _SKIP_TAGS = {"script", "style", "noscript", "svg", "template"}
@@ -77,7 +83,10 @@ _CONTENT_KEYS = {"description", "og:title", "og:description", "startdate", "endd
 
 
 class _TextParser(HTMLParser):
-    """Visible text, <title>, JSON-LD and date-bearing meta; drops tags, scripts, styles, svg."""
+    """Visible text, <title>, JSON-LD and date-bearing meta; drops tags, scripts, styles, svg.
+
+    Also keeps each anchor (text, href) and each JSON-LD blob, for page_links.
+    """
 
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
@@ -85,6 +94,9 @@ class _TextParser(HTMLParser):
         self._skip = 0  # depth inside elements whose content is dropped
         self._ld = False  # inside <script type="application/ld+json">
         self._seen: set[str] = set()  # description and og:description are usually equal
+        self._open: list[tuple[str, int]] = []  # open <a>: (href, index into parts)
+        self.anchors: list[tuple[str, str]] = []
+        self.ld_blobs: list[str] = []
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
@@ -94,13 +106,19 @@ class _TextParser(HTMLParser):
             self.parts.append(f"\n{a['content']}\n")
         if not self._skip and tag == "time" and a.get("datetime"):
             self.parts.append(f" {a['datetime']} ")
+        if tag == "a" and a.get("href"):
+            self._open.append((a["href"], len(self.parts)))
         if tag == "script" and (a.get("type") or "").strip().lower() == "application/ld+json":
             self._ld = True  # script content is CDATA to html.parser: no nested tags
+            self.ld_blobs.append("")
         elif tag in _SKIP_TAGS:
             self._skip += 1
         self.parts.append("\n" if tag in _BLOCK_TAGS else " ")
 
     def handle_endtag(self, tag):
+        if tag == "a" and self._open:
+            href, start = self._open.pop()
+            self.anchors.append((" ".join("".join(self.parts[start:]).split()), href))
         if tag == "script" and self._ld:
             self._ld = False
         elif tag in _SKIP_TAGS and self._skip:
@@ -108,6 +126,8 @@ class _TextParser(HTMLParser):
         self.parts.append("\n" if tag in _BLOCK_TAGS else " ")
 
     def handle_data(self, data):
+        if self._ld:
+            self.ld_blobs[-1] += data
         if self._ld or not self._skip:
             self.parts.append(data)
 
@@ -120,11 +140,61 @@ def _html_to_text(html: str) -> str:
     return re.sub(r"\s*\n\s*", "\n", text).strip()
 
 
+def _ld_pairs(node, acc: list[tuple[str, str]]) -> None:
+    """Every JSON-LD object with a string name and url (Event, ItemList items, ...)."""
+    if isinstance(node, dict):
+        if isinstance(node.get("name"), str) and isinstance(node.get("url"), str):
+            acc.append((node["name"], node["url"]))
+        node = list(node.values())
+    if isinstance(node, list):
+        for item in node:
+            _ld_pairs(item, acc)
+
+
+def page_links(url: str) -> list[tuple[str, str]] | None:
+    """(name, absolute URL) for each link on the page: anchors and JSON-LD.  None when the fetch fails."""
+    html = _fetch_html(url)
+    if html is None:
+        return None
+    try:
+        parser = _TextParser()
+        parser.feed(html)
+        parser.close()
+        pairs = list(parser.anchors)
+        for blob in parser.ld_blobs:
+            try:
+                _ld_pairs(json.loads(blob), pairs)
+            except ValueError:
+                pass
+        own = canonical_url(url)
+        links: dict[str, tuple[str, str]] = {}  # canonical URL -> (name, URL); first non-empty name wins
+        for name, href in pairs:
+            try:
+                absolute = urljoin(url, href.strip())
+                key = canonical_url(absolute)
+            except ValueError:  # malformed href, e.g. a broken IPv6 host
+                continue
+            if urlparse(absolute).scheme not in ("http", "https") or key == own:
+                continue
+            if key not in links or not links[key][0]:
+                links[key] = (name.strip()[:100], absolute)
+        return list(links.values())
+    except Exception as exc:  # untrusted HTML must never fail the page read: carry on without links
+        logger.warning("page links failed for %s: %s", url, exc)
+        return None
+
+
 def _fetch_detail(url: str) -> str | None:
     """Fetch a detail page.  Returns its text (not HTML) or None on failure.
 
     Raw HTML was 98.2% of a London search's input tokens; text is ~5% of the HTML.
     """
+    html = _fetch_html(url)
+    return None if html is None else _html_to_text(html)
+
+
+def _fetch_html(url: str) -> str | None:
+    """Fetch a page's HTML under the deadline and size limit, or None on failure."""
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "sail-event/1.0"})
         with urllib.request.urlopen(req, timeout=DETAIL_FETCH_TIMEOUT) as resp:
@@ -147,7 +217,7 @@ def _fetch_detail(url: str) -> str | None:
             if len(body) > DETAIL_FETCH_MAX_BYTES:
                 logger.warning("detail fetch failed for %s: over %d bytes", url, DETAIL_FETCH_MAX_BYTES)
                 return None
-            return _html_to_text(body.decode("utf-8", errors="replace"))
+            return body.decode("utf-8", errors="replace")
     except Exception as exc:
         logger.warning("detail fetch failed for %s: %s", url, exc)
         return None
@@ -210,6 +280,7 @@ def detail_hop(
             "target_country": target_country,
             "content": f"URL: {ev.link}\n\n{text}",
             "schema": schema_text,
+            "links_rule": "",
         }
         try:
             response, _usage = model.complete_json(

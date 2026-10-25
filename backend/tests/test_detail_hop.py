@@ -174,3 +174,17 @@ def test_model_reads_the_event_page_as_text_not_html(page_server):
     assert "19:30" in content
     assert '"@context":"https:\\/\\/schema.org"' in content  # JSON-LD body kept
     assert len(content) < 10_000, len(content)  # the HTML is 136,706 characters
+
+
+def test_hop_to_another_host_only_when_public():
+    """A listing may link anywhere; a link on another host must not aim the hop at a private address."""
+    from dataclasses import replace
+    ev = ExtractedEvent(
+        title="t", start_local="2026-11-10T18:00", start_tz=None, end_local=None,
+        venue=None, city=None, country=None, link="https://luma.com/granola-jeffrey-veen",
+        description="", confidence=0.9, source_url="https://aisa.to/ai-events-london",
+        page_kind="listing",
+    )
+    assert hop_mod._needs_hop(ev)
+    for private in ("http://169.254.169.254/latest/meta-data", "http://10.0.0.1/x", "http://localhost:8000/x"):
+        assert not hop_mod._needs_hop(replace(ev, link=private)), private
