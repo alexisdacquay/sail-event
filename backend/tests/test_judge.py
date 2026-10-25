@@ -44,7 +44,7 @@ class TestValidateReason:
         assert validate_reason("Jazz trio in Berlin on 20 Oct: fits your dates") is None
 
     def test_too_long(self):
-        err = validate_reason("x" * 141)
+        err = validate_reason("x" * 201)
         assert err is not None
         assert "too long" in err
 
@@ -65,9 +65,9 @@ class TestValidateReason:
         assert len(reason) == 150
         assert validate_reason(reason) is None
 
-    def test_exactly_140_chars(self):
-        reason = "Jazz trio in Berlin on 20 Oct: fits" + " " * (140 - 35)
-        reason = reason[:140]
+    def test_exactly_200_chars(self):
+        reason = "Jazz trio in Berlin on 20 Oct: fits" + " " * (200 - 35)
+        reason = reason[:200]
         assert validate_reason(reason) is None
 
 
@@ -334,7 +334,7 @@ class TestRepairLoop:
         from app.services.judge import judge_event, Verdict
 
         model = _MockModel([
-            {"score": 80, "reason": "x" * 141, "is_event": True},  # too long
+            {"score": 80, "reason": "x" * 201, "is_event": True},  # too long
             {"score": 80, "reason": "jazz in Berlin on Oct 20", "is_event": True},
         ])
 
@@ -342,7 +342,7 @@ class TestRepairLoop:
 
         assert isinstance(result, Verdict)
         assert result.repaired
-        assert len(result.reason) <= 140
+        assert len(result.reason) <= 200
         # Verify assistant turn in repair
         repair = model._calls[1]["repair_messages"]
         assert repair[0]["role"] == "assistant"
@@ -355,8 +355,9 @@ class TestRepairLoop:
         from app.services.judge import judge_event, Verdict
 
         long_reason = ("In London on 28 October, so place and date fit, but this is an economics education "
-                       "conference where AI is only one mentioned subtopic, not an AI-focused event.")
-        assert len(long_reason) > 140
+                       "conference where AI is only one mentioned subtopic, not an AI-focused event, "
+                       "so it does not really match what you asked for.")
+        assert len(long_reason) > 200
         model = _MockModel([
             {"score": 55, "reason": long_reason},                    # no is_event, reason too long
             {"score": 55, "reason": long_reason, "is_event": True},  # schema repaired, reason unchanged

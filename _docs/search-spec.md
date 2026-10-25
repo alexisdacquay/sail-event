@@ -316,7 +316,7 @@ Golden set B — labelled candidates for C1, now = 2026-10-18 12:00 Europe/Berli
 2. The reference criteria yields no event that does not overlap 2026-10-19 → 2026-10-21 in accepted or queued; a 17–22 Oct festival is kept.
 3. No event that has already ended at run time is inserted; a date-only event counts as ending at 23:59 of its day.
 4. Every stored event has a start with a time zone or an explicit "unknown zone", a city, a country, the page it came from and its own link.
-5. Every stored event has a score, a reason sentence ≤ 140 characters passing the pattern check, a judge model and a judge version.
+5. Every stored event has a score, a reason sentence ≤ 200 characters (the prompt asks for 140) passing the pattern check, a judge model and a judge version.
 6. The reason sentence names at least the date and the place, in the language of the criteria text.
 7. The smoke script with three repeats prints the score spread per event; the owner reads it against ±5 (measurement, not a CI assertion).
 8. Facets are parsed once per criteria text (hash) or prompt version change. Relative date words resolve against now on every run in `window.py`; absolute dates are fixed and the past filter and the judge handle them.

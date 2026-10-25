@@ -44,8 +44,9 @@ _MARKUP_RE = re.compile(r"<[^>]+>|&[a-z]+;|\[.*?\]", re.IGNORECASE)
 
 def validate_reason(reason: str) -> str | None:
     """Return an error message if the reason fails basic checks, else None."""
-    if len(reason) > 140:
-        return f"reason too long ({len(reason)} chars, max 140)"
+    # The prompt asks for 140; the check allows 200 so a slightly long reason is kept, not a judge error.
+    if len(reason) > 200:
+        return f"reason too long ({len(reason)} chars, max 200)"
     if _URL_RE.search(reason):
         return "reason contains a URL"
     if _MARKUP_RE.search(reason):

@@ -200,7 +200,7 @@ Prompt content rules (own your prompts: the `.md` is the whole instruction, no t
 - `judge_v2.md`: role, the rubric table from spec §7 verbatim including the one price rule (price unknown with a stated budget → 70–89; no budget → no effect), the sentence pattern and the example sentence, "write the sentence in {input_language}", "write to the user: your dates, your budget", "flags are facts, the score is your judgement", three few-shot examples from golden set B with full output: E1 → 94, `Jazz trio at A-Trane in Berlin on Tue 20 Oct, 18 EUR: fits your dates and topic` flags place/date/topic yes, budget unknown (no budget stated); E20 → 12, `Techno night at Berghain in Berlin on 20 Oct: right place and dates, not jazz`, topic no; E4 → 78, `Jazz vocal workshop in Berlin on 21 Oct: fits your dates and topic, a workshop rather than a concert`. E1, E4 and E20 are therefore not CI judge rows (§10).
 - `guard_v2.md`: §11.
 
-Code after the judge (`judge.py`): apply the caps table from spec §7 to `score`; `is_event = false` → score 0 and the event is dropped with `filtered_non_event`; `reason` checked for length ≤ 140 and the pattern (contains a date token and a place token, ends without a URL, no markup); a failing reason → `judge_errors`, event stays `new`.
+Code after the judge (`judge.py`): apply the caps table from spec §7 to `score`; `is_event = false` → score 0 and the event is dropped with `filtered_non_event`; `reason` checked for length ≤ 200 (the prompt asks for 140; owner decision, 2026-10-25) and the pattern (contains a date token and a place token, ends without a URL, no markup); a failing reason → `judge_errors`, event stays `new`.
 
 ## 5. Query rule (revised 2026-10-18, owner decision)
 
@@ -337,7 +337,7 @@ Issues in dependency order; each one engineer session; new files only until F2.
 
 ### Issue F1 — Judge, caps, golden B verdicts
 1. `judge_v2.md` + schema with the rubric, the one price rule, "write the sentence in {input_language}", few-shot E1/E4/E20; `judge.py` applies the caps table; `is_event=false` → dropped.
-2. Reason check: ≤ 140 characters, date and place tokens present, no URL, no markup; failure → error result, not an exception (the caller counts `judge_errors`).
+2. Reason check: ≤ 200 characters (the prompt asks for 140), date and place tokens present, no URL, no markup; failure → error result, not an exception (the caller counts `judge_errors`).
 3. Band word function for spec §8 (`fits`, `mostly fits`, `open question`, `off topic`, `not a fit`) exposed for the API.
 4. Golden set B judge rows E2, E3, E21, E22 pass with recorded verdicts; E1/E4/E20 excluded by name in the test.
 5. Not wired into the pipeline yet; all existing tests still pass.
