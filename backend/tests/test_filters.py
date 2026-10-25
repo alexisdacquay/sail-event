@@ -327,3 +327,28 @@ class TestFilterPipeline:
         assert len(kept) == 1
         assert kept[0].title == "Jazz Tuesday"
         assert counts.filtered_duplicate == 1
+
+
+# ---------- #136: owner's London AI search ----------
+
+_LISTING = "https://hiddenevents.online/london/tech-events"
+
+
+def test_136_two_listing_events_same_date_both_kept():
+    """#136 evidence: two different talks on one listing page, same day, link = listing URL; both are kept."""
+    movie = _make_event(
+        title="AI Movie Club x The Terminator (1984)", start_local="2026-10-29T18:00",
+        start_tz="Europe/London", city="London", country="GB", venue="Kensington Central Library",
+        link=_LISTING, source_url=_LISTING, page_kind="listing",
+    )
+    debate = _make_event(
+        title="Is AI making us less creative?: An Oxford-style debate", start_local="2026-10-29T18:30",
+        start_tz="Europe/London", city="London", country="GB", venue="Granola",
+        link=_LISTING, source_url=_LISTING, page_kind="listing",
+    )
+    kept, counts = filter_events(
+        [movie, debate], now_utc=_NOW, window_start_utc=_WS, window_end_utc=_WE,
+        target_city="London", target_country="GB", user_tz="Europe/London",
+    )
+    assert [e.title for e in kept] == [movie.title, debate.title]
+    assert counts.filtered_duplicate == 0
