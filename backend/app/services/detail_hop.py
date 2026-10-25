@@ -15,6 +15,7 @@ import json
 import logging
 import os
 import threading
+import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
@@ -71,7 +72,16 @@ def _fetch_detail(url: str) -> str | None:
             ct = resp.headers.get_content_type() if hasattr(resp.headers, "get_content_type") else ""
             if ct and "html" not in ct:
                 return None
-            body = resp.read(DETAIL_FETCH_MAX_BYTES + 1)
+            # urlopen's timeout is per socket read; a slow-drip server needs a total deadline
+            deadline = time.monotonic() + DETAIL_FETCH_TIMEOUT
+            body = b""
+            while len(body) <= DETAIL_FETCH_MAX_BYTES:
+                if time.monotonic() > deadline:
+                    raise TimeoutError(f"detail fetch exceeded {DETAIL_FETCH_TIMEOUT}s total")
+                chunk = resp.read1(64 * 1024)
+                if not chunk:
+                    break
+                body += chunk
             if len(body) > DETAIL_FETCH_MAX_BYTES:
                 return None
             return body.decode("utf-8", errors="replace")

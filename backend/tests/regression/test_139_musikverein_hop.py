@@ -102,7 +102,7 @@ def _mock_urlopen(detail_html: str):
         resp.status = 200
         resp.headers = MagicMock()
         resp.headers.get_content_type.return_value = "text/html"
-        resp.read.return_value = detail_html.encode("utf-8")
+        resp.read1.side_effect = [detail_html.encode("utf-8"), b""]
         resp.__enter__ = lambda s: s
         resp.__exit__ = lambda s, *a: None
         return resp
