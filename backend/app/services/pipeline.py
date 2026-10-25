@@ -415,11 +415,13 @@ def run_pipeline(
                 )
                 counts["pages_detail_fetched"] = hop_counts.pages_detail_fetched
                 counts["detail_fetch_errors"] = hop_counts.detail_fetch_errors
+                counts["detail_extract_errors"] = hop_counts.detail_extract_errors
                 llm_calls += hop_counts.detail_llm_calls
                 if hop_counts.detail_llm_calls:
                     _llm_calls_counter.add(hop_counts.detail_llm_calls, {"prompt": "extract", "provider": getattr(model, "model_id", "unknown")})
-                if hop_counts.detail_fetch_errors > 0 and not error_detail:
-                    error_detail = f"detail_hop: {hop_counts.detail_fetch_errors} fetch error(s)"
+                if (hop_counts.detail_fetch_errors or hop_counts.detail_extract_errors) and not error_detail:
+                    error_detail = (f"detail_hop: {hop_counts.detail_fetch_errors} fetch error(s), "
+                                    f"{hop_counts.detail_extract_errors} extract error(s)")
 
             # --- Stage 6: filter ---
             current_stage = "filter"
@@ -755,7 +757,7 @@ def _finalise_run(
     # #108/#112: the funnel reads these on every finished run, also when it stopped early
     for k in ("rejected_date_place", "rejected_off_topic", "rejected_other",
               "filtered_no_date", "filtered_no_time", "pages_with_events",
-              "pages_detail_fetched", "detail_fetch_errors"):
+              "pages_detail_fetched", "detail_fetch_errors", "detail_extract_errors"):
         counts.setdefault(k, 0)
     counts["counts_version"] = COUNTS_VERSION
     run.finished_at = datetime.now(UTC)

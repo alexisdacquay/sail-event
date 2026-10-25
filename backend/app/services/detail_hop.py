@@ -43,6 +43,7 @@ DETAIL_FETCH_MAX_BYTES = int(os.environ.get("DETAIL_FETCH_MAX_BYTES", str(2 * 10
 class HopCounts:
     pages_detail_fetched: int = 0
     detail_fetch_errors: int = 0
+    detail_extract_errors: int = 0  # model re-extraction failed; the page itself was fetched
     detail_llm_calls: int = 0
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
@@ -71,6 +72,7 @@ def _fetch_detail(url: str) -> str | None:
                 return None
             ct = resp.headers.get_content_type() if hasattr(resp.headers, "get_content_type") else ""
             if ct and "html" not in ct:
+                logger.warning("detail fetch failed for %s: content type %s", url, ct)
                 return None
             # urlopen's timeout is per socket read; a slow-drip server needs a total deadline
             deadline = time.monotonic() + DETAIL_FETCH_TIMEOUT
@@ -83,10 +85,11 @@ def _fetch_detail(url: str) -> str | None:
                     break
                 body += chunk
             if len(body) > DETAIL_FETCH_MAX_BYTES:
+                logger.warning("detail fetch failed for %s: over %d bytes", url, DETAIL_FETCH_MAX_BYTES)
                 return None
             return body.decode("utf-8", errors="replace")
     except Exception as exc:
-        logger.debug("detail fetch failed for %s: %s", url, exc)
+        logger.warning("detail fetch failed for %s: %s", url, exc)
         return None
 
 
@@ -157,7 +160,7 @@ def detail_hop(
         except Exception as exc:
             logger.warning("detail extract error for %s: %s", ev.link, exc)
             with counts._lock:
-                counts.detail_fetch_errors += 1
+                counts.detail_extract_errors += 1
             return idx, None
 
         # Pick the best event from the detail page response

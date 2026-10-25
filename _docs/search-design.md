@@ -57,7 +57,7 @@ One Alembic migration `backend/alembic/versions/<rev>_search_v2.py`, first issue
 | events | extraction_confidence | Float | yes | 0–1 |
 | events | judge_model | String | yes | renamed from `scorer_model` (`op.alter_column(new_column_name=...)`) |
 | events | judge_version | String(16) | yes | e.g. `judge_v2` |
-| runs | stage_counts | Text | yes | JSON: `queries_planned, results_fetched, results_known, pages_content_pass, events_extracted, pages_detail_fetched, detail_fetch_errors, filtered_no_date, filtered_no_time, filtered_incomplete, filtered_past, filtered_date, filtered_place, filtered_non_event, filtered_duplicate, events_judged, accepted, rejected, queued, search_errors, extract_errors, judge_errors` |
+| runs | stage_counts | Text | yes | JSON: `queries_planned, results_fetched, results_known, pages_content_pass, events_extracted, pages_detail_fetched, detail_fetch_errors, detail_extract_errors, filtered_no_date, filtered_no_time, filtered_incomplete, filtered_past, filtered_date, filtered_place, filtered_non_event, filtered_duplicate, events_judged, accepted, rejected, queued, search_errors, extract_errors, judge_errors` |
 | runs | search_calls | Integer | no, default 0 | credits since #77 |
 | runs | llm_calls | Integer | no, default 0 | |
 | runs | llm_tokens_in | Integer | no, default 0 | 0 when the API returns no usage |
