@@ -41,7 +41,7 @@ False positive classes, in the order they must be caught:
 | Wrong dates | "Jazzfest Berlin", 5 Nov 2026 for a 19–21 Oct window | date filter (code) |
 | Past event | "Jazz at b-flat", 17 Oct 2026 | past filter (code) |
 | Not an event | "Top 10 jazz clubs in Berlin" | extraction returns no event |
-| Duplicate | same event, two URLs or two listings | dedup (code) |
+| Duplicate | same event, two URLs or two listings | one code check, then the model after storage (#136) |
 | Off-topic | "Techno night", Berlin, 20 Oct | judge (low score) |
 | Over budget | 120 EUR ticket against "under 30 EUR" | judge (capped score) |
 
@@ -142,12 +142,13 @@ Applied in code, in this order, each with a count on the run:
 | Date window | no overlap with the window: `start > window end` or `(end or start) < window start`, compared in the event's zone; a festival 17–22 Oct overlaps a 19–21 Oct window and is kept | `filtered_date` |
 | Place | country unknown; or country ≠ criteria country; or city ≠ criteria city when no radius is given; unknown city with the right country passes to the judge | `filtered_place` |
 | Non-event | extraction returned no event, or confidence < 0.5 | `filtered_non_event` |
-| Duplicate by link | the event's canonical link and date already stored for the user, or seen earlier in the run | `filtered_duplicate` |
-| Duplicate by title+date | same calendar date and near-identical title (stopwords removed; ≥ 0.8 token overlap, or one title's tokens inside the other's when the shorter has at least 3 tokens) against the user's stored events and the run | `filtered_duplicate` |
+| Duplicate | the event's own page (its link, never the URL of the listing it was found on) and calendar date already stored for the user; or a row with the same link and start already stored or kept in the run (the table's unique key) | `filtered_duplicate` |
+| Same event after storage | at the end of every run, each new accepted or queued event and the user's other stored events on its calendar date go to the model in one call; when it names one as the same real-world event (date, time, place, title, summary), the stored one stays and the new one becomes `rejected`, reason "Duplicate of <title>" | `dedup_merged`; a model error keeps both, `dedup_errors` |
 
 - A page already stored as a single-event page is dropped before extraction, so no model call is spent on it.
-- A listing page (venue programme, weekly jam) is extracted again on every run: its already-stored occurrences are removed by the title+date rule, new occurrences are kept. This is how next week's concerts on a known page are found.
-- A duplicate of a rejected event stays rejected and is counted: rejected events never return.
+- A listing page (venue programme, weekly jam) is extracted again on every run: an occurrence already stored with the same link and start is dropped, new occurrences are kept and go to the after-storage check. This is how next week's concerts on a known page are found.
+- There is no title match and no in-run check by link and date in code (#136: on the owner's London AI search 10 of 25 such drops were different events). Two events from one listing at the same minute still collide on the table's unique key `(user, link, date_time)`; the second is dropped.
+- A duplicate of a rejected event becomes rejected: rejected events never return.
 
 ## 7. Scoring
 
@@ -300,8 +301,8 @@ Golden set B — labelled candidates for C1, now = 2026-10-18 12:00 Europe/Berli
 | E15 | History of jazz in Berlin (encyclopedia page) | — | — | not an event | filtered_non_event |
 | E16 | A-Trane venue homepage, no dates | — | Berlin DE | not an event | filtered_non_event |
 | E17 | Berlin jazz radio, 24/7 stream | — | — | not an event | filtered_non_event |
-| E18 | E1 under the same URL with `?utm_source=x` | 2026-10-20 21:00 | Berlin DE | duplicate by link | filtered_duplicate |
-| E19 | "A-Trane: Jazz Trio" on another site | 2026-10-20 21:00 | Berlin DE | duplicate by title+date | filtered_duplicate |
+| E18 | E1 under the same URL with `?utm_source=x` | 2026-10-20 21:00 | Berlin DE | same event after storage | dedup_merged |
+| E19 | "A-Trane: Jazz Trio" on another site | 2026-10-20 21:00 | Berlin DE | same event after storage | dedup_merged |
 | E20 | Techno night at Berghain | 2026-10-20 23:00 | Berlin DE | off-topic | judged, 10–39 |
 | E21 | Outdoor Photography Meetup | 2026-10-20 10:00 | Berlin DE | off-topic | judged, 10–39 |
 | E22 | Vienna Philharmonic, 120 EUR (for C2) | 2026-11-05 19:30 | Vienna AT | over budget | judged, ≤ 30 |
@@ -326,7 +327,7 @@ Golden set B — labelled candidates for C1, now = 2026-10-18 12:00 Europe/Berli
 12. A listing page yields all its events (no per-page cap); a listing page seen before is extracted again on the next run and only its new occurrences are stored.
 13. A single-event page already stored for the user costs no model call.
 14. Two candidates with the same canonical link and date, or the same date and ≥ 0.8 title overlap (subset rule only from 3 tokens), yield one stored event; two different concerts at one venue on one night stay two.
-15. A duplicate of a rejected event is not inserted and is counted.
+15. A duplicate of a rejected event is rejected and counted (`dedup_merged`).
 16. The run row carries counts for every stage, filter and guard, the number of search and model calls, tokens, and the stage where it stopped if it stopped early.
 17. Reaching a daily budget stops the run at that stage with `budget: <which>` and HTTP 200; a judge error leaves that event `new`, is counted, and the run completes.
 18. With `APP_ENV=prod` and a fixture or fake adapter selected, `GET /api/health` stays 200 and a run is recorded as refused with nothing stored.

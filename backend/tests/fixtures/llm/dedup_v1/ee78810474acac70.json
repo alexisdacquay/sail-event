@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 1,
+    "reason": "Same date, start time, and venue (Mauerpark, Berlin), with titles and descriptions both describing a free open-air jazz concert there."
+  },
+  "usage": {
+    "prompt_tokens": 434,
+    "completion_tokens": 57
+  },
+  "recorded_at": "2026-10-25T21:30:20.948795+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

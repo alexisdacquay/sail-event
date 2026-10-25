@@ -57,7 +57,7 @@ One Alembic migration `backend/alembic/versions/<rev>_search_v2.py`, first issue
 | events | extraction_confidence | Float | yes | 0–1 |
 | events | judge_model | String | yes | renamed from `scorer_model` (`op.alter_column(new_column_name=...)`) |
 | events | judge_version | String(16) | yes | e.g. `judge_v2` |
-| runs | stage_counts | Text | yes | JSON: `queries_planned, results_fetched, results_known, pages_content_pass, events_extracted, pages_detail_fetched, detail_fetch_errors, detail_extract_errors, filtered_no_date, filtered_no_time, filtered_incomplete, filtered_past, filtered_date, filtered_place, filtered_non_event, filtered_duplicate, events_judged, accepted, rejected, queued, search_errors, extract_errors, judge_errors` |
+| runs | stage_counts | Text | yes | JSON: `queries_planned, results_fetched, results_known, pages_content_pass, events_extracted, pages_detail_fetched, detail_fetch_errors, detail_extract_errors, filtered_no_date, filtered_no_time, filtered_incomplete, filtered_past, filtered_date, filtered_place, filtered_non_event, filtered_duplicate, events_judged, accepted, rejected, queued, search_errors, extract_errors, judge_errors, dedup_merged, dedup_errors` |
 | runs | search_calls | Integer | no, default 0 | credits since #77 |
 | runs | llm_calls | Integer | no, default 0 | |
 | runs | llm_tokens_in | Integer | no, default 0 | 0 when the API returns no usage |
@@ -225,13 +225,10 @@ Consequences: `planner.py`, `PlannedQuery`, the local-language month and event-w
 | Rule | Definition |
 |---|---|
 | Canonical link | lowercase scheme and host; drop default port and fragment; drop query keys `utm_*`, `fbclid`, `gclid`, `ref`, `source`; strip trailing `/`; keep everything else |
-| Known page | canonical result URL equals a stored event's `source_url` whose `page_kind` is `single_event` (any status) → dropped before extraction, counted `results_known`. A stored `listing` page is extracted again every run; its stored occurrences fall to the near-match rule below, new ones are kept |
-| In-run link | second occurrence of a canonical `link` with the same `date_time` in the run → dropped, counted `filtered_duplicate` |
-| Stored link | `(user_id, link, date_time)` already stored → dropped, counted `filtered_duplicate` (also enforced by the unique key) |
-| Title key | title lowercased, punctuation removed, tokens split on whitespace, stopwords removed (en, de, fr, es, pt, it, nl short lists: the/a/an/of/at/in/and/der/die/das/im/am/le/la/de/du/el/los/y/o/e/het/een) |
-| Near-match | same local calendar date and (Jaccard of title keys ≥ 0.8, or one key set ⊂ the other when the smaller set has ≥ 3 tokens). `{jazz}` ⊂ `{jazz, trio, atrane}` is not a match; "A-Trane Jazz" and "A-Trane Jazz Trio" on one night stay two events (Jaccard 2/3) |
-| Near-match scope | the user's stored events with the same calendar date (one query on `date_time LIKE 'YYYY-MM-DD%'`) and the events kept so far in the run |
-| Winner | the first seen; a near-match of a stored `rejected` event is dropped without insertion and counted `filtered_duplicate` |
+| Known page | canonical result URL equals a stored event's `source_url` whose `page_kind` is `single_event` (any status) → dropped before extraction, counted `results_known`. A stored `listing` page is extracted again every run; its stored occurrences fall to the unique-key rule below, new ones are kept |
+| Event page (#136) | the event's own page, i.e. `page_kind` is not `listing` or the canonical `link` differs from the canonical `source_url`, with the canonical link and calendar date of a stored event of the user → dropped, counted `filtered_duplicate`. A listing's own URL is never an event page |
+| Unique key | `(user_id, link, date_time)` already stored, or kept earlier in the run → dropped, counted `filtered_duplicate`; the table cannot hold the second row. Two different events from one listing at the same minute lose the second (4 pairs on the owner's London AI search); a migration widening the key would keep them |
+| After storage (#136) | `services/dedup.py`, after judge and triage, the run's last model step. For each new `accepted`/`queued` event of the run: candidates are the user's other events on the same calendar date (code narrows by date only), minus earlier merges and this run's own rejects. One `dedup_v1` call per event with candidates (ids are positions, so recordings stay stable), workers `JUDGE_CONCURRENCY`, budget reserved with `reserve_llm_calls` as for the judge (what does not fit keeps both, run error `budget: llm`). `same_as` = a candidate → the new event is `rejected`, `decided_by` auto, `score_reason` "Duplicate of <title>", counted `dedup_merged` (not in the reject bands); applied lowest judge score first, and a merge into an event already merged in the pass is skipped, so two new events naming each other keep the better-scored one. A model or schema error keeps both, counted `dedup_errors` |
 
 ## 8. Budget enforcement and backoff
 
@@ -331,9 +328,9 @@ Issues in dependency order; each one engineer session; new files only until F2.
 1. `extract_v2.md` + schema; `extract.py`: every page with `raw_content` read in full (no slice, no per-page cap); results without content fall back to snippet-only; confidence < 0.5 dropped; `pages_content_pass` counted; a `get_guardrail()` hook before pass 2 that `GUARDRAIL=none` makes a no-op (wired for real in issue H).
 2. `filters.py`: past = `event_end < now` with the date-only 23:59 rule; window = overlap; place: unknown country → `filtered_place`; order from spec §6; every drop counted.
 3. Canonical link unit tests: utm, fragment, trailing slash, port.
-4. Near-match: Jaccard ≥ 0.8, subset only from 3 tokens; tests on E19 (match), "A-Trane Jazz" vs "A-Trane Jazz Trio" same night (no match), `{jazz}` vs `{jazz, trio, atrane}` (no match).
+4. Near-match: removed in #136; the same event under two titles is the after-storage check's (§7).
 5. Golden set B with 22 entries and recorded extraction responses; filter expectations for E5–E19 pass, including a 17–22 Oct festival kept and a date-only 19 Oct event kept at 12:00 on the 19th.
-6. A near-match of a `rejected` stored event is dropped and counted; a listing page's stored occurrences are deduped and its new ones kept (test with a two-run sequence).
+6. A listing page's stored occurrences are dropped on the unique key and its new ones kept (test with a two-run sequence); same-event matches are the after-storage check's (#136).
 
 ### Issue F1 — Judge, caps, golden B verdicts
 1. `judge_v2.md` + schema with the rubric, the one price rule, "write the sentence in {input_language}", few-shot E1/E4/E20; `judge.py` applies the caps table; `is_event=false` → dropped.

@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 2,
+    "reason": "Candidate 2 matches the new event's title, start time, venue, and jam-session description exactly."
+  },
+  "usage": {
+    "prompt_tokens": 542,
+    "completion_tokens": 205
+  },
+  "recorded_at": "2026-10-25T21:32:06.523065+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

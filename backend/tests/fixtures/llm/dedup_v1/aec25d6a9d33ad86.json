@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 4,
+    "reason": "Same title, date, start time, and venue for the late-night jam session at Zig Zag Jazz Club Berlin."
+  },
+  "usage": {
+    "prompt_tokens": 684,
+    "completion_tokens": 202
+  },
+  "recorded_at": "2026-10-25T21:30:21.913156+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

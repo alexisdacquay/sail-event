@@ -25,6 +25,7 @@ from ..services.extract import extract_events
 from ..services.detail_hop import detail_hop
 from ..services.filters import attach_offset, filter_events
 from ..services.judge import judge_event, Verdict, JudgeError, band_word
+from ..services.dedup import DUPLICATE_PREFIX, dedup_run
 from .. import orm
 
 logger = logging.getLogger("sail-event.pipeline")
@@ -538,6 +539,23 @@ def run_pipeline(
                     error_detail = f"judge: errors on {j_err} event(s)"
                 db.commit()
 
+            # --- #136: after-storage duplicate check, the run's last model step ---
+            with tracer.start_as_current_span("dedup"):
+                d = dedup_run(db, run, user.id, model, llm_calls, JUDGE_CONCURRENCY)
+                llm_calls += d["calls"]
+                llm_tokens_in += d["tokens_in"]
+                llm_tokens_out += d["tokens_out"]
+                if d["calls"]:
+                    _llm_calls_counter.add(d["calls"], {"prompt": "dedup", "provider": getattr(model, "model_id", "unknown")})
+                counts["dedup_merged"] = d["dedup_merged"]
+                counts["dedup_errors"] = d["dedup_errors"]
+                if d["short"] and not error_msg:
+                    error_msg = "budget: llm"
+                    stopped_at_stage = "judge"
+                    _budget_stops_counter.add(1, {"which": "llm"})
+                if d["dedup_errors"] and not error_detail:
+                    error_detail = f"dedup: errors on {d['dedup_errors']} event(s)"
+
             # Count triage outcomes
             if events_new > 0:
                 triaged = db.query(orm.Event).filter(
@@ -734,8 +752,12 @@ COUNTS_VERSION = 4
 
 
 def reject_bands(events: list[orm.Event]) -> dict[str, int]:
-    """#108 funnel bands of a run's rejected events: judge scores 0-9 mean wrong place/dates, 10-39 off topic."""
-    scores = [e.score or 0 for e in events if e.status == "rejected"]
+    """#108 funnel bands of a run's rejected events: judge scores 0-9 mean wrong place/dates, 10-39 off topic.
+
+    #136: a duplicate keeps its judge score but is counted in dedup_merged, never in a band.
+    """
+    scores = [e.score or 0 for e in events
+              if e.status == "rejected" and not (e.score_reason or "").startswith(DUPLICATE_PREFIX)]
     return {
         "rejected_date_place": sum(1 for s in scores if s <= 9),
         "rejected_off_topic": sum(1 for s in scores if 10 <= s <= 39),
@@ -762,7 +784,8 @@ def _finalise_run(
     # #108/#112: the funnel reads these on every finished run, also when it stopped early
     for k in ("rejected_date_place", "rejected_off_topic", "rejected_other",
               "filtered_no_date", "filtered_no_time", "pages_with_events",
-              "pages_detail_fetched", "detail_fetch_errors", "detail_extract_errors"):
+              "pages_detail_fetched", "detail_fetch_errors", "detail_extract_errors",
+              "dedup_merged", "dedup_errors"):
         counts.setdefault(k, 0)
     counts["counts_version"] = COUNTS_VERSION
     run.finished_at = datetime.now(UTC)

@@ -9,6 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from app.orm import Criteria, Event, Run, User
+from app.services.dedup import DUPLICATE_PREFIX
 from app.services.pipeline import run_pipeline
 
 
@@ -271,8 +272,8 @@ def test_triage_uses_ge_le_cutoffs(client, auth_headers, _db_session):
     user = _db_session.query(User).filter(User.username == "demo").first()
     events = _db_session.query(Event).filter(Event.run_id == run_id).all()
     for e in events:
-        if e.score is None:
-            continue
+        if e.score is None or e.score_reason.startswith(DUPLICATE_PREFIX):
+            continue  # #136: a duplicate is triaged first, then rejected by the after-storage check
         if e.score >= user.upper_threshold:
             assert e.status == "accepted"
             assert e.decided_by == "auto"
@@ -530,11 +531,12 @@ def test_events_to_judge_in_stage_counts_during_judge(_db_session):
 # ---------- #108: rejected bands in stage_counts ----------
 
 
-# The 11 fixture events in judge order (source_url, date_time, title, id)
+# The fixture event titles (#136: 20 events reach the judge, some titles on several pages)
 _FIXTURE_TITLES = [
     "Open-air jazz", "Outdoor Photography Meetup", "Jazz vocal workshop", "Jazz Trio at A-Trane",
     "Techno night at Berghain", "Sunday Jazz Brunch", "Open-air Jazz in Mauerpark",
     "Jazz Under the Stars", "Jazzfest Berlin", "Jazz in Bern", "Jazz night Potsdam",
+    "Late Night Jam Session", "Jazz Vocal Workshop",
 ]
 
 
@@ -551,12 +553,13 @@ def _cycling_judge(scores):
 
 
 def _assert_bands(sc: dict) -> None:
-    # #134: no per-page cap → 11 events judged; cycling [5,20,40,95] over 11:
-    # 3×5, 3×20, 3×40, 2×95.
-    assert sc["rejected_date_place"] == 3
-    assert sc["rejected_off_topic"] == 3
+    # #136: 20 events judged; cycling [5,20,40,95] over the titles: 5×5, 5×20, 3×40, 7×95.
+    # A 95 merged after storage is rejected, counted in dedup_merged, never in a band.
+    assert sc["rejected_date_place"] == 5
+    assert sc["rejected_off_topic"] == 5
     assert sc["rejected_other"] == 3
-    assert sc["rejected_date_place"] + sc["rejected_off_topic"] + sc["rejected_other"] == sc["rejected"]
+    assert sc["dedup_merged"] == 3
+    assert sc["rejected_date_place"] + sc["rejected_off_topic"] + sc["rejected_other"] + sc["dedup_merged"] == sc["rejected"]
 
 
 def test_rejected_bands_sum_to_rejected(client, auth_headers, _db_session, monkeypatch):
@@ -566,8 +569,8 @@ def test_rejected_bands_sum_to_rejected(client, auth_headers, _db_session, monke
     with patch("app.services.pipeline.judge_event", side_effect=_cycling_judge([5, 20, 40, 95])):
         body = client.post("/api/search", headers=h).json()
     sc = body["stageCounts"]
-    assert sc["events_judged"] == 11  # #134: no per-page cap → one more event survives
-    assert sc["accepted"] == 2
+    assert sc["events_judged"] == 20  # #136: no in-run or title checks in code
+    assert sc["accepted"] == 4  # 7 scored 95, 3 of them merged after storage
     _assert_bands(sc)
 
 

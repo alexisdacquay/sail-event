@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 1,
+    "reason": "Same title, date, start time, venue and description as the new event."
+  },
+  "usage": {
+    "prompt_tokens": 537,
+    "completion_tokens": 116
+  },
+  "recorded_at": "2026-10-25T21:30:21.406615+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

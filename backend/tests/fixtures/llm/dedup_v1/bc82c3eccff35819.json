@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": null,
+    "reason": "Both are separate co-located conferences at the same venue and time, but one covers cloud infrastructure while the other covers big data and AI analytics, so they are different events."
+  },
+  "usage": {
+    "prompt_tokens": 466,
+    "completion_tokens": 170
+  },
+  "recorded_at": "2026-10-25T21:31:04.520075+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

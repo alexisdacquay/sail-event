@@ -540,11 +540,12 @@ def test_runs_invariant_holds_with_incomplete_and_unjudged(client, auth_headers,
         sc = client.post("/api/search", headers=h).json()["stageCounts"]
 
     assert sc["filtered_incomplete"] == 1
-    # #134: no per-page cap and no per-search cap → all 11 survivors are judged: 1 error, 10 accepted
+    # #134: no per-page cap and no per-search cap → all survivors are judged: 1 error, the rest scored 95
+    # #136: 20 survivors (no in-run or title checks); the after-storage check merges the repeats
     assert "events_capped" not in sc
-    assert sc["events_to_judge"] == 11
+    assert sc["events_to_judge"] == 20
     assert sc["judge_errors"] == 1
-    assert sc["accepted"] == 10
+    assert (sc["accepted"], sc["dedup_merged"]) == (12, 7)
     s = client.get("/api/search/runs", headers=h).json()["runs"][0]
     assert s["eventsFound"] == sc["events_extracted"]
     assert s["accepted"] + s["queued"] + s["rejected"] + s["setAside"] == s["eventsFound"]

@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "This is a jazz concert in Bern, Switzerland, not in Berlin, Germany as you asked.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 750,
+    "completion_tokens": 68
+  },
+  "recorded_at": "2026-10-25T21:30:19.876090+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

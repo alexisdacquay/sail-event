@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": null,
+    "reason": "The new event is a jazz night in Potsdam, while all candidates are different events in other locations or at incompatible venues."
+  },
+  "usage": {
+    "prompt_tokens": 1107,
+    "completion_tokens": 215
+  },
+  "recorded_at": "2026-10-25T21:31:39.443404+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

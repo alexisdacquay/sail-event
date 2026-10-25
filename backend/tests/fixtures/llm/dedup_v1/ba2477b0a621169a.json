@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 11,
+    "reason": "Same title, date, start time, and Berghain Berlin location, describing the same all-night techno event."
+  },
+  "usage": {
+    "prompt_tokens": 1107,
+    "completion_tokens": 211
+  },
+  "recorded_at": "2026-10-25T21:31:39.123418+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

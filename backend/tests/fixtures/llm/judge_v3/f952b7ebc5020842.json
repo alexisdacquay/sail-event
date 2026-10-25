@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "It's a jazz concert on 20 October, but in Bern, Switzerland, not Berlin, Germany as you asked.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 747,
+    "completion_tokens": 89
+  },
+  "recorded_at": "2026-10-25T21:31:59.700038+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}
