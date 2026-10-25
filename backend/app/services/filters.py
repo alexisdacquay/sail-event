@@ -1,4 +1,4 @@
-"""Hard filters before scoring — incomplete, past, window, place, non-event, dedup.
+"""Hard filters before scoring — incomplete, past, and one duplicate check (#136).
 
 Applied in the order from spec §6 (with incomplete first per owner requirement).
 Each filter counts its drops.
@@ -6,7 +6,6 @@ Each filter counts its drops.
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from datetime import date, datetime, time, timezone
 from zoneinfo import ZoneInfo
@@ -24,18 +23,6 @@ _SINGLE_ZONE: dict[str, str] = {
     "PL": "Europe/Warsaw", "CZ": "Europe/Prague", "IE": "Europe/Dublin",
     "GR": "Europe/Athens", "HU": "Europe/Budapest",
 }
-
-# Stopwords for title-key computation (en, de, fr, es, pt, it, nl)
-_STOPWORDS = frozenset(
-    "the a an of at in and or for to with by on is "
-    "der die das im am und ein eine für zu mit von den dem des "
-    "le la de du des les un une et en "
-    "el los las y del en un una con por "
-    "o a os as do da dos das em no na "
-    "il lo la di da del dei delle in e un una "
-    "het een de van in en op met".split()
-)
-
 
 @dataclass
 class FilterCounts:
@@ -172,34 +159,6 @@ def _event_start_utc(ev: ExtractedEvent, user_tz: str) -> datetime | None:
     return None
 
 
-# ---------- title key for near-match ----------
-
-def title_key(title: str) -> frozenset[str]:
-    """Lowercase, remove punctuation, split on whitespace, drop stopwords."""
-    cleaned = re.sub(r"[^\w\s]", "", title.lower())
-    tokens = cleaned.split()
-    return frozenset(t for t in tokens if t not in _STOPWORDS)
-
-
-def jaccard(a: frozenset[str], b: frozenset[str]) -> float:
-    if not a and not b:
-        return 1.0
-    union = a | b
-    if not union:
-        return 0.0
-    return len(a & b) / len(union)
-
-
-def is_near_match(key_a: frozenset[str], key_b: frozenset[str]) -> bool:
-    """Jaccard >= 0.8, or subset only when the smaller has >= 3 tokens."""
-    if jaccard(key_a, key_b) >= 0.8:
-        return True
-    smaller, larger = (key_a, key_b) if len(key_a) <= len(key_b) else (key_b, key_a)
-    if len(smaller) >= 3 and smaller <= larger:
-        return True
-    return False
-
-
 def _event_calendar_date(ev: ExtractedEvent) -> str | None:
     """Extract the calendar date (YYYY-MM-DD) from start_local."""
     if not ev.start_local:
@@ -222,24 +181,15 @@ def filter_events(
 ) -> tuple[list[ExtractedEvent], FilterCounts]:
     """Apply all hard filters in order. Returns (kept, counts).
 
-    stored_events: list of dicts with keys: link, date_time, title, status, page_kind.
+    stored_events: list of dicts with keys link and date_time (others are ignored).
     """
     counts = FilterCounts()
     stored = stored_events or []
-
-    # Build stored lookup structures
-    stored_links: set[tuple[str, str]] = set()  # (canonical_link, calendar_date)
-    stored_title_date: list[tuple[frozenset[str], str, str]] = []  # (key, cal_date, status)
-    for se in stored:
-        link = se.get("link", "")
-        dt = se.get("date_time", "")
-        cal_date = dt[:10] if dt else ""
-        stored_links.add((canonical_url(link), cal_date))
-        stored_title_date.append((title_key(se.get("title", "")), cal_date, se.get("status", "")))
-
-    # In-run dedup tracking
-    run_links: set[tuple[str, str]] = set()
-    run_title_date: list[tuple[frozenset[str], str]] = []
+    # #136: the one duplicate check, an event page already stored for the same calendar date
+    stored_pages = {(canonical_url(se.get("link", "")), (se.get("date_time") or "")[:10]) for se in stored}
+    # The events table is unique on (user, link, date_time): a second row with that key cannot be stored
+    stored_keys = {(se.get("link", ""), se.get("date_time") or "") for se in stored}
+    run_keys: set[tuple[str, str]] = set()
 
     kept: list[ExtractedEvent] = []
 
@@ -267,39 +217,15 @@ def filter_events(
 
         # Place and date-window filtering removed — the judge decides.
 
-        # 5. Duplicate by link
-        cal_date = _event_calendar_date(ev) or ""
-        canon = canonical_url(ev.link)
-
-        if (canon, cal_date) in stored_links:
-            counts.filtered_duplicate += 1
-            continue
-        if (canon, cal_date) in run_links:
+        # 5. Duplicate: the event's own page (never a listing's URL) stored for the same day
+        own_page = ev.page_kind != "listing" or canonical_url(ev.link) != canonical_url(ev.source_url)
+        key = (ev.link, attach_offset(ev.start_local, ev.start_tz, ev.country))
+        if (own_page and (canonical_url(ev.link), _event_calendar_date(ev)) in stored_pages) \
+                or key in stored_keys or key in run_keys:
             counts.filtered_duplicate += 1
             continue
 
-        # 6. Near-match by title+date
-        ev_key = title_key(ev.title)
-        is_dup = False
-
-        for s_key, s_date, s_status in stored_title_date:
-            if s_date == cal_date and is_near_match(ev_key, s_key):
-                is_dup = True
-                break
-
-        if not is_dup:
-            for r_key, r_date in run_title_date:
-                if r_date == cal_date and is_near_match(ev_key, r_key):
-                    is_dup = True
-                    break
-
-        if is_dup:
-            counts.filtered_duplicate += 1
-            continue
-
-        # Event passes all filters
-        run_links.add((canon, cal_date))
-        run_title_date.append((ev_key, cal_date))
+        run_keys.add(key)
         kept.append(ev)
 
     return kept, counts
