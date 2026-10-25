@@ -17,6 +17,7 @@ Why the deployed result was worthless: prod has no adapter keys, so the old fact
 | 3 | (withdrawn 2026-10-18: no query planning, see §5) | — | — | — | — | — |
 | 4 | search | `search.py` | `Criteria.text` verbatim, `SearchProvider` | `list[SearchResult]` deduped by canonical URL, known links removed | none | 10 small steps |
 | 5 | extract | `extract.py` | pass 1: one query's results (title + snippet each), `Window`, target place, today; pass 2: one page's `raw_content` for `listing` or incomplete rows, after the page guard (§11) | `list[ExtractedEvent]`, `page_kind` per result | 1 per query + 1 per listing or incomplete page | 4 |
+| 5b | detail hop | `detail_hop.py` | listing events with a same-site detail link; fetches the event's own page and re-extracts (#139) | replaced `ExtractedEvent`s + `HopCounts` | 1 HTTP fetch + 1 LLM call per hop | — |
 | 6 | filter | `filters.py` | `ExtractedEvent`s, `Window`, `Facets.place`, stored events | kept events + `FilterCounts` | none | 8 |
 | 7 | judge | `judge.py` | one event, criteria text, `Facets`, `Window` | `Verdict(score, reason, flags)` → capped score | 1 per event | 4, 12 stateless |
 | 8 | triage | existing `_score_and_triage` logic | score, thresholds | status | none | 7 humans via the queue, 8 |
@@ -56,7 +57,7 @@ One Alembic migration `backend/alembic/versions/<rev>_search_v2.py`, first issue
 | events | extraction_confidence | Float | yes | 0–1 |
 | events | judge_model | String | yes | renamed from `scorer_model` (`op.alter_column(new_column_name=...)`) |
 | events | judge_version | String(16) | yes | e.g. `judge_v2` |
-| runs | stage_counts | Text | yes | JSON: `queries_planned, results_fetched, results_known, pages_content_pass, events_extracted, filtered_no_date, filtered_no_time, filtered_incomplete, filtered_past, filtered_date, filtered_place, filtered_non_event, filtered_duplicate, events_judged, accepted, rejected, queued, search_errors, extract_errors, judge_errors` |
+| runs | stage_counts | Text | yes | JSON: `queries_planned, results_fetched, results_known, pages_content_pass, events_extracted, pages_detail_fetched, detail_fetch_errors, filtered_no_date, filtered_no_time, filtered_incomplete, filtered_past, filtered_date, filtered_place, filtered_non_event, filtered_duplicate, events_judged, accepted, rejected, queued, search_errors, extract_errors, judge_errors` |
 | runs | search_calls | Integer | no, default 0 | credits since #77 |
 | runs | llm_calls | Integer | no, default 0 | |
 | runs | llm_tokens_in | Integer | no, default 0 | 0 when the API returns no usage |

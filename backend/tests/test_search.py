@@ -351,16 +351,16 @@ _RUN_SUMMARY_KEYS = {
 
 
 def test_counts_version_stamped_and_exposed(client, auth_headers):
-    """#118: every finished run carries counts_version 3; last-run and /runs expose it as countsVersion."""
+    """#118/#139: every finished run carries counts_version 4; last-run and /runs expose it as countsVersion."""
     h = auth_headers("demo", "demo")
     body = client.post("/api/search", headers=h).json()
-    assert body["stageCounts"]["counts_version"] == 3
-    assert body["countsVersion"] == 3
-    assert client.get("/api/search/last-run", headers=h).json()["run"]["countsVersion"] == 3
-    assert client.get("/api/search/runs", headers=h).json()["runs"][0]["countsVersion"] == 3
+    assert body["stageCounts"]["counts_version"] == 4
+    assert body["countsVersion"] == 4
+    assert client.get("/api/search/last-run", headers=h).json()["run"]["countsVersion"] == 4
+    assert client.get("/api/search/runs", headers=h).json()["runs"][0]["countsVersion"] == 4
     # a run that stopped early is stamped too
     stopped = client.post("/api/search", headers=auth_headers("nocrit", "nocritpw")).json()
-    assert stopped["stoppedAtStage"] and stopped["stageCounts"]["counts_version"] == 3
+    assert stopped["stoppedAtStage"] and stopped["stageCounts"]["counts_version"] == 4
 
 
 def test_old_run_reports_version_1_and_recomputes_bands(client, auth_headers, _db_session):

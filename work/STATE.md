@@ -4,7 +4,8 @@
 
 - #134 → PR 138 (f6bbc67) + repair PR 140 (51b4654): no page slicing, no per-page cap, six mandatory fields (time required, filtered_no_time counted, country inferred), London AI Hub regression test red-first under backend/tests/regression/. PR 138 shipped 9 synthetic judge recordings; PR 140 replaced them with real ones. Fixture guard did not catch them (checks only 'unused fixture' / live-without-timestamp).
 - #135 → PR 137 (c0f83e6): runner.py --phase 1..4 replaces battery.py, remote_batch.py, recall.py; one log work/RUN-LOG.md; regression store seeded; role files carry the root-cause gate (red test before fix).
-- Next, owner-approved: #139 hop to each event's own page (depends on #134, merged). Ground-truth set (#126) still unvetted and contains junk (wrong-dated events, article pages); recall numbers indicative only.
+- #139 (in progress): detail-page hop — listing events with a same-site link get fetched and re-extracted before filtering. Musikverein regression test red-first, Davidsen recital survives with 19:30 from the detail page. Counters: pages_detail_fetched, detail_fetch_errors; counts_version 4.
+- Ground-truth set (#126) still unvetted; recall numbers indicative only.
 - Held PRs 132, 133: 133 is now redundant (fixtures re-recorded); 132 (Not judged breakdown) still open.
 
 ## 2026-10-23 — Stream page promoted to prod

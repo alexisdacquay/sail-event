@@ -15,6 +15,8 @@ export function funnelNumbers(counts: Record<string, number>) {
     pagesKnown: c('results_known'),
     pagesWithEvents: withEvents,
     pagesNoEvents: pages - withEvents,
+    pagesDetailFetched: c('pages_detail_fetched'),
+    detailFetchErrors: c('detail_fetch_errors'),
     found: c('events_extracted'),
     nonEvent: c('filtered_non_event'),
     judged: accepted + queued + rejected,

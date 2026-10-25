@@ -1,5 +1,5 @@
 """Search-run pipeline v2: nine stages — criteria, window, plan, search,
-extract, filter, judge, triage, persist run."""
+extract, detail-hop, filter, judge, triage, persist run."""
 
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ from ..services.budget import check_search_budget, check_llm_budget
 from ..services.criteria import needs_parse, parse_criteria, parse_metadata
 from ..services.window import resolve
 from ..services.extract import extract_events
+from ..services.detail_hop import detail_hop
 from ..services.filters import attach_offset, filter_events
 from ..services.judge import judge_event, Verdict, JudgeError, band_word
 from .. import orm
@@ -391,6 +392,27 @@ def run_pipeline(
                         for p in extract_counts.page_details
                     ])
 
+            # --- Stage 5b: detail-page hop ---
+            current_stage = "detail_hop"
+            _update_run_stage(run, db, current_stage, counts)
+            with tracer.start_as_current_span("detail_hop"):
+                extracted, hop_counts = detail_hop(
+                    extracted,
+                    model=model,
+                    user_tz=user_tz,
+                    window_start=window.start_utc,
+                    window_end=window.end_utc,
+                    target_city=target_city,
+                    target_country=target_country,
+                )
+                counts["pages_detail_fetched"] = hop_counts.pages_detail_fetched
+                counts["detail_fetch_errors"] = hop_counts.detail_fetch_errors
+                llm_calls += hop_counts.detail_llm_calls
+                if hop_counts.detail_llm_calls:
+                    _llm_calls_counter.add(hop_counts.detail_llm_calls, {"prompt": "extract", "provider": getattr(model, "model_id", "unknown")})
+                if hop_counts.detail_fetch_errors > 0 and not error_detail:
+                    error_detail = f"detail_hop: {hop_counts.detail_fetch_errors} fetch error(s)"
+
             # --- Stage 6: filter ---
             current_stage = "filter"
             _update_run_stage(run, db, current_stage, counts)
@@ -672,8 +694,8 @@ def _judge_and_triage(
     return llm_calls, tokens_in, tokens_out, judge_errors, judge_repaired
 
 
-# #118: shape of stage_counts. 1 = before the reject bands, 2 = before filtered_no_date, 3 = now.
-COUNTS_VERSION = 3
+# #118: shape of stage_counts. 1 = before reject bands, 2 = before filtered_no_date, 3 = before detail hop, 4 = now.
+COUNTS_VERSION = 4
 
 
 def reject_bands(events: list[orm.Event]) -> dict[str, int]:
@@ -704,7 +726,8 @@ def _finalise_run(
     run = db.merge(run)
     # #108/#112: the funnel reads these on every finished run, also when it stopped early
     for k in ("rejected_date_place", "rejected_off_topic", "rejected_other",
-              "filtered_no_date", "filtered_no_time", "pages_with_events"):
+              "filtered_no_date", "filtered_no_time", "pages_with_events",
+              "pages_detail_fetched", "detail_fetch_errors"):
         counts.setdefault(k, 0)
     counts["counts_version"] = COUNTS_VERSION
     run.finished_at = datetime.now(UTC)

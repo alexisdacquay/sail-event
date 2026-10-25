@@ -125,6 +125,7 @@ From one search result to zero or more events.
 - Owner rule (2026-10-18, updated 2026-10-24 #134): six mandatory fields — title, description, start date-time with time component, time zone, city, country. An event missing any of these is dropped: no start → `filtered_no_date`; date-only start (no time) → `filtered_no_time`; other missing fields → `filtered_incomplete`. The model is told to infer the country from the city when the page omits it.
 
 - A page with many events (venue programme, listing): all events are extracted (no per-page cap; the model's context window is the ceiling).
+- Detail-page hop (#139): for every listing-page event whose link differs from the source URL, is same-site HTTP(S), and is not the listing page itself, the pipeline fetches that page and re-extracts the event. The judge receives the record built from the detail page (title, description, city, country, date, time). Events from `single_event` pages or with off-site links keep the listing record unchanged. Fetches use `urllib.request` with `DETAIL_FETCH_TIMEOUT` (default 10 s) and `DETAIL_FETCH_MAX_BYTES` (default 2 MB), in the existing `EXTRACT_CONCURRENCY` pool. Failed fetches keep the listing record and increment `detail_fetch_errors`. Counters: `pages_detail_fetched`, `detail_fetch_errors`.
 - A page with none (article, listicle, venue homepage, radio stream): no event, counted as non-event.
 - The extractor is told today's date, the window and the target place so it picks the right occurrence from a programme page; it never decides fit.
 

@@ -85,7 +85,7 @@ export function stageFraction(run: SearchResult): number | null {
   }
 }
 
-const STAGES = ['search', 'extract', 'filter', 'judge']
+const STAGES = ['search', 'extract', 'detail_hop', 'filter', 'judge']
 
 /** The chronology lines: finished stages, then the live line or the stop line. */
 export function stageLines(run: SearchResult): string[] {
@@ -98,7 +98,8 @@ export function stageLines(run: SearchResult): string[] {
       ? `Searched the web: ${n.pages} pages, ${n.pagesKnown} already known from earlier runs, ${n.pages - n.pagesKnown} new`
       : `Searched the web, ${n.pages} pages`],
     [`Read ${n.pages - n.pagesKnown} pages, found ${n.found} events`, ...(n.nonEvent > 0 ? [`Skipped ${n.nonEvent} pages that were not events`] : [])],
-    [`Not judged: ${n.notJudged}`],
+    [...(n.pagesDetailFetched > 0 ? [`Fetched ${n.pagesDetailFetched} detail pages${n.detailFetchErrors > 0 ? `, ${n.detailFetchErrors} failed` : ''}`] : [])],
+    [`Not judged: ${n.notJudged}${n.detailFetchErrors > 0 ? ` (${n.detailFetchErrors} detail fetch errors)` : ''}`],
     [`Judged ${c.events_judged ?? 0} · ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} out`],
   ]
   const stage = run.currentStage ?? run.stoppedAtStage
