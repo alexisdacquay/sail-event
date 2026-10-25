@@ -6,12 +6,13 @@ time could hold a fetch forever (a 75-minute hang was observed).
 
 from __future__ import annotations
 
+import socket
 import threading
 import time
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -176,15 +177,95 @@ def test_model_reads_the_event_page_as_text_not_html(page_server):
     assert len(content) < 10_000, len(content)  # the HTML is 136,706 characters
 
 
-def test_hop_to_another_host_only_when_public():
-    """A listing may link anywhere; a link on another host must not aim the hop at a private address."""
-    from dataclasses import replace
-    ev = ExtractedEvent(
+
+# What resolvers answer for these names (RFC 6761 localhost, GCP metadata), without the network.
+_NAMES = {"localhost.": "127.0.0.1", "foo.localhost": "127.0.0.1",
+          "metadata.google.internal": "169.254.169.254", "luma.com": "93.184.216.34"}
+
+
+@pytest.fixture
+def resolver(monkeypatch):
+    numeric = socket.getaddrinfo  # the conftest guard: numeric hosts only
+
+    def _getaddrinfo(host, port, *args, **kwargs):
+        if host in _NAMES:
+            return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", (_NAMES[host], port or 80))]
+        return numeric(host, port, *args, **kwargs)
+
+    monkeypatch.setattr(socket, "getaddrinfo", _getaddrinfo)
+
+
+def _listing_event(link: str) -> ExtractedEvent:
+    return ExtractedEvent(
         title="t", start_local="2026-11-10T18:00", start_tz=None, end_local=None,
-        venue=None, city=None, country=None, link="https://luma.com/granola-jeffrey-veen",
+        venue=None, city=None, country=None, link=link,
         description="", confidence=0.9, source_url="https://aisa.to/ai-events-london",
         page_kind="listing",
     )
-    assert hop_mod._needs_hop(ev)
-    for private in ("http://169.254.169.254/latest/meta-data", "http://10.0.0.1/x", "http://localhost:8000/x"):
-        assert not hop_mod._needs_hop(replace(ev, link=private)), private
+
+
+def test_hop_to_another_public_host(resolver):
+    assert hop_mod._needs_hop(_listing_event("https://luma.com/granola-jeffrey-veen"))
+
+
+@pytest.mark.parametrize("url", [
+    "http://127.1/x", "http://2130706433/x", "http://0x7f000001/x", "http://localhost./x",
+    "http://foo.localhost/x", "http://metadata.google.internal/computeMetadata/v1/", "http://localhost:8000/x",
+    "http://10.1.2.3/x", "http://169.254.169.254/latest/meta-data", "http://[::1]/x", "http://[fc00::1]/x",
+])
+def test_hop_refuses_every_spelling_of_a_private_address(resolver, url):
+    """QA on PR 151: a listing may link anywhere; the hop goes only where the host resolves to public addresses."""
+    assert not hop_mod._needs_hop(_listing_event(url))
+
+
+@pytest.fixture
+def local_server():
+    """127.0.0.1 only: /start redirects to loopback /secret, /r<n> redirects to /r<n+1> forever."""
+    hits: list[str] = []
+
+    class _Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            hits.append(self.path)
+            port = self.server.server_address[1]
+            if self.path == "/start" or self.path.startswith("/r"):
+                nxt = "/secret" if self.path == "/start" else f"/r{int(self.path[2:]) + 1}"
+                self.send_response(302)
+                self.send_header("Location", f"http://127.0.0.1:{port}{nxt}")
+                self.end_headers()
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.end_headers()
+            self.wfile.write(b"<p>secret</p>")
+
+        def log_message(self, *args):
+            pass
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _Handler)
+    server.daemon_threads = True
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    yield server.server_address[1], hits
+    server.shutdown()
+    server.server_close()
+
+
+def test_fetch_refuses_loopback_spellings(local_server):
+    port, hits = local_server
+    for host in ("127.1", "2130706433", "0x7f000001"):
+        assert hop_mod._fetch_html(f"http://{host}:{port}/secret") is None, host
+    assert hits == []
+
+
+def test_fetch_refuses_a_redirect_to_loopback(local_server):
+    port, hits = local_server
+    start = f"http://127.0.0.1:{port}/start"
+    with patch.object(hop_mod, "_public", lambda url: url == start, create=True):  # only the start counts as public
+        assert hop_mod._fetch_html(start) is None
+    assert hits == ["/start"], "the redirect target must be checked before it is opened"
+
+
+def test_fetch_caps_redirects(local_server):
+    port, hits = local_server
+    with patch.object(hop_mod, "_public", lambda url: True, create=True):
+        assert hop_mod._fetch_html(f"http://127.0.0.1:{port}/r0") is None
+    assert len(hits) <= 6, f"{len(hits)} requests: redirects are not capped at 5"
