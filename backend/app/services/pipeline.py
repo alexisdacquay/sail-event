@@ -3,19 +3,22 @@ extract, detail-hop, filter, judge, triage, persist run."""
 
 from __future__ import annotations
 
+import contextvars
 import json
 import logging
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 
 from opentelemetry import trace, metrics
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from ..adapters.factory import get_language_model, get_search_provider
 from ..adapters.search import remove_known_pages
 from ..services import clock
-from ..services.budget import check_search_budget, check_llm_budget
+from ..services.budget import check_search_budget, check_llm_budget, reserve_llm_calls
 from ..services.criteria import needs_parse, parse_criteria, parse_metadata
 from ..services.window import resolve
 from ..services.extract import extract_events
@@ -27,6 +30,7 @@ from .. import orm
 logger = logging.getLogger("sail-event.pipeline")
 tracer = trace.get_tracer("sail-event.pipeline")
 meter = metrics.get_meter("sail-event.pipeline")
+JUDGE_CONCURRENCY = int(os.environ.get("JUDGE_CONCURRENCY", "5"))
 
 # --- §9 metrics ---
 
@@ -171,10 +175,13 @@ def run_pipeline(
             user_tz = user.time_zone or "UTC"
 
             # --- Recovery: score leftover `new` events from prior crashed runs ---
-            leftover = db.query(orm.Event).filter(
+            # #142: only events of finished runs; a run still in flight is judging its own
+            leftover = db.query(orm.Event).outerjoin(orm.Run, orm.Event.run_id == orm.Run.id).filter(
                 orm.Event.user_id == user.id,
                 orm.Event.status == "new",
+                or_(orm.Event.run_id.is_(None), orm.Run.finished_at.isnot(None)),
             ).all()
+            leftover = _reserve_judge(db, run, llm_calls, leftover)
             if leftover:
                 llm_c, tok_in, tok_out, j_err, j_rep = _judge_and_triage(
                     leftover, criteria_row, criteria_text, user_tz, user, model, db,
@@ -184,7 +191,8 @@ def run_pipeline(
                 llm_tokens_out += tok_out
                 counts["judge_errors"] = counts.get("judge_errors", 0) + j_err
                 counts["judge_repaired"] = counts.get("judge_repaired", 0) + j_rep
-                db.commit()
+            run.llm_calls = llm_calls  # release the unused reservation
+            db.commit()
 
             # --- Stage 1: understand criteria ---
             current_stage = "criteria"
@@ -493,34 +501,24 @@ def run_pipeline(
             counts["events_to_judge"] = events_new  # live total for the progress bar
             _update_run_stage(run, db, current_stage, counts)
             if events_new > 0:
-                # Budget check before judge LLM calls
-                budget_stop = check_llm_budget(db)
-                if budget_stop:
-                    error_msg = budget_stop
-                    stopped_at_stage = "judge"
-                    _budget_stops_counter.add(1, {"which": "llm"})
-                    # events stay `new`, recovered next run
-                    _finalise_run(
-                        run, db, events_found, events_new, error_msg,
-                        counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out,
-                        stopped_at_stage, error_detail,
-                    )
-                    elapsed = time.monotonic() - t0
-                    _emit_metrics(trigger, error_msg, events_found, events_new, elapsed)
-                    return run
-
                 inserted = db.query(orm.Event).filter(
                     orm.Event.user_id == user.id,
                     orm.Event.status == "new",
                     orm.Event.run_id == run.id,
                 ).all()
+                # Reserve the worst case before any judge call; what does not fit stays `new`
+                to_run = _reserve_judge(db, run, llm_calls, inserted)
+                if len(to_run) < len(inserted):
+                    error_msg = "budget: llm"
+                    stopped_at_stage = "judge"
+                    _budget_stops_counter.add(1, {"which": "llm"})
 
                 def _on_event_done(judged_so_far):
                     counts["events_judged"] = judged_so_far
                     _update_run_stage(run, db, "judge", counts)
 
                 llm_c, tok_in, tok_out, j_err, j_rep = _judge_and_triage(
-                    inserted, criteria_row, criteria_text, user_tz, user, model, db,
+                    to_run, criteria_row, criteria_text, user_tz, user, model, db,
                     on_event_done=_on_event_done,
                 )
                 llm_calls += llm_c
@@ -572,6 +570,18 @@ def run_pipeline(
         return run
 
 
+def _judge_order(evt: orm.Event) -> tuple:
+    return (evt.source_url or "", evt.date_time or "", evt.title or "", evt.id or "")
+
+
+def _reserve_judge(db: Session, run: orm.Run, spent: int, events: list[orm.Event]) -> list[orm.Event]:
+    """#142: the events, in judge order, whose worst-case calls fit the daily budget (reserved on the run)."""
+    if not events:
+        return []
+    events = sorted(events, key=_judge_order)
+    return events[:reserve_llm_calls(db, run, spent, len(events))]
+
+
 def _judge_and_triage(
     events: list[orm.Event],
     criteria_row: orm.Criteria | None,
@@ -608,72 +618,90 @@ def _judge_and_triage(
         import re
         return re.sub(r"[+-]\d{2}:\d{2}$|Z$", "", dt_str)
 
-    with tracer.start_as_current_span("judge"):
-        for evt in events:
-            # Build an ExtractedEvent from the ORM event for the judge
-            extracted = ExtractedEvent(
-                title=evt.title,
-                start_local=_strip_offset(evt.date_time),
-                start_tz=evt.start_tz,
-                end_local=_strip_offset(evt.end_time),
-                venue=None,
-                city=evt.city,
-                country=evt.country,
-                link=evt.link,
-                description=evt.description,
-                confidence=evt.extraction_confidence or 1.0,
-                source_url=evt.source_url or evt.link,
-                page_kind=evt.page_kind or "single_event",
+    # #142: sorted for determinism; inputs built here so workers never touch the session or ORM rows
+    events = sorted(events, key=_judge_order)
+    inputs = [
+        ExtractedEvent(
+            title=evt.title,
+            start_local=_strip_offset(evt.date_time),
+            start_tz=evt.start_tz,
+            end_local=_strip_offset(evt.end_time),
+            venue=None,
+            city=evt.city,
+            country=evt.country,
+            link=evt.link,
+            description=evt.description,
+            confidence=evt.extraction_confidence or 1.0,
+            source_url=evt.source_url or evt.link,
+            page_kind=evt.page_kind or "single_event",
+        )
+        for evt in events
+    ]
+    results: list[Verdict | JudgeError | None] = [None] * len(events)
+    provider = getattr(model, "model_id", "unknown")
+
+    def _judge_one(i: int):
+        """Worker: plain dataclass in, (index, result) out; no db, counters or callbacks."""
+        extracted = inputs[i]
+        with tracer.start_as_current_span("event", attributes={"capped": False}) as espan:
+            result = judge_event(
+                extracted,
+                criteria_text=criteria_text,
+                facets=facets,
+                window_start=window.start_utc,
+                window_end=window.end_utc,
+                user_tz=user_tz,
+                model=model,
             )
+            if isinstance(result, Verdict):
+                espan.set_attribute("score", result.score)
+                espan.set_attribute("capped", result.capped)
+                try:
+                    from urllib.parse import urlparse
+                    espan.set_attribute("source_host", urlparse(extracted.source_url).hostname or "")
+                except Exception:
+                    pass
+            return i, result
 
-            with tracer.start_as_current_span("event", attributes={
-                "capped": False,
-            }) as espan:
-                result = judge_event(
-                    extracted,
-                    criteria_text=criteria_text,
-                    facets=facets,
-                    window_start=window.start_utc,
-                    window_end=window.end_utc,
-                    user_tz=user_tz,
-                    model=model,
-                )
-                llm_calls += 1
-                _llm_calls_counter.add(1, {"prompt": "judge", "provider": getattr(model, "model_id", "unknown")})
+    with tracer.start_as_current_span("judge"):
+        if events:
+            with ThreadPoolExecutor(max_workers=min(JUDGE_CONCURRENCY, len(events))) as pool:
+                futures = [pool.submit(contextvars.copy_context().run, _judge_one, i) for i in range(len(events))]
+                try:
+                    for done, future in enumerate(as_completed(futures), 1):
+                        i, result = future.result()
+                        results[i] = result
+                        llm_calls += result.calls
+                        tokens_in += result.tokens_in
+                        tokens_out += result.tokens_out
+                        _llm_calls_counter.add(result.calls, {"prompt": "judge", "provider": provider})
+                        if isinstance(result, JudgeError):
+                            judge_errors += 1  # event stays `new`
+                            logger.warning("judge error: %s", result.error)
+                        elif result.repaired:
+                            judge_repaired += 1
+                        if on_event_done:
+                            on_event_done(done)
+                except BaseException:
+                    # A failed run stops spending: drop queued calls, events stay `new`
+                    pool.shutdown(cancel_futures=True)
+                    raise
 
-                if isinstance(result, JudgeError):
-                    judge_errors += 1
-                    logger.warning("judge error: %s", result.error)
-                    if on_event_done:
-                        on_event_done(llm_calls)
-                    # event stays `new`
-                    continue
-
-                if isinstance(result, Verdict):
-                    if result.repaired:
-                        judge_repaired += 1
-                        llm_calls += 1  # repair cost one extra call
-                        _llm_calls_counter.add(1, {"prompt": "judge", "provider": getattr(model, "model_id", "unknown")})
-                    espan.set_attribute("score", result.score)
-                    espan.set_attribute("capped", result.capped)
-                    try:
-                        from urllib.parse import urlparse
-                        espan.set_attribute("source_host", urlparse(extracted.source_url).hostname or "")
-                    except Exception:
-                        pass
-                    if not result.is_event:
-                        # Drop non-events: mark rejected with score 0
-                        evt.score = 0
-                        evt.score_reason = result.reason or "not an event"
-                        evt.status = "rejected"
-                        evt.decided_by = "auto"
-                    else:
-                        evt.score = result.score
-                        evt.score_reason = result.reason
-                    evt.judge_model = model.model_id if hasattr(model, "model_id") else None
-                    evt.judge_version = "judge_v3"
-                if on_event_done:
-                    on_event_done(llm_calls)
+        # Apply in sorted order, never completion order
+        for evt, result in zip(events, results):
+            if not isinstance(result, Verdict):
+                continue
+            if not result.is_event:
+                # Drop non-events: mark rejected with score 0
+                evt.score = 0
+                evt.score_reason = result.reason or "not an event"
+                evt.status = "rejected"
+                evt.decided_by = "auto"
+            else:
+                evt.score = result.score
+                evt.score_reason = result.reason
+            evt.judge_model = model.model_id if hasattr(model, "model_id") else None
+            evt.judge_version = "judge_v3"
 
     # Triage
     with tracer.start_as_current_span("triage"):

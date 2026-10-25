@@ -6,6 +6,7 @@ daily_used() sums today's runs; check_* returns a stop reason or None.
 from __future__ import annotations
 
 import os
+import threading
 from datetime import UTC, datetime
 
 from sqlalchemy import func
@@ -46,3 +47,25 @@ def check_llm_budget(db: Session) -> str | None:
     if used + 1 > cap:
         return "budget: llm"
     return None
+
+
+# shortcut: process lock, upgrade to a DB row lock if uvicorn ever runs --workers > 1
+_reserve_lock = threading.Lock()
+
+
+def reserve_llm_calls(db: Session, run: orm.Run, spent: int, n_events: int) -> int:
+    """#142: reserve the judge's worst case (2 calls per event) on the run row.
+
+    Writes ``spent`` + the reservation to ``run.llm_calls`` and commits, so
+    concurrent runs see it.  Returns how many events fit; _finalise_run
+    later overwrites the reservation with the actual count.
+    """
+    cap = int(os.environ.get("LLM_DAILY_CALLS", str(_DEFAULT_LLM_DAILY)))
+    with _reserve_lock:
+        run.llm_calls = spent
+        db.flush()
+        remaining = cap - daily_used(db, "llm_calls")
+        fit = max(0, min(n_events, remaining // 2))
+        run.llm_calls = spent + 2 * fit
+        db.commit()
+    return fit

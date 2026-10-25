@@ -303,3 +303,20 @@ def test_leftover_recovery_skips_unfinished_runs(tmp_path, monkeypatch):
     s.close()
     assert a_events
     assert len(judged) == len(a_events), f"A's events judged {len(judged)} times for {len(a_events)} events"
+
+
+def test_full_run_same_rows_and_counts_at_concurrency_1_and_5(tmp_path, monkeypatch):
+    """Fake model: a run at JUDGE_CONCURRENCY=5 writes the same rows and stage_counts as at 1."""
+    out = []
+    for c in (5, 1):
+        monkeypatch.setattr(pipeline, "JUDGE_CONCURRENCY", c)
+        Session = _file_db(tmp_path / f"c{c}.db")
+        s = Session()
+        user = s.query(User).filter(User.username == "demo").first()
+        run = pipeline.run_pipeline(user, s, trigger="manual")
+        rows = sorted((e.title, e.score, e.score_reason, e.status, e.decided_by)
+                      for e in s.query(Event).filter(Event.run_id == run.id).all())
+        out.append((rows, json.loads(run.stage_counts), run.llm_calls, run.llm_tokens_in, run.llm_tokens_out))
+        s.close()
+    assert out[0][0]
+    assert out[0] == out[1]

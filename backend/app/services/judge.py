@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from ..services import clock
@@ -63,12 +63,37 @@ class Verdict:
     is_event: bool
     capped: bool  # kept for API compat; always False in v3
     repaired: bool = False
+    # #142: what this judgement cost, set by judge_event; the caller sums them
+    calls: int = field(default=1, compare=False)
+    tokens_in: int = field(default=0, compare=False)
+    tokens_out: int = field(default=0, compare=False)
 
 
 @dataclass
 class JudgeError:
     event: ExtractedEvent
     error: str
+    calls: int = field(default=1, compare=False)
+    tokens_in: int = field(default=0, compare=False)
+    tokens_out: int = field(default=0, compare=False)
+
+
+class _Metered:
+    """Counts the calls and tokens of one judge_event; one per call, so no shared state across threads."""
+
+    def __init__(self, model) -> None:
+        self._model = model
+        self.calls = self.tokens_in = self.tokens_out = 0
+
+    def __getattr__(self, name):
+        return getattr(self._model, name)
+
+    def complete_json(self, **kwargs):
+        self.calls += 1
+        response, usage = self._model.complete_json(**kwargs)
+        self.tokens_in += getattr(usage, "tokens_in", 0) or 0
+        self.tokens_out += getattr(usage, "tokens_out", 0) or 0
+        return response, usage
 
 
 # ---------- main entry point ----------
@@ -96,7 +121,21 @@ def _event_to_json(ev: ExtractedEvent) -> str:
 _REPAIR_FIELDS = "score, reason, is_event"
 
 
-def judge_event(
+def judge_event(event: ExtractedEvent, *, model, **kwargs) -> Verdict | JudgeError:
+    """Judge one event.  Returns Verdict on success, JudgeError on failure.
+
+    On a schema or reason violation the model is re-asked once.  A repaired
+    Verdict has ``repaired=True`` so the caller can count ``judge_repaired``.
+    The caller counts JudgeError as ``judge_errors``; the event stays ``new``.
+    Both carry the calls made and tokens used (#142).
+    """
+    metered = _Metered(model)
+    result = _judge(event, model=metered, **kwargs)
+    result.calls, result.tokens_in, result.tokens_out = metered.calls, metered.tokens_in, metered.tokens_out
+    return result
+
+
+def _judge(
     event: ExtractedEvent,
     *,
     criteria_text: str,
@@ -106,12 +145,6 @@ def judge_event(
     user_tz: str,
     model,
 ) -> Verdict | JudgeError:
-    """Judge one event.  Returns Verdict on success, JudgeError on failure.
-
-    On a schema or reason violation the model is re-asked once.  A repaired
-    Verdict has ``repaired=True`` so the caller can count ``judge_repaired``.
-    The caller counts JudgeError as ``judge_errors``; the event stays ``new``.
-    """
     from ..adapters.prompts.loader import call_with_repair
 
     schema = _read_schema()
