@@ -114,6 +114,11 @@ class TestRequestBody:
                     )
                 assert captured["max_tokens"] == expected
 
+    def test_extract_has_room_for_large_listing_pages(self):
+        """Reasoning plus a 114-event JSON array needed up to 30,109 tokens; 16000 cut it."""
+        body = _make_model()._build_body("extract", "page", {"type": "object"})
+        assert body["max_tokens"] == 64000
+
     def test_bearer_auth_header(self):
         model = _make_model()
         captured_headers = {}
