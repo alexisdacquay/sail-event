@@ -58,6 +58,13 @@ class TestValidateReason:
         assert err is not None
         assert "markup" in err
 
+    def test_150_char_reason_is_accepted(self):
+        """Owner decision B, 2026-10-25: the prompt asks for 140, the check accepts up to 200."""
+        reason = ("In London on 28 October, so place and date fit, but this is an economics education "
+                  "conference where AI is only one mentioned subtopic, not an AI-focused event")[:150]
+        assert len(reason) == 150
+        assert validate_reason(reason) is None
+
     def test_exactly_140_chars(self):
         reason = "Jazz trio in Berlin on 20 Oct: fits" + " " * (140 - 35)
         reason = reason[:140]
