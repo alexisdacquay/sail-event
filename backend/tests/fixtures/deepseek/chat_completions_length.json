@@ -1,0 +1,21 @@
+{
+  "id": "chatcmpl-test-length",
+  "object": "chat.completion",
+  "created": 1729245600,
+  "model": "deepseek-flash",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"events\": [{\"title\": \"Wiener Philharmoniker\", \"start_local\": \"2026-11-0"
+      },
+      "finish_reason": "length"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 14185,
+    "completion_tokens": 16000,
+    "completion_tokens_details": {"reasoning_tokens": 7464}
+  }
+}

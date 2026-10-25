@@ -284,6 +284,25 @@ class TestSchemaValidation:
                     variables={"text": "test"},
                 )
 
+    def test_cut_at_max_tokens_raises_truncated_not_malformed(self):
+        """finish_reason=length: the JSON is cut, not malformed; say so, with the token counts."""
+        model = _make_model()
+
+        def fake_urlopen(req, timeout=None):
+            return _make_response("chat_completions_length.json")
+
+        with patch("app.adapters.llm_openai_compat.urllib.request.urlopen", fake_urlopen):
+            with pytest.raises(
+                RuntimeError,
+                match=r"guard: output truncated at max_tokens=16000 "
+                r"\(completion_tokens=16000, reasoning_tokens=7464\)",
+            ):
+                model.complete_json(
+                    prompt_name="guard",
+                    prompt_version="v2",
+                    variables={"text": "test"},
+                )
+
     def test_missing_required_field_raises_with_field_name(self):
         model = _make_model()
 
