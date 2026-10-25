@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 5,
+    "reason": "Jazz in Berlin matches, but this show is on 22 October, outside your 19\u201321 October dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 765,
+    "completion_tokens": 95
+  },
+  "recorded_at": "2026-10-25T23:30:50.044895+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

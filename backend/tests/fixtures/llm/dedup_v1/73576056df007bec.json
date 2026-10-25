@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 1,
+    "reason": "Same date, start time, Berlin location, and jazz vocal workshop topic."
+  },
+  "usage": {
+    "prompt_tokens": 810,
+    "completion_tokens": 471
+  },
+  "recorded_at": "2026-10-25T23:30:01.977447+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

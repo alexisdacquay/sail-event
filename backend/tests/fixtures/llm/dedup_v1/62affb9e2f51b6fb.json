@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 3,
+    "reason": "Same title, start time, venue, and matching jazz-trio description."
+  },
+  "usage": {
+    "prompt_tokens": 673,
+    "completion_tokens": 391
+  },
+  "recorded_at": "2026-10-25T23:30:35.195942+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

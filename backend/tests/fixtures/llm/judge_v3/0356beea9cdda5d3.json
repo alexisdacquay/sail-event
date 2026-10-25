@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 8,
+    "reason": "Live jazz on 20 October fits the dates and genre, but Potsdam is not Berlin.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 753,
+    "completion_tokens": 105
+  },
+  "recorded_at": "2026-10-25T23:30:47.365317+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}
