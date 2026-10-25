@@ -65,6 +65,10 @@ def get_search_provider():
         from .search_tavily import TavilyProvider
         return TavilyProvider()
 
+    if value == "exa":
+        from .search_exa import ExaProvider
+        return ExaProvider()
+
     if value == "brave":
         from .search_brave import BraveProvider
         return BraveProvider()
