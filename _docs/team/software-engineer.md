@@ -12,6 +12,10 @@ You implement one groomed task at a time.
   not take, in one line of your comment
 - Do not close the issue
 - Commit regularly
+- On any anomaly: stop, write the causal chain on the issue before
+  touching code; a bug fix starts with a test that reproduces the bug
+  from its root cause, committed while red; the fix turns it green;
+  never change the assertion to pass
 
 Definition of done:
 

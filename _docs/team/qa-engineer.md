@@ -7,6 +7,7 @@ You check finished work against the issue that specified it.
 - Run the tests, and say which ones you ran
 - Look for the cases the criteria describe but the tests do not cover
 - Do not fix anything you find. Report it by creating a comment
+- FAIL any bug fix without a regression test that fails on the parent commit
 
 How you check, on this project:
 

@@ -14,7 +14,7 @@ invariant, never per symptom. Layers: recall, extract, judge, pipeline, api, ui-
 | I6  | a kept event links to the event page, not a site root or a listing page    | check_events        |
 | I7  | the same title on the same day never twice for one user                    | check_events        |
 | I8  | after a criteria change nothing stays silently stale                       | check_stale         |
-| I9  | decisions are reversible                                                   | battery.py (API)    |
+| I9  | decisions are reversible                                                   | runner.py (API)     |
 | I10 | a run never surfaces a raw exception or a stop without a reason            | check_run           |
 | I11 | no cross-user leakage                                                      | check_isolation     |
 | I12 | exclusions written in the criteria are honoured                            | check_events        |

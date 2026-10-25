@@ -90,19 +90,25 @@ To run against an already-running stack:
 SAIL_BASE_URL=http://localhost:8010 make test-e2e
 ```
 
-## Breadth batch against a deployed service
+## Field-test runner (four phases against a deployed service)
 
-`backend/scripts/remote_batch.py` is the standing search-quality test: twenty
-criteria texts (cities and countries, Spanish and Japanese, vague text, junk,
-a URL, an injection), one fixed throwaway user per text, ten searches in
-parallel through the public API, one Markdown table (status, error, counts
-per stage, seconds, top kept events). Results are logged in
-`work/SEARCH-BATCHES.md` with the ranked problems.
+One runner, four cumulative phases:
 
 ```
-python3 backend/scripts/remote_batch.py https://sail-event-dev.onrender.com d
-python3 backend/scripts/remote_batch.py https://sail-event.onrender.com p
+SSL_CERT_FILE=$(uv run --project backend python -m certifi) \
+  uv run --project backend python backend/tests/field/runner.py \
+    --base-url https://sail-event.onrender.com --phase 4
 ```
+
+| Phase | What | Time |
+|-------|------|------|
+| 1 | Invariants battery (13 checks, personas from `personas.yaml`) | 5 min |
+| 2 | Regression tests (`backend/tests/regression/`, offline fixtures) | <1 min |
+| 3 | Breadth batch (20 dissimilar search texts, 10 in parallel) | 5 min |
+| 4 | Recall ground truth (38 events from `triples.json`) | 10 min |
+
+`--phase N` runs phases 1..N.  Each run appends numbers and deltas against
+the last committed run to `work/RUN-LOG.md`.
 
 Prod allows 5 registrations per IP per hour, so the first prod run creates
 the users over a few hours; later runs reuse them and the "already known"

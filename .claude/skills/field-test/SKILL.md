@@ -1,14 +1,15 @@
 ---
 name: field-test
-description: Stress the deployed Sail-event the way real users do, in minutes and in parallel, and hand the owner a ranked list of what breaks. Use after a release or when the owner asks "how would real users fare"; results go to work/FIELD-TESTS.md and the reply. Never files issues; the owner vets.
+description: Stress the deployed Sail-event the way real users do, in minutes and in parallel, and hand the owner a ranked list of what breaks. Use after a release or when the owner asks "how would real users fare"; results go to work/RUN-LOG.md and the reply. Never files issues; the owner vets.
 ---
 
 # Field test
 
 Everything lives in `backend/tests/field/`: `invariants.py` (the 13 data invariants, as code and as a
-table in its docstring), `personas.yaml` (one matrix cell each), `battery.py` (tier 1 runner),
-`sweep.sql` (tier 0), `test_invariants.py` (unit test, runs in `make test`). UI invariants U1-U4 are
-`e2e/field.spec.ts`. The log is `work/FIELD-TESTS.md`.
+table in its docstring), `personas.yaml` (one matrix cell each), `runner.py` (unified four-phase
+runner), `helpers.py` (shared HTTP), `recall_match.py` (ground-truth matching), `sweep.sql` (tier 0),
+`test_invariants.py` (unit test, runs in `make test`). Regression tests: `backend/tests/regression/`.
+UI invariants U1-U4 are `e2e/field.spec.ts`. The log is `work/RUN-LOG.md`.
 
 Why: the rubric says the app works; five naive users said they would not come back. Their ~40 symptoms
 were 3 root causes. Code checks invariants, an LLM never says "looks fine", and findings are grouped by
@@ -19,15 +20,27 @@ plan one that takes hours. Report a ranked list of at most five problems to the 
 issues or PRs from a run. Agents are Opus at high effort and may spawn their own sub-agents to go faster.
 While agents run, post the `/status-update` block every 5 minutes.
 
-## Tiers
+## Phases (runner.py)
 
-| tier | what | how | time |
-|---|---|---|---|
-| 0 | invariant counts over data users already produced | run `sweep.sql` statements through the Render Postgres connector (prod db `dpg-db9gpa3bc2fs73do1jc0-a`) or `psql $DATABASE_URL -f` | 1 min, free |
-| 1 | every persona through the API, invariants after each step | `uv run --project backend python backend/tests/field/battery.py https://sail-event.onrender.com` | 5 min, ~20 searches |
-| 2 | naive-user agents with a goal | 5-8 Opus-high subagents in parallel, at most 2 searches each, brief below | 10 min |
-| 3 | recall ground truth | `personas.yaml` cells with `want:` (real events verified on venue sites); recall = found/want | with tier 1 |
-| 4 | UI state | `make test-e2e` (field.spec.ts is part of the suite) | 1 min |
+```
+SSL_CERT_FILE=$(uv run --project backend python -m certifi) \
+  uv run --project backend python backend/tests/field/runner.py \
+    --base-url https://sail-event.onrender.com --phase 4
+```
+
+| phase | what | time |
+|---|---|---|
+| 1 | invariants battery (13 checks, all personas) | 5 min |
+| 2 | regression tests (`backend/tests/regression/`, offline) | <1 min |
+| 3 | breadth batch (20 texts, 10 in parallel) | 5 min |
+| 4 | recall ground truth (38 events from `triples.json`) | 10 min |
+
+`--phase N` runs phases 1..N.  Sweep (tier 0) is still `sweep.sql` via psql.
+UI invariants are still `make test-e2e`.
+
+## Naive-user agents (tier 2, weekly)
+
+5-8 Opus-high subagents in parallel, at most 2 searches each, brief below:
 
 Prod has the real adapters; dev runs fixtures, so tiers 1-3 run against prod. Limits that bite:
 `REGISTER_RATE_LIMIT_PER_HOUR` (5 per IP: a fresh host registers five personas per run),
@@ -35,9 +48,9 @@ Prod has the real adapters; dev runs fixtures, so tiers 1-3 run against prod. Li
 
 ## Run
 
-1. Tier 0 and tier 4 first; they are free.
-2. Tier 1: run the battery, paste its output under a new `## <date> tier 1` heading in the log.
-3. Tier 2 (weekly or after a release): launch 5-8 agents in parallel, background, each with ONE cell
+1. Sweep (tier 0) and UI (make test-e2e) first; they are free.
+2. Runner: `runner.py --base-url <url> --phase 4`.  Output goes to `work/RUN-LOG.md`.
+3. Naive-user agents (weekly or after a release): launch 5-8 agents in parallel, background, each with ONE cell
    from `personas.yaml` that tier 1 flagged or that the ledger shows untested, and this brief:
    - You are <persona in two lines: who, where, what they want this week>. You have the URL
      https://sail-event.onrender.com, an account `field_<id>` / the battery password, and the API only
@@ -60,7 +73,9 @@ Prod has the real adapters; dev runs fixtures, so tiers 1-3 run against prod. Li
 ## Log format
 
 ```
-## <date> tier <n> — <target> — <main sha>
-<battery output or sweep numbers>
-priorities: 1. … 2. … (invariant · layer · size · existing issue)
+## <date> phases 1..<n> — <target> — <sha>
+<phase output>
+numbers:
+  <label>: found=N accepted=N pages=N recall=x/y (+delta)
+summary: found N, accepted N, pages N  recall: x/y, x/y, ...
 ```
