@@ -2,6 +2,8 @@
 
 ## 2026-10-25 — merged to main (dev only, prod still 969a161)
 
+- Owner decision: search switches to Exa (live pages, 0 stale copies vs Tavily's 11 Sep arclight copy). Branch search-exa adds `SEARCH_PROVIDER=exa` (`adapters/search_exa.py`); owner sets `EXA_API_KEY` and `SEARCH_PROVIDER=exa` on sail-event-dev; Tavily stays selectable.
+
 - #134 → PR 138 (f6bbc67) + repair PR 140 (51b4654): no page slicing, no per-page cap, six mandatory fields (time required, filtered_no_time counted, country inferred), London AI Hub regression test red-first under backend/tests/regression/. PR 138 shipped 9 synthetic judge recordings; PR 140 replaced them with real ones. Fixture guard did not catch them (checks only 'unused fixture' / live-without-timestamp).
 - #135 → PR 137 (c0f83e6): runner.py --phase 1..4 replaces battery.py, remote_batch.py, recall.py; one log work/RUN-LOG.md; regression store seeded; role files carry the root-cause gate (red test before fix).
 - #139 (in progress): detail-page hop — listing events with a same-site link get fetched and re-extracted before filtering. Musikverein regression test red-first, Davidsen recital survives with 19:30 from the detail page. Counters: pages_detail_fetched, detail_fetch_errors; counts_version 4.
