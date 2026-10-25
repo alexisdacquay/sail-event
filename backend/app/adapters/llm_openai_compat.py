@@ -17,9 +17,10 @@ logger = logging.getLogger(__name__)
 
 # max_tokens per prompt name — reasoning models (DeepSeek) spend thinking
 # tokens that count against max_tokens, so all prompts need headroom.
+# extract: large listing pages measured up to 30,109 tokens (DeepSeek's max output is 384K).
 MAX_TOKENS: dict[str, int] = {
     "criteria": 16000,
-    "extract": 16000,
+    "extract": 64000,
     "judge": 16000,
     "guard": 16000,
 }
