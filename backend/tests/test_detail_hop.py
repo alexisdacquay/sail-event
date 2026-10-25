@@ -10,6 +10,7 @@ import threading
 import time
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -123,3 +124,53 @@ def test_fetch_and_extract_errors_are_counted_and_logged_apart(status_server, ca
         r.levelno >= logging.WARNING and "/gone" in r.getMessage() and "410" in r.getMessage()
         for r in caplog.records
     ), [r.getMessage() for r in caplog.records]
+
+
+_MUSIKVEREIN = Path(__file__).resolve().parent / "regression" / "issue_139_musikverein_detail.html"
+
+
+class _PageHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(_MUSIKVEREIN.read_bytes())
+
+    def log_message(self, *args):
+        pass
+
+
+@pytest.fixture
+def page_server():
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _PageHandler)
+    server.daemon_threads = True
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    yield f"http://127.0.0.1:{server.server_address[1]}"
+    server.shutdown()
+    server.server_close()
+
+
+def test_model_reads_the_event_page_as_text_not_html(page_server):
+    """London run: the event pages' raw HTML was 7,455,055 of 7,590,352 input tokens (98.2%).
+    The Musikverein page carries its 19:30 start only in its meta description."""
+    model = MagicMock()
+    model.complete_json.return_value = ({"page_kind": "single_event", "events": []}, None)
+    ev = ExtractedEvent(
+        title="t", start_local="2026-11-07", start_tz=None, end_local=None,
+        venue=None, city=None, country=None, link=f"{page_server}/konzert",
+        description="", confidence=0.9, source_url=f"{page_server}/listing",
+        page_kind="listing",
+    )
+    hop_mod.detail_hop(
+        [ev], model=model, user_tz="Europe/Vienna",
+        window_start=datetime(2026, 10, 1, tzinfo=timezone.utc),
+        window_end=datetime(2026, 12, 31, tzinfo=timezone.utc),
+        target_city="Vienna", target_country="AT",
+    )
+
+    content = model.complete_json.call_args.kwargs["variables"]["content"]
+    assert "<div" not in content
+    assert "<script" not in content
+    assert "19:30" in content
+    assert '"@context":"https:\\/\\/schema.org"' in content  # JSON-LD body kept
+    assert len(content) < 10_000, len(content)  # the HTML is 136,706 characters
