@@ -444,7 +444,7 @@ def test_runs_summary_fields_and_set_aside(client, auth_headers):
     assert summary["rejected"] == sc["rejected"]
     assert summary["setAside"] == (
         sc["filtered_no_date"] + sc.get("filtered_no_time", 0) + sc["filtered_incomplete"] + sc["filtered_past"] + sc["filtered_date"]
-        + sc["filtered_place"] + sc["filtered_duplicate"] + sc["events_capped"] + sc["judge_errors"]
+        + sc["filtered_place"] + sc["filtered_duplicate"] + sc["judge_errors"]
     )
     assert summary["setAside"] > 0
     assert summary["pagesRead"] == sc["results_fetched"]
@@ -479,7 +479,7 @@ def test_runs_invariant_holds_for_every_finished_run(client, auth_headers):
     with patch("app.services.pipeline.extract_events", side_effect=extract_plus_no_date):
         sc = client.post("/api/search", headers=h).json()["stageCounts"]
     assert sc["filtered_no_date"] == 1
-    # setAside includes filtered_no_date, filtered_duplicate, events_capped, judge_errors, etc.
+    # setAside includes filtered_no_date, filtered_duplicate, judge_errors, etc.
     s0 = client.get("/api/search/runs", headers=h).json()["runs"][0]
     assert s0["setAside"] >= sc["filtered_no_date"]
     assert s0["accepted"] + s0["queued"] + s0["rejected"] + s0["setAside"] == s0["eventsFound"]
@@ -507,8 +507,8 @@ def test_runs_invariant_holds_for_every_finished_run(client, auth_headers):
         assert (sc["rejected_date_place"], sc["rejected_off_topic"], sc["rejected_other"]) == (0, 0, 0)
 
 
-def test_runs_invariant_holds_with_incomplete_capped_and_unjudged(client, auth_headers, monkeypatch):
-    """One incomplete extracted event, MAX_EVENTS_PER_RUN=3 and one judge error: all set aside, none lost."""
+def test_runs_invariant_holds_with_incomplete_and_unjudged(client, auth_headers, monkeypatch):
+    """One incomplete extracted event and one judge error: all set aside, none lost."""
     from unittest.mock import patch
     from app.services import pipeline as pipeline_mod
     from app.services.extract import ExtractedEvent
@@ -534,18 +534,17 @@ def test_runs_invariant_holds_with_incomplete_capped_and_unjudged(client, auth_h
             return JudgeError(event=event, error="forced")
         return Verdict(score=95, reason="t", fit={}, is_event=True, capped=False)
 
-    monkeypatch.setenv("MAX_EVENTS_PER_RUN", "3")
     h = auth_headers("demo", "demo")
     with patch("app.services.pipeline.extract_events", side_effect=extract_plus_incomplete), \
             patch("app.services.pipeline.judge_event", side_effect=judge_fails_once):
         sc = client.post("/api/search", headers=h).json()["stageCounts"]
-    monkeypatch.delenv("MAX_EVENTS_PER_RUN")
 
     assert sc["filtered_incomplete"] == 1
-    # #134: no per-page cap → 11 survive to judge, MAX=3 → 8 capped
-    assert sc["events_capped"] == 8
+    # #134: no per-page cap and no per-search cap → all 11 survivors are judged: 1 error, 10 accepted
+    assert "events_capped" not in sc
+    assert sc["events_to_judge"] == 11
     assert sc["judge_errors"] == 1
-    assert sc["accepted"] == 2
+    assert sc["accepted"] == 10
     s = client.get("/api/search/runs", headers=h).json()["runs"][0]
     assert s["eventsFound"] == sc["events_extracted"]
     assert s["accepted"] + s["queued"] + s["rejected"] + s["setAside"] == s["eventsFound"]

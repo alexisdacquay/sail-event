@@ -9,7 +9,7 @@ export function funnelNumbers(counts: Record<string, number>) {
   const withEvents = counts.pages_with_events ?? pages
   const [accepted, queued, rejected] = [c('accepted'), c('queued'), c('rejected')]
   const [noDate, noTime, past, duplicate, date] = [c('filtered_no_date'), c('filtered_no_time'), c('filtered_past'), c('filtered_duplicate'), c('filtered_date')]
-  const [place, incomplete, capped, judgeErrors] = [c('filtered_place'), c('filtered_incomplete'), c('events_capped'), c('judge_errors')]
+  const [place, incomplete, judgeErrors] = [c('filtered_place'), c('filtered_incomplete'), c('judge_errors')]
   return {
     pages,
     pagesKnown: c('results_known'),
@@ -33,9 +33,8 @@ export function funnelNumbers(counts: Record<string, number>) {
     date,
     place,
     incomplete,
-    capped,
     judgeErrors,
-    notJudged: noDate + noTime + past + duplicate + date + place + incomplete + capped + judgeErrors,
+    notJudged: noDate + noTime + past + duplicate + date + place + incomplete + judgeErrors,
   }
 }
 
@@ -117,7 +116,7 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
       key: 'notJudged', count: n.notJudged, fill: '#64748b', ribbonFill: '#94a3b8', ribbonOpacity: 0.4, label: `${n.notJudged} not judged`,
       subs: wrap([
         ...nz(n.noDate, 'no date'), ...nz(n.noTime, 'no time'), ...nz(n.past, 'past'), ...nz(n.duplicate, 'duplicate'), ...nz(n.date, 'date'),
-        ...nz(n.place, 'place'), ...nz(n.incomplete, 'incomplete'), ...nz(n.capped, 'capped'), ...nz(n.judgeErrors, 'errors'),
+        ...nz(n.place, 'place'), ...nz(n.incomplete, 'incomplete'), ...nz(n.judgeErrors, 'errors'),
       ], CHARS[1]),
     },
     { key: 'notAccounted', count: notAccounted, fill: '#64748b', ribbonFill: '#94a3b8', ribbonOpacity: 0.4, label: `${notAccounted} not accounted`, subs: ['run before 22 Oct, counters added later'] },

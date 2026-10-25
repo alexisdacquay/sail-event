@@ -80,7 +80,7 @@ def _run_summary(run: orm.Run) -> dict:
             sc.get(k, 0)
             for k in (
                 "filtered_no_date", "filtered_no_time", "filtered_incomplete", "filtered_past", "filtered_date",
-                "filtered_place", "filtered_duplicate", "events_capped", "judge_errors",
+                "filtered_place", "filtered_duplicate", "judge_errors",
             )
         ),
         # page-level

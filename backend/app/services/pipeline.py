@@ -472,9 +472,7 @@ def run_pipeline(
                 _stage_items.add(len(kept), {"stage": "filter", "outcome": "kept"})
 
             # --- Phase 1: insert kept events as `new`, commit (crash-recoverable) ---
-            cap = int(os.environ.get("MAX_EVENTS_PER_RUN", "50"))
-            to_judge = kept[:cap]
-            counts["events_capped"] = len(kept) - len(to_judge)
+            to_judge = kept  # no per-search cap: every event that passes the filters is judged
             events_new = len(to_judge)
 
             for ev in to_judge:

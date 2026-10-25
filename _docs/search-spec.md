@@ -105,7 +105,7 @@ Result budget per run:
 | Queries per run | 6 | 2, rotating through the planned list across hours |
 | Results per query | 6 | same |
 | Results sent to extraction | 36, minus links already known for the user | same |
-| Events judged | `MAX_EVENTS_PER_RUN` = 50 | same |
+| Events judged | every event that passes the filters (no per-search cap) | same |
 
 ## 5. Event extraction
 
@@ -225,7 +225,7 @@ Run report (after "Search now" and on the last scheduled run):
 |---|---|---|---|
 | Search calls | per run | queries per run (above) | n/a, planned |
 | Search calls | per day, whole deployment | 600 | run stops before search; report says `budget: search` |
-| Model calls | per run | ≤ 1 (criteria) + queries (snippet extraction) + listing or incomplete pages (content extraction) + `MAX_EVENTS_PER_RUN` (judge) | n/a, planned |
+| Model calls | per run | ≤ 1 (criteria) + queries (snippet extraction) + listing or incomplete pages (content extraction) + event pages read + up to 3 per event that passes the filters (judge) | n/a, planned |
 | Model calls | per day, whole deployment | 5000 | run stops at the stage that would exceed it; judged events keep their state; unjudged stay `new` and are judged on the next run |
 | "Search now" | per user | 6 per hour | HTTP 429 with `Retry-After`; nothing runs |
 | Money | per day | derived from calls × configured unit prices; unset = not computed | reported, not enforced |
