@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 1,
+    "reason": "Same date, time, city, and vocal jazz workshop topic, with candidate 1 matching the title exactly and a compatible Berlin venue."
+  },
+  "usage": {
+    "prompt_tokens": 684,
+    "completion_tokens": 221
+  },
+  "recorded_at": "2026-10-25T21:30:22.173270+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

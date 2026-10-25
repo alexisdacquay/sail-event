@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 1,
+    "reason": "Same date, start time, city, and the same jazz vocal workshop title and topic."
+  },
+  "usage": {
+    "prompt_tokens": 590,
+    "completion_tokens": 71
+  },
+  "recorded_at": "2026-10-25T21:31:35.880231+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

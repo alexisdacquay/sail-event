@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 8,
+    "reason": "Candidate 8 matches the new event exactly on title, start time, venue, and ticket description."
+  },
+  "usage": {
+    "prompt_tokens": 1107,
+    "completion_tokens": 282
+  },
+  "recorded_at": "2026-10-25T21:31:39.502485+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

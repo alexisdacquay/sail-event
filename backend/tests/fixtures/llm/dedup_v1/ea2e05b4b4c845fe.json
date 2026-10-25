@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 3,
+    "reason": "Same title, start time, and venue, with compatible jam-session description."
+  },
+  "usage": {
+    "prompt_tokens": 590,
+    "completion_tokens": 109
+  },
+  "recorded_at": "2026-10-25T21:31:36.288840+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

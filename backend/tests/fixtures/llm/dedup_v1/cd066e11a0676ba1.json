@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 2,
+    "reason": "Same title, start time, and Zig Zag Jazz Club Berlin venue, with matching jam-session description."
+  },
+  "usage": {
+    "prompt_tokens": 542,
+    "completion_tokens": 302
+  },
+  "recorded_at": "2026-10-25T21:32:06.192322+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

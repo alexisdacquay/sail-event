@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 92,
+    "reason": "Jazz jam session at Zig Zag Jazz Club Berlin on 21 October, the last day of your window \u2014 place, date and topic all match.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 754,
+    "completion_tokens": 101
+  },
+  "recorded_at": "2026-10-25T21:31:59.430923+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

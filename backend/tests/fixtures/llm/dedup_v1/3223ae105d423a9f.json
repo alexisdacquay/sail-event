@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 1,
+    "reason": "Identical title variant, same date and start time, and same venue (Encode Hub, London), describing the same Encode Club AI demo event."
+  },
+  "usage": {
+    "prompt_tokens": 463,
+    "completion_tokens": 56
+  },
+  "recorded_at": "2026-10-25T21:31:02.368265+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

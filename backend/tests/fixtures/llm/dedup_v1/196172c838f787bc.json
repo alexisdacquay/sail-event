@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 4,
+    "reason": "Same title, start time, and venue as the new late-night jam session."
+  },
+  "usage": {
+    "prompt_tokens": 684,
+    "completion_tokens": 140
+  },
+  "recorded_at": "2026-10-25T21:30:21.492075+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

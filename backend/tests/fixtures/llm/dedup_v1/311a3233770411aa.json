@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 1,
+    "reason": "Identical title, date, start time, venue and summary for the same jazz trio performance; candidate 2 also matches but 1 is the exact listing."
+  },
+  "usage": {
+    "prompt_tokens": 537,
+    "completion_tokens": 96
+  },
+  "recorded_at": "2026-10-25T21:30:21.248756+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

@@ -27,6 +27,7 @@ export function funnelNumbers(counts: Record<string, number>) {
     rejectedDatePlace: c('rejected_date_place'),
     rejectedOffTopic: c('rejected_off_topic'),
     rejectedOther: c('rejected_other'),
+    dedupMerged: c('dedup_merged'),
     noDate,
     noTime,
     past,
@@ -129,7 +130,7 @@ export function Funnel({ counts, countsVersion = 3, className }: { counts: Recor
     { key: 'queued', count: n.queued, fill: '#d97706', ribbonFill: '#f59e0b', ribbonOpacity: 0.85, label: `${n.queued} to review`, subs: [] },
     {
       key: 'rejected', count: n.rejected, fill: '#dc2626', ribbonFill: '#ef4444', ribbonOpacity: 0.6, label: `${n.rejected} rejected`,
-      subs: wrap([...nz(n.rejectedDatePlace, 'wrong date or place'), ...nz(n.rejectedOffTopic, 'off topic'), ...nz(n.rejectedOther, 'below your threshold')], CHARS[2]),
+      subs: wrap([...nz(n.rejectedDatePlace, 'wrong date or place'), ...nz(n.rejectedOffTopic, 'off topic'), ...nz(n.rejectedOther, 'below your threshold'), ...nz(n.dedupMerged, 'duplicate', 'duplicates')], CHARS[2]),
     },
     // owner 2026-10-25: neutral, no verdict yet; the slate of "screened out"
     { key: 'notScored', count: n.judgeErrors, fill: '#64748b', ribbonFill: '#94a3b8', ribbonOpacity: 0.4, label: `${n.judgeErrors} not scored yet`, subs: [] },

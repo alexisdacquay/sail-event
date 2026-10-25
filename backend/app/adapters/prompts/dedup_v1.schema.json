@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "required": ["same_as", "reason"],
+  "additionalProperties": false,
+  "properties": {
+    "same_as": {"type": "integer"},
+    "reason": {"type": "string"}
+  }
+}

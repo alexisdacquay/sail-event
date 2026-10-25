@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 3,
+    "reason": "Candidate 3 matches the title, start time, venue, and description exactly."
+  },
+  "usage": {
+    "prompt_tokens": 661,
+    "completion_tokens": 256
+  },
+  "recorded_at": "2026-10-25T21:32:05.862052+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

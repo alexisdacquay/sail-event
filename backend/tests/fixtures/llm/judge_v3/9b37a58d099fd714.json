@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 15,
+    "reason": "A techno night in Berlin on 20 October is in the right city and dates, but it's techno, not jazz.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 757,
+    "completion_tokens": 44
+  },
+  "recorded_at": "2026-10-25T21:31:59.590873+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

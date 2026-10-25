@@ -8,6 +8,7 @@
 - #135 → PR 137 (c0f83e6): runner.py --phase 1..4 replaces battery.py, remote_batch.py, recall.py; one log work/RUN-LOG.md; regression store seeded; role files carry the root-cause gate (red test before fix).
 - #139 (in progress): detail-page hop — listing events with a same-site link get fetched and re-extracted before filtering. Musikverein regression test red-first, Davidsen recital survives with 19:30 from the detail page. Counters: pages_detail_fetched, detail_fetch_errors; counts_version 4.
 - Ground-truth set (#126) still unvetted; recall numbers indicative only.
+- #136 (branch dedup-after-storage, PR open, not merged): code keeps one duplicate check (event page + date already stored) plus the table's unique key; the same event on two sites is now a `dedup_v1` model call after storage (`dedup_merged`, `dedup_errors`); Funnel.tsx needs a one-word follow-up to name `dedup_merged` under rejected.
 - Held PRs 132, 133: 133 is now redundant (fixtures re-recorded); 132 (Not judged breakdown) still open.
 
 ## 2026-10-23 — Stream page promoted to prod

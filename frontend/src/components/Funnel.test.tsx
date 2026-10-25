@@ -104,6 +104,14 @@ describe('funnelNumbers', () => {
     expect(n.nonEvent).toBe(2)
   })
 
+  // #136: a new event the after-storage check found to be the same as a stored one is rejected as a duplicate
+  it('counts after-storage duplicates among the rejected reasons', () => {
+    const n = funnelNumbers({ ...counts, rejected: 4, dedup_merged: 2 })
+    expect(n.rejectedDatePlace + n.rejectedOffTopic + n.rejectedOther + n.dedupMerged).toBe(n.rejected)
+    render(<Funnel counts={{ ...counts, rejected: 4, dedup_merged: 2 }} />)
+    expect(screen.getByTestId('funnel')).toHaveTextContent('2 duplicates')
+  })
+
   // owner 2026-10-25: the judge could not score them; they stay `new` and the next search's recovery judges them
   it('counts judge errors under judged, as not scored yet, never as screened out', () => {
     const n = funnelNumbers({ ...counts, events_extracted: 14, judge_errors: 2 })

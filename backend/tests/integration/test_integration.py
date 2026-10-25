@@ -116,13 +116,13 @@ def test_dedup(http: httpx.Client):
     )
 
     http.post("/api/search", headers=headers)
+    first = http.get("/api/events", headers=headers).json()
     http.post("/api/search", headers=headers)
-
-    r = http.get("/api/events", headers=headers)
-    events = r.json()
-    # #134: listing events share the listing URL; dedup key is (link, date).
-    keys = [(e["link"], e["dateTime"][:10]) for e in events]
-    assert len(keys) == len(set(keys)), "duplicate events after two searches"
+    events = http.get("/api/events", headers=headers).json()
+    # #136: two events of one listing share its URL and date, so (link, date) is not an identity;
+    # the repeated search must add no row
+    assert len(first) > 0
+    assert sorted(e["id"] for e in events) == sorted(e["id"] for e in first), "duplicate events after two searches"
 
 
 # ---------- user isolation ----------

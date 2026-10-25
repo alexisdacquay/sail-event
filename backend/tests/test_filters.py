@@ -1,4 +1,4 @@
-"""Tests for services/filters.py — canonical URL, near-match, filter pipeline."""
+"""Tests for services/filters.py — canonical URL, filter pipeline."""
 
 from __future__ import annotations
 
@@ -12,9 +12,6 @@ from app.services.extract import ExtractedEvent
 from app.services.filters import (
     FilterCounts,
     filter_events,
-    is_near_match,
-    jaccard,
-    title_key,
 )
 
 
@@ -75,61 +72,6 @@ class TestCanonicalUrl:
     def test_all_params_stripped_leaves_no_query(self):
         url = "https://example.com/page?utm_source=x&fbclid=y"
         assert canonical_url(url) == "https://example.com/page"
-
-
-# ---------- title key ----------
-
-
-class TestTitleKey:
-    def test_basic(self):
-        assert title_key("Jazz Trio at A-Trane") == frozenset({"jazz", "trio", "atrane"})
-
-    def test_stopwords_removed(self):
-        assert title_key("The Jazz Concert in Berlin") == frozenset({"jazz", "concert", "berlin"})
-
-    def test_punctuation_removed(self):
-        assert title_key("A-Trane: Jazz Trio!") == frozenset({"atrane", "jazz", "trio"})
-
-    def test_german_stopwords(self):
-        assert title_key("Jazz im Tiergarten") == frozenset({"jazz", "tiergarten"})
-
-
-# ---------- near-match ----------
-
-
-class TestNearMatch:
-    def test_e19_matches_e1(self):
-        """E19 'A-Trane: Jazz Trio' matches E1 'Jazz Trio at A-Trane'."""
-        k1 = title_key("Jazz Trio at A-Trane")  # {jazz, trio, atrane}
-        k19 = title_key("A-Trane: Jazz Trio")   # {atrane, jazz, trio}
-        assert is_near_match(k1, k19)
-
-    def test_atrane_jazz_vs_atrane_jazz_trio_no_match(self):
-        """'A-Trane Jazz' vs 'A-Trane Jazz Trio' same night — no match (Jaccard 2/3)."""
-        ka = title_key("A-Trane Jazz")       # {atrane, jazz}
-        kb = title_key("A-Trane Jazz Trio")  # {atrane, jazz, trio}
-        j = jaccard(ka, kb)
-        assert j == pytest.approx(2 / 3, abs=0.01)
-        assert not is_near_match(ka, kb)
-
-    def test_jazz_vs_jazz_trio_atrane_no_match(self):
-        """{jazz} vs {jazz, trio, atrane} — subset but < 3 tokens, no match."""
-        ka = frozenset({"jazz"})
-        kb = frozenset({"jazz", "trio", "atrane"})
-        # {jazz} ⊂ {jazz, trio, atrane} but len({jazz}) = 1 < 3
-        assert ka <= kb
-        assert not is_near_match(ka, kb)
-
-    def test_subset_with_3_tokens_matches(self):
-        """{jazz, trio, berlin} ⊂ {jazz, trio, berlin, concert} — match (subset with ≥ 3)."""
-        ka = frozenset({"jazz", "trio", "berlin"})
-        kb = frozenset({"jazz", "trio", "berlin", "concert"})
-        assert is_near_match(ka, kb)
-
-    def test_different_events_no_match(self):
-        k1 = title_key("Jazz Trio at A-Trane")
-        k2 = title_key("Techno Night at Berghain")
-        assert not is_near_match(k1, k2)
 
 
 # ---------- filter pipeline ----------
@@ -245,7 +187,8 @@ class TestFilterPipeline:
         assert counts.filtered_incomplete == 0
         assert not hasattr(counts, "filtered_non_event")
 
-    def test_duplicate_link_filtered(self):
+    def test_same_link_and_start_filtered(self):
+        """The events table is unique on (user, link, date_time); the second row cannot be stored."""
         ev1 = _make_event(link="https://example.com/event1", title="Event 1")
         ev2 = _make_event(link="https://example.com/event1", title="Event 2")
         kept, counts = filter_events(
@@ -260,7 +203,8 @@ class TestFilterPipeline:
         assert len(kept) == 1
         assert counts.filtered_duplicate == 1
 
-    def test_duplicate_utm_link_filtered(self):
+    def test_in_run_utm_link_variant_kept(self):
+        """#136: no in-run link check; the after-storage check compares them."""
         ev1 = _make_event(link="https://example.com/event1")
         ev2 = _make_event(link="https://example.com/event1?utm_source=x")
         kept, counts = filter_events(
@@ -272,11 +216,11 @@ class TestFilterPipeline:
             target_country="DE",
             user_tz="Europe/Berlin",
         )
-        assert len(kept) == 1
-        assert counts.filtered_duplicate == 1
+        assert len(kept) == 2
+        assert counts.filtered_duplicate == 0
 
-    def test_near_match_stored_rejected_dropped(self):
-        """A near-match of a rejected stored event is dropped."""
+    def test_title_match_of_stored_event_kept(self):
+        """#136: no title match against stored events; the after-storage check compares them."""
         ev = _make_event(title="Jazz Trio at A-Trane")
         stored = [
             {"link": "https://other.com/atrane", "date_time": "2026-10-20T21:00",
@@ -292,8 +236,8 @@ class TestFilterPipeline:
             user_tz="Europe/Berlin",
             stored_events=stored,
         )
-        assert len(kept) == 0
-        assert counts.filtered_duplicate == 1
+        assert len(kept) == 1
+        assert counts.filtered_duplicate == 0
 
     def test_listing_stored_occurrences_deduped_new_kept(self):
         """A listing page's stored occurrences are deduped, new ones kept."""
@@ -327,3 +271,49 @@ class TestFilterPipeline:
         assert len(kept) == 1
         assert kept[0].title == "Jazz Tuesday"
         assert counts.filtered_duplicate == 1
+
+
+# ---------- #136: owner's London AI search ----------
+
+_LISTING = "https://hiddenevents.online/london/tech-events"
+
+
+def test_136_two_listing_events_same_date_both_kept():
+    """#136 evidence: two different talks on one listing page, same day, link = listing URL; both are kept."""
+    movie = _make_event(
+        title="AI Movie Club x The Terminator (1984)", start_local="2026-10-29T18:00",
+        start_tz="Europe/London", city="London", country="GB", venue="Kensington Central Library",
+        link=_LISTING, source_url=_LISTING, page_kind="listing",
+    )
+    debate = _make_event(
+        title="Is AI making us less creative?: An Oxford-style debate", start_local="2026-10-29T18:30",
+        start_tz="Europe/London", city="London", country="GB", venue="Granola",
+        link=_LISTING, source_url=_LISTING, page_kind="listing",
+    )
+    kept, counts = filter_events(
+        [movie, debate], now_utc=_NOW, window_start_utc=_WS, window_end_utc=_WE,
+        target_city="London", target_country="GB", user_tz="Europe/London",
+    )
+    assert [e.title for e in kept] == [movie.title, debate.title]
+    assert counts.filtered_duplicate == 0
+
+
+def test_136_stored_event_page_same_day_is_duplicate():
+    """#136: the one check, the event's own page stored for the same calendar date, at another time."""
+    stored = [{"link": "https://example.com/event?utm_source=x", "date_time": "2026-10-20T18:00+02:00"}]
+    kept, counts = _filter_one(_make_event(), stored_events=stored)
+    assert kept == []
+    assert counts.filtered_duplicate == 1
+
+
+def test_136_stored_listing_url_same_day_other_event_kept():
+    """#136: a listing's own URL is never an event page; a stored event from that listing does not drop another."""
+    stored = [{"link": _LISTING, "date_time": "2026-10-29T18:00+00:00"}]
+    debate = _make_event(
+        title="Is AI making us less creative?: An Oxford-style debate", start_local="2026-10-29T18:30",
+        start_tz="Europe/London", city="London", country="GB",
+        link=_LISTING, source_url=_LISTING, page_kind="listing",
+    )
+    kept, counts = _filter_one(debate, stored_events=stored, user_tz="Europe/London")
+    assert kept == [debate]
+    assert counts.filtered_duplicate == 0

@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 1,
+    "reason": "Candidate 1 has the same title, date, start time and Tiergarten Berlin location, and its description matches the same outdoor photography meetup."
+  },
+  "usage": {
+    "prompt_tokens": 1107,
+    "completion_tokens": 79
+  },
+  "recorded_at": "2026-10-25T21:31:38.384881+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

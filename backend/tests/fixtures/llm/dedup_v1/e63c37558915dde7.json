@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 8,
+    "reason": "Same title, date, start time, and venue for a live jazz trio at A-Trane Berlin."
+  },
+  "usage": {
+    "prompt_tokens": 1107,
+    "completion_tokens": 173
+  },
+  "recorded_at": "2026-10-25T21:31:39.144973+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}
