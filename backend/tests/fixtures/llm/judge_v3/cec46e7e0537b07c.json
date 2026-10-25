@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 95,
+    "reason": "Jazz concert in Berlin on 19 October 2026 falls squarely within your requested dates and city.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 779,
+    "completion_tokens": 73
+  },
+  "recorded_at": "2026-10-24T22:32:34.316291+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
+}

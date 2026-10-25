@@ -1,14 +1,14 @@
 {
   "response": {
-    "score": 5,
-    "reason": "Event does not match the jazz in Berlin criteria well enough.",
+    "score": 15,
+    "reason": "Techno at Berghain on 20 October in Berlin \u2014 right city and dates, but this is techno, not jazz.",
     "is_event": true
   },
   "usage": {
-    "prompt_tokens": 500,
-    "completion_tokens": 50
+    "prompt_tokens": 767,
+    "completion_tokens": 71
   },
-  "recorded_at": "2026-10-24T12:00:00+00:00",
-  "model": "fake:fixture",
-  "recorded": "synthetic"
+  "recorded_at": "2026-10-24T22:06:11.941616+00:00",
+  "model": "openai_compatible:deepseek/deepseek-v4.1-flash",
+  "recorded": "live"
 }
