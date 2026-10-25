@@ -296,13 +296,14 @@ class TestSchemaValidation:
         def fake_urlopen(req, timeout=None):
             return _make_response("chat_completions_length.json")
 
-        # The fixture is a real deepseek-flash reply recorded at max_tokens=200; max_tokens=16000
-        # below is guard's budget in this request body, the token counts come from the fixture.
+        # The fixture is a real deepseek-flash reply recorded at max_tokens=1500: reasoning ended,
+        # then the JSON content was cut mid-array (the dev bug). max_tokens=16000 below is guard's
+        # budget in this request body; the token counts come from the fixture.
         with patch("app.adapters.llm_openai_compat.urllib.request.urlopen", fake_urlopen):
             with pytest.raises(
                 RuntimeError,
                 match=r"guard: output truncated at max_tokens=16000 "
-                r"\(completion_tokens=200, reasoning_tokens=200\)",
+                r"\(completion_tokens=1500, reasoning_tokens=982\)",
             ):
                 model.complete_json(
                     prompt_name="guard",
