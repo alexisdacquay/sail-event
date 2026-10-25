@@ -125,20 +125,21 @@ const DRAWING = {
   },
   texts: {
     '24 found': [10, 176], 'from 8 of 20 pages read': [10, 187],
-    '8 judged': [280, 33], '16 not judged': [280, 124], '5 no date · 9 duplicate · 2 errors': [280, 135],
-    '2 in calendar': [532, 16], '1 to review': [532, 40], '5 out': [532, 66], '4 date or place · 1 topic': [532, 77],
+    // owner 2026-10-25 wording: the longer reasons wrap to a second line and each block re-centres on its node
+    '8 judged': [280, 33], '16 screened out': [280, 120], '9 duplicates · 5 no start date': [280, 131], '2 judge errors': [280, 142],
+    '2 in calendar': [532, 16], '1 to review': [532, 40], '5 rejected': [532, 66], '4 wrong date or place': [532, 77], '1 off topic': [532, 88],
   },
   ribbons: { judged: ['#3b82f6', '0.55'], notJudged: ['#94a3b8', '0.4'], accepted: ['#10b981', '0.75'], queued: ['#f59e0b', '0.85'], rejected: ['#ef4444', '0.6'] },
 }
 // Where the hand-made drawing departs from its own rule (nodes GAP apart, centred on their source): its column-2 gap is
 // 28 and its judged node sits 12 px higher than a centred stack puts it, which moves column 3 and "8 judged" with it.
-const HAND_PLACED = { judged: 12, accepted: 8, queued: 8, rejected: 8, '8 judged': 22, '2 in calendar': 8, '1 to review': 8, '5 out': 8, '4 date or place · 1 topic': 8 }
+const HAND_PLACED = { judged: 12, accepted: 8, queued: 8, rejected: 8, '8 judged': 22, '2 in calendar': 8, '1 to review': 8, '5 rejected': 8, '4 wrong date or place': 8 }
 
 describe('Funnel', () => {
   it("matches the owner's drawing numerically: frame, scale, columns, widths, labels, fills", () => {
     const { container } = render(<Funnel counts={DRAWING.counts} />)
     const [width, height] = container.querySelector('svg')!.getAttribute('viewBox')!.split(' ').slice(2).map(Number)
-    // the drawing's own "4 date or place · 1 topic" runs to x 682, past its 640 frame: the frame grows just enough for it
+    // "4 wrong date or place" runs to x 664, past the drawing's 640 frame: the frame grows just enough for it
     expect(width).toBeGreaterThanOrEqual(DRAWING.viewBox[0])
     expect(width).toBeLessThanOrEqual(690)
     expect(Math.abs(height - DRAWING.viewBox[1])).toBeLessThanOrEqual(7) // the frame ends 6 px under the last label
@@ -174,29 +175,29 @@ describe('Funnel', () => {
     const { container } = render(<Funnel counts={noDate} />)
     expectStructure(container, noDate)
     expectLabelsClear(container)
-    expect(screen.getByText('2 no date')).toBeInTheDocument()
+    expect(screen.getByText('2 no start date')).toBeInTheDocument()
   })
 
   it('labels every node beside it: under found, right of the others', () => {
     const { container } = render(<Funnel counts={counts} />)
     for (const t of [
-      '12 found', 'from 8 of 31 pages read', '7 judged', '5 not judged', '1 no date · 2 past · 1 duplicate', '1 place',
-      '2 in calendar', '3 to review', '2 out', '1 date or place · 1 topic',
+      '12 found', 'from 8 of 31 pages read', '7 judged', '5 screened out', '2 already over · 1 duplicate', '1 no start date · 1 wrong place',
+      '2 in calendar', '3 to review', '2 rejected', '1 wrong date or place', '1 off topic',
     ]) expect(screen.getByText(t)).toBeInTheDocument()
-    expect(screen.queryByText(/other/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/threshold/)).not.toBeInTheDocument()
     const x = (el: Element) => Number(el.getAttribute('x'))
     const y = (el: Element) => Number(el.getAttribute('y'))
     const by = Object.fromEntries(nodes(container).map((b) => [b.key, b]))
     expect(x(screen.getByText('12 found'))).toBe(by.found.x)
     expect(y(screen.getByText('12 found'))).toBeGreaterThan(by.found.y + by.found.h)
     expect(x(screen.getByText('from 8 of 31 pages read'))).toBe(by.found.x)
-    for (const [text, key] of [['7 judged', 'judged'], ['5 not judged', 'notJudged'], ['2 in calendar', 'accepted'], ['2 out', 'rejected']]) {
+    for (const [text, key] of [['7 judged', 'judged'], ['5 screened out', 'notJudged'], ['2 in calendar', 'accepted'], ['2 rejected', 'rejected']]) {
       expect(x(screen.getByText(text)), text).toBe(by[key].x + by[key].w + 6)
       expect(y(screen.getByText(text)), text).toBeGreaterThan(by[key].y)
       expect(y(screen.getByText(text)) - 8, text).toBeLessThan(by[key].y + by[key].h)
     }
     // the breakdown line sits right under its count line
-    expect(y(screen.getByText('1 date or place · 1 topic')) - y(screen.getByText('2 out'))).toBe(11)
+    expect(y(screen.getByText('1 wrong date or place')) - y(screen.getByText('2 rejected'))).toBe(11)
   })
 
   it('no two labels overlap and nothing is clipped, with every breakdown and thin nodes', () => {
@@ -231,13 +232,25 @@ describe('Funnel', () => {
     const { container } = render(<Funnel counts={allJudged} />)
     expectStructure(container, allJudged)
     expect(nodes(container).map((b) => b.key)).toEqual(['found', 'judged', 'accepted', 'rejected'])
-    expect(container.textContent).not.toMatch(/not judged|to review|0 /)
+    expect(container.textContent).not.toMatch(/screened out|to review|0 /)
   })
 
-  it('never says set aside or rejected', () => {
+  // owner 2026-10-25: a gatekeeper screens events out by fixed rules before the judge; "rejected" is the judge's verdict
+  it('says screened out and rejected, never not judged, out or set aside', () => {
     const { container } = render(<Funnel counts={counts} />)
-    expect(container.textContent).not.toMatch(/set aside|rejected|pages: no events/)
-    expect(screen.getByTestId('funnel').getAttribute('aria-label')).not.toMatch(/set aside|rejected/)
+    expect(container.textContent).toMatch(/5 screened out/)
+    expect(container.textContent).toMatch(/2 rejected/)
+    expect(container.textContent).not.toMatch(/set aside|not judged|\d out\b|pages: no events/)
+    const aria = screen.getByTestId('funnel').getAttribute('aria-label')!
+    expect(aria).toBe('Funnel: 12 events found, 5 screened out, 7 judged: 2 in calendar, 3 to review, 2 rejected')
+  })
+
+  it("reads the screen reasons in the owner's plain words", () => {
+    render(<Funnel counts={{ results_fetched: 9, events_extracted: 12, filtered_past: 3, filtered_duplicate: 4, filtered_no_time: 2, accepted: 1, queued: 1, rejected: 1, rejected_off_topic: 1 }} />)
+    // "3 already over · 4 duplicates · 2 no start time", wrapped at the gap between columns 2 and 3
+    expect(screen.getByText('3 already over · 4 duplicates')).toBeInTheDocument()
+    expect(screen.getByText('2 no start time')).toBeInTheDocument()
+    expect(screen.getByText('1 off topic')).toBeInTheDocument()
   })
 
   it('renders nothing with no events', () => {
