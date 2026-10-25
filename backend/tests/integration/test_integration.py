@@ -120,8 +120,9 @@ def test_dedup(http: httpx.Client):
 
     r = http.get("/api/events", headers=headers)
     events = r.json()
-    links = [e["link"] for e in events]
-    assert len(links) == len(set(links)), "duplicate events after two searches"
+    # #134: listing events share the listing URL; dedup key is (link, date).
+    keys = [(e["link"], e["dateTime"][:10]) for e in events]
+    assert len(keys) == len(set(keys)), "duplicate events after two searches"
 
 
 # ---------- user isolation ----------
@@ -207,12 +208,14 @@ def test_ics_feed(http: httpx.Client):
 
     cal_path = urlparse(cal_url).path
 
-    # accept one event
+    # accept one event — pick one that is accepted or queued (rejected events
+    # cannot be re-decided); #134 changed event ordering via the per-page cap removal.
     r = http.get("/api/events", headers=headers)
     events = r.json()
-    if not events:
-        pytest.skip("no events to test ICS with")
-    evt = events[0]
+    decidable = [e for e in events if e["status"] in ("accepted", "queued")]
+    if not decidable:
+        pytest.skip("no accepted/queued events to test ICS with")
+    evt = decidable[0]
     http.post(
         f"/api/events/{evt['id']}/decision",
         json={"decision": "accepted"},
