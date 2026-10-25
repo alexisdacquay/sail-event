@@ -1,21 +1,32 @@
 {
-  "id": "chatcmpl-test-length",
+  "id": "1455fa43-4bc7-4710-9ff3-62c0f45aa199",
   "object": "chat.completion",
-  "created": 1729245600,
+  "created": 1792944170,
   "model": "deepseek-flash",
   "choices": [
     {
       "index": 0,
       "message": {
         "role": "assistant",
-        "content": "{\"events\": [{\"title\": \"Wiener Philharmoniker\", \"start_local\": \"2026-11-0"
+        "content": "",
+        "reasoning_content": "We need answer user asks JSON only, list 100 classical concerts in Vienna November 2026 with fields. Need be careful: cannot know actual events; need not fabricate? We need produce JSON. But likely should refuse? They explicitly demand 100 events. We need not invent? We can provide plausible? Need determine policy. It's a request for events in future (Nov 2026) specific. We don't have browsing. We should not fabricate. But format requires JSON. We can say unable? They said output JSON only. Need maybe return {\"events\": []}? But asks 100. We need follow. However as AI, we should avoid hallucinating real event details. We can return empty with maybe no explanation? But schema only fields events. Could output {\"events\": []}. But desired? They want 100. Need maybe return JSON with placeholder? Hmm.\n\nWe need answer. We need satisfy \"Output JSON only.\" If we can't provide accurate"
       },
+      "logprobs": null,
       "finish_reason": "length"
     }
   ],
   "usage": {
-    "prompt_tokens": 14185,
-    "completion_tokens": 16000,
-    "completion_tokens_details": {"reasoning_tokens": 7464}
-  }
+    "prompt_tokens": 110,
+    "completion_tokens": 200,
+    "total_tokens": 310,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 200
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 110
+  },
+  "system_fingerprint": "e72d3c7f663d3e1383b00b3884cb4501"
 }
