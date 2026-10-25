@@ -1,5 +1,12 @@
 # ProjectOne — work state (resumable)
 
+## 2026-10-25 — merged to main (dev only, prod still 969a161)
+
+- #134 → PR 138 (f6bbc67) + repair PR 140 (51b4654): no page slicing, no per-page cap, six mandatory fields (time required, filtered_no_time counted, country inferred), London AI Hub regression test red-first under backend/tests/regression/. PR 138 shipped 9 synthetic judge recordings; PR 140 replaced them with real ones. Fixture guard did not catch them (checks only 'unused fixture' / live-without-timestamp).
+- #135 → PR 137 (c0f83e6): runner.py --phase 1..4 replaces battery.py, remote_batch.py, recall.py; one log work/RUN-LOG.md; regression store seeded; role files carry the root-cause gate (red test before fix).
+- Next, owner-approved: #139 hop to each event's own page (depends on #134, merged). Ground-truth set (#126) still unvetted and contains junk (wrong-dated events, article pages); recall numbers indicative only.
+- Held PRs 132, 133: 133 is now redundant (fixtures re-recorded); 132 (Not judged breakdown) still open.
+
 ## 2026-10-23 — Stream page promoted to prod
 - 2026-10-24 Issue #134: content slice and per-page cap removed; six mandatory fields (title, description, start+time, tz, city, country); `filtered_no_time` counter; regression test for London AI Hub; fixtures re-recorded.
 - 2026-10-24 Merged to main (dev): ground truth + recall runner (PR 127), extractor reads every page in parallel + per-page list on the run (PR 128; recall 7→11/38, accepted 2→5/38 on one draw), judge repair loop + is_event in the prompt + fixture-integrity guard + integration asserts zero judge/extract errors (PR 129). Issues 124, 125, 126, 74 closed. Prod still 969a161 (Stream + Sankey, old search box, old extractor). Next measurement: rerun `backend/scripts/recall.py --base-url https://sail-event-dev.onrender.com` once dev has deployed; misses now mostly "possibly filtered past" → next root cause to look at.
