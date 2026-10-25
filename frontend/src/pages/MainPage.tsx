@@ -85,6 +85,7 @@ const STAGES = ['search', 'extract', 'detail_hop', 'filter', 'judge']
 export function stageLines(run: SearchResult): string[] {
   const c = run.stageCounts ?? {}
   const n = funnelNumbers(c)
+  const opened = n.pagesDetailFetched + n.detailFetchErrors // = the live line's total, detail_pages_to_open
   // one entry per stage; found = screened out + judged, non-events are pages, not events
   // shortcut: new = fetched - known ignores duplicate URLs removed in between; upgrade if the backend ever counts them
   const done = [
@@ -92,9 +93,10 @@ export function stageLines(run: SearchResult): string[] {
       ? `Searched the web: ${n.pages} pages, ${n.pagesKnown} already known from earlier runs, ${n.pages - n.pagesKnown} new`
       : `Searched the web, ${n.pages} pages`],
     [`Read ${n.pages - n.pagesKnown} pages, found ${n.found} events`, ...(n.nonEvent > 0 ? [`Skipped ${n.nonEvent} pages that were not events`] : [])],
-    [...(n.pagesDetailFetched > 0 ? [`Fetched ${n.pagesDetailFetched} detail pages${n.detailFetchErrors > 0 ? `, ${n.detailFetchErrors} failed` : ''}`] : [])],
-    [`Screened out: ${n.notJudged}${n.detailFetchErrors > 0 ? ` (${n.detailFetchErrors} detail fetch errors)` : ''}`],
-    [`Judged ${c.events_judged ?? 0} · ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} rejected`],
+    // a failed fetch keeps the listing's record for the screen: a count of pages, never a screening reason
+    [...(opened > 0 ? [`Opened ${opened} event pages${n.detailFetchErrors > 0 ? `, ${n.detailFetchErrors} failed` : ''}`] : [])],
+    [`Screened out: ${n.notJudged}`],
+    [`Judged ${n.judged} · ${n.accepted} in calendar, ${n.queued} to review, ${n.rejected} rejected${n.judgeErrors > 0 ? `, ${n.judgeErrors} not scored yet` : ''}`],
   ]
   const stage = run.currentStage ?? run.stoppedAtStage
   const at = stage ? STAGES.indexOf(stage) : run.finishedAt ? STAGES.length : 0

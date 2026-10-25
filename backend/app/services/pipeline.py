@@ -191,7 +191,8 @@ def run_pipeline(
                 llm_calls += llm_c
                 llm_tokens_in += tok_in
                 llm_tokens_out += tok_out
-                counts["judge_errors"] = counts.get("judge_errors", 0) + j_err
+                # an older run's events: kept apart so judge_errors is this run's own "not scored yet"
+                counts["recovery_judge_errors"] = j_err
                 counts["judge_repaired"] = counts.get("judge_repaired", 0) + j_rep
             run.llm_calls = llm_calls  # release the unused reservation
             db.commit()

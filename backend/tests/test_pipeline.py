@@ -247,6 +247,45 @@ def test_judge_error_leaves_event_new(client, auth_headers, _db_session):
             assert sc.get("judge_errors", 0) > 0
 
 
+_SCREENED = ("filtered_no_date", "filtered_no_time", "filtered_incomplete", "filtered_past",
+             "filtered_date", "filtered_place", "filtered_duplicate")
+
+
+def test_judge_error_is_retried_by_the_next_search_and_counted_in_its_own_run(client, auth_headers, _db_session):
+    """Owner 2026-10-25 "not scored yet": a judge error leaves the event `new`, the next search's recovery
+    judges it again. That retry is the older run's event, so a run's judge_errors counts its own events only
+    and found = screened out + in calendar + to review + rejected + not scored yet, exactly."""
+    from app.services.judge import JudgeError
+
+    h = auth_headers("retry", "retry")
+    client.put("/api/criteria", headers=h, json={
+        "text": "jazz in Berlin (Germany) next week (19-21st October 2026)",
+    })
+
+    def _always_error(event, **kwargs):
+        return JudgeError(event=event, error="forced test error")
+
+    with patch("app.services.pipeline.judge_event", side_effect=_always_error) as judge:
+        first = client.post("/api/search", headers=h).json()
+        calls_first = judge.call_count
+        second = client.post("/api/search", headers=h).json()
+    c1, c2 = first["stageCounts"], second["stageCounts"]
+    left = _db_session.query(Event).filter(Event.run_id == first["runId"]).all()
+    assert left and all(e.status == "new" for e in left)
+    assert c1["judge_errors"] == len(left) == calls_first
+    # the second search retried every one of them; its own count holds only its own events
+    assert judge.call_count - calls_first == len(left) + c2["events_to_judge"]
+    assert c2.get("judge_errors", 0) == c2["events_to_judge"]
+    for c in (c1, c2):
+        verdicts = c.get("accepted", 0) + c.get("queued", 0) + c.get("rejected", 0)
+        assert c["events_extracted"] == sum(c.get(k, 0) for k in _SCREENED) + verdicts + c.get("judge_errors", 0)
+
+    client.post("/api/search", headers=h)  # the judge works again: the leftovers get their score
+    for e in left:
+        _db_session.refresh(e)
+    assert all(e.status != "new" and e.score is not None for e in left)
+
+
 # ---------- Factory refusal in prod ----------
 
 

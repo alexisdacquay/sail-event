@@ -326,7 +326,7 @@ Golden set B — labelled candidates for C1, now = 2026-10-18 12:00 Europe/Berli
 11. Every query contains the city and the year; when the place's language is not English, at least one query is in that language; Tavily receives the country as its name (`germany`), Brave as `DE`.
 12. A listing page yields all its events (no per-page cap); a listing page seen before is extracted again on the next run and only its new occurrences are stored.
 13. A single-event page already stored for the user costs no model call.
-14. Two candidates with the same canonical link and date, or the same date and ≥ 0.8 title overlap (subset rule only from 3 tokens), yield one stored event; two different concerts at one venue on one night stay two.
+14. An event whose own page and calendar date are already stored is not inserted; the same event found on two sites, under any titles, is rejected after storage by the model (`dedup_merged`); two different events at one venue on one night, or on one listing on one day, stay two.
 15. A duplicate of a rejected event is rejected and counted (`dedup_merged`).
 16. The run row carries counts for every stage, filter and guard, the number of search and model calls, tokens, and the stage where it stopped if it stopped early.
 17. Reaching a daily budget stops the run at that stage with `budget: <which>` and HTTP 200; a judge error leaves that event `new`, is counted, and the run completes.

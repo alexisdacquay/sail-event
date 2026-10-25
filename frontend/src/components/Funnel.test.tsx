@@ -51,7 +51,7 @@ function expectStructure(container: HTMLElement, c: Record<string, number>, extr
   const by = Object.fromEntries(ns.map((b) => [b.key, b]))
   const expected: Record<string, number> = {
     found: n.found, judged: n.judged, notJudged: n.notJudged, notAccounted: extra.notAccounted ?? 0,
-    accepted: n.accepted, queued: n.queued, rejected: n.rejected,
+    accepted: n.accepted, queued: n.queued, rejected: n.rejected, notScored: n.judgeErrors,
   }
   // every node is its count × scale tall; a count of 0 has no node
   expect(ns.map((b) => b.key).sort()).toEqual(Object.keys(expected).filter((k) => expected[k] > 0).sort())
@@ -104,6 +104,22 @@ describe('funnelNumbers', () => {
     expect(n.nonEvent).toBe(2)
   })
 
+  // #136: a new event the after-storage check found to be the same as a stored one is rejected as a duplicate
+  it('counts after-storage duplicates among the rejected reasons', () => {
+    const n = funnelNumbers({ ...counts, rejected: 4, dedup_merged: 2 })
+    expect(n.rejectedDatePlace + n.rejectedOffTopic + n.rejectedOther + n.dedupMerged).toBe(n.rejected)
+    render(<Funnel counts={{ ...counts, rejected: 4, dedup_merged: 2 }} />)
+    expect(screen.getByTestId('funnel')).toHaveTextContent('2 duplicates')
+  })
+
+  // owner 2026-10-25: the judge could not score them; they stay `new` and the next search's recovery judges them
+  it('counts judge errors under judged, as not scored yet, never as screened out', () => {
+    const n = funnelNumbers({ ...counts, events_extracted: 14, judge_errors: 2 })
+    expect([n.notJudged, n.judged]).toEqual([5, 9])
+    expect(n.judged).toBe(n.accepted + n.queued + n.rejected + n.judgeErrors)
+    expect(n.notJudged + n.judged).toBe(n.found)
+  })
+
   it('treats missing counts as 0 and pagesWithEvents as every page', () => {
     const n = funnelNumbers({ events_extracted: 3, accepted: 3, results_fetched: 5 })
     expect([n.rejected, n.rejectedDatePlace, n.notJudged, n.pagesNoEvents, n.pagesKnown]).toEqual([0, 0, 0, 0, 0])
@@ -113,7 +129,7 @@ describe('funnelNumbers', () => {
 
 // The owner's drawing, _docs/ui/05-funnel-sankey.svg, read as numbers: 24 found, 8 judged, 16 not judged, 2 / 1 / 5.
 const DRAWING = {
-  counts: { results_fetched: 20, pages_with_events: 8, events_extracted: 24, filtered_no_date: 5, filtered_duplicate: 9, judge_errors: 2, accepted: 2, queued: 1, rejected: 5, rejected_date_place: 4, rejected_off_topic: 1 },
+  counts: { results_fetched: 20, pages_with_events: 8, events_extracted: 24, filtered_no_date: 5, filtered_duplicate: 9, filtered_incomplete: 2, accepted: 2, queued: 1, rejected: 5, rejected_date_place: 4, rejected_off_topic: 1 },
   viewBox: [640, 200],
   rects: {
     found: { x: 10, y: 40, w: 14, h: 120 },
@@ -126,7 +142,7 @@ const DRAWING = {
   texts: {
     '24 found': [10, 176], 'from 8 of 20 pages read': [10, 187],
     // owner 2026-10-25 wording: the longer reasons wrap to a second line and each block re-centres on its node
-    '8 judged': [280, 33], '16 screened out': [280, 120], '9 duplicates · 5 no start date': [280, 131], '2 judge errors': [280, 142],
+    '8 judged': [280, 33], '16 screened out': [280, 120], '9 duplicates · 5 no start date': [280, 131], '2 missing details': [280, 142],
     '2 in calendar': [532, 16], '1 to review': [532, 40], '5 rejected': [532, 66], '4 wrong date or place': [532, 77], '1 off topic': [532, 88],
   },
   ribbons: { judged: ['#3b82f6', '0.55'], notJudged: ['#94a3b8', '0.4'], accepted: ['#10b981', '0.75'], queued: ['#f59e0b', '0.85'], rejected: ['#ef4444', '0.6'] },
@@ -251,6 +267,24 @@ describe('Funnel', () => {
     expect(screen.getByText('3 already over · 4 duplicates')).toBeInTheDocument()
     expect(screen.getByText('2 no start time')).toBeInTheDocument()
     expect(screen.getByText('1 off topic')).toBeInTheDocument()
+  })
+
+  it('draws judge errors as "N not scored yet" under judged, in the neutral slate', () => {
+    const c = { ...counts, events_extracted: 14, judge_errors: 2 }
+    const { container } = render(<Funnel counts={c} />)
+    expectStructure(container, c)
+    expectLabelsClear(container)
+    expect(screen.getByText('2 not scored yet')).toBeInTheDocument()
+    expect(screen.getByText('9 judged')).toBeInTheDocument()
+    expect(screen.getByText('5 screened out')).toBeInTheDocument()
+    expect(container.textContent).not.toMatch(/judge error/)
+    const node = screen.getByTestId('funnel-node-notScored')
+    expect(node.getAttribute('x')).toBe(String(X[2]))
+    expect(node.getAttribute('fill')).toBe('#64748b')
+    const rib = screen.getByTestId('funnel-ribbon-notScored')
+    expect([rib.getAttribute('fill'), rib.getAttribute('opacity')]).toEqual(['#94a3b8', '0.4'])
+    expect(screen.getByTestId('funnel').getAttribute('aria-label'))
+      .toBe('Funnel: 14 events found, 5 screened out, 9 judged: 2 in calendar, 3 to review, 2 rejected, 2 not scored yet')
   })
 
   it('renders nothing with no events', () => {
