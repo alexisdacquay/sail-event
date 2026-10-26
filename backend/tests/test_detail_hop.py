@@ -218,6 +218,8 @@ def test_hop_to_another_public_host(resolver):
     "http://127.1/x", "http://2130706433/x", "http://0x7f000001/x", "http://localhost./x",
     "http://foo.localhost/x", "http://metadata.google.internal/computeMetadata/v1/", "http://localhost:8000/x",
     "http://10.1.2.3/x", "http://169.254.169.254/latest/meta-data", "http://[::1]/x", "http://[fc00::1]/x",
+    "http://[64:ff9b::7f00:1]/x", "http://[64:ff9b::a00:1]/x", "http://[2002:7f00:1::1]/x",  # NAT64, 6to4
+    "ftp://93.184.216.34/x", "file:///etc/passwd",
 ])
 def test_hop_refuses_every_spelling_of_a_private_address(resolver, url):
     """QA on PR 151: a listing may link anywhere; the hop goes only where the host resolves to public addresses."""
@@ -233,6 +235,11 @@ def local_server():
         def do_GET(self):
             hits.append(self.path)
             port = self.server.server_address[1]
+            if self.path.startswith("/to-"):  # /to-<url>: redirect anywhere, e.g. ftp:// or file://
+                self.send_response(302)
+                self.send_header("Location", self.path[4:])
+                self.end_headers()
+                return
             if self.path == "/start" or self.path.startswith("/r"):
                 nxt = "/secret" if self.path == "/start" else f"/r{int(self.path[2:]) + 1}"
                 self.send_response(302)
@@ -275,3 +282,43 @@ def test_fetch_caps_redirects(local_server):
     with patch.object(hop_mod, "_public", lambda url: True, create=True):
         assert hop_mod._fetch_html(f"http://127.0.0.1:{port}/r0") is None
     assert len(hits) <= 6, f"{len(hits)} requests: redirects are not capped at 5"
+
+
+@pytest.fixture
+def tcp_listener():
+    """A bare TCP listener on 127.0.0.1 that counts connections (stands in for an internal FTP or Redis)."""
+    accepted: list[int] = []
+    srv = socket.socket()
+    srv.bind(("127.0.0.1", 0))
+    srv.listen()
+    srv.settimeout(0.2)
+    stop = threading.Event()
+
+    def _accept():
+        while not stop.is_set():
+            try:
+                conn, _ = srv.accept()
+            except OSError:
+                continue
+            accepted.append(1)
+            conn.close()
+
+    threading.Thread(target=_accept, daemon=True).start()
+    yield srv.getsockname()[1], accepted
+    stop.set()
+    srv.close()
+
+
+def test_fetch_never_follows_a_redirect_off_http(local_server, tcp_listener):
+    """QA round 2 on PR 151: a 302 to ftp:// skipped the address check and the opener dialled the host."""
+    port, hits = local_server
+    ftp_port, accepted = tcp_listener
+    for target in (f"ftp://127.0.0.1:{ftp_port}/secret.html", "file:///etc/passwd"):
+        start = f"http://127.0.0.1:{port}/to-{target}"
+        with patch.object(hop_mod, "_public", lambda url: url == start):
+            assert hop_mod._fetch_html(start) is None, target
+        # even if the address check were wrong, the opener must not speak anything but http(s)
+        with patch.object(hop_mod, "_public", lambda url: True):
+            assert hop_mod._fetch_html(start) is None, target
+    time.sleep(0.3)
+    assert accepted == [], "a connection was opened to the redirect target"
