@@ -4,6 +4,7 @@ The docs were rewritten, then three blind checkers reviewed them. Their reports 
 - work/docs-pass/out/verify-reader.md
 - work/docs-pass/out/verify-facts.md
 - work/docs-pass/out/verify-rubric.md
+- work/docs-pass/out/orchestrator-review.md (the orchestrator's own read; treat it as authoritative on tone and structure)
 If it exists, also work/docs-pass/out/final-review.md.
 
 YOUR FILES (edit only these; other fixers are editing the other docs right now): everything under _docs/ (only files that need it), AGENTS.md, .claude/agents/qa-engineer.md

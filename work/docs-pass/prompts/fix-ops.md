@@ -4,6 +4,7 @@ The docs were rewritten, then three blind checkers reviewed them. Their reports 
 - work/docs-pass/out/verify-reader.md
 - work/docs-pass/out/verify-facts.md
 - work/docs-pass/out/verify-rubric.md
+- work/docs-pass/out/orchestrator-review.md (the orchestrator's own read; treat it as authoritative on tone and structure)
 If it exists, also work/docs-pass/out/final-review.md.
 
 YOUR FILES (edit only these; other fixers are editing the other docs right now): docs/*.md except docs/reviewer-guide.md, observability/README.md, incident-response/README.md
