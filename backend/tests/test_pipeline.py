@@ -530,10 +530,12 @@ def test_detail_hop_writes_done_and_total_while_it_runs(_db_session):
         snapshots.append((stage, dict(counts)))
         _update_run_stage(run, db, stage, counts)
 
-    # every extracted event needs its own page; each fetch fails fast, so no network and no model call
+    # fixture results are fetched only when treated as web results; every extracted event then needs
+    # its own page and each fetch fails fast, so no network and no model call
     with patch("app.services.pipeline._update_run_stage", side_effect=_spy), \
+            patch("app.services.pipeline._WEB_PROVIDERS", {"fixture"}), \
             patch("app.services.detail_hop._needs_hop", return_value=True), \
-            patch("app.services.detail_hop._fetch_detail", return_value=None):
+            patch("app.services.detail_hop._fetch_html", return_value=None):
         run_pipeline(user, _db_session, trigger="manual")
 
     hop = [c for s, c in snapshots if s == "detail_hop"]

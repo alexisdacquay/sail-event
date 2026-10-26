@@ -88,6 +88,7 @@ def _extract_page_pass2(page: dict, model) -> list[dict]:
         "target_country": "",
         "content": f"URL: {page['url']}\n\n{raw_content}",
         "schema": schema_text,
+        "links_rule": "",
     }
 
     try:

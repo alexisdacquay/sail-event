@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import ipaddress
 import os
+import socket
 
 import pytest
 from fastapi.testclient import TestClient
@@ -92,6 +94,45 @@ def _seed(db: Session) -> None:
         db.add(Event(user_id=user.id, **ev_data))
 
     db.commit()
+
+
+def _loopback(host) -> bool:
+    try:
+        return ipaddress.ip_address(str(host).split("%")[0]).is_loopback
+    except ValueError:
+        return False
+
+
+@pytest.fixture(autouse=True)
+def _no_network(request, monkeypatch):
+    """make test is offline: a test that looks up a host name or connects off loopback fails, even
+    when the code under test swallowed the error.  Numeric hosts resolve without the network."""
+    if request.node.get_closest_marker("integration"):
+        yield
+        return
+    calls: list[str] = []
+    real_getaddrinfo, real_connect = socket.getaddrinfo, socket.socket.connect
+
+    def _getaddrinfo(host, port, *args, **kwargs):
+        if host != "localhost":
+            try:
+                real_getaddrinfo(host, port, flags=socket.AI_NUMERICHOST)
+            except (OSError, UnicodeError):
+                calls.append(f"dns {host}")
+                raise OSError(f"network blocked in tests: lookup of {host}")
+        return real_getaddrinfo(host, port, *args, **kwargs)
+
+    def _connect(self, address):
+        if isinstance(address, tuple) and not _loopback(address[0]):
+            calls.append(f"connect {address[0]}")
+            raise OSError(f"network blocked in tests: connect to {address[0]}")
+        return real_connect(self, address)
+
+    monkeypatch.setattr(socket, "getaddrinfo", _getaddrinfo)
+    monkeypatch.setattr(socket.socket, "connect", _connect)
+    yield
+    if calls:
+        pytest.fail(f"live network in a unit test: {sorted(set(calls))}")
 
 
 @pytest.fixture(autouse=True)

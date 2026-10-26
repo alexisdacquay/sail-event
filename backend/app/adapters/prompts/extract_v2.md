@@ -10,7 +10,7 @@ Field rules:
 - venue: the venue name, or null.
 - city: the city name. Required.
 - country: ISO 3166-1 alpha-2 (e.g. DE, US, CH). Infer the country from the city when the page omits it. Required.
-- link: the URL of the event's own page when the page is a listing; otherwise the search result URL.
+- link: the URL of the event's own page when the page is a listing; otherwise the search result URL.{links_rule}
 - description: one or two sentences from the page, at most 200 characters. Required.
 - confidence: 0 to 1. Below 0.5 the event is dropped.
 
