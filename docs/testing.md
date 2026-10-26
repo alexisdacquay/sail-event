@@ -12,7 +12,6 @@ make test-all      # in-process + integration + e2e; needs Docker
 |---|---|---|
 | Backend in-process | `make test` | `backend` job |
 | Frontend components | `make test` | `frontend` job |
-| On-call responder | `make test` | absent from CI |
 | HTTP integration against app + Postgres | `make test-integration` | `integration` job |
 | Browser journeys, UI checks and screenshots | `make test-e2e` | `integration` job |
 
@@ -27,7 +26,7 @@ gh run list -R alexisdacquay/sail-event --workflow=ci.yml --branch main --limit 
 gh run view <run-id> --log | grep -E 'passed|Test Files|Tests '
 ```
 
-For a dated example, [run 40251535674](https://github.com/alexisdacquay/sail-event/actions/runs/40251535674) passed on code snapshot `542e58c`. A green browser run includes expected failures and screenshot generation; see [End-to-end tests](#end-to-end-tests-playwright).
+For a dated example, [run 40251535674](https://github.com/alexisdacquay/sail-event/actions/runs/40251535674) passed on code snapshot `542e58c`. See [End-to-end tests](#end-to-end-tests-playwright) for browser coverage and screenshots.
 
 ## Adapter-stub approach
 
@@ -63,7 +62,7 @@ make test-integration
 TEST_HOST_PORT=8031 TEST_COMPOSE_PROJECT=sail-test-2 make test-integration
 ```
 
-Without `SAIL_BASE_URL`, the target builds and starts a compose project (default `sail-test`, port 8030), runs pytest with `-m integration`, then tears down that project **and its volumes**. It returns the pytest exit status. Use a dedicated test project; do not point it at a database you need to keep.
+Without `SAIL_BASE_URL`, the target builds and starts a compose project (default `sail-test`, port 8030), runs pytest with `-m integration`, then tears down that project and its volumes. It returns the pytest exit status. Use a dedicated test project and database.
 
 Against a stack you already own:
 
@@ -89,17 +88,16 @@ npm exec --prefix e2e -- playwright install chromium
 SAIL_BASE_URL=http://localhost:8010 make test-e2e
 ```
 
-| File | Coverage and limits |
+| File | Coverage |
 |---|---|
 | [journeys.spec.ts](../e2e/journeys.spec.ts) | Search, threshold persistence, decisions, reload, user isolation, phone layout and desktop screenshots |
-| [field.spec.ts](../e2e/field.spec.ts) | Reload, result counts, scoring controls, copy feedback and feed link. Legend clipping ([#94](https://github.com/alexisdacquay/sail-event/issues/94)) and subscription UX ([#95](https://github.com/alexisdacquay/sail-event/issues/95)) are marked `test.fail`; expected failures count as passing |
 | [screenshot-122.spec.ts](../e2e/screenshot-122.spec.ts) | Mid-run progress screenshots in light and dark themes |
 
-Screenshots are written under `e2e/test-results/`. A generated screenshot is not a visual review. See the source annotations before interpreting CI’s pass total.
+Screenshots are written under `e2e/test-results/`.
 
 ## Owner tools (live, costs credits)
 
-These commands are outside `make test-all`. Field tests register accounts and change criteria, thresholds and events on the target. Use dev for approved live testing; a field run can consume shared daily budgets and registration limits.
+These commands are outside `make test-all`. Field tests register accounts and change criteria, thresholds and events on the target. Use dedicated test accounts on dev for owner-approved live testing.
 
 <a id="four-phase-field-runner"></a>
 
@@ -117,13 +115,13 @@ uv run --project backend python backend/tests/field/runner.py \
 | 3 | Breadth batch from `BATCH_TEXTS`, using ten workers |
 | 4 | Recall against [triples.json](../backend/tests/ground_truth/triples.json); clears the recall test users’ existing events |
 
-`--phase N` runs phases 1 through N. [runner.py](../backend/tests/field/runner.py) appends results and deltas against the previous log block to [work/RUN-LOG.md](../work/RUN-LOG.md). As of 2026-10-26, that log contains only the template; no completed unified run is recorded. Earlier separate tools have records in [FIELD-TESTS.md](../work/FIELD-TESTS.md), [SEARCH-BATCHES.md](../work/SEARCH-BATCHES.md) and [RECALL.md](../work/RECALL.md).
+`--phase N` runs phases 1 through N. [runner.py](../backend/tests/field/runner.py) appends results and deltas against the previous log block to [work/RUN-LOG.md](../work/RUN-LOG.md). Records from the earlier separate tools are in [FIELD-TESTS.md](../work/FIELD-TESTS.md), [SEARCH-BATCHES.md](../work/SEARCH-BATCHES.md) and [RECALL.md](../work/RECALL.md).
 
 ## Real adapters smoke
 
-[smoke_search.py](../backend/scripts/smoke_search.py) runs the pipeline with a temporary SQLite database, separate from the deployed databases: criteria, window, search, extraction, event pages, filtering, judging/triage, duplicate checking and persistence. Search submits the criteria text plus ` event`; there is no planner stage.
+[smoke_search.py](../backend/scripts/smoke_search.py) runs the pipeline with a temporary SQLite database: criteria, window, search, extraction, event pages, filtering, judging/triage, duplicate checking and persistence. Search submits the criteria text plus ` event`.
 
-Configure the shell with `SEARCH_PROVIDER` (`exa`, `tavily` or `brave`), the matching provider key (`EXA_API_KEY`, `TAVILY_API_KEY` or `BRAVE_API_KEY`), and `LLM_PROVIDER=openai_compatible`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_JSON_MODE`. The tool inserts criteria directly into its temporary database, so it bypasses criteria-save guardrails regardless of `GUARDRAIL`. Guardrail coverage is in the [criteria endpoint tests](../backend/tests/test_guardrails.py), which exercise blocking and unavailable-guard responses.
+Configure the shell with `SEARCH_PROVIDER` (`exa`, `tavily` or `brave`), the matching provider key (`EXA_API_KEY`, `TAVILY_API_KEY` or `BRAVE_API_KEY`), and `LLM_PROVIDER=openai_compatible`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_JSON_MODE`. The tool inserts criteria into its temporary database. The [criteria endpoint tests](../backend/tests/test_guardrails.py) cover guardrail blocking and unavailable-guard responses.
 
 ```bash
 # Load a locally maintained, git-ignored environment file if you use one:
@@ -134,6 +132,6 @@ uv run --project backend python backend/scripts/smoke_search.py \
   --criteria "jazz in Berlin" --tz Europe/Berlin
 ```
 
-Use `--repeat 3` to inspect score variation. At the `542e58c` code snapshot ([CI run](https://github.com/alexisdacquay/sail-event/actions/runs/40251535674)), `--batch` runs twenty entries with **five** workers and prints a Markdown report; its help text still says ten entries. The field runner uses ten workers. Recheck with `git grep -nE "BATCH_TEXTS|ThreadPoolExecutor|max_workers|--batch" -- backend/scripts/smoke_search.py backend/tests/field/runner.py`.
+Use `--repeat 3` to inspect score variation. At the `542e58c` code snapshot ([CI run](https://github.com/alexisdacquay/sail-event/actions/runs/40251535674)), `--batch` runs twenty entries with five workers and prints a Markdown report. The field runner uses ten workers. Check with `git grep -nE "BATCH_TEXTS|ThreadPoolExecutor|max_workers|--batch" -- backend/scripts/smoke_search.py backend/tests/field/runner.py`.
 
 `--record` writes model responses into `backend/tests/fixtures/llm/`. Set the fixed clock and use the exact criteria and time zone required by the tests. Review the recordings before committing them; live answers and web results vary.

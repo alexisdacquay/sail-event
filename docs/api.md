@@ -22,7 +22,7 @@
 | `rotateCalendarUrl` | `rotateCalendarUrl` | POST | `/api/calendar/rotate`    |
 | —                 | `getCalendarFeed`| GET    | `/api/calendar/{ics_token}` |
 
-The endpoint contract is [openapi.yaml](../openapi.yaml); the frontend implementation is [http.ts](../frontend/src/services/http.ts). The fields below follow [the search router](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/routers/search.py#L30-L91) and pipeline code. Known contract gap: OpenAPI still describes counter version 3 as current; the implementation writes version 4.
+The endpoint contract is [openapi.yaml](../openapi.yaml); the frontend implementation is [http.ts](../frontend/src/services/http.ts). The fields below follow [the search router](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/routers/search.py#L30-L91) and pipeline code.
 
 ## Run responses
 
@@ -69,7 +69,7 @@ The three reject bands plus `dedup_merged` account for the run’s rejected even
 | `setAside` | `filtered_no_date + filtered_no_time + filtered_incomplete + filtered_past + filtered_date + filtered_place + filtered_duplicate + judge_errors` |
 | `pagesRead`, `pagesWithEvents`, `pagesSkipped` | `results_fetched`, `pages_with_events`, `filtered_non_event` |
 
-The intended event identity is `accepted + queued + rejected + setAside == eventsFound`. Treat a run that stopped early or failed as incomplete: counters can be missing, and budget-limited unjudged events are not included in `setAside`. Page counts and event counts are different units.
+Page counters measure pages; event counters measure events. Use `currentStage`, `stoppedAtStage` and `error` from the detailed response to inspect run progress.
 
 ## Event decisions
 

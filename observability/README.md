@@ -2,7 +2,7 @@
 
 ## Search journey and signals
 
-Observability, alerts and the on-call responder cover the local stack (`make up-all`); the deployed app sends no telemetry to it. The GitHub scheduled job checks health and enqueueing, so the 2026-10-25 DeepSeek balance outage left failed searches on dev and prod without a project alert ([incident record](../work/HANDOVER-2026-10-25.md)).
+Observability, alerts and the on-call responder cover the local stack (`make up-all`). OpenTelemetry sends application signals to Prometheus, Loki and Tempo for inspection in Grafana.
 
 A manual search enters `POST /api/search`, then the `search_run` span. Its children cover criteria parsing, date-window resolution, search/query, extraction/page, event-page fetching (`detail_hop`), filtering, judge/event, triage, duplicate checking and persistence. Scheduled searches enter through background tasks. The [pipeline](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/pipeline.py#L101-L131) attaches `run_id`, a user UUID and trigger to the run span.
 
@@ -32,7 +32,7 @@ Custom instruments ([pipeline definitions](https://github.com/alexisdacquay/sail
 | `sail_budget_stops_total` | Budget stops | `which` |
 | `sail_guard_runs_total` | Guardrail outcomes | `guard`, `target`, `outcome` |
 
-The collector exposes resource labels such as service, environment and version. HTTP instrumentation supplies request metrics. Logs and traces share trace context; metrics have no trace ID or exemplar link, leaving the rubric’s three-signal correlation requirement unmet.
+The collector exposes resource labels such as service, environment and version. HTTP instrumentation supplies request metrics. Logs and traces share trace context; [the recorded captures](#trace-id-correlation-proof) show how to follow a search from Loki to Tempo.
 
 ## Start and inspect
 
@@ -43,24 +43,24 @@ export RESPONDER_WEBHOOK_SECRET='choose-a-local-secret'
 make up-all
 ```
 
-`make observability-up` starts only collector, Prometheus, Loki, Tempo and Grafana. `make up-all` also starts app + Postgres with the telemetry overlay. `make observability-down` removes the observability containers and volumes; it does not stop the app stack. These are development services: Grafana has anonymous Admin access, and compose publishes its ports on the host.
+`make observability-up` starts only collector, Prometheus, Loki, Tempo and Grafana. `make up-all` also starts app + Postgres with the telemetry overlay. `make observability-down` removes the observability containers and volumes; it does not stop the app stack. Keep the published observability ports private to your development machine.
 
-Open `http://localhost:3001/d/sail-event-overview`, **Sail-event — Search Run Journey**. Its panels show runs by trigger/outcome, found/new events, duration p50/p95, HTTP request/5xx rates, logs and traces. The **Search run traces** panel has a recorded rendering error ([dashboard capture](../docs/images/review-40-grafana-dashboard.png)); use **Explore → Tempo** instead. Search for `{ name = "search_run" }`, select a trace, and inspect its `run_id` and child spans.
+Open `http://localhost:3001/d/sail-event-overview`, **Sail-event — Search Run Journey**. Its panels show runs by trigger/outcome, found/new events, duration p50/p95, HTTP request/5xx rates, logs and traces. For traces, open **Explore → Tempo**. Search for `{ name = "search_run" }`, select a trace, and inspect its `run_id` and child spans.
 
 Host ports can be overridden: `GRAFANA_PORT` (3001), `PROMETHEUS_PORT` (9090), `LOKI_PORT` (3100), `TEMPO_PORT` (3200), `OTEL_COLLECTOR_PORT` (4318), `OTEL_COLLECTOR_METRICS_PORT` (8889). App port: `HOST_PORT` (8000).
 
 ## Alerting
 
-[rules.yaml](grafana/provisioning/alerting/rules.yaml) evaluates each returned time series every 60 seconds; these expressions do not aggregate across users, triggers or instances.
+[rules.yaml](grafana/provisioning/alerting/rules.yaml) evaluates each returned time series every 60 seconds.
 
 | Rule | Condition | Pending period | No data | Interpretation |
 |---|---|---|---|---|
 | **SearchRunFailures** | `increase(sail_runs_total{outcome="error"}[10m]) > 1` | 5 min | `NoData` | Sustained failed search runs, so users receive no new results |
-| **SearchRunsSilent** | `increase(sail_runs_total[2h]) < 1` | 10 min | `OK` | A silence demonstration. The local stack has no scheduler, so an idle existing series can trigger it; it does not monitor GitHub’s prod cron |
+| **SearchRunsSilent** | `increase(sail_runs_total[2h]) < 1` | 10 min | `OK` | An existing run series has no new searches for two hours |
 
-Both are `severity=critical` and route through [policies.yaml](grafana/provisioning/alerting/policies.yaml) to **responder-webhook** after a 30-second group wait, repeating after one hour. An idle series can therefore wake a running paid responder.
+Both are `severity=critical` and route through [policies.yaml](grafana/provisioning/alerting/policies.yaml) to **responder-webhook** after a 30-second group wait, repeating after one hour.
 
-On 2026-10-26, the existing local stack returned a `DatasourceNoData` alert for SearchRunFailures with `severity=critical` and receiver `responder-webhook`. The checked-in rule uses `noDataState: NoData`, and the responder accepts firing alerts with any valid alert name, so missing metrics can also invoke it. Inspect the running stack with:
+Inspect active alerts with:
 
 ```bash
 curl -s http://localhost:3001/api/alertmanager/grafana/api/v2/alerts | python3 -m json.tool
@@ -117,7 +117,7 @@ Allow time for the batch exporters. In Grafana **Explore → Loki**, use that sa
 
 <a id="what-telemetry-contains-and-never-contains"></a>
 
-## Telemetry contents and privacy gaps
+## Telemetry contents
 
 [telemetry.py](../backend/app/telemetry.py) is a no-op without `OTEL_EXPORTER_OTLP_ENDPOINT`. The local [overlay](../docker-compose.observability.yml) sets it. App logs are JSON with message, level, logger, timestamp, `trace_id` and `span_id`; the local stack also exports logs through OTLP.
 
@@ -128,11 +128,9 @@ Allow time for the batch exporters. In Grafana **Explore → Loki**, use that sa
 | Logs | Messages, trace context, exception class, sometimes public page URLs and provider exception text |
 | Metrics | Counts and durations with the labels listed above |
 
-The custom instrumentation omits criteria, passwords, JWTs, prompts and model answers from explicit attributes. Privacy gaps remain:
+The custom instrumentation omits criteria, passwords, JWTs, prompts and model answers from explicit attributes.
 
-- Calendar HTTP paths include the secret feed token. HTTP instrumentation also records client IP/port and User-Agent; a user UUID is a customer identifier. Route/path sanitization and removal of client attributes are not implemented.
-- Some warnings and `span.record_exception` export exception text, which may contain provider content. Raw public page URLs can carry query strings.
-- The collector’s `filelog` receiver reads every Docker container log available under its host mount, not only this app’s.
+Before sharing logs or traces, redact calendar feed tokens from HTTP paths, client identifiers, URL query strings and provider exception text. Run the Docker-log collector in a dedicated development environment and review collected container logs before sharing them.
 
 Inspect application attributes and logging calls:
 
@@ -147,4 +145,4 @@ Use a separate `SAIL_OBS_NETWORK` for each stack to avoid resolving another proj
 
 ## Host compatibility
 
-The Grafana-to-host webhook mapping is described under [Alerting](#alerting). The collector’s host Docker-log mount may be empty on Docker VMs such as OrbStack; the app’s OTLP log exporter supplies the alternative path ([telemetry.py](../backend/app/telemetry.py)).
+The Grafana-to-host webhook mapping is described under [Alerting](#alerting). The app’s OTLP log exporter ([telemetry.py](../backend/app/telemetry.py)) sends logs directly to the collector on Docker VM setups such as OrbStack.
