@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 1,
+    "reason": "Same title, same day and 21:00 start, and the venue is the same Berlin club (A-Trane / A-Trane Jazz Club) for one jazz trio performance."
+  },
+  "usage": {
+    "prompt_tokens": 526,
+    "completion_tokens": 695
+  },
+  "recorded_at": "2026-10-25T23:31:22.844372+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

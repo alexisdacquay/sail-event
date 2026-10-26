@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 9,
+    "reason": "Same title, date, start time, and venue as the new jazz trio event at A-Trane Berlin."
+  },
+  "usage": {
+    "prompt_tokens": 1263,
+    "completion_tokens": 277
+  },
+  "recorded_at": "2026-10-25T23:30:14.713075+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

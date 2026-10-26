@@ -23,7 +23,7 @@ from urllib.parse import urlparse
 
 from opentelemetry import trace
 
-from ..adapters.search import SearchResult
+from ..adapters.search import SearchResult, canonical_url
 from ..services import clock
 
 tracer = trace.get_tracer("sail-event.extract")
@@ -34,6 +34,8 @@ PROMPT_NAME = "extract"
 PROMPT_VERSION = "v2"
 # 10, not 50: at 50 the model calls opened in 50-connection bursts and timed out on connect (PR 144).
 EXTRACT_CONCURRENCY = int(os.environ.get("EXTRACT_CONCURRENCY", "10"))
+# Rendered into the prompt only when a links block follows the page, so prompts without one are unchanged.
+LINKS_RULE = ' When the page is followed by "Links on this page", take the event\'s own link from that list.'
 
 # --- structure layer helpers (§10) ---
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
@@ -120,12 +122,14 @@ def extract_events(
     user_tz: str,
     model,
     on_page_done=None,
+    page_links=None,
 ) -> tuple[list[ExtractedEvent], ExtractionCounts]:
     """Run extraction over a list of search results. Returns (events, counts).
 
     Every result with raw_content is read in full (pass-2 prompt), in
     parallel up to EXTRACT_CONCURRENCY.  Results without raw_content
     fall back to a single snippet-only call covering all of them.
+    page_links(url) -> [(name, url)] | None, when given, lists the links on each page read in full.
     """
     counts = ExtractionCounts()
     schema = _read_schema()
@@ -152,14 +156,19 @@ def extract_events(
 
         def _read_one_page(r: SearchResult) -> tuple[SearchResult, list[ExtractedEvent] | None]:
             """Read one page in full. Returns (result, events_or_None_on_error)."""
+            links = page_links(r.url) if page_links else None
+            content = f"URL: {r.url}\n\n{r.raw_content}"
+            if links:  # the provider's page text has no URLs; the page's own links give the model some
+                content += "\n\nLinks on this page:\n" + "\n".join(f"{name} -> {url}" for name, url in links)
             variables = {
                 "today": today,
                 "window_start": ws,
                 "window_end": we,
                 "target_city": target_city,
                 "target_country": target_country,
-                "content": f"URL: {r.url}\n\n{r.raw_content}",
+                "content": content,
                 "schema": schema_text,
+                "links_rule": LINKS_RULE if links else "",
             }
             with tracer.start_as_current_span("page") as pspan:
                 try:
@@ -168,7 +177,7 @@ def extract_events(
                         prompt_version=PROMPT_VERSION,
                         variables=variables,
                     )
-                    page_events = _process_pass2(response, r, counts)
+                    page_events = _process_pass2(response, r, counts, links)
                     pspan.set_attribute("page_kind", response.get("page_kind", "unknown"))
                     pspan.set_attribute("event_count", len(page_events))
                     return r, page_events
@@ -204,6 +213,7 @@ def extract_events(
             "target_country": target_country,
             "content": content,
             "schema": schema_text,
+            "links_rule": "",
         }
         try:
             response, _usage = model.complete_json(
@@ -315,10 +325,13 @@ def _process_pass2(
     response: dict,
     result: SearchResult,
     counts: ExtractionCounts,
+    links: list[tuple[str, str]] | None = None,
 ) -> list[ExtractedEvent]:
     """Process a full-page extraction response (single page).
 
     page_kind comes from the model's answer, not inferred.
+    With the page's links collected, an event link must be the page itself or one of them;
+    without (fetch failed or not tried), the same-origin rule applies as before.
     """
     page_kind = response.get("page_kind", "not_event")
     raw_events = response.get("events", [])
@@ -327,15 +340,16 @@ def _process_pass2(
         return []
 
     result_urls = {result.url}
+    on_page = {canonical_url(u) for _, u in links} | {canonical_url(result.url)} if links else None
     extracted: list[ExtractedEvent] = []
     for ev in raw_events:
         confidence = ev.get("confidence", 0)
         if confidence < 0.5:
             continue
 
-        link = ev.get("link", result.url)
+        link = ev.get("link") or result.url
         # Structure layer: link allow-list
-        if not _link_allowed(link, result_urls):
+        if not (canonical_url(link) in on_page if on_page else _link_allowed(link, result_urls)):
             link = result.url
         # Structure layer: strip markup and control chars, truncate
         title = _strip_markup(ev.get("title", ""))[:200]

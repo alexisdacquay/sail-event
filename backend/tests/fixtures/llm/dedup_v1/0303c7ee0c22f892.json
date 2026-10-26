@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 5,
+    "reason": "Candidate 5 has the same title, start time, venue in Potsdam, and a matching live jazz description."
+  },
+  "usage": {
+    "prompt_tokens": 1263,
+    "completion_tokens": 86
+  },
+  "recorded_at": "2026-10-25T23:30:07.413871+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 7,
+    "reason": "Candidate 7 has the same title, date, start time, venue and a matching description as the new jazz night in Potsdam."
+  },
+  "usage": {
+    "prompt_tokens": 1582,
+    "completion_tokens": 106
+  },
+  "recorded_at": "2026-10-25T23:29:56.698374+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

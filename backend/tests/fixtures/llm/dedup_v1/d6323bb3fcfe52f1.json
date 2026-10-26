@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 4,
+    "reason": "Candidate 4 has the same title, date, start time, and place (Jazz in Bern, Bern CH) with a matching jazz concert description."
+  },
+  "usage": {
+    "prompt_tokens": 1582,
+    "completion_tokens": 89
+  },
+  "recorded_at": "2026-10-25T23:29:53.790984+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

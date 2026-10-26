@@ -300,9 +300,12 @@ def test_leftover_recovery_skips_unfinished_runs(tmp_path, monkeypatch):
 
     s = Session()
     a_events = s.query(Event).filter(Event.run_id == a_res[0]).all()
+    # owner 2026-10-25: B re-stores and judges its own re-found listing events, never A's
+    b_events = s.query(Event).filter(Event.run_id == b_res[0]).all()
     s.close()
     assert a_events
-    assert len(judged) == len(a_events), f"A's events judged {len(judged)} times for {len(a_events)} events"
+    assert len(judged) == len(a_events) + len(b_events), \
+        f"{len(judged)} judge calls for {len(a_events)} A + {len(b_events)} B events"
 
 
 def test_full_run_same_rows_and_counts_at_concurrency_1_and_5(tmp_path, monkeypatch):

@@ -12,6 +12,7 @@ Seeded from every CLOSED GitHub issue labelled "bug" plus findings in
 | #124 | test_london_ai_hub.py | Listing page whose snippet yields no events but raw_content does |
 | #125 | test_135_judge_repair.py | Extra fields dropped (not rejected); missing is_event triggers repair |
 | #112 | test_135_no_date_counter.py | Event without start_local is incomplete; never counted as a page |
+| listing links (2026-10-25) | test_listing_own_links.py | A listing event takes its own URL from the listing HTML (another host too) and its page is opened |
 
 ## Cannot reproduce yet
 

@@ -101,7 +101,11 @@ def test_full_journey(http: httpx.Client):
 
 
 def test_dedup(http: httpx.Client):
-    """Two searches with identical criteria produce no duplicate events."""
+    """Two searches with identical criteria leave no two visible events that are the same event.
+
+    Owner decision 2026-10-25: a repeat search may re-store and re-judge an event; the after-storage
+    check rejects the repeat as "Duplicate of ...", so repeat rows may exist, but only as rejected.
+    """
     user, pw = _unique(), "pass1234"
     r = http.post("/api/auth/register", json={"username": user, "password": pw})
     assert r.status_code == 201
@@ -119,10 +123,10 @@ def test_dedup(http: httpx.Client):
     first = http.get("/api/events", headers=headers).json()
     http.post("/api/search", headers=headers)
     events = http.get("/api/events", headers=headers).json()
-    # #136: two events of one listing share its URL and date, so (link, date) is not an identity;
-    # the repeated search must add no row
     assert len(first) > 0
-    assert sorted(e["id"] for e in events) == sorted(e["id"] for e in first), "duplicate events after two searches"
+    visible = [(e["title"], e["dateTime"], e["city"]) for e in events if e["status"] in ("accepted", "queued")]
+    assert len(visible) == len(set(visible)), f"same event visible twice after two searches: {sorted(visible)}"
+    assert {e["id"] for e in first} <= {e["id"] for e in events}, "a repeat search must not remove events"
 
 
 # ---------- user isolation ----------
