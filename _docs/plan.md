@@ -16,35 +16,34 @@ clear, ask them when it is not, and put the accepted events on their calendar.
 
 ## Problem
 
-People who like events spend time every day scanning sites.
-Small events surface late, or never.
-Site filters offer fixed boxes, not your own words.
+No single source lists every event a person might attend. A web search accepts
+free text, but returns pages: the person still has to check dates and places,
+decide what fits, copy events into a calendar and repeat the search.
+
+Sail-event repeats discovery, scores the extracted events against the saved
+criteria and publishes accepted events to a calendar feed. Search coverage and
+model judgments remain imperfect; the [quality targets and measurements](search-spec.md#2-quality-definition)
+make that gap explicit.
 
 ### Who it is for: three jobs
 
-A person who wants to go to events but does not want to scan sites every day.
-Table copied from [ux-spec.md §1](ux-spec.md#1-who-the-user-is).
-
-| Job | When | Done when |
-|---|---|---|
-| Set up what I like | Once, then tweak occasionally | My criteria are saved and a search has run |
-| See what was found and decide | Every day or two | The queue is empty: every borderline event accepted or rejected |
-| Get it on my calendar | After accepting | I subscribed to the feed; accepted events appear in my calendar app |
+For people who want relevant events in their calendar without repeating the
+search and checking every page. The jobs and outcomes are defined once in
+[ux-spec.md §1](ux-spec.md#1-who-the-user-is).
 
 ### Before and with Sail-event
 
-| Before | With Sail-event |
+| Work the person repeats | What Sail-event supplies |
 |---|---|
-| Open 5-10 sites a day | Write one sentence, once |
-| Miss events on small sites | A web search runs every hour, and on **Search now** |
-| Site filters are fixed boxes (city, category) | A model reads your own words and scores each event 0-100, with a one-line reason |
-| Copy events into your calendar by hand | Sure ones land in your ICS feed by themselves |
+| Repeat a search for new events | Scheduled searches against saved criteria, plus **Search now** |
+| Read pages and judge which events fit | Extracted events with a score, reason and source link |
+| Decide and copy events into a calendar | Threshold triage, a review list and an ICS feed |
 
 ## Users
 
 Several people use one deployment. Each user has their own account, their own
-criteria, their own event list and their own calendar feed. Nothing is shared
-between users.
+criteria, their own event list and their own calendar feed. Authenticated event and criteria access is scoped to the user. A feed URL is
+a bearer link: anyone holding it can read that feed.
 
 ## Core workflow
 
@@ -55,18 +54,22 @@ anything that matters to them. One free-text profile per user, editable at any t
 
 ### 2. Search
 
-The criteria text is the search query, sent to one web search provider as written
-([search-spec.md, revision 2026-10-18](search-spec.md)).
+The query is the criteria text plus the word `event`, sent to one selected web
+search provider ([pipeline.py](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/pipeline.py#L286-L298)).
 The app collects candidate pages and reads each one for events
 (title, start date and time, place, link, description).
 When a listing page links to an event's own page, the app opens that page too ([#139](https://github.com/alexisdacquay/sail-event/issues/139)).
 
-**When it runs.** Scheduled hourly (GitHub cron at minute `:07`,
-[hourly-search.yml](../.github/workflows/hourly-search.yml)).
-GitHub delays or skips scheduled runs under load,
-so in practice runs land every 2 to 6 hours.
-Check: `gh run list -R alexisdacquay/sail-event --workflow=hourly-search.yml --limit 20`.
-**Search now** is immediate. On the live site it takes 1-2 minutes.
+**When it runs.** The GitHub cron is `7 * * * *`, targeting prod only
+([hourly-search.yml](../.github/workflows/hourly-search.yml)). Actual workflow
+starts are roughly 2–6 hours apart in the latest 20 scheduled runs checked on
+2026-10-26; this is not a reliable hourly service. Reproduce the timestamps with
+`gh run list -R alexisdacquay/sail-event --workflow hourly-search.yml --event schedule -L 20 --json createdAt`.
+The workflow enqueues background searches; a green job does not prove the searches succeeded.
+
+**Search now** starts on demand. Measurements with live adapters in
+[PR #144](https://github.com/alexisdacquay/sail-event/pull/144) range from **86 to
+493 seconds** across local runs, branches and concurrency settings.
 
 ### 3. Screen out (code, no model)
 
@@ -75,17 +78,17 @@ The funnel calls these **screened out**.
 
 | Dropped | Counter | Where |
 |---|---|---|
-| No start date | `filtered_no_date` | [filters.py](../backend/app/services/filters.py#L197-L200) |
-| A date but no start time | `filtered_no_time` | [filters.py](../backend/app/services/filters.py#L202-L205) |
-| A required field missing (title, description, time zone, city, country) | `filtered_incomplete` | [filters.py](../backend/app/services/filters.py#L207-L210) |
-| Already over | `filtered_past` | [filters.py](../backend/app/services/filters.py#L212-L216) |
-| Duplicate: same event page already stored for that day | `filtered_duplicate` | [filters.py](../backend/app/services/filters.py#L220-L226) |
+| No start date | `filtered_no_date` | [filters.py](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/filters.py#L195-L197) |
+| A date but no start time | `filtered_no_time` | [filters.py](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/filters.py#L200-L202) |
+| A required field missing (title, description, time zone, city, country) | `filtered_incomplete` | [filters.py](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/filters.py#L205-L207) |
+| Already over | `filtered_past` | [filters.py](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/filters.py#L210-L213) |
+| Duplicate: same event page already stored for that day | `filtered_duplicate` | [filters.py](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/filters.py#L217-L221) |
 
 Pages that are not events (articles, venue pages, top-10 lists) are skipped
 earlier, when the page is read. The funnel shows them as "Skipped N pages that were not events".
 
 Wrong place and wrong dates are **not** screened by code.
-The model scores them 0-9, so they land in **Out** ([judge prompt](../backend/app/adapters/prompts/judge_v3.md)).
+The judge prompt assigns scores 0–9 to them, below the default lower threshold ([judge prompt](../backend/app/adapters/prompts/judge_v3.md)).
 
 ### 4. Score
 
@@ -93,8 +96,8 @@ A model reads each remaining event against the user's criteria and returns a sco
 from 0 to 100 with a one-line reason. The score, the reason and the model used are
 stored on the event.
 
-After storage, one more model call per event checks for the same event found under
-two links. A duplicate is moved to Out ([#136](https://github.com/alexisdacquay/sail-event/issues/136)).
+After storage, a model check compares each new accepted or queued event with
+other stored events on its date, when there are candidates. A duplicate is moved to **Out** ([#136](https://github.com/alexisdacquay/sail-event/issues/136)).
 
 ### 5. Triage
 
@@ -107,10 +110,11 @@ The words are the ones the UI shows on each row.
 | 41 to 89 | in between | **Review** (you decide) |
 | 40 or less | `score <= lower` | **Out** (rejected automatically) |
 
-Rule: [pipeline.py#L739-L745](../backend/app/services/pipeline.py#L739-L745).
-Proof: [test_triage_uses_ge_le_cutoffs](../backend/tests/test_pipeline.py#L306) runs a search and checks every event against this rule.
+Rule: [pipeline.py#L743-L750](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/pipeline.py#L743-L750).
+Proof: [test_triage_uses_ge_le_cutoffs](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_pipeline.py#L306) runs a search and checks every event against this rule.
 
-Rejected events never return. The user can change the thresholds.
+**Out** rows are hidden until the user selects **show**. A later search does not
+bring a rejected event back. The user can change the thresholds.
 
 ### 6. Approve
 
@@ -127,57 +131,58 @@ accepted event removes it from the feed.
 
 ```mermaid
 flowchart TD
-    A["Your criteria, in your words"] --> B["Web search<br/>hourly, or Search now"]
+    A["Your criteria, in your words"] --> B["Web search<br/>scheduled, or Search now"]
     B --> C["Read each page<br/>open an event's own page"]
     C --> D{"Code check<br/>no date or time, missing field,<br/>already over, duplicate"}
     D -- fails --> S["Screened out<br/>never shown"]
     D -- passes --> E["Model scores 0-100<br/>+ one-line reason"]
     E --> F{"Score vs your thresholds<br/>(defaults 90 / 40)"}
-    F -- "90 or more" --> G["In calendar"]
-    F -- "41 to 89" --> H["Review: you decide"]
     F -- "40 or less" --> I["Out (rejected)"]
+    F -- "41 or more" --> K["Model duplicate check<br/>when same-day candidates exist"]
+    K -- duplicate --> I
+    K -- "kept, 90 or more" --> G["In calendar"]
+    K -- "kept, 41 to 89" --> H["Review: you decide"]
     H -- "Add to calendar" --> G
     H -- Reject --> I
-    G --> J["Your ICS feed<br/>any calendar app"]
+    G --> J["Your ICS feed<br/>calendar apps with ICS subscription"]
 ```
 
-Boundary values (90 is In calendar, 40 is Out):
-[test_triage_uses_ge_le_cutoffs](../backend/tests/test_pipeline.py#L306) ·
-[test_triage_exact_boundaries](../backend/tests/test_events.py#L111).
+The [triage implementation](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/pipeline.py#L743-L750)
+sets the inclusive boundaries: 90 is In calendar and 40 is Out at the defaults.
+The pipeline test linked above checks the statuses produced by a fixture search.
 
-Note for the owner: the slider labels **Auto-accept above** / **Auto-reject below**
-([ScoreScale.tsx#L80-L86](../frontend/src/components/ScoreScale.tsx#L80-L86))
-say "above" and "below", but the code includes the boundary (`>=`, `<=`).
-That file belongs to an open PR, so it is not changed here.
 
 ## Expected behaviour
 
 | When you... | The app... | Proved by |
 |---|---|---|
-| sign up as a second user | shows you none of the first user's events, criteria or feed | [Journey 2](../e2e/journeys.spec.ts#L158) · [test_user_isolation](../backend/tests/integration/test_integration.py#L131) |
-| run the same search twice | adds no duplicate rows | [test_dedup](../backend/tests/integration/test_integration.py#L103) |
-| get a score of 90+, 41-89, or 40- (defaults) | marks it In calendar, Review, or Out | [test_triage_uses_ge_le_cutoffs](../backend/tests/test_pipeline.py#L306) |
-| reject an event | keeps it rejected; a later search never brings it back | [test_rejected_event_survives_later_search](../backend/tests/test_events.py#L150) |
-| move a threshold and save | keeps it after a reload; the next search triages with it | [Journey 1](../e2e/journeys.spec.ts#L37-L67) · the rule reads the saved value: [pipeline.py#L739](../backend/app/services/pipeline.py#L739) |
-| reject an event that is in your calendar | removes it from the feed | [test_rejected_event_removed_from_feed](../backend/tests/test_calendar.py#L112) |
-| share your feed URL | lets anyone with the URL read that feed; after a reset the old URL returns 404 | [test_old_token_404_after_rotate](../backend/tests/test_calendar.py#L255) |
-| press **Search now** a 7th time within an hour | answers 429, try later | [test_seventh_call_returns_429](../backend/tests/test_guardrails.py#L404) |
+| sign up as a second user | starts with empty criteria and no events from the first user | [Journey 2](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/e2e/journeys.spec.ts#L158) · [test_user_isolation](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/integration/test_integration.py#L135) |
+| repeat the fixture search | leaves no duplicate accepted/queued events in the fixture integration scenario; rejected repeat rows may remain | [test_dedup](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/integration/test_integration.py#L103) |
+| get a score of 90+, 41-89, or 40- (defaults) | marks it In calendar, Review, or Out | [test_triage_uses_ge_le_cutoffs](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_pipeline.py#L306) |
+| reject an event | keeps it rejected; a later search never brings it back | [test_rejected_event_survives_later_search](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_events.py#L150) |
+| move a threshold and save | keeps it after a reload; the next search triages with it | [Journey 1](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/e2e/journeys.spec.ts#L37-L67) · the rule reads the saved value: [pipeline.py#L743](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/pipeline.py#L743) |
+| reject an event that is in your calendar | removes it from the feed | [test_rejected_event_removed_from_feed](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_calendar.py#L112) |
+| share your feed URL | lets anyone with the URL read that feed; after a reset the old URL returns 404 | [test_old_token_404_after_rotate](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_calendar.py#L255) |
+| press **Search now** a 7th time within an hour | answers 429, try later | [test_seventh_call_returns_429](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_guardrails.py#L404) |
 
-You never see in **In calendar** or **Review**: past events, events without a start time,
-pages that are not events, duplicates, a score without a reason.
+The intended result is no past events, missing start times, non-events,
+duplicates or unexplained scores in **In calendar** or **Review**. These are
+quality targets; extraction and model duplicate checks can fail.
 Targets: [search-spec.md §2](search-spec.md#2-quality-definition).
 
 ## Features the MVP settles on
+
+MVP features, including later changes to the core loop.
 
 Each feature links to the GitHub issues that built it.
 
 | # | Feature | Issues |
 |---|---|---|
 | 1 | Per-user criteria profile in free text | [#2](https://github.com/alexisdacquay/sail-event/issues/2), [#42](https://github.com/alexisdacquay/sail-event/issues/42) |
-| 2 | Hourly and on-demand search, model scoring, three-way triage | [#11](https://github.com/alexisdacquay/sail-event/issues/11), [#19](https://github.com/alexisdacquay/sail-event/issues/19), [#20](https://github.com/alexisdacquay/sail-event/issues/20), [#22](https://github.com/alexisdacquay/sail-event/issues/22), [#54](https://github.com/alexisdacquay/sail-event/issues/54)-[#63](https://github.com/alexisdacquay/sail-event/issues/63) |
+| 2 | Scheduled and on-demand search, model scoring, three-way triage | [#11](https://github.com/alexisdacquay/sail-event/issues/11), [#19](https://github.com/alexisdacquay/sail-event/issues/19), [#20](https://github.com/alexisdacquay/sail-event/issues/20), [#22](https://github.com/alexisdacquay/sail-event/issues/22), [#54](https://github.com/alexisdacquay/sail-event/issues/54)-[#63](https://github.com/alexisdacquay/sail-event/issues/63) |
 | 3 | Approval queue | [#3](https://github.com/alexisdacquay/sail-event/issues/3), [#41](https://github.com/alexisdacquay/sail-event/issues/41), [#63](https://github.com/alexisdacquay/sail-event/issues/63) |
 | 4 | Per-user ICS calendar feed | [#12](https://github.com/alexisdacquay/sail-event/issues/12), [#36](https://github.com/alexisdacquay/sail-event/issues/36), [#71](https://github.com/alexisdacquay/sail-event/issues/71) |
-| - | Multi-user accounts | [#7](https://github.com/alexisdacquay/sail-event/issues/7) |
+| 5 | Multi-user accounts | [#7](https://github.com/alexisdacquay/sail-event/issues/7) |
 
 ## Decisions made for the MVP
 
@@ -204,14 +209,15 @@ manual add (same).
 
 **Decision:** criteria are free text; a model scores each event against them.
 
-**Why:** structured filters were tried in the previous version and dropped; the
-judgement is the product.
+**Why:** topic, place and date preferences need interpretation against the
+information on an event page. The saved sentence is the judge's input.
 
 **Alternatives considered:** code-only filters (cheap, testable, too blunt);
-filters first then model (two mechanisms to maintain).
+facet-by-facet scoring (more rules to maintain). Code still screens missing
+data, past events and known pages before the judge.
 
 **Cost accepted:** every run makes model calls; tests and reviewers need a model
-key or a recorded stub.
+key or recorded answers. Local defaults use recorded answers.
 
 ### Three-way triage with user-set thresholds
 
@@ -219,29 +225,33 @@ key or a recorded stub.
 
 **Why:** the user should only be asked about the events the model is unsure of.
 
-**Alternative considered:** the user decides every event (too much work; the
-previous version showed that).
+**Alternative considered:** the user decides every event, increasing the review
+work the thresholds are intended to reduce.
 
 ### Calendar by published feed
 
 **Decision:** the app serves an ICS feed per user; no calendar-provider login.
 
-**Why:** no third-party credentials, works with any calendar application, one
+**Why:** no third-party credentials, works with calendar applications that support ICS subscriptions, one
 endpoint in the API contract.
 
 **Alternatives considered:** writing into Google Calendar (needs a Google cloud
-project and per-user sign-in); app-only list (no scheduler).
+project and per-user sign-in); app-only list (requires opening the app to see accepted events).
 
-**Cost accepted:** a feed is pulled on the calendar application's schedule; a hold
-can appear hours late. The feed URL is a secret: anyone holding it sees the holds.
+**Cost accepted:** a feed is pulled on the calendar application's schedule; an accepted event
+appears when the calendar client refreshes. Anyone holding the feed URL can read it.
 
 ### Hourly schedule plus a button
 
-**Decision:** a scheduled run every hour and a manual "Search now".
+**Decision:** an hourly GitHub cron and a manual **Search now**. Actual workflow
+starts are less frequent, as measured above.
 
-**Why:** events appear and sell out within a day.
+**Why:** repeat discovery without requiring the user to repeat the search.
 
-**Cost accepted:** search quota and model calls scale with runs; each run is capped.
+**Cost accepted:** daily limits default to 600 search credits and 5000 model calls
+([budget.py](../backend/app/services/budget.py)); **Search now** defaults to six
+requests per user per hour. There is no per-search event cap; daily budgets
+still stop work.
 
 ## Out of scope for the MVP
 
@@ -260,19 +270,21 @@ What it does not do:
 
 | Date | Change | Where |
 |---|---|---|
-| 2026-10-18 | The criteria text is the search query, sent as written; no query templates | [search-spec.md](search-spec.md) (revision line) |
+| 2026-10-18 | Criteria text plus `event` is the query; no query templates | [search-spec.md](search-spec.md) (revision line) |
 | 2026-10-20 | The judge decides place and dates; code no longer filters them | commit [b656aa5](https://github.com/alexisdacquay/sail-event/commit/b656aa5) |
 | 2026-10-24 | Six mandatory fields; an event without a start time is dropped | [#134](https://github.com/alexisdacquay/sail-event/issues/134) |
 | 2026-10-25 | Event-page hop: a listing's event is completed from its own page before the judge | [#139](https://github.com/alexisdacquay/sail-event/issues/139), PR [#141](https://github.com/alexisdacquay/sail-event/pull/141) |
 | 2026-10-25 | Duplicates: one code check, then a model check after storage | [#136](https://github.com/alexisdacquay/sail-event/issues/136), PR [#149](https://github.com/alexisdacquay/sail-event/pull/149) |
 | 2026-10-25 | One search provider at a time, chosen by `SEARCH_PROVIDER`: `tavily`, `brave` or `exa` | [factory.py](../backend/app/adapters/factory.py), PR [#147](https://github.com/alexisdacquay/sail-event/pull/147) |
+| 2026-10-25 | Extraction and judging default to concurrency 10; per-search event cap removed | PR [#144](https://github.com/alexisdacquay/sail-event/pull/144) |
+| 2026-10-26 | Delete stored events without start times; drop the event link/start unique constraint. The deletion is irreversible; rollback across the three new migrations is untested | PR [#150](https://github.com/alexisdacquay/sail-event/pull/150) |
+| 2026-10-26 | Event-page hop follows listing links to public hosts, including other sites | PR [#151](https://github.com/alexisdacquay/sail-event/pull/151) |
 | not shipped | No place in the criteria: queue, never auto-accept | [#101](https://github.com/alexisdacquay/sail-event/issues/101) open, PR [#103](https://github.com/alexisdacquay/sail-event/pull/103) open |
 
 ## Later, after the MVP
 
-- self-maintenance: an on-call responder that investigates a failed or empty run
-  and proposes a fix for approval (course lesson 4), and the agent extension pack
-  around the project (course lesson 5)
-- status 2026-10-17: both delivered. Responder: issues #25, #26, directory
-  `incident-response/`. Extension pack: issue #28, reduced to the QA subagent and
-  the pre-commit hook.
+This was the planning category; the on-call work (#25/#26) and agent extension
+work (#28) were delivered. See [incident-response](../incident-response/README.md)
+and the [QA agent](../.claude/agents/qa-engineer.md). Observability, alerting and
+the responder operate on the local `make up-all` stack; the deployed app sends
+no telemetry. The recorded alert firings and repairs are injected-fault drills.

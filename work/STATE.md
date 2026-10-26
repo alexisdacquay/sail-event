@@ -1,5 +1,25 @@
 # ProjectOne — work state (resumable)
 
+## 2026-10-26 ~13:45 UTC — docs pass (PR 153) on dev; prod still 969a161, waiting on the owner
+
+- PR 153 changes docs only. It rewrites every reviewer-facing page to the owner's standard (`work/docs-pass/STANDARD.md`). The record and how to resume are in `work/docs-pass/README.md`.
+- How it was checked:
+  1. 10 critics found 363 issues.
+  2. 4 writers rewrote the pages.
+  3. 3 blind checks; links all ok.
+  4. Fixes.
+  5. A final Claude review, a round-2 fix, then a re-check.
+  6. `make test-all` exited 0 on 3e33fc9.
+- Mock rubric score: 23/24. The lost point is Observability: feed tokens can reach HTTP spans, and metrics carry no trace ID. That needs a config change, which the change freeze blocks; the owner decides.
+- Found, not fixed (freeze): the frontend test `App.test.tsx:77` races under heavy CPU load; it passes when run alone.
+- The owner allowed the docs merge to main (dev) while away. Prod was not touched.
+- **PROD PROMOTE CHECKLIST (owner):**
+  1. Back up the prod DB in Render (sail-event-db → Recovery). PR 150's migration deletes 3,279 date-only events on prod, 603 of them in users' calendars. This is irreversible, and rollback across the 3 new migrations is untested.
+  2. On sail-event (prod), set `EXA_API_KEY`, `SEARCH_PROVIDER=exa` and `MAX_RESULTS_PER_QUERY=10`.
+  3. Check dev, then run `gh workflow run promote.yml -R alexisdacquay/sail-event -f sha=<full sha that dev /api/health prints>`.
+  4. Confirm with `curl -s https://sail-event.onrender.com/api/health`. The README's "Try it live" assumes prod runs main.
+- Deadline: Project 1 is due 2026-10-26 23:00 (course platform). After submitting, the owner does 3 peer reviews.
+
 ## 2026-10-26 00:50 UTC — change freeze; main ac54483 on dev, prod still 969a161
 
 - Merged to main (dev) on 25-26 Oct: PR 144 (speed, text event pages, concurrency 10, judge fixes), 146 (screened out + live counts), 147 (Exa search), 148 (not scored yet, labels), 149 (duplicates: one exact skip + LLM check after storage), 150 (delete events without a start time; drop the (user, link, date_time) rule), 151 (listing events get their own page on any host; tests offline; internal-address guard), 152 (README for reviewers, docs/reviewer-guide.md, reviewer-guide skill).

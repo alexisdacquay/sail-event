@@ -1,8 +1,8 @@
 # UX design — Sail-event redesign (implements `_docs/ux-spec.md`)
 
-Source of truth for copy and behaviour: `_docs/ux-spec.md`. This document adds the layout, the components, the states and the build order. Where this document and the spec differ, section 9 lists the deviation and why.
+**Historical proposal, last revised 2026-10-18** (`4bdef07`). The Stream replaced this Home/Queue/All events design. Its assumptions, examples, line references and implementation checklists below are retained as a design record, not instructions for main. Use [ux-spec.md](ux-spec.md) for current behavior and [ui-design.md](ui-design.md) for the decisions that superseded it.
 
-Facts about the current build this design relies on (checked in code):
+Assumptions recorded for the original proposal (not a current code audit):
 
 | Fact | Where |
 |---|---|
