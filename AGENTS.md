@@ -32,7 +32,7 @@ Two doc folders: `_docs/` = what to build and how the team works (product, desig
 ### Agents and tools
 
 - [`.claude/agents/qa-engineer.md`](.claude/agents/qa-engineer.md) - the QA subagent
-- [`.claude/skills/rubric-review/SKILL.md`](.claude/skills/rubric-review/SKILL.md), [`.claude/skills/status-update/SKILL.md`](.claude/skills/status-update/SKILL.md), [`.claude/skills/field-test/SKILL.md`](.claude/skills/field-test/SKILL.md), [`.claude/skills/reviewer-guide/SKILL.md`](.claude/skills/reviewer-guide/SKILL.md) (rebuilds [`docs/reviewer-guide.md`](docs/reviewer-guide.md))
+- [`.claude/skills/rubric-review/SKILL.md`](.claude/skills/rubric-review/SKILL.md), [`.claude/skills/status-update/SKILL.md`](.claude/skills/status-update/SKILL.md), [`.claude/skills/field-test/SKILL.md`](.claude/skills/field-test/SKILL.md), [`.claude/skills/reviewer-guide/SKILL.md`](.claude/skills/reviewer-guide/SKILL.md) (rebuilds the README's review sections)
 
 ### State and history
 
