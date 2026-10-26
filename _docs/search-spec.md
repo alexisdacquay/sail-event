@@ -6,10 +6,7 @@ from the behavior and measurements that can be checked today.
 
 The 2026-10-18 revision replaced query planning and facet score caps with a
 criteria-text query and suitability judge. The actual query includes ` event`.
-The 2026-10-21 no-place auto-accept restriction remains **unshipped**
-([#101](https://github.com/alexisdacquay/sail-event/issues/101), PR
-[#103](https://github.com/alexisdacquay/sail-event/pull/103)). Later changes are
-listed in the [PRD change log](plan.md#changed-after-the-mvp-dated).
+Later changes are listed in the [PRD change log](plan.md#changed-after-the-mvp-dated).
 
 ## 1. The job
 
@@ -39,6 +36,8 @@ on 2026-10-24 found **3/38 events (7.9%)**, with **0/38 accepted**. The ground-t
 unvetted ([STATE](../work/STATE.md)), so the result is indicative. Recall after
 the event-page hop has not been measured in that record.
 
+<a id="input"></a>
+
 ## 3. Criteria understanding
 
 [criteria.py](../backend/app/services/criteria.py) caches parsed facets by text
@@ -50,7 +49,9 @@ Past absolute dates do not stop the search.
 
 The saved sentence drives the query and judge; facets supply extraction context
 and window resolution. Missing place does not stop a run or prevent auto-accept
-in main. That last behavior is the open requirement #101.
+in main. The restriction requested on **2026-10-21** remains unshipped
+([#101](https://github.com/alexisdacquay/sail-event/issues/101), PR
+[#103](https://github.com/alexisdacquay/sail-event/pull/103)).
 
 ## 4. Candidate discovery
 
@@ -60,8 +61,9 @@ The pipeline requests `MAX_RESULTS_PER_QUERY` (default 20). See
 [pipeline.py](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/pipeline.py#L279-L298) and the
 [adapter factory](../backend/app/adapters/factory.py).
 
-Canonical result URLs are de-duplicated; previously stored single-event pages
-are removed before extraction. Stored listing pages remain eligible.
+Exact duplicate result URLs are removed. Canonical URL matching excludes
+previously stored single-event pages before extraction; stored listing pages
+remain eligible.
 Scheduled searches use the prod GitHub cron; actual starts are less frequent
 than hourly. [PRD timing and measured durations](plan.md#2-search) gives the
 source and reproduction command.
@@ -186,12 +188,9 @@ basis with a result; the unvetted ground truth limits the recall claim.
 ## 12. Acceptance criteria
 
 For regression checks, use the executable cases linked in
-[plan.md, Expected behaviour](plan.md#expected-behaviour). They cover triage
-boundaries, isolation, rejection persistence, feed removal/reset and rate limits.
+[plan.md, Expected behaviour](plan.md#expected-behaviour). They cover pipeline
+triage, isolation, rejection persistence, feed removal/reset and rate limits.
 Quality targets in §2 need live evaluation in addition to recorded tests.
-
-The no-place auto-accept requirement is open (#101). Do not mark it delivered
-because it appears in an older specification or an unmerged PR.
 
 ## 13. Out of scope
 

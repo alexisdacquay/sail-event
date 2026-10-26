@@ -1,14 +1,14 @@
 # AI Usage Report — Sail-event
 
-**Scope note, 2026-10-26:** written on 2026-10-16, this report covers the initial issues #1–#26 and their immediate corrections. It is a dated set of examples, not a complete defect list or a description of all later work. See [the process record](../_docs/process.md#evidence-it-ran-this-way) for later worktree/PR handoffs, counts and gaps.
+Scope note (2026-10-26): written on 2026-10-16, this report covers issues #1–#26 and their immediate corrections. Later handoffs and process gaps are in [the process record](../_docs/process.md#evidence-it-ran-this-way).
 
 ## Process
 
 The initial intended loop was PM groom → engineer implementation → independent QA → orchestrator closure. On QA FAIL, the engineer received the findings for correction and re-check. Roles and prompts came from [work/METHOD.md](../work/METHOD.md) and the [role files](../_docs/team/).
 
-“Orchestrator” throughout this report means the main Claude Code session, not the human owner. It launched role subagents with separate context. The record also shows it correcting grooms and performing browser checks itself, beyond its intended dispatch role. Those actions are disclosed below, not evidence that role separation was enforced. Current responsibilities and historical exceptions: [_docs/process.md](../_docs/process.md#team).
+“Orchestrator” throughout this report means the main Claude Code session, not the human owner. It launched role subagents with separate context. It also corrected grooms and performed browser checks itself, exceeding its dispatch role in the examples below. Current responsibilities and historical exceptions: [_docs/process.md](../_docs/process.md#team).
 
-The initial loop was sequential. Later work ran concurrently in separate worktrees and PRs, for example PRs [#84](https://github.com/alexisdacquay/sail-event/pull/84), [#85](https://github.com/alexisdacquay/sail-event/pull/85), [#86](https://github.com/alexisdacquay/sail-event/pull/86) and [#87](https://github.com/alexisdacquay/sail-event/pull/87) on 2026-10-20. The current process must not be read back into this early report.
+The initial loop was sequential. Later work ran concurrently in separate worktrees and PRs, for example PRs [#84](https://github.com/alexisdacquay/sail-event/pull/84), [#85](https://github.com/alexisdacquay/sail-event/pull/85), [#86](https://github.com/alexisdacquay/sail-event/pull/86) and [#87](https://github.com/alexisdacquay/sail-event/pull/87) on 2026-10-20. Owner-selected work and separate approval for production promotion followed on 2026-10-21.
 
 ## Tools
 
@@ -20,13 +20,13 @@ The initial loop was sequential. Later work ran concurrently in separate worktre
 | Semgrep via `uvx` | Static security scan | [Scan summary](../security-audit/runs/2026-10-16/semgrep-summary.md), [raw output](../security-audit/runs/2026-10-16/semgrep-output.json) |
 | Headless Claude (`claude -p`) | Model security review | [Review output](../security-audit/runs/2026-10-16/model-review-output.json) |
 
-Later tooling (2026-10-26 scope update): project skills live in [.claude/skills/](../.claude/skills/) (rubric-review, field-test, status-update, reviewer-guide). The [work log](../work/STATE.md) records Opus/Fable choices and DeepSeek directly on Render or through Kilo locally. Runtime provider configuration is in [deployment.md](deployment.md#environment-variables); Lakera checks criteria, and the local headless on-call agent is described in [incident-response/README.md](../incident-response/README.md). These are separate from the early defect examples.
+Later tooling (as of 2026-10-26): project skills live in [.claude/skills/](../.claude/skills/) (rubric-review, field-test, status-update, reviewer-guide). The [work log](../work/STATE.md) records DeepSeek directly on Render or through Kilo locally. Runtime provider configuration is in [deployment.md](deployment.md#environment-variables); Lakera checks criteria, and the local headless on-call agent is described in [incident-response/README.md](../incident-response/README.md). These are separate from the early defect examples.
 
 ## Tracker as evidence
 
 The issue bodies and comments expose grooms, implementation reports and QA verdicts. They are not uniform: [#17](https://github.com/alexisdacquay/sail-event/issues/17) and [#21](https://github.com/alexisdacquay/sail-event/issues/21) were AWS tasks delivered on Render instead, then closed without the four-section groom or QA verdict. Inspect them with `gh issue view 17 --comments` and `gh issue view 21 --comments`.
 
-Issue [#7](https://github.com/alexisdacquay/sail-event/issues/7) is a complete recorded FAIL → fix → PASS cycle. The later [process evidence](../_docs/process.md#evidence-it-ran-this-way) gives reproducible counts rather than claiming every issue followed the loop.
+Issue [#7](https://github.com/alexisdacquay/sail-event/issues/7) is a complete recorded FAIL → fix → PASS cycle. The later [process record](../_docs/process.md#evidence-it-ran-this-way) gives reproducible counts and exceptions.
 
 <a id="defects-the-orchestrator-caught"></a>
 
@@ -89,4 +89,4 @@ The PM’s initial groom for [#24](https://github.com/alexisdacquay/sail-event/i
 
 ## Known process gaps
 
-The record includes orchestrator overreach (groom corrections, implementation and testing), issues never groomed, closures and merges without a QA PASS, and direct pushes to main. PR #31’s red merge is item 8 above; [PR #138](https://github.com/alexisdacquay/sail-event/pull/138) is a later red merge. The role files began on 2026-10-16 (`98f3cf7`); the owner priority/prod gates date from 2026-10-21 ([process history](../_docs/process.md)); the red-test/root-cause gate entered the roles on 2026-10-25 (`c0f83e6`) and the process summary on 2026-10-26 (`ac54483`). Verify dates with `git show --no-patch --format=fuller <commit>`. The [process record](../_docs/process.md#evidence-it-ran-this-way) documents the exceptions and counting commands; this report does not claim compliance before those rules existed.
+The record includes orchestrator overreach (groom corrections, implementation and testing), issue bodies missing required grooming sections, closures and merges without a QA PASS, and direct pushes to main. PR #31’s red merge is item 8 above; [PR #138](https://github.com/alexisdacquay/sail-event/pull/138) later merged before CI completed; its integration check subsequently failed. The role files began on 2026-10-16 (`98f3cf7`); the owner priority/prod gates date from 2026-10-21 ([process history](../_docs/process.md)); the red-test/root-cause gate entered the roles on 2026-10-25 (`c0f83e6`) and the process summary on 2026-10-26 (`ac54483`). Verify dates with `git show --no-patch --format=fuller <commit>`. The [process record](../_docs/process.md#evidence-it-ran-this-way) documents the exceptions and counting commands.

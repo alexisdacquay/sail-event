@@ -49,9 +49,9 @@ Counter format versions: 4 includes event-page counters; 3 predates those counte
 | Event pages | `detail_pages_done`, `detail_pages_to_open` | Live progress while `currentStage` is `detail_hop` |
 | Event pages | `pages_detail_fetched`, `detail_fetch_errors`, `detail_extract_errors` | Successful event-page fetches; fetch failures; model re-extraction failures. On failure, the listing record continues to filtering |
 | Filtering | `filtered_no_date`, `filtered_no_time`, `filtered_incomplete`, `filtered_past`, `filtered_date`, `filtered_place`, `filtered_duplicate` | Event screen-out counts; these are separate from pages that yielded no events |
-| Judging | `events_to_judge`, `events_judged` | Live total entering the judge; events processed by the judge |
+| Judging | `events_to_judge`, `events_judged` | New candidates entering judging; live `events_judged` counts completed attempts, including failures, while the finished value counts this run’s events with a score |
 | Judging | `judge_errors`, `recovery_judge_errors` | This run’s events that could not be scored; failures while retrying older events. Unscored events stay `new` for later recovery |
-| Judging | `judge_repaired` | Responses repaired after schema validation failed; successfully scored events are excluded from `judge_errors` |
+| Judging | `judge_repaired` | Successfully scored responses repaired after schema or reason validation, including recovery of older events; excluded from the corresponding judge-error counter |
 | Triage | `accepted`, `queued`, `rejected` | Stored outcomes after judging and duplicate checking |
 | Rejection | `rejected_date_place`, `rejected_off_topic`, `rejected_other` | Rejected scores 0–9, 10–39 and 40 or more, excluding model-marked duplicates. The last band includes user rejections as well as threshold rejections |
 | Duplicates | `dedup_merged`, `dedup_errors` | New events moved to Out by the model duplicate check; failed checks, which keep both events |
@@ -73,4 +73,4 @@ The intended event identity is `accepted + queued + rejected + setAside == event
 
 ## Event decisions
 
-`decidedBy` is `auto`, `user` or null; null also applies to queued events awaiting a decision. `scoreReason` is the model’s explanation shown with the event. Out events remain available through the UI’s **show** toggle; later searches do not restore them to the queue.
+`decidedBy` is `auto`, `user` or null; null also applies to queued events awaiting a decision. `scoreReason` is the model’s explanation shown with the event. Rejected events remain stored; later searches do not restore them to the queue.

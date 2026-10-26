@@ -39,7 +39,7 @@ For a dated example, [run 40251535674](https://github.com/alexisdacquay/sail-eve
 
 ## Fixed clock
 
-Backend tests and CI use `FAKE_NOW=2026-10-18T12:00:00+02:00`; compose and `make run` default to that value. It stabilizes date-dependent prompts and filters for the recordings. Run timestamps and rate limits still use real UTC. Real-adapter deployments should leave `FAKE_NOW` unset; this pass did not inspect Render’s environment values.
+Backend tests and CI use `FAKE_NOW=2026-10-18T12:00:00+02:00`; compose and `make run` default to that value. It stabilizes date-dependent prompts and filters for the recordings. Run timestamps and rate limits still use real UTC. Real-adapter deployments should leave `FAKE_NOW` unset.
 
 The integration HTTP clients omit `timeZone`, so their criteria default to UTC. Playwright sets `timezoneId: Europe/Berlin`, and the UI saves that browser zone with the criteria. Recordings must cover the time zones used by the relevant tests.
 
@@ -101,6 +101,8 @@ Screenshots are written under `e2e/test-results/`. A generated screenshot is not
 
 These commands are outside `make test-all`. Field tests register accounts and change criteria, thresholds and events on the target. Use dev for approved live testing; a field run can consume shared daily budgets and registration limits.
 
+<a id="four-phase-field-runner"></a>
+
 ## Field-test runner (four phases against a deployed service)
 
 ```bash
@@ -115,13 +117,13 @@ uv run --project backend python backend/tests/field/runner.py \
 | 3 | Breadth batch from `BATCH_TEXTS`, using ten workers |
 | 4 | Recall against [triples.json](../backend/tests/ground_truth/triples.json); clears the recall test users’ existing events |
 
-`--phase N` runs phases 1 through N. [runner.py](../backend/tests/field/runner.py) appends results and deltas against the previous log block to [work/RUN-LOG.md](../work/RUN-LOG.md). That log has no completed unified run at the 2026-10-26 check, so no phase duration or end-to-end success is claimed. Earlier separate tools have records in [FIELD-TESTS.md](../work/FIELD-TESTS.md), [SEARCH-BATCHES.md](../work/SEARCH-BATCHES.md) and [RECALL.md](../work/RECALL.md).
+`--phase N` runs phases 1 through N. [runner.py](../backend/tests/field/runner.py) appends results and deltas against the previous log block to [work/RUN-LOG.md](../work/RUN-LOG.md). As of 2026-10-26, that log contains only the template; no completed unified run is recorded. Earlier separate tools have records in [FIELD-TESTS.md](../work/FIELD-TESTS.md), [SEARCH-BATCHES.md](../work/SEARCH-BATCHES.md) and [RECALL.md](../work/RECALL.md).
 
 ## Real adapters smoke
 
 [smoke_search.py](../backend/scripts/smoke_search.py) runs the pipeline with a temporary SQLite database, separate from the deployed databases: criteria, window, search, extraction, event pages, filtering, judging/triage, duplicate checking and persistence. Search submits the criteria text plus ` event`; there is no planner stage.
 
-Configure the shell with `SEARCH_PROVIDER` (`exa`, `tavily` or `brave`), the matching provider key (`EXA_API_KEY`, `TAVILY_API_KEY` or `BRAVE_API_KEY`), and `LLM_PROVIDER=openai_compatible`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_JSON_MODE`. `GUARDRAIL=none` skips Lakera for local smoke runs. With `GUARDRAIL=lakera`, configure `LAKERA_API_KEY` and optionally `GUARD_FALLBACK=self_check`.
+Configure the shell with `SEARCH_PROVIDER` (`exa`, `tavily` or `brave`), the matching provider key (`EXA_API_KEY`, `TAVILY_API_KEY` or `BRAVE_API_KEY`), and `LLM_PROVIDER=openai_compatible`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_JSON_MODE`. The tool inserts criteria directly into its temporary database, so it bypasses criteria-save guardrails regardless of `GUARDRAIL`. Guardrail coverage is in the [criteria endpoint tests](../backend/tests/test_guardrails.py), which exercise blocking and unavailable-guard responses.
 
 ```bash
 # Load a locally maintained, git-ignored environment file if you use one:

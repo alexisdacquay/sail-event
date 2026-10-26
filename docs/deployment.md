@@ -2,8 +2,6 @@
 
 The app runs on Render: separate dev and prod web services, each with its own database. Both build the root [Dockerfile](../Dockerfile). CI, dev deployment and manual promotion are explained in [release-process.md](release-process.md).
 
-**Monitoring scope:** observability, alerting and the on-call agent run only in the local stack (`make up-all`). The deployed app sends no telemetry to that stack. Render exposes service logs and platform metrics; these are separate from the project’s Grafana dashboard.
-
 ## Which version runs where
 
 | Env | URL | Runs | Check |
@@ -26,34 +24,34 @@ curl -s https://sail-event.onrender.com/api/health
 gh run list -R alexisdacquay/sail-event --workflow=promote.yml --limit 3
 ```
 
-These commands compare versions; they do not prove the dashboard settings or a completed user journey. Auto-deploy settings were recorded in [the deployment log](../work/DEPLOY-render.md) on 2026-10-17: `sail-event-dev` → Settings → Auto-Deploy = On Commit; `sail-event` → Auto-Deploy = Off.
+The commands compare the deployed commits with main and promotion history. [The deployment log](../work/DEPLOY-render.md) records an automatic dev deploy after a push on 2026-10-17, with these settings: `sail-event-dev` → Settings → Auto-Deploy = On Commit; `sail-event` → Auto-Deploy = Off.
 
 ## Using the live sites
 
 - Registration is open on both: `curl -s https://sail-event.onrender.com/api/config` prints `{"registrationCodeRequired":false}`.
-- The deployment log records `SEED_DEMO=1` on dev, which creates the shared `demo` / `demo` account. Keep it unset on prod. Account access was not tested in this documentation pass.
-- Live-adapter searches measured 86–493 seconds across local runs on different code revisions in [PR #144](https://github.com/alexisdacquay/sail-event/pull/144). This is a measured range, not a service guarantee.
+- The deployment log records `SEED_DEMO=1` on dev, which creates the shared `demo` / `demo` account. Keep it unset on prod.
+- Live-adapter searches measured 86–493 seconds across local runs on different code revisions in [PR #144](https://github.com/alexisdacquay/sail-event/pull/144).
 - Default limits: 5 successful registrations per IP per hour; 6 manual searches per user per rolling hour; daily budgets of 600 search credits and 5000 model calls across users. Settings are configurable; see [Environment variables](#environment-variables).
 
 ## Services
 
-Recorded Render configuration (2026-10-17, [deployment log](../work/DEPLOY-render.md)); plan, region, recovery and network settings were not rechecked in the dashboard during this pass. The log records Frankfurt and Postgres 18.
+The [deployment log](../work/DEPLOY-render.md) records these services in Frankfurt with Postgres 18 on 2026-10-17:
 
 | Environment | Web service | Database | Deploys when |
 |---|---|---|---|
 | dev | `sail-event-dev` (starter) | `sail-event-dev-db` (basic_256mb) | every push to `main` |
 | prod | `sail-event` (starter) | `sail-event-db` (Basic, point-in-time recovery on) | manual promotion; dashboard changes can also redeploy |
 
-- Required health check path: `/api/health`. The logs still list setting it on both services as an owner task; an HTTP GET proves the endpoint works, not that Render uses it to gate traffic.
-- The recorded prod database inbound rule is `0.0.0.0/0`. The owner must decide whether to restrict or accept that external access; its current value was not rechecked.
+- Setting Render’s health check path to `/api/health` remains open in the deployment log.
+- The log records the prod database inbound rule as `0.0.0.0/0`, with a pending decision to restrict or accept external access.
 - Saving environment variables can trigger a deploy independently of `promote.yml`; the [work log](../work/STATE.md) records this on 2026-10-20.
 
 ## Scheduled search
 
 - [hourly-search.yml](../.github/workflows/hourly-search.yml) is scheduled at minute 07 of every hour and calls prod only (repo variable `SAIL_BASE_URL` = `https://sail-event.onrender.com`). The app has no scheduler of its own.
-- GitHub delays scheduled runs. The 50 scheduled runs from 17 to 26 Oct were 2.1 to 7.8 hours apart, median 4.5 h (checked 2026-10-26). Reproduce the timestamps: `gh run list -R alexisdacquay/sail-event --workflow=hourly-search.yml --event schedule --limit 50 --json createdAt`; sort them and subtract adjacent timestamps.
+- GitHub delays scheduled runs. The 50 scheduled runs from 17 to 26 Oct were 2.1 to 7.8 hours apart, median 4.8 h (sample ending 2026-10-26 12:51 UTC). Reproduce the timestamps: `gh run list -R alexisdacquay/sail-event --workflow=hourly-search.yml --event schedule --limit 50 --json createdAt`; sort them and subtract adjacent timestamps.
 - Each run checks that `/api/health` answers 200, then calls `POST /api/search/all` with the `X-API-Key` secret. The server queues every user with saved criteria, oldest last search first, up to `MAX_SCHEDULED_USERS`; it skips users with an unfinished run started in the last 55 minutes and those beyond the cap. It answers `202` with `usersQueued` and `usersSkipped`, then runs the searches in background tasks.
-- The job fails on a failed health GET, a non-2xx enqueue response or an unreadable response body. It does not check completed searches. A search that fails after the 202 never shows there. On 25 Oct the model provider's balance ran out (HTTP 402) and searches on dev and prod failed ([work/HANDOVER-2026-10-25.md](../work/HANDOVER-2026-10-25.md)); every scheduled run that day reported success, and prod has no alert ([observability/README.md](../observability/README.md)).
+- The job fails on a failed health GET, a non-2xx enqueue response or an unreadable response body. Success confirms enqueueing; searches that fail after the 202 are not reflected in the job result. See [Monitoring](#monitoring) for search-failure coverage.
 
 Setup, once per target:
 
@@ -64,9 +62,13 @@ gh secret set SEARCH_ALL_API_KEY                                          # same
 
 Run it by hand: `gh workflow run hourly-search.yml`; history: `gh run list --workflow=hourly-search.yml`.
 
+## Monitoring
+
+Project observability, alerts and the on-call responder cover the local stack (`make up-all`); the deployed app sends no telemetry to it. Render provides service logs and platform metrics separately. The [observability runbook](../observability/README.md) explains the signals, alerts and recorded drills.
+
 ## Environment variables
 
-Set in Render → service → Environment. These are deployment settings for main, not a live export of either service’s environment. Provider choices follow the owner’s [promotion checklist](../work/STATE.md); confirm them at deployment. Secrets belong in environment variables and GitHub secrets, never in tracked files.
+Set in Render → service → Environment. These settings target main. Confirm provider choices against the [promotion checklist](release-process.md#manual-promotion-to-prod) when deploying. Secrets belong in environment variables and GitHub secrets, never in tracked files.
 
 **Required**
 
@@ -131,12 +133,12 @@ Set in Render → service → Environment. These are deployment settings for mai
 **Legacy and local-only settings**
 
 - `SCORER`: a leftover from the first scorer; if it has any value, every search fails with `unset SCORER; use LLM_PROVIDER`.
-- `FAKE_NOW`: freezes date-dependent search logic. CI, `make run` and compose use a fixed date for recordings; real-adapter deployments should leave it unset. Dev’s current value was not rechecked in Render.
-- `OTEL_EXPORTER_OTLP_ENDPOINT`: not set, because Render has no collector. The live sites export no metrics or traces; their logs are JSON lines in Render → service → Logs. Telemetry runs in the local stack only ([observability/README.md](../observability/README.md)).
+- `FAKE_NOW`: freezes date-dependent search logic. CI, `make run` and compose use a fixed date for recordings; real-adapter deployments should leave it unset.
+- `OTEL_EXPORTER_OTLP_ENDPOINT`: leave unset on Render. See [Monitoring](#monitoring) for the collection setup.
 
 ## Health
 
-`GET /api/health` returns a status and the deployed commit, not database or provider readiness. A green health check can coexist with failed searches. The container runs migrations before starting Uvicorn. Rollback across the three migrations `e4f5a6b7c8d9`, `f5a6b7c8d9e0` and `a6b7c8d9e0f1` is untested; PR #150’s event deletion is irreversible without a backup. See [release-process.md](release-process.md#rollback).
+`GET /api/health` returns a status and the deployed commit, not database or provider readiness. A green health check can coexist with failed searches. The container runs migrations before starting Uvicorn. Migration and data-recovery requirements are in [Rollback](release-process.md#rollback).
 
 ## Access
 

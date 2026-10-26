@@ -1,10 +1,7 @@
 # Architecture — Sail-event
 
-The application runs on Render; the observability, alerting and on-call stack
-runs locally with `make up-all`. The deployed app sends no telemetry. Locally,
-logs and traces correlate by trace ID; the metrics do not carry that ID, a gap
-against the rubric's “share a trace ID” requirement. See
-[observability](../observability/README.md) for collection and privacy limits.
+The Docker image packages the React frontend with the FastAPI backend, with a
+separate database. The app runs locally and on Render.
 
 ## Stack
 
@@ -109,7 +106,7 @@ flowchart LR
 | 7 Calendar | accepted events served at `GET /api/calendar/{ics_token}` | HTTP span |
 | Run row | `stage_counts`, calls, tokens, timestamps written | `persist` |
 
-- Events are committed as `new` before judging. The next run retries leftover `new` rows; this recovers that stage, not every possible crash in the pipeline.
+- Events are committed as `new` before judging. The next run retries leftover `new` rows.
 
 ## Application at a glance
 
@@ -138,8 +135,16 @@ See [deployment.md](../docs/deployment.md) for service settings. To inspect the
 currently deployed commit, run `curl -s https://sail-event.onrender.com/api/health`;
 do not infer it from main or the last merge.
 
+## Telemetry
+
+The observability, alerting and on-call stack runs locally with `make up-all`;
+the deployed app sends no telemetry. Logs and traces correlate by trace ID;
+metrics have no trace ID or exemplars. Telemetry can include user IDs, HTTP
+client metadata and calendar-feed tokens. Collection and privacy limits are in
+the [observability guide](../observability/README.md). The two recorded on-call
+repair runs are injected-fault drills.
+
 ## Known limitations
 
-- Duplicate detection depends on the model after the stored-page/date check. Errors can leave both rows (`dedup_errors`). Removing the uniqueness constraint permits different events with the same link and start.
+- Duplicate detection depends on the model after the stored-page/date check. Model errors (`dedup_errors`) or insufficient budget can leave both rows. Removing the uniqueness constraint permits different events with the same link and start.
 - Search coverage is limited by provider results and failed page/model calls. A stored `new` row is retried; a page lost during extraction is not recovered by that mechanism.
-- The two recorded on-call repair runs are injected-fault drills. HTTP telemetry has privacy gaps described in the observability guide.

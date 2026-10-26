@@ -2,46 +2,46 @@
 
 Sail-event turns a free-text event search into scored events and a personal ICS feed. [Production](https://sail-event.onrender.com) · [Dev](https://sail-event-dev.onrender.com) · [Local setup](../README.md#try-it).
 
-**Observability, alerts and the on-call responder cover the local stack (`make up-all`). The deployed app sends no telemetry to that stack. Both recorded on-call runs are drills with injected faults.**
-
 Each criterion below has the rubric's levels, a phrase-by-phrase checklist, the evidence against the lower level, extras, a picture where useful, and known gaps. Proof checks mean inspecting a linked file, record or screenshot; building and running the system takes longer.
 
-Rubric: [saved copy](../work/rubric-2026-10-16.md), compared with the [course source](https://github.com/DataTalksClub/ai-dev-tools-zoomcamp/tree/main/project) on 2026-10-26. Code-line links use **542e58cb0fe73065a905febec7637bfa377a77c4**, an evidence pin, not a claim about the deployed version. Read that version with `curl -s https://sail-event.onrender.com/api/health`.
+Rubric: [saved copy](../work/rubric-2026-10-16.md), compared with the [course source](https://github.com/DataTalksClub/ai-dev-tools-zoomcamp/tree/main/project) on 2026-10-26. Source links were checked at `542e58cb0fe73065a905febec7637bfa377a77c4` on 2026-10-26. Check the deployed commit with `curl -fsS https://sail-event.onrender.com/api/health`.
 
 ## Criteria map
 
-| Criterion | Evidence | Main limitations (full list in [Known gaps](#known-gaps)) |
-|---|---|---|
-| [1. Problem description](#1-problem-description) | README problem, workflow and expected behavior | Scheduled searches are not reliably hourly; demo data is recorded |
-| [2. Product specification](#2-product-specification) | PRD, public issues, edit history and QA comments | Incomplete grooming, missing QA passes and inconsistent role attribution |
-| [3. Agent team specification](#3-agent-team-specification) | Roles, launches and handoffs | Orchestrator overreach; late rules; instructions do not enforce separation |
-| [4. Context management](#4-context-management) | AGENTS.md and modular docs | Handover and instructions can drift |
-| [5. Application](#5-application) | Browser journey and restart test | External services replay fixtures locally; restart test compares counts |
-| [6. Testing](#6-testing) | CI logs and Makefile | Responder tests are local only; expected browser failures; no captured combined run |
-| [7. Containerization](#7-containerization) | Dockerfile and Compose | Scheduler and responder are separate; local providers use fixtures |
-| [8. Deployment](#8-deployment) | Public health endpoint | Health does not prove search quality or provider availability |
-| [9. CI/CD](#9-cicd) | CI, Render deployment instructions, manual promote | Direct pushes, red merges, no enforced CI gate; migration rollback untested and PR #150's delete irreversible |
-| [10. Observability](#10-observability) | Metrics, Tempo, Loki and Grafana | Local only; feed-token exposure; metrics lack a trace ID; other privacy/UI gaps |
-| [11. Alerting on user impact](#11-alerting-on-user-impact) | Provisioned rules and drill records | No hosted coverage; silence rule limitations; enqueue success is not search success |
-| [12. On-call agent](#12-on-call-agent) | Drill evidence and fix commits | Host process; easy injected fault; weak test evidence; no recorded recovery; broad Edit access |
+| Criterion | Evidence |
+|---|---|
+| [1. Problem description](#1-problem-description) | README problem, workflow and expected behavior |
+| [2. Product specification](#2-product-specification) | PRD, public issues, edit history and QA comments |
+| [3. Agent team specification](#3-agent-team-specification) | Roles, launches and handoffs |
+| [4. Context management](#4-context-management) | AGENTS.md and modular docs |
+| [5. Application](#5-application) | Browser journey and restart test |
+| [6. Testing](#6-testing) | CI logs and Makefile |
+| [7. Containerization](#7-containerization) | Dockerfile and Compose |
+| [8. Deployment](#8-deployment) | Public health endpoint |
+| [9. CI/CD](#9-cicd) | CI, Render deployment instructions, manual promote |
+| [10. Observability](#10-observability) | Metrics, Tempo, Loki and Grafana |
+| [11. Alerting on user impact](#11-alerting-on-user-impact) | Provisioned rules and drill records |
+| [12. On-call agent](#12-on-call-agent) | Drill evidence and fix commits |
+
+The [Known gaps index](#known-gaps) links to limitations and their evidence.
 
 ## Check it in 5 minutes
 
-Open the [app](https://sail-event.onrender.com). The following are read-only checks; `gh` needs an authenticated GitHub CLI. They do not register an account or run a paid search.
+Open the [app](https://sail-event.onrender.com). These read-only checks need curl, Git and an authenticated GitHub CLI:
 
 ```bash
-# §8: availability and the deployed commit; no expected SHA is hard-coded.
-curl -s https://sail-event.onrender.com/api/health
+# §8: availability and the deployed commit.
+curl -fsS --max-time 20 https://sail-event.onrender.com/api/health
 # §9: compare dev's reported commit with main's head; allow for a deploy in progress.
-curl -s https://sail-event-dev.onrender.com/api/health
+curl -fsS --max-time 20 https://sail-event-dev.onrender.com/api/health
 git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main
 # §6: find the latest CI run, then inspect its jobs with gh run view <id> -R ...
 gh run list -R alexisdacquay/sail-event --workflow=ci.yml -b main -L 3
 # §2–3: QA FAIL → fix → QA PASS → close.
-gh issue view 7 -R alexisdacquay/sail-event --comments | grep -E '^## QA|^Closed by the orchestrator'
+gh issue view 7 -R alexisdacquay/sail-event --comments
 ```
 
-In that issue, `QA fix: db3499a` labels a fix for QA's findings, not a QA verdict. The public record does not identify which agent typed it. Browser alternatives: [CI history](https://github.com/alexisdacquay/sail-event/actions/workflows/ci.yml) · [issue #7](https://github.com/alexisdacquay/sail-event/issues/7).
+Browser alternatives: [CI history](https://github.com/alexisdacquay/sail-event/actions/workflows/ci.yml) · [issue #7](https://github.com/alexisdacquay/sail-event/issues/7).
 
 With a clone, `python3 -I incident-response/test_responder.py` checks the responder without launching an agent. For a longer local review, use `docker compose up --build` (Docker), then `make test-all` (Docker, uv, Node/npm and Python). These builds and test suites are outside the five-minute check.
 
@@ -62,28 +62,30 @@ With a clone, `python3 -I incident-response/test_responder.py` checks the respon
 | README | [README](../README.md) | The entry document contains the problem, workflow and expected behavior. |
 | clearly | [Problem](../README.md#problem) | The gap is repeated discovery and checking: a web search returns pages, not checked events in a calendar. |
 | describes the problem | [Problem](../README.md#problem) · [user](../_docs/ux-spec.md#1-who-the-user-is) | The user wants events without repeatedly scanning sites and copying details. |
-| the system functionality | [What it does](../README.md#what-it-does) · [pipeline][pipeline] | Search → extract → event-page fetch → screen → score/triage → store → model duplicate check → feed. |
-| expected behavior | [Expected behaviour](../README.md#expected-behaviour) · [boundary test][boundaries] · [rejection test][rejection] | Saved thresholds control triage; a rejected event stays rejected after a later search. |
+| the system functionality | [What it does](../README.md#what-it-does) · [pipeline][pipeline] | Search → extract → event-page fetch → screen → store as new → score/triage → model duplicate check → feed. |
+| expected behavior | [Expected behaviour](../README.md#expected-behaviour) · [triage implementation][triage] · [pipeline test][triage-test] · [rejection test][rejection] | Saved thresholds control triage; a rejected event stays rejected after a later search. |
 
 **Why not the lower score**
 
-The lower level is “The problem is described briefly, but it is unclear what the system does or what functionality is expected.” The README distinguishes discovery from calendar delivery, names the result states, and links expected behaviors to tests. The checklist checks those distinctions rather than the length of the prose.
+The lower level is “The problem is described briefly, but it is unclear what the system does or what functionality is expected.” The README distinguishes discovery from calendar delivery, names the result states, and links expected behaviors to tests.
+
+Thresholds are per user. Defaults accept at **90 or more**, reject at **40 or less**, and leave the middle for review ([registration defaults][auth], [triage][triage]). A later model duplicate check can reject a high-scoring event ([dedup stage][dedup]).
 
 **Beyond the rubric**
 
-- Thresholds are per user. Defaults accept at **90 or more**, reject at **40 or less**, and leave the middle for review ([registration defaults][auth], [triage][triage]). A later model duplicate check can move a high-scoring event to Out ([dedup stage][dedup]).
-- Out rows are hidden behind **show**, not erased from the UI ([browser test][journey]).
+The [expected-behavior table](../README.md#expected-behaviour) links the product description to executable checks for triage, user isolation, feed removal and token rotation.
 
 **Picture**
 
 ![Local recorded demo: selected Review row, score and reason, calendar actions, and the Out show toggle](images/review-06-review-detail.png)
 
-Local demo data, with the application clock fixed at 18 October 2026 so the 19–21 October fixtures remain usable. This is not live search-quality evidence. The chronology also shows two failed event-page fetches.
+Local demo data, with the application clock fixed at 18 October 2026 so the 19–21 October fixtures remain usable. The chronology also shows two failed event-page fetches.
 
 **Known gaps**
 
 - “Hourly” describes the GitHub cron, not a delivery guarantee. The 50 scheduled runs inspected on 2026-10-26 had gaps of **2.1–7.8 hours**; [reproduce the measurement](#schedule-measurement).
-- The UI says “Auto-accept above” / “Auto-reject below”, but equality also accepts/rejects ([triage][triage]). Product limits are in [the PRD](../_docs/plan.md#out-of-scope-for-the-mvp); price rules are not supported.
+- Criteria without a place can still auto-accept events; [#101](https://github.com/alexisdacquay/sail-event/issues/101), which requires queuing them instead, is unshipped ([search spec](../_docs/search-spec.md#3-criteria-understanding)).
+- Price rules are unsupported; other product exclusions are in [the PRD](../_docs/plan.md#out-of-scope-for-the-mvp).
 
 ## 2. Product specification
 
@@ -106,24 +108,20 @@ Local demo data, with the application clock fixed at 18 October 2026 so the 19�
 
 **Why not the lower score**
 
-“A spec exists, but no public task tracker.” The issue body, implementation report and QA verdict are public, not just an internal task list. They show use of acceptance criteria. This is evidence for the workflow, not a claim that every item followed it.
+“A spec exists, but no public task tracker.” The issue body, implementation report and QA verdict are public, not just an internal task list. They show use of acceptance criteria.
+
+[Issue #11](https://github.com/alexisdacquay/sail-event/issues/11), including **edited** and the QA comment, preserves the specification history. The 2026-10-16 rewrite added the criteria. A third edit on 2026-10-20 ticked the boxes after the 2026-10-16 close. The QA comment is the contemporaneous verification record. Query splitting and the per-run cap in that historical issue were later withdrawn ([PRD changes](../_docs/plan.md#changed-after-the-mvp-dated), [PR #144](https://github.com/alexisdacquay/sail-event/pull/144)).
 
 **Beyond the rubric**
 
 - The spec preceded code. `git log --reverse --diff-filter=A --format='%h %ci %s' -- _docs/plan.md AGENTS.md backend/app/main.py` shows the PRD on 2026-10-15 (`fa345ba`), context and roles on 2026-10-16 (`98f3cf7`), then the first backend scaffold (`6ccfdec`).
 - [Original tasks](../_docs/outdated/tasks.md) 1–28 became issues 1–28. Task 18 was narrowed to CI; CD was split into [#29](https://github.com/alexisdacquay/sail-event/issues/29).
 
-**Picture**
-
-The useful record is [issue #11](https://github.com/alexisdacquay/sail-event/issues/11), including **edited** and the QA comment; a screenshot would hide its revision history. The 2026-10-16 rewrite added the criteria. A third edit on 2026-10-20 ticked the boxes after the 2026-10-16 close. The QA comment is the contemporaneous verification record. Query splitting and the per-run cap in that historical issue were later withdrawn ([PRD changes](../_docs/plan.md#changed-after-the-mvp-dated), [PR #144](https://github.com/alexisdacquay/sail-event/pull/144)).
-
 **Known gaps**
 
-- On 2026-10-26, **58 of 96 issues** had all four template headings; **91** contained “acceptance criteria”. The other **38** were never groomed into the full template, including **27** already closed. Those without the phrase were #17, #21, #46, #102 and #145. These are textual counts, not a quality verdict.
-- **69 issues** had a QA PASS/FAIL heading; **23** had a FAIL. **30 of 56 PRs** had a verdict heading. Of **42** merged PRs from #66 onward, **14** had none: #67, #88, #89, #91, #92, #93, #137, #138, #140, #141, #143, #144, #146, #152. A missing PR verdict alone does not prove there was none on its issue. [Reproduce these counts](#tracker-audit).
-- Closed issues with no QA verdict on either the issue or its associated PR: **#17, #21, #29, #59, #60, #74, #139, #142**. #59 deferred verification to #60; #60 and PR #64 have no QA verdict. [Inspect the exception records](#tracker-audit).
-- Closed or merged after FAIL with no fresh QA PASS: issues **#14, #15, #39, #52, #55, #63, #76, #134**; PRs **#86, #115, #127, #128, #129, #144**. #76 corresponds to PR #86. On #134 the PASS claim is the orchestrator's closing note; the recorded QA comments are FAIL. PR #85 instead has an explicit waiver: criterion 6b could not occur at sessionmaker construction, and stale-run release bounded its effect.
-- Role labels are incomplete and all comments use the owner's GitHub identity. The tracker does not independently authenticate who performed an action. **21 issues** lacked both `mvp` and `post-mvp`; the audit prints them.
+- On 2026-10-26, **38 of 96 issue bodies** lacked at least one template heading; **27** were closed. **91** contained “acceptance criteria”. [Tracker audit](#tracker-audit) gives the filters and exceptions.
+- **14 of 42 merged PRs** from #66 onward lacked a PR QA heading; some closed or merged work had no verdict or no fresh PASS after FAIL. [Exception records](#tracker-audit) distinguish these cases.
+- Shared GitHub authorship, incomplete role headings and **21 issues** without MVP/post-MVP labels limit attribution and classification; [the audit](#tracker-audit) lists them.
 
 ## 3. Agent team specification
 
@@ -137,7 +135,7 @@ The useful record is [issue #11](https://github.com/alexisdacquay/sail-event/iss
 
 **Checklist**
 
-The first two rows also check the lower-level ambiguity requested by the owner; their words come from that level.
+The first two rows check the preceding level: role names and clear responsibilities.
 
 | Rubric phrase | Where to look | Proof checkable in under a minute |
 |---|---|---|
@@ -149,19 +147,20 @@ The first two rows also check the lower-level ambiguity requested by the owner; 
 
 **Why not the lower score**
 
-“Roles or agents are mentioned, but responsibilities are unclear.” The roles have distinct inputs and outputs, not just names. The following is the documented Phase 2 cycle, not a claim that every historical task followed it:
+“Roles or agents are mentioned, but responsibilities are unclear.” The roles have distinct inputs and outputs, not just names. In the documented Phase 2 cycle:
 
-1. The owner selects work; the orchestrator starts a PM task with [pm.md](../_docs/team/pm.md), the issue and [task template](../_docs/task-template.md). PM rewrites the body; it does not implement code.
-2. The orchestrator starts an engineer task with [software-engineer.md](../_docs/team/software-engineer.md) and the groomed issue. In Phase 2 the engineer uses a separate branch/worktree, implements within scope and opens a PR with its report. It may question criteria in a comment, not rewrite them or close the issue.
+1. The owner selects work; the orchestrator starts a PM task with [pm.md](../_docs/team/pm.md), the issue and [task template](../_docs/task-template.md). PM rewrites the body; it does not implement code. [Recorded launches](../_docs/process.md#how-the-orchestrator-starts-an-agent) use background `general-purpose` tasks for PM and engineer, with the role file and read list supplied in the brief.
+2. The orchestrator starts an engineer task with [software-engineer.md](../_docs/team/software-engineer.md) and the groomed issue. In Phase 2 the engineer uses its own copy of the repository on a separate branch, implements within scope and opens a PR with its report. It may question criteria in a comment, not rewrite them or close the issue.
 3. CI runs on the PR. Green CI is the written merge rule; historical violations are listed in §9.
 4. The orchestrator starts a separate QA task, using [qa-engineer.md](../.claude/agents/qa-engineer.md) or the QA role brief. “Fresh” means a separate verification task: read the criteria, inspect/run the code and do not trust the implementation report. QA posts a verdict, edits no files and leaves the issue open.
-5. FAIL returns the QA comment to the engineer; the changed work goes back for re-check. PASS, or an explicit waiver, goes to the owner with the PR summary. In Phase 2 the verdict belongs on the PR.
+5. FAIL returns the QA comment to the engineer for a fix and re-check. If a criterion remains unmet, the orchestrator sends that criterion and its evidence to the owner, who grants or rejects a waiver; the decision is recorded before merge. QA records its verdict on the PR. A PASS goes to the owner with the PR summary.
 6. The owner authorizes merge in chat; the orchestrator performs it. GitHub may close an issue through `Closes #N`. A merge deploys dev. Production needs separate owner approval for a named SHA; the owner can dispatch the promote workflow or instruct the orchestrator to dispatch that approved SHA. Public run metadata records the dispatch, not the private approval conversation.
+
+[Issue #7](https://github.com/alexisdacquay/sail-event/issues/7) records a Phase 1 loop: password echoed in an error → QA FAIL → fix → QA PASS → close. It predates the worktree/PR phase.
 
 **Beyond the rubric**
 
-- [Issue #7](https://github.com/alexisdacquay/sail-event/issues/7) records a Phase 1 loop: password echoed in an error → QA FAIL → fix → QA PASS → close. It predates the worktree/PR phase.
-- The root-cause/regression rule entered the role files on **2026-10-25** (`c0f83e6`, part of the test-runner PR), then process.md on **2026-10-26** (`ac54483`). Verify with `git log -S 'committed while red' --format='%h %cs %s' -- _docs/team/software-engineer.md` and `git log -S 'Root-cause gate' --format='%h %cs %s' -- _docs/process.md`.
+The root-cause/regression rule entered the role files on **2026-10-25** (`c0f83e6`, part of the test-runner PR), then process.md on **2026-10-26** (`ac54483`). Verify with `git log -S 'committed while red' --format='%h %cs %s' -- _docs/team/software-engineer.md` and `git log -S 'Root-cause gate' --format='%h %cs %s' -- _docs/process.md`.
 
 **Picture**
 
@@ -177,24 +176,30 @@ sequenceDiagram
   O->>PM: role + issue + template
   PM-->>O: groomed issue body
   O->>E: role + issue
-  loop implement and verify until PASS or explicit waiver
+  loop implement and re-check
     E->>CI: commits + PR + report
     CI-->>O: test results
     O->>QA: role + criteria + branch/PR
     QA-->>O: per-criterion verdict and test evidence
     O-->>E: findings if FAIL
   end
-  O->>Owner: PR summary and verdict
-  Owner->>O: authorize merge
+  alt QA PASS and green CI
+    O->>Owner: PR summary and verdict
+    Owner->>O: authorize merge
+  else criterion remains unmet
+    O->>Owner: unmet criterion + evidence + waiver request
+    Owner->>O: grant or reject waiver
+    O->>O: record decision before any merge
+  end
   Note over Owner,O: Production approval is separate
 ```
 
 **Known gaps**
 
-- The orchestrator exceeded coordination: corrected the #24 groom, edited missing lines for #39/#52, and verified #14/#15/#55 itself. This breaks the stated role separation; it is not evidence of independent QA. See [the tracker audit](#tracker-audit) and [AI usage report](ai-usage-report.md).
-- Owner control of work selection and production approval dates from **2026-10-21** ([state record](../work/STATE.md), pause at 11:40 and owner rules). Earlier work did not run under those rules. The root-cause rule dates above likewise do not describe the whole project.
+- The orchestrator groomed, edited code and substituted its own verification for QA in recorded cases ([tracker audit](#tracker-audit), [AI usage report](ai-usage-report.md)).
+- Owner control of work selection and production approval began on **2026-10-21** ([state record](../work/STATE.md)); the regression gate began later, as dated above.
 - QA has Bash. “No edits” rests on instructions and the clean-tree check, not a write-proof sandbox. The runnable QA definition was added on **2026-10-17** (`git log -1 --format='%h %cs %s' a41b405`).
-- A separate initial QA context does not mean each re-check started a new agent: #7 reused its QA task ([launch and re-check record](../_docs/process.md#how-the-orchestrator-starts-an-agent)). Parallel work also needs dependency control; [#142](https://github.com/alexisdacquay/sail-event/issues/142) explicitly depended on #141. The tracker exceptions in §2 and CI exceptions in §9 limit claims of process compliance.
+- QA re-checks can reuse an agent; #7 did so ([launch record](../_docs/process.md#how-the-orchestrator-starts-an-agent)). Dependent parallel changes also need review at their final commit, as [#142](https://github.com/alexisdacquay/sail-event/issues/142) depended on #141.
 
 ## 4. Context management
 
@@ -234,7 +239,7 @@ sequenceDiagram
 
 **Picture**
 
-Context entry points, not a claim that every linked file is loaded on every task:
+Context entry points:
 
 ```mermaid
 flowchart LR
@@ -248,7 +253,7 @@ flowchart LR
 
 **Known gaps**
 
-Pointers do not guarantee freshness. [work/STATE.md](../work/STATE.md) contains dated snapshots; read its top block and verify live versions. Launch transcripts are retained locally, not published, so the public tracker cannot prove the exact context loaded on every task. No rule requires PM and engineer to load every linked document.
+[work/STATE.md](../work/STATE.md) contains dated snapshots that can drift; verify the top block against live versions. Exact launch transcripts remain private, and PM/engineer reads depend on the task brief.
 
 ## 5. Application
 
@@ -272,21 +277,20 @@ Pointers do not guarantee freshness. [work/STATE.md](../work/STATE.md) contains 
 
 **Why not the lower score**
 
-“Frontend, backend, and database exist but are not fully connected.” The browser and HTTP tests cross those boundaries; the restart test checks storage beyond the app process. Inspect their assertions and the linked CI log in §6 rather than inferring connectivity from folder names.
+“Frontend, backend, and database exist but are not fully connected.” The browser and HTTP tests cross those boundaries; the restart test checks storage beyond the app process. Their assertions and the §6 CI log provide the proof.
 
 **Beyond the rubric**
 
 [The schema-contract test][contract] compares API paths, methods and operation IDs with [openapi.yaml](../openapi.yaml). [Journey 2][journeys] checks that another user cannot see the first user's events.
 
-**Picture**
-
-The container diagram in §7 shows the serving path; another app screenshot adds no persistence evidence.
-
 **Known gaps**
 
 - Local defaults replay fixture search pages and recorded model answers. Use the pre-filled demo criteria; other text can lack a model recording and remain unscored ([fixture provider][fixture], [fake model][fake]). The backend, HTTP client and database still run normally.
 - `mock.ts` is also selected by a bare frontend dev run when `VITE_API_URL` is absent; it is not limited to tests ([client selection][client]). Use the documented startup commands.
-- The restart assertion compares event **counts**, not event IDs or full contents. End-to-end connectivity does not establish live search recall; no recall result after the event-page changes is recorded in [the measurement log](../work/RECALL.md). [PR #141](https://github.com/alexisdacquay/sail-event/pull/141) supplies a targeted regression, not that measurement.
+- The restart assertion compares event **counts**, not event IDs or full contents; the exact-score boundary test seeds its expected statuses instead of exercising triage ([test source][seeded-boundaries]).
+- Search quality after the event-page changes is unmeasured in [the recall log](../work/RECALL.md), and its ground-truth set remains unvetted ([testing](testing.md#field-test-runner-four-phases-against-a-deployed-service)).
+- Out events offer “Add to calendar”, but the backend returns HTTP 400; the [UI specification](../_docs/ux-spec.md#3e-all-events) records this mismatch.
+- Model duplicate-check failure or budget exhaustion can retain both events ([duplicate checker][duplicate-checker]).
 
 ## 6. Testing
 
@@ -302,16 +306,13 @@ The container diagram in §7 shows the serving path; another app screenshot adds
 
 | Rubric phrase | Where to look | Proof checkable in under a minute |
 |---|---|---|
-| unit tests exist | [backend tests](../backend/tests/) · [frontend tests](../frontend/src/) | The rubric's shared “tests exist” predicate applies to both layers. pytest and Vitest results are below; some backend tests cross routes/ORM in-process using TestClient and SQLite. |
-| integration tests exist | [HTTP integration tests][integration] | Tests use HTTP against the container and PostgreSQL, including app restart. |
+| Both unit and integration tests exist | [backend tests](../backend/tests/) · [frontend tests](../frontend/src/) · [HTTP integration tests][integration] | Unit: pytest and Vitest suites. Integration: HTTP against the container and PostgreSQL, including restart. Results are below. |
 | run with a single command | [Makefile][makefile] | `make test-all` invokes `test`, `test-integration`, `test-e2e` sequentially under normal make execution. |
-| pass | [CI run 40251535674](https://github.com/alexisdacquay/sail-event/actions/runs/40251535674) | At the evidence pin, unit, integration and browser steps passed. This proves the parts; it is not a captured local `make test-all` run. |
+| pass | [CI run 40251535674](https://github.com/alexisdacquay/sail-event/actions/runs/40251535674) | At the evidence commit, unit, integration and browser steps passed; see the logs below. |
 
 **Why not the lower score**
 
 “Only unit tests or only integration tests exist.” Both layers run: [CI configuration][ci] uses `uv run pytest` in `backend`, `npm test` in `frontend`, then `make test-integration` and `make test-e2e` inside the job named `integration`. CI does not invoke `make test-all` itself.
-
-**Beyond the rubric**
 
 At **542e58c**, [CI run 40251535674](https://github.com/alexisdacquay/sail-event/actions/runs/40251535674) reports **507 backend passed, 4 skipped, 7 deselected; 117 frontend; 7 integration; 12 Playwright**. Reproduce:
 
@@ -319,11 +320,9 @@ At **542e58c**, [CI run 40251535674](https://github.com/alexisdacquay/sail-event
 gh run view 40251535674 -R alexisdacquay/sail-event --log | grep -E 'passed|test_data_survives_restart'
 ```
 
-The responder's **20** stdlib tests passed locally on 2026-10-26: `python3 -I incident-response/test_responder.py`. They do not launch an agent. Bug fixes require a red regression test under the rule introduced on 2026-10-25 (see §3).
+**Beyond the rubric**
 
-**Picture**
-
-The [CI run graph](https://github.com/alexisdacquay/sail-event/actions/runs/40251535674) shows the jobs and their actual status; a static screenshot would become stale.
+The responder's **20** stdlib tests passed locally on 2026-10-26: `python3 -I incident-response/test_responder.py`. They do not launch an agent. The [schema-contract test][contract] checks API drift, and the [browser journeys][journeys] exercise user isolation. Bug fixes require a red regression test under the rule introduced on 2026-10-25 (see §3).
 
 **Known gaps**
 
@@ -387,24 +386,20 @@ The one-command application path uses fixture search, the fake/recorded model an
 | Rubric phrase | Where to look | Proof checkable in under a minute |
 |---|---|---|
 | deployed | [Render deployment instructions](deployment.md) · [public app](https://sail-event.onrender.com) | HTTP GET reaches the hosted application; `/api/health` returns status and the deployed commit. |
-| reachable at a public URL | <https://sail-event.onrender.com/api/health> | `curl -s https://sail-event.onrender.com/api/health` prints the deployment's own response. Public URL is the route used here; the rubric's demo alternative is not needed. |
+| reachable at a public URL | <https://sail-event.onrender.com/api/health> | `curl -fsS --max-time 20 https://sail-event.onrender.com/api/health` prints the deployment's own response. The hosted UI and API are publicly reachable. |
 
 **Why not the lower score**
 
-“Deployment steps are described, but no working deployment is shown.” The health endpoint and served UI can be inspected now, independently of the written instructions. This is an availability check, not proof that every external search succeeds.
+“Deployment steps are described, but no working deployment is shown.” The health endpoint and served UI can be inspected now, independently of the written instructions.
 
 **Beyond the rubric**
 
 - [Services](deployment.md#services) documents separate dev and production services/databases. [Promotion][promote] checks health and the requested commit after deployment.
-- Registration requirements are discoverable with `curl -s https://sail-event.onrender.com/api/config`; the 2026-10-26 GET returned `registrationCodeRequired: false`. The UI uses **Create one** / **Create account** ([login page][login], [registration page][register]).
-
-**Picture**
-
-No image is needed: the public URL and response are directly inspectable.
+- Registration requirements are discoverable with `curl -fsS --max-time 20 https://sail-event.onrender.com/api/config`; the 2026-10-26 GET returned `registrationCodeRequired: false`.
 
 **Known gaps**
 
-Live searches depend on provider availability and balance. Measured searches in [PR #144](https://github.com/alexisdacquay/sail-event/pull/144) ranged **86–493 seconds**, across different code/configuration measurements, not a latency guarantee. On 2026-10-25 a DeepSeek HTTP 402 outage stopped searches on both hosted environments ([handover](../work/HANDOVER-2026-10-25.md)). Health remained insufficient evidence of search success. Hosted alerting coverage is absent (see §11).
+Live searches depend on provider availability and balance. Measured searches in [PR #144](https://github.com/alexisdacquay/sail-event/pull/144) ranged **86–493 seconds** in local measurements across different code/configuration settings. [The alerting section](#11-alerting-on-user-impact) records the provider-balance outage and monitoring coverage.
 
 ## 9. CI/CD
 
@@ -423,23 +418,23 @@ Live searches depend on provider availability and balance. Measured searches in 
 | Rubric phrase | Where to look | Proof checkable in under a minute |
 |---|---|---|
 | CI runs tests | [CI][ci] · [run evidence](#6-testing) | PRs targeting main and pushes to main trigger unit, integration and browser checks. |
-| CD deploys to dev | [deployment instructions](deployment.md) · [live dev health](https://sail-event-dev.onrender.com/api/health) | Compare dev's commit with `git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main`. Equality is indirect evidence; it does not itself prove the Render trigger setting. |
+| CD deploys to dev | [deployment instructions](deployment.md) · [live dev health](https://sail-event-dev.onrender.com/api/health) | The [deployment record](../work/DEPLOY-render.md#devprod-split-issue-21-started-2026-10-17) records an automatic dev deployment on 2026-10-17. For current version alignment, compare dev health with `git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main`. |
 | manual deploy to production | [promote.yml][promote] · [run history](https://github.com/alexisdacquay/sail-event/actions/workflows/promote.yml) | Only `workflow_dispatch` triggers this workflow. An optional full SHA overrides the dispatched ref's commit. |
 
 **Why not the lower score**
 
-“CI runs tests and CD automatically deploys.” The extra distinction is the separate manual production workflow. Dev and production use different deployment paths. Render's auto-deploy settings are external to this repository; a health comparison cannot substitute for a dashboard setting or deployment-history record.
+“CI runs tests and CD automatically deploys.” The extra distinction is the separate manual production workflow. Dev and production use different deployment paths. The dated deployment record shows the dev/prod split in use; the manual workflow and run history show production dispatches.
+
+The [promotion workflow][promote] selects the input SHA or dispatched commit, validates its format, calls the Render deploy hook, then polls production for that healthy commit. The owner first checks dev and approves a named commit ([release process](release-process.md)).
 
 **Beyond the rubric**
 
-The promotion sequence is small enough to inspect in [promote.yml][promote]: select the input SHA or dispatched commit → validate its format → call the Render deploy hook → poll production until it reports that healthy commit. Owner approval is a process requirement; the workflow itself checks neither approval nor that SHA's CI status.
-
-Read the deployment state without dispatching anything:
+The workflow verifies the running commit after deployment, beyond checking health alone. Inspect deployment state without dispatching anything:
 
 ```bash
-curl -s https://sail-event-dev.onrender.com/api/health
+curl -fsS --max-time 20 https://sail-event-dev.onrender.com/api/health
 git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main
-curl -s https://sail-event.onrender.com/api/health
+curl -fsS --max-time 20 https://sail-event.onrender.com/api/health
 gh run list -R alexisdacquay/sail-event --workflow=promote.yml -L 3
 ```
 
@@ -457,18 +452,17 @@ flowchart LR
   Prod --> Health[Check requested commit + health]
 ```
 
-The diagram shows the documented deployment paths and the direct-push exception; it does not imply that CI blocks a dev deployment.
+Dev deployment and CI on main start from the same push; dev does not wait for CI.
 
 **Known gaps**
 
-- Main has no branch protection/ruleset gate. PRs **#31 and #138** merged with a failed integration check. Docs/work/tooling also reached main directly: **34 of the last 60 first-parent subjects at 542e58c lack a PR marker**. This is a subject-based proxy, not a complete API audit. [Reproduce and inspect](#delivery-audit).
-- Dev auto-deploys on pushes without waiting for main CI. Both Render auto-deploy settings are outside git; there is no Render settings/deploy-history capture here, and GitHub's deployments API returned no records on 2026-10-26.
-- The manual workflow validates SHA format and health, not a prior green CI run or a protected production approval.
-- **Rollback is documented, never exercised. Rollback across the three new migrations is untested; PR #150's delete is irreversible.** Those migrations are `e4f5a6b7c8d9`, `f5a6b7c8d9e0` and `a6b7c8d9e0f1`. Old code may not recognize the database revision during startup's `alembic upgrade head`; promoting an earlier SHA alone cannot recover deleted events. A compatible database backup/recovery plan is needed; see [release process](release-process.md#rollback) and [delete migration][delete-migration]. No tested recovery procedure is claimed.
+- Main has no branch protection/ruleset gate; direct pushes and merges with failed CI occurred ([delivery audit](#delivery-audit)).
+- Current Render trigger settings are external to git and have no sanitized dashboard capture here; the manual workflow checks SHA format and health, but neither prior green CI nor production approval.
+- Rollback was never exercised, the three new migrations make rollback untested, and PR #150 deletes data irreversibly ([migration evidence](#delivery-audit), [release process](release-process.md#rollback)).
 
 ## 10. Observability
 
-**Local stack only. The deployed app sends no telemetry to this collector, Grafana, or responder.** [Telemetry initialization][telemetry] returns without an OTLP endpoint; the local [override](../docker-compose.observability.yml) enables it.
+Telemetry, alerts and the responder cover the local stack started with `make up-all`; hosted deployments export no telemetry to it. [Telemetry initialization][telemetry] requires an OTLP endpoint, supplied by the local [override](../docker-compose.observability.yml).
 
 **Rubric levels**
 
@@ -486,20 +480,23 @@ The diagram shows the documented deployment paths and the direct-push exception;
 | metrics | [metric definitions][metrics] | Run count, duration, event counts and provider/model activity are instrumented. |
 | traces | [pipeline][pipeline] · picture below | Search, extraction, event-page hop, filter, judge, triage, dedup and persist appear as spans. |
 | structured logs | [JSON formatter][logging] | Timestamp, level, logger, message, trace ID and span ID form each application JSON record. |
-| share a trace ID | picture below · [telemetry][telemetry] | **Partial:** Loki and Tempo share the displayed ID. Metrics have no trace ID/exemplar correlation; joining by time does not meet this whole phrase. |
-| no customer data | [pipeline][pipeline] · [telemetry][telemetry] | **Not met:** spans include the user's UUID and HTTP client metadata. Provider exception text can also reach logs/spans. See the privacy gaps below. |
-| no credentials | [collector](../observability/collector.yaml) · [calendar route][calendar] | **Not met:** raw HTTP paths can include the feed token, which grants feed access. No redaction processor is configured. |
+| share a trace ID | picture below · [telemetry][telemetry] | **Partial:** Loki and Tempo display the same ID; metric correlation is a [known gap](#telemetry-audit). |
+| no customer data or credentials are sent to telemetry | [pipeline][pipeline] · [telemetry][telemetry] · [collector](../observability/collector.yaml) · [calendar route][calendar] | **Not met:** check customer identifiers/client metadata in spans and bearer feed tokens in HTTP paths; [the privacy evidence](#telemetry-audit) covers both. |
 | collected | [collector](../observability/collector.yaml) | OTLP receivers feed signal pipelines; filelog also reads container logs. |
 | stored | [observability Compose](../observability/docker-compose.yml) | Prometheus, Loki and Tempo store metrics, logs and traces. |
-| viewable in a UI | [dashboard](../observability/dashboard.json) · [Grafana provisioning](../observability/grafana/provisioning/) | Grafana dashboard plus Explore for Loki/Tempo. |
+| viewable in a UI | [dashboard](../observability/dashboard.json) · [Grafana provisioning](../observability/grafana/provisioning/) | The dashboard shows metrics/logs; use **Explore → Tempo** for traces, as demonstrated below. |
 
-**Why not the lower score**
+**Lower-level wording and remaining gaps**
 
-“The app emits logs, but there are no metrics or traces, or the signals cannot be correlated to a single request.” Metrics and traces exist, and the screenshots correlate a log with its trace. This closes the absence-of-signals concern. It does **not** close all full-marks clauses: metrics lack the shared ID and the privacy/credential conditions are incomplete. The rubric has no intermediate level for this combination; the reviewer decides.
+“The app emits logs, but there are no metrics or traces, or the signals cannot be correlated to a single request.” Metrics and traces exist; the screenshots correlate a log with its trace. The checklist leaves the metric-correlation and privacy clauses open.
+
+**Inspect the signal path**
+
+To inspect the local path, run `RESPONDER_WEBHOOK_SECRET=local-drill-secret make up-all`, exercise the recorded demo through `http://localhost:8000`, then open Grafana at `http://localhost:3001`. The app exports OTLP to the collector; Prometheus scrapes collector metrics; Loki and Tempo receive logs/traces. In Explore, use `{service_name="sail-event-backend"} |= "search run completed"` for logs, and find the same trace ID in Tempo. Allow for export delay. Starting the responder is a separate step (§12).
 
 **Beyond the rubric**
 
-To inspect the local path: set a nonempty `RESPONDER_WEBHOOK_SECRET` locally, run `make up-all`, exercise the recorded demo through `http://localhost:8000`, then open Grafana at `http://localhost:3001`. The app exports OTLP to the collector; Prometheus scrapes collector metrics; Loki and Tempo receive logs/traces. In Explore, use `{service_name="sail-event-backend"} |= "search run completed"` for logs, and find the same trace ID in Tempo. Allow for export delay. Starting the responder is a separate step (§12).
+The [dashboard](../observability/dashboard.json) adds environment/version selectors and panels for stage counts and run-duration percentiles.
 
 **Picture**
 
@@ -511,15 +508,11 @@ Local fixture run, 2026-10-25. The matching trace ID is `9da6b9bd797b3bdc96b1758
 
 **Known gaps**
 
-- Feed tokens in HTTP span paths violate “no credentials”; user UUIDs are customer identifiers, and HTTP auto-instrumentation also records client address, user-agent and URL metadata. Application-selected attributes alone are not a privacy boundary.
-- On 2026-10-26 a GET of an **invalid** calendar path on the existing local app returned 404 and left that full path and client IP in the Uvicorn container access log. The matching Loki query returned no lines, and no matching probe trace was found. Transport of that access-log line into Loki is **unverified**, not disproved. Reproduce without a real token using [the privacy check](#local-privacy-check).
-- Some warning logs and `record_exception` include provider exception text ([pipeline][pipeline]); the collector has no redaction step and its filelog glob covers **all Docker container logs**, not just this application. The filelog mount can also be empty on some Docker hosts ([telemetry comments][telemetry]).
-- Metrics lack trace IDs; the dashboard's traces panel errors in [the recorded screenshot](images/review-40-grafana-dashboard.png). Explore/Tempo is the demonstrated alternative. `service.version` defaults to `dev` unless `APP_VERSION` is set; the selector does not prove commit identification.
-- Grafana's local Compose configuration enables anonymous **Admin** access. These defaults are a local demonstration, not a hosted operations setup. There is no deployed telemetry/alerting coverage (§11).
+- Metrics lack trace-ID/exemplar correlation; user UUIDs, HTTP client metadata, feed-token paths and provider exceptions can reach unsanitized telemetry ([telemetry audit](#telemetry-audit)).
+- The traces dashboard panel errors in [the captured dashboard](images/review-40-grafana-dashboard.png); use **Explore → Tempo**, shown above.
+- The collector reads all host-container logs, may find no files on some Docker hosts, and Grafana grants anonymous Admin access; `service.version` defaults to `dev` ([configuration and probe evidence](#telemetry-audit)).
 
 ## 11. Alerting on user impact
-
-**Local stack only; no alert watches hosted users. Recorded firings are drills.**
 
 **Rubric levels**
 
@@ -535,7 +528,7 @@ Local fixture run, 2026-10-25. The matching trace ID is `9da6b9bd797b3bdc96b1758
 
 **Why not the lower score**
 
-“No alerts.” The rule is provisioned in code and a drill records its firing. It measures failed searches, a user journey outcome, rather than CPU utilization. This does not establish production coverage.
+“No alerts.” The rule is provisioned in code and a drill records its firing. It measures failed searches, a user journey outcome, rather than CPU utilization.
 
 **Beyond the rubric**
 
@@ -561,8 +554,6 @@ flowchart LR
 
 ## 12. On-call agent
 
-**A host-run demonstration beside the local stack, not an always-on production service. Both records are injected-fault drills.**
-
 **Rubric levels**
 
 > No on-call agent. (0 points)
@@ -574,26 +565,29 @@ flowchart LR
 | Rubric phrase | Where to look | Proof checkable in under a minute |
 |---|---|---|
 | An agent | [responder launch][responder-launch] · [task](../incident-response/responder-task.md) | The HTTP responder starts headless Claude Code with model `sonnet`; the model process is the agent. |
-| wakes up on an alert | [drill script][drill] · [stored alert](../incident-response/incidents/20261021-074150-SearchRunFailures/alert.json) | The script injects failures and waits for Grafana's firing rule. Its only direct `/alerts` POST is a resolved liveness ping, ignored by the responder. JSON field names alone cannot prove the sender. |
-| fixes the issue | [verdict](../incident-response/incidents/20261021-074150-SearchRunFailures/verdict.json) · [diff](../incident-response/incidents/20261021-074150-SearchRunFailures/fix.diff) · [commit 8d2f839](https://github.com/alexisdacquay/sail-event/commit/8d2f839) | The commit removes the injected exception stub and restores the method name (+1/−4). No recovered running service or resolved alert is recorded. |
+| wakes up on an alert | [drill script][drill] · [stored alert](../incident-response/incidents/20261021-074150-SearchRunFailures/alert.json) | The script injects failures and waits for Grafana's firing rule. Its only direct `/alerts` POST is a resolved liveness ping, ignored by the responder. The rule, route and stored alert are linked together in §11. |
+| fixes the issue | [verdict](../incident-response/incidents/20261021-074150-SearchRunFailures/verdict.json) · [diff](../incident-response/incidents/20261021-074150-SearchRunFailures/fix.diff) · [commit 8d2f839](https://github.com/alexisdacquay/sail-event/commit/8d2f839) | The commit removes the injected exception stub and restores the method name (+1/−4). Recovery evidence is a [known gap](#responder-audit). |
 
 **Why not the lower score**
 
-“No on-call agent.” The drill preserves the alert, collected evidence, agent report, verdict and fix commit. It demonstrates alert-triggered code repair; the unrecorded recovery and weak test evidence below limit the broader claim that it “fixes the issue”.
+“No on-call agent.” The drill preserves the alert, collected evidence, agent report, verdict and fix commit. It demonstrates alert-triggered code repair of an injected fault.
 
 The implemented sequence is explicit in [responder.py][responder]:
 
-1. Run the webhook server on the host (`make responder`) with a nonempty `RESPONDER_WEBHOOK_SECRET`. Grafana's default URL is `host.docker.internal:8001/alerts`.
+1. Run the webhook server on the host with `RESPONDER_WEBHOOK_SECRET=local-drill-secret make responder`; use the same secret for `make up-all`. Grafana's default URL is `host.docker.internal:8001/alerts`.
 2. For a valid firing alert, create an incident folder and save the **alert element**, not the entire Grafana webhook envelope.
 3. Run `collect-evidence.sh` before the agent starts: Prometheus errors, Loki query, health and recent commits form `evidence.md`.
-4. Create a local git worktree. Pass [responder-task.md](../incident-response/responder-task.md) and fenced evidence to Claude Code. The task asks it to make an incident branch, investigate, test, commit and write `verdict.json`.
-5. Copy the report/verdict into the incident record and remove the worktree. The tool list omits `git push`; branch publication and deployment are separate human actions. The script does not deploy the repaired build or verify recovery.
+4. Create a separate repository worktree from the responder checkout's **HEAD**, rather than automatically selecting the deployed commit. Pass [responder-task.md](../incident-response/responder-task.md) and fenced evidence to Claude Code. The task asks it to make an incident branch, investigate, test, commit and write `verdict.json`.
+5. Copy the report/verdict into the incident record and remove the worktree. The tool list omits `git push`; branch publication and deployment are separate human actions.
+
+**Recorded drills**
+
+- The **2026-10-17** drill injected a scorer fault (`7318f2f`) and recorded fix `dae24e9` ([folder](../incident-response/incidents/20261017-052050-SearchRunFailures/)). The 2026-10-21 drill injected search-provider fault `3d9f6b8` and recorded fix `8d2f839`.
+- The latter alert starts at **07:41:20 UTC**, and its fix commit is **07:46:12 UTC**: **4 min 52 s** from alert to fix commit. Check `git show -s --format='%h %cI %s' 3d9f6b8 8d2f839` against the stored alert.
 
 **Beyond the rubric**
 
-- A second drill, **2026-10-17**, injected a scorer fault (`7318f2f`) and recorded fix `dae24e9` ([folder](../incident-response/incidents/20261017-052050-SearchRunFailures/)). The 2026-10-21 drill injected search-provider fault `3d9f6b8` and recorded fix `8d2f839`.
-- The latter alert starts at **07:41:20 UTC**, and its fix commit is **07:46:12 UTC**: **4 min 52 s** to a commit, not to recovery. Check `git show -s --format='%h %cI %s' 3d9f6b8 8d2f839` against the stored alert.
-- Implemented limits are in [the tool list][responder-tools], [launch flags][responder-launch] and [authentication][responder-auth]: separate worktree, $1 budget, 300-second timeout, Bearer check. The [response schema](../incident-response/response.schema.json) also permits `false_positive` and `escalate`.
+Implemented limits are in [the tool list][responder-tools], [launch flags][responder-launch] and [authentication][responder-auth]: separate worktree, $1 budget, 300-second timeout, Bearer check. The [response schema](../incident-response/response.schema.json) also permits `false_positive` and `escalate`.
 
 **Picture**
 
@@ -605,59 +599,51 @@ sequenceDiagram
   participant Git as Local git worktree
   G->>R: firing alert (injected-fault drill)
   R->>R: collect evidence packet
-  R->>Git: create worktree
+  R->>Git: create worktree from checkout HEAD
   R->>A: task + evidence + tool list
   A->>Git: remove stub, restore method, commit
   A-->>R: verdict and agent report
-  Note over A,Git: A human later published the branch; nothing merged
-  Note over R,Git: No deployment/recovery step in this sequence
+  Note over A,Git: Human publication and deployment are separate
 ```
 
 **Known gaps**
 
-### What this run does not prove
-
-| Limit | Recorded evidence and consequence |
-|---|---|
-| Production response | The responder is a host process using the operator's Claude login/configuration. It was started for the drills; it does not monitor hosted users. |
-| Diagnosis of an unknown fault | The newest commit says `test: inject search-provider fault`; the original method remains under `_search_original`. The repair is unusually easy. |
-| Complete investigation | The script collected the packet before the agent ran. Both Loki queries returned no lines; the 2026-10-21 health commit was empty and deployed version `unknown`. The 2026-10-17 health check failed. Read [agent.log](../incident-response/incidents/20261021-074150-SearchRunFailures/agent.log) for the agent's own reasoning. |
-| Reliable test evidence | The agent claims “84 frontend + backend tests” passed, without preserving the full test output, and admits not checking a background pytest completion. It also says “~28 errors/min” where the packet says about 28 in **ten** minutes. The suite was not rerun on the incident branch for this guide. `SKIP_HOOK_TESTS=1` skips the hook's tests. |
-| Recovery | No successful post-fix search or resolved alert is recorded. A local code commit did not replace the faulty running image; cleanup/rebuild was separate. |
-| Enforced file boundaries | `autonomy-policy.yaml` is documentation, read by no runtime code. `Read` and `Edit` are not path-restricted. No push command is listed, but broad Edit plus `make test` is not a security boundary against indirect actions. |
-| Independent identity | Commits use the machine's git identity; GitHub author names do not prove which process wrote them. The incident branches were published by a human for the record, not by the agent. |
-
-Read the [recorded folders](../incident-response/incidents/) without running another drill. The script's `--dry-run` still needs Docker, creates/cleans a temporary fault branch, builds the stack and waits for Grafana; it skips only the model agent. It is not a quick read-only check.
+- The repair worktree can differ from the running build, and the drills reveal the injected fault in the commit subject while preserving the original method ([responder audit](#responder-audit)).
+- Evidence collection returned empty Loki results and missing version/health data; test success and service recovery are unverified ([recorded evidence](#what-this-run-does-not-prove)).
+- Broad Edit access, the operator's login/configuration and shared git identity limit isolation and attribution; written autonomy policy is not runtime enforcement ([controls](#what-this-run-does-not-prove)).
 
 ## Known gaps
 
-This index includes the limitations above; the linked criterion supplies evidence and detail.
+This index groups the disclosures by criterion; follow the evidence links for details.
 
-| Criteria | Gap and practical effect |
-|---|---|
-| [1](#1-problem-description), [5](#5-application), [7](#7-containerization) | Cron delays; recorded demo data and fixed clock; local free text may lack model recordings. Search quality after the event-page changes is unmeasured. |
-| [1](#1-problem-description) | Threshold labels say above/below while code includes equality; price rules are unsupported. |
-| [2](#2-product-specification) | Ungroomed issues, missing acceptance-criteria text, incomplete role labels and missing MVP labels; counts and lists are reproducible below. |
-| [2](#2-product-specification), [3](#3-agent-team-specification) | Closed/merged work without a QA verdict or fresh PASS; #134's PASS is an orchestrator assertion; historical checkboxes can postdate closure. |
-| [3](#3-agent-team-specification) | Orchestrator overreach into grooming/edits/verification; owner controls and regression rules started late; QA Bash permits writes; re-checks did not always start a new context. |
-| [4](#4-context-management) | Documentation links and state snapshots do not guarantee current context. |
-| [5](#5-application) | Bare frontend dev can select mocks; the restart test checks count rather than full event identity. |
-| [6](#6-testing) | Responder tests absent from CI; combined `make test-all` pass not captured; expected browser failures and screenshot tests are included in green totals. |
-| [7](#7-containerization) | Scheduler external to Compose; ops stack and host responder are separate. |
-| [8](#8-deployment) | Public health does not prove provider availability, search latency or result quality. |
-| [9](#9-cicd) | Direct pushes and red merges; no branch/CI/production-approval enforcement; external Render settings not captured. |
-| [9](#9-cicd) | Rollback never exercised; rollback across the three new migrations untested; PR #150's delete irreversible. An older SHA alone cannot restore deleted data. |
-| [10](#10-observability), [11](#11-alerting-on-user-impact), [12](#12-on-call-agent) | Hosted app sends no telemetry to the local stack; no alert or responder covers hosted users or the recorded provider-balance outage. |
-| [10](#10-observability) | Feed-token paths can reach spans and access logs; client metadata/provider exceptions are privacy gaps; Loki transport of the access-log probe remains unverified. Collector filelog includes all host containers. |
-| [10](#10-observability) | Metrics lack trace IDs; traces dashboard panel errors; version defaults to `dev`; local Grafana grants anonymous Admin. |
-| [11](#11-alerting-on-user-impact) | Silence rule is per series, no-data OK, not tuned/wired to the scheduler; no useful-result alarm; workflow sees enqueue status only. |
-| [12](#12-on-call-agent) | Drills with a named fault and preserved original method; empty Loki evidence; weak test claims; no recorded recovery; host runtime, broad Edit access and no independent author identity. |
+| Criteria | Gaps | Evidence |
+|---|---|---|
+| [1](#1-problem-description) | Schedule delays; no-place acceptance rule unshipped; unsupported price rules | [Schedule measurement](#schedule-measurement) · [#101](https://github.com/alexisdacquay/sail-event/issues/101) · [product exclusions](../_docs/plan.md#out-of-scope-for-the-mvp) |
+| [2](#2-product-specification), [3](#3-agent-team-specification) | Incomplete grooming/labels/attribution; closure or merge without QA/fresh PASS; overreach and late role rules | [Tracker audit](#tracker-audit) · [process records](../_docs/process.md#process-records-and-exceptions) |
+| [4](#4-context-management) | Dated handovers; private launch/context records; instruction-based QA separation | [Context gaps](#4-context-management) · [role boundaries](#3-agent-team-specification) |
+| [5](#5-application), [7](#7-containerization) | Fixture providers/fixed clock; frontend mock selection; count-only restart check; seeded boundary test; unmeasured recall and unvetted ground truth; Out restore error; duplicates on model failure | [Application gaps](#5-application) · [UI spec](../_docs/ux-spec.md) |
+| [6](#6-testing) | Responder absent from CI; no captured combined run; expected browser failures/screenshot tests; conditional skips | [Testing gaps](#6-testing) |
+| [7](#7-containerization) | External scheduler and separately started operations components | [Container scope](#7-containerization) |
+| [8](#8-deployment), [11](#11-alerting-on-user-impact) | Provider availability/balance and variable latency; hosted monitoring absent | [Deployment gaps](#8-deployment) · [outage record](#11-alerting-on-user-impact) |
+| [9](#9-cicd) | Direct pushes/red merges; unenforced CI/approval gates; external trigger settings; untested rollback and irreversible delete | [Delivery audit](#delivery-audit) |
+| [10](#10-observability) | Metric correlation, privacy, collector scope/portability, dashboard traces, version labels and Grafana access | [Telemetry audit](#telemetry-audit) · [working trace UI](#10-observability) |
+| [11](#11-alerting-on-user-impact) | Per-series silence rule/no-data behavior; no useful-result alert; enqueue-only workflow status | [Alerting gaps](#11-alerting-on-user-impact) |
+| [12](#12-on-call-agent) | Checkout revision, easy drill, incomplete evidence/tests/recovery, broad tools, host runtime and shared identity | [Responder audit](#responder-audit) |
 
 ## Evidence commands
 
 ### Tracker audit
 
-Snapshot checked on 2026-10-26. These are explicit text filters over issue/PR bodies and comments, not independent identification of an agent. Run from a clone with `gh` authenticated:
+Snapshot checked on 2026-10-26. The filters below reproduce **58/96** issues with four headings, **69** with QA headings (**23** FAIL), **30/56** PRs with QA headings, and **45** orchestrator closing notes. All comments use the owner's GitHub login; role headings supply project attribution.
+
+- **Specification coverage:** 38 issue bodies lacked at least one heading, including 27 closed issues. Five bodies lacked “acceptance criteria”: #17, #21, #46, #102 and #145. Issue #11's edited history shows its boxes were ticked after closure; its QA comment is the contemporaneous check.
+- **No PR QA heading among 42 merged PRs from #66:** #67, #88, #89, #91, #92, #93, #137, #138, #140, #141, #143, #144, #146, #152.
+- **Closed with no QA verdict on the issue or associated PR:** #17, #21, #29, #59, #60, #74, #139, #142. #59 deferred verification to #60, whose PR #64 has no verdict.
+- **Closed or merged after FAIL without a fresh QA PASS:** issues #14, #15, #39, #52, #55, #63, #76, #134; PRs #86, #115, #127, #128, #129, #144. #76 corresponds to #86; #144's FAILs are on #145. #134's closing PASS is an orchestrator assertion. PR #85 instead records an orchestrator waiver of criterion 6b; the comment cites sessionmaker construction and stale-run release.
+- **Role separation:** the orchestrator corrected the #24 groom, edited missing lines for #39/#52 and verified #14/#15/#55 itself ([AI usage report](ai-usage-report.md)).
+- **Classification:** 21 issues had neither `mvp` nor `post-mvp`; the command prints them.
+
+Run from a clone with `gh` authenticated:
 
 ```bash
 python3 - <<'PY'
@@ -678,6 +664,8 @@ print('four headings / AC phrase:', sum(map(groom, issues)),
       sum('acceptance criteria' in x['body'].lower() for x in issues))
 print('ungroomed / closed ungroomed:', sum(not groom(x) for x in issues),
       sum(not groom(x) and x['state']=='CLOSED' for x in issues))
+print('without AC phrase:', sorted(x['number'] for x in issues
+      if 'acceptance criteria' not in x['body'].lower()))
 print('issue QA / FAIL:', sum(map(qa, issues)), sum(qa(x, 'FAIL') for x in issues))
 print('PR QA / total:', sum(map(qa, prs)), len(prs))
 print('closed-by-orchestrator notes:', sum(any('closed by the orchestrator' in c['body'].lower()
@@ -711,11 +699,18 @@ gh run list -R alexisdacquay/sail-event --workflow=hourly-search.yml --event=sch
 
 ### Delivery audit
 
+On 2026-10-26, main's protection API returned “Branch not protected”, rulesets and deployments were empty, and PRs **#31 and #138** showed merged timestamps with failed integration checks. A fixed sample of the last 60 first-parent subjects at `542e58c` contains **34** without a PR marker; inspect their changed paths to distinguish docs/work notes from code.
+
+Rollback has no recorded execution: all 15 [promotion runs](https://github.com/alexisdacquay/sail-event/actions/workflows/promote.yml) inspected on 2026-10-26 moved forward. The new migrations are `e4f5a6b7c8d9`, `f5a6b7c8d9e0` and `a6b7c8d9e0f1`. PR #150's [deletion migration][delete-migration] has no restorative downgrade. Old code may not recognize a newer database revision at `alembic upgrade head`, and an older application SHA cannot restore deleted events; follow the [release rollback requirements](release-process.md#rollback).
+
+The [2026-10-17 deployment record](../work/DEPLOY-render.md#devprod-split-issue-21-started-2026-10-17) documents dev auto-deploy and prod auto-deploy being disabled. Current health/version alignment and that historical record are separate checks; a sanitized current Render settings/history capture is still missing.
+
 ```bash
 # A 404 saying Branch not protected was returned on 2026-10-26.
 gh api repos/alexisdacquay/sail-event/branches/main/protection
 gh api repos/alexisdacquay/sail-event/rulesets
 gh api repos/alexisdacquay/sail-event/deployments
+gh run list -R alexisdacquay/sail-event --workflow=promote.yml -L 100 --json databaseId,event,conclusion,createdAt,headSha
 gh pr view 31 -R alexisdacquay/sail-event --json mergedAt,statusCheckRollup
 gh pr view 138 -R alexisdacquay/sail-event --json mergedAt,statusCheckRollup
 # Fixed historical sample: 34 subjects without a PR marker; inspect paths to classify them.
@@ -723,18 +718,43 @@ git log --first-parent 542e58c -60 --format='%s' | python3 -c 'import re,sys; pr
 git show --stat 8ceef57 6b2fcc4 571b751
 ```
 
+### Responder audit
+
+[responder.py][responder] starts the repair worktree at the operator checkout's `HEAD`; health collection does not select its revision. Compare the two before a drill.
+
+### What this run does not prove
+
+| Limit | Recorded evidence and consequence |
+|---|---|
+| Production response | The host process uses the operator's Claude login/configuration and must be started separately with `make responder`. |
+| Diagnosis of an unknown fault | The newest commit says `test: inject search-provider fault`; the original method remains under `_search_original`. The repair is unusually easy. |
+| Complete investigation | Both Loki queries returned no lines; the 2026-10-21 health commit was empty and deployed version `unknown`. The 2026-10-17 health check failed. Read [agent.log](../incident-response/incidents/20261021-074150-SearchRunFailures/agent.log) for the agent's own reasoning. |
+| Reliable test evidence | The agent claims “84 frontend + backend tests” passed, without preserving the full test output, and admits not checking a background pytest completion. It also says “~28 errors/min” where the packet says about 28 in **ten** minutes. `SKIP_HOOK_TESTS=1` skips the hook's tests. |
+| Recovery | No successful post-fix search or resolved alert is recorded. A local code commit did not replace the faulty running image; cleanup/rebuild was separate. |
+| Enforced file boundaries | `autonomy-policy.yaml` is documentation, read by no runtime code. `Read` and `Edit` are not path-restricted. Broad Edit plus `make test` allows indirect actions beyond the written policy. |
+| Independent identity | Commits use the machine's git identity; GitHub author names do not prove which process wrote them. The incident branches were published by a human for the record, not by the agent. |
+
+Read the [recorded folders](../incident-response/incidents/) without running another drill. The script's `--dry-run` still needs Docker, creates/cleans a temporary fault branch, builds the stack and waits for Grafana; it skips only the model agent. It is not a quick read-only check.
+
+### Telemetry audit
+
+- [Metrics][metrics] have no trace-ID attribute or demonstrated exemplars; [the screenshots](#10-observability) correlate logs and traces.
+- The [search span][pipeline] includes the user's UUID. HTTP auto-instrumentation adds client address, user-agent and URL metadata; the [calendar route][calendar] carries the feed credential in its path. Provider warnings and `record_exception` can also export provider text. The [collector](../observability/collector.yaml) has no redaction processor.
+- Collector filelog covers `/var/lib/docker/containers/*/*.log`, including other applications' logs; this mount can be empty on some Docker hosts ([telemetry comments][telemetry]). [Grafana Compose](../observability/docker-compose.yml) enables anonymous Admin access, and [telemetry][telemetry] defaults `service.version` to `dev` unless `APP_VERSION` is set.
+- The 2026-10-26 invalid-path probe returned HTTP 404 and appeared in the Uvicorn access log with client IP; its Loki query returned no lines, and no matching probe trace was found. Loki transport of that access-log line remains unverified.
+
 ### Local privacy check
 
-The existing local app used port **8010** for this check on 2026-10-26. Substitute your local app port. The probe value is deliberately invalid; do not paste a real feed credential into logs or shared output.
+Use the local app port and the same Compose project and override flags used to start it. The example below matches `make up-all` with `HOST_PORT=8010`; for the base stack, omit both `-f` flags. The probe is deliberately invalid; never substitute a real feed credential.
 
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8010/api/calendar/docs-quality-invalid-probe
-docker logs --since 5m projectone-app-1 2>&1 | grep 'docs-quality-invalid-probe'
+docker compose -f docker-compose.yml -f docker-compose.observability.yml logs --since 5m app | grep 'docs-quality-invalid-probe'
 curl -sG http://localhost:3100/loki/api/v1/query_range --data-urlencode 'query={service_name="sail-event-backend"} |= "docs-quality-invalid-probe"' --data-urlencode 'limit=10'
 ```
 
 [auth]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/routers/auth.py#L100-L101
-[boundaries]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_events.py#L111
+[seeded-boundaries]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_events.py#L111
 [rejection]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_events.py#L150
 [pipeline]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/pipeline.py
 [triage]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/pipeline.py#L737-L750
@@ -753,8 +773,6 @@ curl -sG http://localhost:3100/loki/api/v1/query_range --data-urlencode 'query={
 [ci]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/.github/workflows/ci.yml
 [field]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/e2e/field.spec.ts
 [spa]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/main.py#L117-L126
-[login]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/frontend/src/pages/LoginPage.tsx
-[register]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/frontend/src/pages/RegisterPage.tsx
 [promote]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/.github/workflows/promote.yml
 [delete-migration]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/alembic/versions/f5a6b7c8d9e0_cleanup_events_without_start_time.py
 [telemetry]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/telemetry.py
@@ -769,3 +787,6 @@ curl -sG http://localhost:3100/loki/api/v1/query_range --data-urlencode 'query={
 [responder-launch]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/incident-response/responder.py#L151-L166
 [responder-auth]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/incident-response/responder.py#L188-L195
 [drill]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/incident-response/test-incident.sh
+
+[triage-test]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_pipeline.py#L306-L323
+[duplicate-checker]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/dedup.py#L67-L104

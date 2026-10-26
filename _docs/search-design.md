@@ -165,14 +165,13 @@ untrusted pages cannot affect a model. Sources:
 The original v2 rollout is complete; do not execute the old “set keys before
 pipeline swap” instructions. Use [release-process.md](../docs/release-process.md).
 Prod promotion needs the owner's approval of a named commit and a database
-backup. Rollback across the three new migrations is untested; PR #150's delete
-is irreversible. `curl -s https://sail-event.onrender.com/api/health` prints the
-deployed commit.
+backup. `curl -s https://sail-event.onrender.com/api/health` prints the deployed
+commit.
 
 ## 13. Implementation plan
 
-Historical issue split, retained for links; closed issues describe their scope
-at the time, not a claim that each old criterion still matches main.
+Historical issue split, retained for links. Closed issues describe their scope
+at the time; the sections above describe the implementation on main.
 
 ### Issue A — Search v2 data model (migration first)
 

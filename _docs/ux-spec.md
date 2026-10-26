@@ -34,15 +34,14 @@ back. Known wording gap: [Auto-accept above / Auto-reject below](https://github.
 ### 3a. Sign in
 
 [LoginPage](../frontend/src/pages/LoginPage.tsx) authenticates returning users.
-Its account-creation link says **Create one**. Error copy distinguishes wrong
-credentials, rate limiting and other failures. The sign-in pitch says “every
-hour”; actual GitHub workflow starts are less frequent ([PRD timing](plan.md#2-search)).
+Error copy distinguishes wrong credentials, rate limiting and other failures.
+The sign-in pitch says “every hour”; actual GitHub workflow starts are less
+frequent ([PRD timing](plan.md#2-search)).
 
 ### 3b. Register
 
-[RegisterPage](../frontend/src/pages/RegisterPage.tsx) uses **Create account**.
-Invitation code is conditional on `GET /api/config`; it is not an unconditional
-registration step. Authentication errors remain on the form.
+[RegisterPage](../frontend/src/pages/RegisterPage.tsx) requires an invitation
+code only when `GET /api/config` enables it. Authentication errors remain on the form.
 
 ### 3c. Home
 
@@ -99,6 +98,8 @@ There is no All events tab. Results shows accepted and review rows; **show**
 reveals Out rows. Accepted events have **Remove from calendar**, with confirmation.
 **Clear all** confirms irreversible deletion of every event for the user.
 
+<a id="event-detail"></a>
+
 Known gap: the detail of an Out event shows **Add to calendar**, but
 [the decision endpoint](../backend/app/routers/events.py) accepts decisions only
 on queued or accepted events and returns 400 for rejected ones. The control does
@@ -114,8 +115,7 @@ lists one saved search; **+ new search** is disabled with “coming later”.
 
 The intended first outcome is useful events, followed by a decision on uncertain
 matches and a calendar subscription. There is no tutorial overlay or wizard.
-A completed search and empty review list do not by themselves prove the first
-outcome; relevance and coverage require the [search evaluation](search-spec.md#11-evaluation).
+Relevance and coverage are measured through the [search evaluation](search-spec.md#11-evaluation).
 
 ## 5. Terminology table
 
@@ -146,9 +146,8 @@ not delivered. Theme history, mockups and content rules are in
 
 [MainPage tests](../frontend/src/pages/MainPage.test.tsx) and
 [e2e journeys](../e2e/journeys.spec.ts) cover saved criteria, thresholds, run
-progress, event decisions, hidden Out rows and feed behavior. Review the
-[known UI/API gaps](#3e-all-events) and the [boundary-label gap](#2-mental-model)
-when interpreting passing tests; they do not prove those issues fixed.
+progress, event decisions, hidden Out rows and feed behavior. Remaining issues:
+[UI/API gaps](#3e-all-events) and [boundary labels](#2-mental-model).
 
 ## 9. API gaps
 

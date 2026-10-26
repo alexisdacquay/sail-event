@@ -20,8 +20,8 @@ Every page a peer reviewer reads must meet [STANDARD.md](STANDARD.md): correct E
 | 1 | Review: 10 critics (sense, facts, rubric, live site, team docs, ops docs) | done: 363 findings, 78 high | `findings.json`, `findings-<group>.json`, `facts.md` |
 | 2 | Rewrite: 4 codex writers on disjoint files (readme, guide, team, ops) | done 12:42 UTC, links ok | `out/<group>-changes.md` |
 | 3 | Blind verify: fresh reader, facts + links, rubric scorer | done 12:54 UTC: reader FAIL (22, 0 high), facts FAIL (6, 0 high, links ok), rubric 23/24 (Observability 1/2, a code gap) | `out/verify-*.md`, `out/orchestrator-review.md` |
-| 4 | Fix what verify found (4 codex fixers) | running since 12:56 UTC | `out/fix-*.md` |
-| 5 | Final Claude reviewer on README + guide, then fix | pending | `out/final-review.md` |
+| 4 | Fix what verify found (4 codex fixers) | done 13:04 UTC, links ok; README 3,300 → 1,665 words | `out/fix-*.md` |
+| 5 | Final Claude reviewer on README + guide, then fix | running since 13:05 UTC (prompt: `prompts/final-review.md`) | `out/final-review.md` |
 | 6 | Commit, PR, green CI, merge (dev only), check GitHub README and dev | pending | PR link here |
 | 7 | Update `work/STATE.md` top block and the prod promote checklist for the owner | pending | |
 

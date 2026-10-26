@@ -147,8 +147,9 @@ flowchart TD
     G --> J["Your ICS feed<br/>calendar apps with ICS subscription"]
 ```
 
-Boundary values (90 is In calendar, 40 is Out):
-[test_triage_uses_ge_le_cutoffs](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_pipeline.py#L306).
+The [triage implementation](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/pipeline.py#L743-L750)
+sets the inclusive boundaries: 90 is In calendar and 40 is Out at the defaults.
+The pipeline test linked above checks the statuses produced by a fixture search.
 
 
 ## Expected behaviour

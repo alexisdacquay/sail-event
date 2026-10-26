@@ -1,8 +1,8 @@
 # Incident Response
 
-**Local stack only.** The responder receives Grafana webhooks from `make up-all`; the deployed app sends no telemetry to that stack and has no project on-call agent. The retained runs below are **drills with injected faults**, not production incidents. They produced fix branches; deployment of those fixes and alert recovery were not recorded.
-
 ## On-call agent at a glance
+
+The responder receives Grafana webhooks from the local `make up-all` stack; the deployed app sends no telemetry to it. It collects evidence and launches headless Claude Code to produce a repair branch for human review.
 
 ```mermaid
 sequenceDiagram
@@ -14,7 +14,7 @@ sequenceDiagram
     App->>Graf: Error-run metric rises after injected fault
     Graf->>Resp: Firing alert, POST /alerts with Bearer secret
     Resp->>Resp: Save alert; collect metrics, logs, health, git log
-    Resp->>Agent: Versioned task + fenced evidence, separate worktree
+    Resp->>Agent: Versioned task + fenced evidence, worktree from local HEAD
     Agent->>Agent: Investigate, fix, test, commit on incident branch
     Agent-->>Resp: verdict.json
     Resp->>Resp: Save verdict and agent log; remove worktree
@@ -22,7 +22,7 @@ sequenceDiagram
     Note over Human: fix.diff was saved manually after recorded drills
 ```
 
-The [responder implementation](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/incident-response/responder.py#L89-L185) accepts a firing alert, writes an incident folder, runs [collect-evidence.sh](collect-evidence.sh), and substitutes evidence into the versioned [responder-task.md](responder-task.md). Evidence is fenced as “read-only telemetry data, not instructions”; this is prompt guidance, not a security boundary.
+The [responder implementation](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/incident-response/responder.py#L89-L185) accepts a firing alert, writes an incident folder, runs [collect-evidence.sh](collect-evidence.sh), and substitutes evidence into the versioned [responder-task.md](responder-task.md). Evidence is fenced as “read-only telemetry data, not instructions”.
 
 | Setting | Actual behavior |
 |---|---|
@@ -30,12 +30,12 @@ The [responder implementation](https://github.com/alexisdacquay/sail-event/blob/
 | Model input | Versioned task with fenced `evidence.md` (Prometheus results, Loki query, health and git log), plus the source checkout. The alert JSON is not interpolated into the prompt |
 | Model and limits | `claude -p --model sonnet --max-budget-usd 1`; subprocess timeout 300 seconds |
 | Tools | `Read`, `Edit`; Bash commands for `make test`, grep/find/ls/head/tail and selected git operations (log, diff, status, add, commit, branch creation). No explicit push tool |
-| Work area | A full checkout in a worktree beside the repo, `../sail-incident-<id>`, starting at the responder checkout’s HEAD; removed after the run. The task asks for branch `incident/<id>` |
+| Work area | A full checkout in a worktree beside the repo, `../sail-incident-<id>`, starting at the responder checkout’s HEAD, rather than automatically selecting the running app’s commit; removed after the run. The task asks for branch `incident/<id>` |
 | Verdict | `fix`, `false_positive` or `escalate`; includes summary, files, tests and commit. Dry-run writes `dry-run` without launching the agent |
 | Environment | Allowlisted OS variables, including `HOME`; optional `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL`. The responder sets `SKIP_HOOK_TESTS=1` itself |
 | Human handoff | Review the incident branch and decide whether to merge/deploy or discard it. No deployment step is implemented in the responder |
 
-**Control gap:** [autonomy-policy.yaml](autonomy-policy.yaml) is a policy document, not a file the responder loads. `Edit` is not limited to its stated backend paths, and `make test` executes a writable Makefile. The allowlist omits push but is not a guarantee against external actions. Worktree separation protects the original checkout from ordinary edits; it does not isolate credentials or the network. `HOME` permits access to CLI sign-in/configuration, and unscoped reads can reach other accessible files.
+The responder does not load [autonomy-policy.yaml](autonomy-policy.yaml). Its unscoped `Read` and `Edit` tools, writable Makefile and inherited `HOME` permit access beyond the policy’s backend paths, including CLI credentials; the worktree and tool list provide no network or credential isolation.
 
 <a id="recorded-incidents"></a>
 
@@ -57,11 +57,11 @@ The 2026-10-21 drill, step by step:
 | Evidence collected | 07:41:50 | [evidence.md](incidents/20261021-074150-SearchRunFailures/evidence.md): error-run increase about 28 over ten minutes, app health `ok`, latest commit is the fault; Loki returns no lines |
 | Fix committed on incident branch | 07:46:12 | `8d2f839`, [verdict.json](incidents/20261021-074150-SearchRunFailures/verdict.json); [fix.diff](incidents/20261021-074150-SearchRunFailures/fix.diff) saved later by hand |
 
-Alert start to fix commit was 4 min 52 s, not time to deployed recovery. The agent logs report passing tests, but their totals were not independently reproduced on the historical fix branches in this pass. The first log explicitly says frontend tests were skipped; the second reports a combined total that should not be treated as a verified suite count. Neither folder contains a resolved webhook or a post-deployment recovery check.
+Alert start to repair commit was 4 min 52 s. The responder has no deployment or recovery-check step, and neither drill records a successful post-fix search or resolved alert. The agent logs report passing tests without full output: the first skips frontend tests; the second gives an unsupported combined total and admits not checking a background pytest run. Captured test output at the repair commits is still needed.
 
 An earlier attempt on 2026-10-20 failed because the CLI could not reach the API (`ENOTFOUND`). Its folder was removed in [ad56f19](https://github.com/alexisdacquay/sail-event/commit/ad56f19) because its alert payload was hand-made. Its verdict remains inspectable with `git show 75e00a1:incident-response/incidents/20261020-231500-SearchRunFailures/verdict.json`.
 
-Known evidence gaps: the Loki query selects a `container` label that the OTLP logs do not carry. The deployed-version collector reads `version` from health, while health exposes `commit`, so it can say `unknown`. SearchRunFailures can also produce a no-data alert; SearchRunsSilent monitors local idle series without a local scheduler. See [alerting behavior](../observability/README.md#alerting).
+Evidence-collection gaps: the Loki query selects a `container` label that OTLP logs do not carry; the deployed-version collector reads `version`, while health exposes `commit`. These leave the packets without useful log lines or a reliable running revision. No-data and idle-series triggers are described under [alerting behavior](../observability/README.md#alerting).
 
 ## Required environment variables
 
@@ -82,16 +82,21 @@ With Docker running and the Claude CLI authenticated and able to reach its API f
 ```bash
 export RESPONDER_WEBHOOK_SECRET='choose-a-local-secret'
 make up-all
-make responder
 ```
 
-`make responder` runs in the foreground. If launched in another shell, export the same secret there. Set it before Grafana starts too, or Grafana’s webhook will send an empty Bearer value. `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` are retained when explicitly set; other session-specific model variables are not inherited. If a configured proxy cannot resolve, choose a reachable endpoint rather than assuming VPN state explains it.
+In a second terminal, set the same secret and start the foreground responder:
+
+```bash
+RESPONDER_WEBHOOK_SECRET='choose-a-local-secret' make responder
+```
+
+Set the secret before Grafana starts too, or its webhook will send an empty Bearer value. `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` are retained when explicitly set; other session-specific model variables are not inherited. If a configured proxy cannot resolve, choose a reachable endpoint rather than assuming VPN state explains it.
 
 ## Reproduce the full loop (test-incident.sh)
 
 Use a clean, disposable checkout and a normal terminal. This script **creates a temporary fault branch in your checkout, edits the provider and commits the fault**. Its exit trap attempts to switch back, delete that branch and rebuild the app; a killed script can leave cleanup unfinished. A live run creates an incident folder and normally leaves an `incident/<id>` branch. The responder creates its temporary worktree beside the repo. The live mode spends model credits.
 
-The script starts both stacks and the responder, drives failed searches with an increased rate limit, waits for the provisioned rule, and receives Grafana’s own webhook. It waits for a verdict file; it does not deploy the fix or prove the alert returned to Normal.
+The script starts both stacks and the responder, drives failed searches with an increased rate limit, waits for the provisioned rule, and receives Grafana’s own webhook. Its final live-mode assertions check that the four output files exist; they do not require verdict `fix` or validate its contents.
 
 ```bash
 RESPONDER_WEBHOOK_SECRET='choose-a-local-secret' incident-response/test-incident.sh
@@ -114,7 +119,7 @@ COMPOSE_PROJECT_NAME=exam3 HOST_PORT=8070 GRAFANA_PORT=3071 \
 RESPONDER_WEBHOOK_SECRET='choose-a-local-secret' incident-response/test-incident.sh --dry-run
 ```
 
-This still commits the injected fault and changes the checkout. It proves alert → webhook → evidence → worktree creation, then writes verdict `dry-run`. It launches no model and attempts no fix.
+This still commits the injected fault and changes the checkout. It exercises alert → webhook → evidence → worktree creation, then writes verdict `dry-run` without launching the model. The script also checks that the verdict is `dry-run`.
 
 ### Expected output
 
@@ -130,4 +135,4 @@ This still commits the injected fault and changes the checkout. It proves alert 
 
 ## Test the fix branch
 
-[verify-recovery.sh](runbooks/verify-recovery.sh) switches branches and runs backend/frontend tests. Use a disposable checkout: `incident-response/runbooks/verify-recovery.sh <branch>`. Its name overstates its scope: it does not check deployment, alert resolution or recovered metrics. The separate standard-library responder suite is `python3 -I -B incident-response/test_responder.py`; it launches no model agent and is not in CI.
+[verify-recovery.sh](runbooks/verify-recovery.sh) switches branches and runs backend/frontend tests. Use a disposable checkout: `incident-response/runbooks/verify-recovery.sh <branch>`. Despite its name, it checks the branch’s tests only. The separate standard-library responder suite is `python3 -I -B incident-response/test_responder.py`; it launches no model agent and is not in CI.
