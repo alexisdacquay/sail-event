@@ -325,10 +325,10 @@ gh run view 40251535674 -R alexisdacquay/sail-event --log | grep -E 'passed|test
 
 **Local combined run**
 
-At `ca4cf2b` on 2026-10-26, this command exited **0**:
+On 2026-10-26, with the code of `542e58c` (the docs PR that followed changed no code), this command exited **0** in 4 min 49 s:
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 TEST_COMPOSE_PROJECT=sail-docs-guide-round2 TEST_HOST_PORT=8046 make test-all
+make test-all
 ```
 
 ```text
@@ -641,7 +641,7 @@ Each row links to the criterion’s limitations and evidence.
 |---|---|---|
 | [1](#1-problem-description) | Schedule delays; scheduled-user cap; place-less criteria auto-accept; price rules unsupported | [Schedule measurement](#schedule-measurement) · [#101](https://github.com/alexisdacquay/sail-event/issues/101) · [product exclusions](../_docs/plan.md#out-of-scope-for-the-mvp) |
 | [2](#2-product-specification) | Missing specification sections; incomplete labels; shared author identity; missing QA verdicts; merges after QA FAIL | [Tracker evidence](#tracker-evidence) · [process records](../_docs/process.md#process-records-and-exceptions) |
-| [3](#3-agent-team-specification) | Orchestrator crossed role boundaries; rules introduced after implementation; QA can write through Bash; QA reuses prior context; final commits lack QA | [Team gaps](#3-agent-team-specification) · [tracker evidence](#tracker-evidence) |
+| [3](#3-agent-team-specification) | Orchestrator crossed role boundaries; rules introduced after implementation; QA can write through Bash; QA reuses prior context; one PR (#143) merged with no QA verdict on its final commit | [Team gaps](#3-agent-team-specification) · [tracker evidence](#tracker-evidence) |
 | [4](#4-context-management) | Handovers can become stale; private launch records; reads depend on briefs | [Context gaps](#4-context-management) |
 | [5](#5-application) | Fixture providers; count-only restart assertion; seeded boundary test; low measured recall; unvetted ground truth; later recall unmeasured; Out restore fails; duplicate-check failures retain duplicates; past events remain listed; open product defects | [Application gaps](#5-application) · [open issues](https://github.com/alexisdacquay/sail-event/issues?q=is%3Aissue+is%3Aopen) |
 | [6](#6-testing) | Responder absent from CI; expected browser failures; screenshots need visual review; conditional skips | [Testing gaps](#6-testing) |

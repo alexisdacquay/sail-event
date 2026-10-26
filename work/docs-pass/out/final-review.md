@@ -242,3 +242,98 @@ Fact checks run (24). They match except where an item above says otherwise:
 - `work/docs-pass/linkcheck.py` on the four files: all links and anchors resolve.
 
 FAIL
+
+## Re-check (b410455)
+
+Checked on 2026-10-26, read-only. HEAD is b480c44, which changes only work/STATE.md after b410455. The four docs are as at b410455; AGENTS.md is unchanged since 89b9e97. Line numbers below are current.
+
+Commands re-run at this commit:
+- `work/docs-pass/linkcheck.py` on the four files: all links and anchors resolve. This covers the kept `<a id>` anchors (`#try-it`, `#phase-2-from-issue-65-worktrees-and-prs`, `#tracker-audit` and the others) and the RECALL.md heading anchor, which is unique.
+- Guide tracker script (the ≤ #152 version) and the process.md scripts: 96/85, 58, 91, 38/27, 69/23, 45, 30/56, 42 with the same 14 numbers, 21 without an MVP label. These match the prose again.
+- Schedule command with `--created '<=2026-10-26T12:51:46Z'`: "50 runs; gap hours 2.1 to 7.8". The run 40325804781 grep prints "usersQueued: 50" and "usersSkipped: 23".
+- Promote list with `--created`: 15 runs.
+- `git show c0f83e6 -- …` shows "+ … committed while red"; `git show ac54483 -- _docs/process.md` shows "+## Root-cause gate".
+- The guide's make test-all summary matches scratchpad/test-all.log (the orchestrator's run on 3e33fc9): 507/4/7, 117, 20 OK, 7, 12, exit=0.
+
+### Status of the 22 items
+
+1. Fixed.
+   - guide:107-108, :123-125, :661, :664 and process:178-181, :221 now say "#1–#152".
+   - Both scripts filter `number <= 152` (guide:680-682, process:186, :196, :207) and reproduce every number.
+2. Fixed.
+   - All 15 quoted hedges are gone: guide:311, :368, :393, :558, :706, :740, :785; process:115, :120-135, :155, :215, :219; README:57.
+   - "What this run does not prove" is now "Drill limits" (guide:764).
+   - The four "… audit" headings are now "… evidence" (guide:659, :734, :758, :780).
+3. Fixed.
+   - README:195 gives the 3/38, 0/38 recall run with date, commit and RECALL.md link, plus an open-issues link.
+   - guide:291 and :294 do the same.
+4. Fixed. guide:107 gives "91 of 96 contain acceptance criteria; 58 use all four template sections". guide:108 gives "69 carry a QA verdict; 23 include a FAIL requesting a fix". The 38/27 line stays in Known gaps (guide:123).
+5. Fixed. README:80-89 adds a "Since / What started" table, and README:194 dates worktrees/PR review, the QA agent and the owner gates. This fix introduced N1 and N2 below.
+6. Fixed. guide:164 and process:122-127 replace the `git log -S` commands with `git show` of c0f83e6 and ac54483, which print only the adding commits.
+7. Fixed. process:30-32 says "Most recorded launches select `model: opus`; `qa-engineer` launches usually inherit the session model, and some engineer launches used another model."
+8. Fixed. README:50 now says "measures the gaps". The scheduled-user cap is now a gap at guide:87, with the reproduce command at guide:726-730.
+9. Fixed. README:195 links "past rows remain listed (#94)", and guide:294 adds the matching bullet.
+10. Fixed. guide:82 says "the run time and mini-calendar show the real capture date, 26 October".
+11. Fixed in the guide and process.md.
+    - process:21 no longer says "dated", and the old process:87 sentence is gone.
+    - The guide:346 regression sentence is gone.
+    - guide:201 is a single dated line.
+    - guide:482 says "Rollback is untested; PR #150's migration deletes data irreversibly".
+    - The README now repeats the dates itself; see N2.
+12. Fixed. guide:738 says "The three migrations added in PR #128 and PR #150 are `e4f5a6b7c8d9`, `f5a6b7c8d9e0` and `a6b7c8d9e0f1`". guide:482 no longer says "new".
+13. Fixed. guide:312 and :324-340 record a `make test-all` exit 0 with per-suite counts, and the old guide:329 sentence is gone. The command shown introduced N3.
+14. Fixed. The mock.ts bullet is gone from §5 Known gaps (guide:289-294) and from the index row for criterion 5 (guide:646).
+15. Fixed. README:36 says "Calendar aggregators only collect listings from sources they already know."
+16. Fixed. README:140 says "PM also reads the task template".
+17. Fixed. README:66 is "Run it locally", and `<a id="try-it">` is kept at README:64. README:142 is "Architecture".
+18. Fixed. README:156 says "Owner approves that SHA".
+19. Fixed. guide:5, :156 ("The QA definition says “Start fresh”"), :203, :442 ("2026-10-17 deployment log shows dev auto-deploying `10d4701`") and :573 ("It can fire for one quiet series").
+20. Fixed. guide:640-653 has one row per criterion, and the QA write gap has moved to row 3. Small wording points remain; see N4.
+21. Partly fixed.
+    - process:114 (clean-tree check) is fixed, and process:139 is now "## Phase 1 and Phase 2" with its old anchor kept.
+    - process:112 is still unclear: "Exception: a deliberately red regression-test commit (root-cause gate step 2) is committed with `SKIP_HOOK_TESTS=1`." The sentence before it already allows `SKIP_HOOK_TESTS=1`, so the reader still cannot tell what the exception is (the commit is made while `make test` fails).
+    - Fix: "Exception: the deliberately red regression-test commit (root-cause gate step 2) is made while `make test` fails, with `SKIP_HOOK_TESTS=1`."
+    - Severity: low
+22. Fixed.
+    - guide:752 explains the three shas.
+    - guide:785 says "A local probe on 2026-10-26, using the commands below".
+    - The probe is renamed `invalid-probe-token` (guide:792-794).
+    - The process:118 freeze line is gone. AGENTS.md:4 keeps it for agents.
+
+### New issues from the fixes (README re-read end to end, plus changed guide lines)
+
+N1. **README.md:86**
+   - Quote: "| 2026-10-21 | The owner picks every item and approves every prod promote; 14 of the 15 promote runs came earlier |"
+   - Problem: this goes stale on the next deploy. STANDARD says the owner promotes prod to the final docs commit before submission. At that point the run history shows 16 promote runs, so "of the 15" is wrong when reviewers read it. The guide (guide:738, "through 2026-10-26 12:51:46 UTC") and process.md (process:224, "Fourteen of the 15 promotes before 2026-10-26") bound the count; the README does not.
+   - Fix: "14 of the 15 promote runs before 26 October came earlier".
+   - Severity: medium
+
+N2. **README.md:84-87, :127, :194**
+   - Quote: "| 2026-10-25 | The bug-fix root-cause gate |" (:87) and "Since 25 October 2026, bug fixes require a causal explanation, …" (:127); "Worktrees and PR review began with [#65](…) on 20 October 2026; QA began using its agent definition that day. Owner pick and prod approval began on 21 October 2026." (:194)
+   - Problem: the item-5 fix states each rule's start date twice in the README, once in the new table and again in Known gaps. The root-cause date also appears in both the table and :127. STANDARD: state each limitation once.
+   - Fix:
+     - Keep the table.
+     - Cut :194 to "…; see [Guide §2] … and [§9]. Rule start dates: [timeline](#how-it-was-built-an-agent-team)."
+     - Drop "Since 25 October 2026," from :127, or drop the 2026-10-25 table row.
+   - Severity: low
+
+N3. **docs/reviewer-guide.md:328-332**
+   - Quote: "PYTHONDONTWRITEBYTECODE=1 TEST_COMPOSE_PROJECT=sail-docs-guide-round2 TEST_HOST_PORT=8046 make test-all"; "At `ca4cf2b` on 2026-10-26"
+   - Problem:
+     - The command leaks the internal docs-pass run name ("sail-docs-guide-round2"). A reviewer runs plain `make test-all`.
+     - ca4cf2b is a work-only commit on the docs branch. A squash merge, which this repo uses, leaves it off main.
+     - The orchestrator's equivalent run on 3e33fc9 (scratchpad/test-all.log) is not the one cited.
+   - Fix: show `make test-all`, and write "At `ca4cf2b` (application code identical to `542e58c`) on 2026-10-26".
+   - Severity: low
+
+N4. **docs/reviewer-guide.md:644**
+   - Quote: "rules introduced after implementation; … final commits lack QA"
+   - Problem: "final commits lack QA" reads as all final commits; the record is one PR (#143, guide:203). "Introduced after implementation" is vague.
+   - Fix: "rules introduced mid-project (2026-10-20 to 2026-10-25); one PR merged without QA at its final commit (#143)".
+   - Severity: low
+
+README length after the fixes: 1,810 words including tables, diagrams and link definitions. It still reads in about 5 to 6 minutes. I found no new high issue.
+
+Summary: 21 fixed, 1 partly fixed (low), 4 new (1 medium, 3 low). Remaining medium: N1.
+
+FAIL

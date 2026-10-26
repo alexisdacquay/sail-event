@@ -83,7 +83,7 @@ This is the process as it stands now. It was built up in steps:
 |---|---|
 | 2026-10-16 | Role files |
 | 2026-10-20 (#65) | Each engineer works on its own branch with a PR, and QA checks the PR |
-| 2026-10-21 | The owner picks every item and approves every prod promote; 14 of the 15 promote runs came earlier |
+| 2026-10-21 | The owner picks every item and approves every prod promote; 14 of the 15 promote runs up to 26 October came before this |
 | 2026-10-25 | The bug-fix root-cause gate |
 
 Details: [process phases](_docs/process.md#phase-1-and-phase-2).
@@ -124,7 +124,7 @@ sequenceDiagram
     O->>CI: Merge; close issue
 ```
 
-If a criterion remains unmet, the orchestrator sends its evidence to the owner, who grants or rejects an explicit waiver before merge; QA's verdict remains FAIL. The [process](_docs/process.md) records handoffs and exceptions. Since 25 October 2026, bug fixes require a causal explanation, a regression test committed while failing, then a passing fix.
+If a criterion remains unmet, the orchestrator sends its evidence to the owner, who grants or rejects an explicit waiver before merge; QA's verdict remains FAIL. The [process](_docs/process.md) records handoffs and exceptions. Bug fixes require a causal explanation, a regression test committed while failing, then a passing fix.
 
 ### How an agent gets its context
 
@@ -191,7 +191,7 @@ The injected-fault drills on [17 October](incident-response/incidents/20261017-0
 
 ## Known gaps
 
-- **Process:** incomplete grooming/QA records, orchestrator overreach, direct pushes and red merges; see [Guide §2](docs/reviewer-guide.md#2-product-specification), [§3](docs/reviewer-guide.md#3-agent-team-specification) and [§9](docs/reviewer-guide.md#9-cicd). Worktrees and PR review began with [#65](https://github.com/alexisdacquay/sail-event/issues/65) on 20 October 2026; QA began using its agent definition that day. Owner pick and prod approval began on 21 October 2026.
+- **Process:** incomplete grooming/QA records, orchestrator overreach, direct pushes and red merges; see [Guide §2](docs/reviewer-guide.md#2-product-specification), [§3](docs/reviewer-guide.md#3-agent-team-specification) and [§9](docs/reviewer-guide.md#9-cicd).
 - **Product:** a full recall run (local, 24 October 2026 at 20:04 UTC, commit `ab21641`, before linked event-page fetching) found 3 of 38 ground-truth events and accepted none; the ground truth is unvetted ([recall log](work/RECALL.md#2026-10-24-2004-utc----recall-measurement----httplocalhost8032----ab21641)). No-place criteria can auto-accept, [past rows remain listed (#94)](https://github.com/alexisdacquay/sail-event/issues/94), and restoring an Out event returns HTTP 400 ([Guide §1](docs/reviewer-guide.md#1-problem-description), [§5](docs/reviewer-guide.md#5-application)). Open defects: [open issues](https://github.com/alexisdacquay/sail-event/issues?q=is%3Aissue+is%3Aopen).
 - **Operations evidence:** empty Loki drill evidence, weak incident test claims and broad agent file access are detailed in [Guide §12](docs/reviewer-guide.md#12-on-call-agent).
 

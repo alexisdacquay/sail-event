@@ -109,7 +109,7 @@ and the referenced evidence; it must not restart from an old backlog position.
 ## Rules
 
 - Groom before implementation. If a criterion is wrong, the engineer comments and waits; it does not rewrite the issue's acceptance criteria.
-- Run `make test`, then commit completed work. Agents may use `SKIP_HOOK_TESTS=1` after running it themselves, to avoid a second run. Exception: a deliberately red regression-test commit (root-cause gate step 2) is committed with `SKIP_HOOK_TESTS=1`. The hook's secret-pattern scan still runs.
+- Run `make test`, then commit completed work. Agents may use `SKIP_HOOK_TESTS=1` after running it themselves, to avoid a second run. Exception: a deliberately red regression-test commit (root-cause gate step 2) is committed with `SKIP_HOOK_TESTS=1`, because `make test` fails on purpose at that point. The hook's secret-pattern scan still runs.
 - Require green PR CI and a QA verdict before asking to merge. The owner must explicitly accept any unmet criterion; a closing note claiming PASS is not a QA verdict.
 - QA never changes project files. In Phase 1, QA shared the engineer's checkout, so its `git status` check also caught uncommitted engineer work. In a QA worktree, it only shows that QA changed nothing.
 - The orchestrator closes issues, or GitHub does on merge of `Closes #N`. QA records each criterion in its comment.
