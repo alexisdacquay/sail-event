@@ -34,11 +34,16 @@ test.describe("Journey 1: full user flow", () => {
 
     await register(page, user, pw);
 
-    // Scoring lives in the rail, folded: open it, raise Auto-accept above by 6 (90 → 96)
+    // Scoring starts open in the rail: raise Auto-accept above by 6 (90 → 96)
     // so more events land in review for the accept/reject test below
-    await page.getByText("Scoring", { exact: true }).click();
     // the saved thresholds load after the page; key presses before that land on the default
     await expect(page.getByRole("spinbutton", { name: "Auto-accept above" })).toHaveValue("90");
+    await expect(page.getByTestId("scoring-card")).toHaveAttribute("open", "");
+    await expect(page.getByRole("button", { name: "Save scoring" })).toHaveCount(0);
+    const savedResponse = page.waitForResponse(
+      (r) => r.url().includes("/api/thresholds") && r.request().method() === "PUT",
+      { timeout: 15_000 }
+    );
     const slider = page.getByRole("slider", { name: "Auto-accept above" });
     await slider.focus();
     for (let i = 0; i < 6; i++) {
@@ -47,21 +52,12 @@ test.describe("Journey 1: full user flow", () => {
     await expect(
       page.getByRole("spinbutton", { name: "Auto-accept above" })
     ).toHaveValue("96");
-    const saveScoring = page.getByRole("button", { name: "Save scoring" });
-    await expect(saveScoring).toBeEnabled();
-    const [saved] = await Promise.all([
-      page.waitForResponse(
-        (r) => r.url().includes("/api/thresholds") && r.request().method() === "PUT",
-        { timeout: 15_000 }
-      ),
-      saveScoring.click(),
-    ]);
-    expect(saved.ok()).toBeTruthy();
+    expect((await savedResponse).ok()).toBeTruthy();
+    await expect(page.getByTestId("scoring-card").getByRole("status")).toHaveText("Saved.");
 
     // Reload and verify the value persisted
     await page.reload();
     await expect(page.getByRole("heading", { name: "Sail Event" })).toBeVisible();
-    await page.getByText("Scoring", { exact: true }).click();
     await expect(
       page.getByRole("spinbutton", { name: "Auto-accept above" })
     ).toHaveValue("96");

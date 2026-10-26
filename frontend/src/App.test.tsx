@@ -1,12 +1,19 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import App from './App'
 import * as mock from './services/mock'
+import * as api from './services/api'
 
-beforeEach(() => {
+beforeEach(async () => {
+  await mock.saveThresholds({ lowerThreshold: 30, upperThreshold: 70 })
   localStorage.clear()
   document.documentElement.classList.remove('dark')
   mock._resetMockEvents()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+  vi.restoreAllMocks()
 })
 
 async function loginAsTestUser() {
@@ -123,10 +130,12 @@ describe('Thresholds', () => {
   })
 
   it('equal thresholds shows error and saveThresholds is not called', async () => {
-    const spy = vi.spyOn(mock, 'saveThresholds')
+    const spy = vi.spyOn(api, 'saveThresholds')
     await loginAsTestUser()
     const lowerInput = screen.getByRole('spinbutton', { name: 'Auto-reject below' })
     const upperInput = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
+    await waitFor(() => expect(lowerInput).toHaveValue(30))
+    vi.useFakeTimers()
     fireEvent.change(lowerInput, { target: { value: '50' } })
     fireEvent.change(upperInput, { target: { value: '50' } })
     expect(
@@ -134,21 +143,27 @@ describe('Thresholds', () => {
         'The auto-accept line must be higher than the auto-reject line.',
       ),
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Save scoring' })).toBeDisabled()
+    await act(() => vi.advanceTimersByTimeAsync(1000))
     expect(spy).not.toHaveBeenCalled()
     spy.mockRestore()
   })
 
-  it('save round-trips threshold values', async () => {
+  it('auto-save round-trips threshold values after signing in again', async () => {
     await loginAsTestUser()
     const lowerInput = screen.getByRole('spinbutton', { name: 'Auto-reject below' })
     const upperInput = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
+    await waitFor(() => expect(lowerInput).toHaveValue(30))
     fireEvent.change(lowerInput, { target: { value: '20' } })
     fireEvent.change(upperInput, { target: { value: '90' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Save scoring' }))
+    await screen.findByText('Saved.')
+    expect(await mock.getThresholds()).toEqual({ lowerThreshold: 20, upperThreshold: 90 })
+    fireEvent.click(screen.getByRole('button', { name: 'Sign out' }))
+    fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'testuser' } })
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'pass123' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
     await waitFor(() => {
-      expect(lowerInput).toHaveValue(20)
-      expect(upperInput).toHaveValue(90)
+      expect(screen.getByRole('spinbutton', { name: 'Auto-reject below' })).toHaveValue(20)
+      expect(screen.getByRole('spinbutton', { name: 'Auto-accept above' })).toHaveValue(90)
     })
   })
 })
