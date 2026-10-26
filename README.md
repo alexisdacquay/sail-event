@@ -83,7 +83,7 @@ This is the process as it stands now. It was built up in steps:
 |---|---|
 | 2026-10-16 | Role files |
 | 2026-10-20 (#65) | Each engineer works on its own branch with a PR, and QA checks the PR |
-| 2026-10-21 | The owner picks every item and approves every prod promote; 14 of the 15 promote runs up to 26 October came before this |
+| 2026-10-21 | The owner picks every item and approves every prod promote; 14 of the 15 promote runs before 26 October came before this |
 | 2026-10-25 | The bug-fix root-cause gate |
 
 Details: [process phases](_docs/process.md#phase-1-and-phase-2).
