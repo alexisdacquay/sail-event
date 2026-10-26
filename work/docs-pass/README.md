@@ -22,7 +22,7 @@ Every page a peer reviewer reads must meet [STANDARD.md](STANDARD.md): correct E
 | 3 | Blind verify: fresh reader, facts + links, rubric scorer | done 12:54 UTC: reader FAIL (22, 0 high), facts FAIL (6, 0 high, links ok), rubric 23/24 (Observability 1/2, a code gap) | `out/verify-*.md`, `out/orchestrator-review.md` |
 | 4 | Fix what verify found (4 codex fixers) | done 13:04 UTC, links ok; README 3,300 → 1,665 words | `out/fix-*.md` |
 | 5 | Final Claude reviewer on README + guide, then fix | running since 13:05 UTC (prompt: `prompts/final-review.md`) | `out/final-review.md` |
-| 6 | Commit, PR, green CI, merge (dev only), check GitHub README and dev | pending | PR link here |
+| 6 | Commit, PR, green CI, merge (dev only), check GitHub README and dev | PR opened 13:06 UTC; merge waits for green CI + final review PASS | https://github.com/alexisdacquay/sail-event/pull/153 |
 | 7 | Update `work/STATE.md` top block and the prod promote checklist for the owner | pending | |
 
 Groups and files:
