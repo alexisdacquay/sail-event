@@ -38,6 +38,8 @@ test("U2 the Judged line matches the rows", async ({ page }) => {
 
 test("U3 slider knobs equal the boxes", async ({ page }) => {
   await signUp(page);
+  // Wait for persisted thresholds before comparing boxes and thumbs.
+  await expect(page.getByRole("spinbutton", { name: "Auto-accept above" })).toHaveValue("90");
   for (const name of ["Auto-reject below", "Auto-accept above"]) {
     const box = await page.getByRole("spinbutton", { name }).inputValue();
     await expect(page.getByRole("slider", { name })).toHaveAttribute("aria-valuenow", box);
