@@ -19,8 +19,8 @@ Every page a peer reviewer reads must meet [STANDARD.md](STANDARD.md): correct E
 |---|---|---|---|
 | 1 | Review: 10 critics (sense, facts, rubric, live site, team docs, ops docs) | done: 363 findings, 78 high | `findings.json`, `findings-<group>.json`, `facts.md` |
 | 2 | Rewrite: 4 codex writers on disjoint files (readme, guide, team, ops) | done 12:42 UTC, links ok | `out/<group>-changes.md` |
-| 3 | Blind verify: fresh reader, facts + links, rubric scorer | pending | `out/verify-*.md` |
-| 4 | Fix what verify found | pending | `out/fix-*.md` |
+| 3 | Blind verify: fresh reader, facts + links, rubric scorer | done 12:54 UTC: reader FAIL (22, 0 high), facts FAIL (6, 0 high, links ok), rubric 23/24 (Observability 1/2, a code gap) | `out/verify-*.md`, `out/orchestrator-review.md` |
+| 4 | Fix what verify found (4 codex fixers) | running since 12:56 UTC | `out/fix-*.md` |
 | 5 | Final Claude reviewer on README + guide, then fix | pending | `out/final-review.md` |
 | 6 | Commit, PR, green CI, merge (dev only), check GitHub README and dev | pending | PR link here |
 | 7 | Update `work/STATE.md` top block and the prod promote checklist for the owner | pending | |
@@ -46,3 +46,4 @@ Groups and files:
 - 12:38 UTC: the pre-commit hook's `make test` failed one frontend test, `App.test.tsx:77` (`getByTestId('calendar-url')` is read synchronously after an async fetch). Under load from 4 codex jobs plus pytest it races; run alone it passes 15/15. Not caused by docs. Not fixed (change freeze). Docs-only WIP commits use `SKIP_HOOK_TESTS=1`; CI runs everything on the PR.
 - 12:40 UTC: after reading the README rewrite (accurate, but defensive like an audit), the orchestrator added the 'Honest, not defensive' section to STANDARD.md before the verify step.
 - 12:42 UTC: all 4 writers done. 27 files changed. linkcheck: all links ok.
+- 12:54 UTC: verify done. The lost point is Observability: feed tokens can reach HTTP spans and metrics carry no trace id. That is a code/config gap, frozen; it is listed for the owner, not fixed.
