@@ -42,3 +42,14 @@ I read README.md in full and docs/reviewer-guide.md through §3. The rewrite is 
 11. §2 Known gaps: summarise in 2–3 bullets (counts plus a link to [Tracker audit](#tracker-audit)). The lists of issue and PR numbers belong in the Tracker audit section.
 12. Apply the same in every section: Known gaps per criterion are short; exhaustive lists go to the Evidence commands appendix.
 13. Keep the rubric levels and the checklist shape exactly. They are right.
+
+## _docs/process.md (read through "One cycle in one picture")
+
+14. The Roles and Handoffs tables are good. Keep them.
+15. The prose is telegraphic and uses insider shorthand. Write full sentences for an outsider. Examples:
+   - "STATE also records Fable for judgment-heavy work." Readers don't know what STATE or Fable are.
+   - "worktree/head".
+   - "PM also reads this process, the task template, plan, architecture, contract and code".
+   Explain once what a worktree and a "head" are, or use plain words: "its own copy of the repo on a separate branch" and "the exact commit QA checked".
+16. Move the rollback and migration paragraph out of Lifecycle. It belongs in docs/release-process.md (the ops fixer owns it). Keep at most one line in this file's gaps.
+17. "the original 2026-10-16 process ran an unattended backlog loop" is fine. Add one plain sentence on what changed on 2026-10-21 and why: the owner picks every item and approves every prod promote.
