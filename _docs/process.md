@@ -208,8 +208,8 @@ gh api graphql -f query='{repository(owner:"alexisdacquay",name:"sail-event"){is
 ```
 
 Read issue [#7](https://github.com/alexisdacquay/sail-event/issues/7) for a full
-FAIL → fix → PASS cycle: the engineer fixed the plaintext-password error in
-`db3499a`; the same QA agent re-checked and passed (local transcript). For a
+review cycle: QA sent the first version back, the engineer's fix landed in
+`db3499a`, and the same QA agent re-checked and passed (local transcript). For a
 groom, issue [#11](https://github.com/alexisdacquay/sail-event/issues/11)'s
 **edited** history shows the raw task followed by the four-section specification.
 

@@ -20,7 +20,7 @@ Final project for the [DataTalksClub AI Dev Tools Zoomcamp 2026](https://github.
 |---|---|---|
 | Problem description | [Guide §1](docs/reviewer-guide.md#1-problem-description) | [Problem](#problem), workflow and [expected behaviour](#expected-behaviour) below. |
 | Product specification | [Guide §2](docs/reviewer-guide.md#2-product-specification) | [Issue #11](https://github.com/alexisdacquay/sail-event/issues/11): acceptance criteria and edited history. |
-| Agent team specification | [Guide §3](docs/reviewer-guide.md#3-agent-team-specification) | [Team](#how-it-was-built-an-agent-team); [#7](https://github.com/alexisdacquay/sail-event/issues/7): FAIL → fix → PASS → close. |
+| Agent team specification | [Guide §3](docs/reviewer-guide.md#3-agent-team-specification) | [Team](#how-it-was-built-an-agent-team); [PR #151](https://github.com/alexisdacquay/sail-event/pull/151) shows the handoffs: the engineer's PR and report, QA's verdict per criterion, the merge on the owner's word. |
 | Context management | [Guide §4](docs/reviewer-guide.md#4-context-management) | [`CLAUDE.md`](CLAUDE.md) imports [`AGENTS.md`](AGENTS.md); [context handoff](#how-an-agent-gets-its-context) below. |
 | Application | [Guide §5](docs/reviewer-guide.md#5-application) | [Restart persistence test][t-restart] passed in [recorded CI][ci-proof]. |
 | Testing | [Guide §6](docs/reviewer-guide.md#6-testing) | `make test-all`; inspect the passing jobs in [recorded CI][ci-proof]. |

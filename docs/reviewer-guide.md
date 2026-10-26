@@ -37,11 +37,11 @@ curl -fsS --max-time 20 https://sail-event-dev.onrender.com/api/health
 git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main
 # §6: find the latest CI run, then inspect its jobs with gh run view <id> -R ...
 gh run list -R alexisdacquay/sail-event --workflow=ci.yml -b main -L 3
-# §2–3: QA FAIL → fix → QA PASS → close.
-gh issue view 7 -R alexisdacquay/sail-event --comments
+# §2–3: one PR with every role's record: report, QA verdicts per criterion, merge.
+gh pr view 151 -R alexisdacquay/sail-event --comments
 ```
 
-Browser alternatives: [CI history](https://github.com/alexisdacquay/sail-event/actions/workflows/ci.yml) · [issue #7](https://github.com/alexisdacquay/sail-event/issues/7).
+Browser alternatives: [CI history](https://github.com/alexisdacquay/sail-event/actions/workflows/ci.yml) · [PR #151](https://github.com/alexisdacquay/sail-event/pull/151).
 
 With a clone, `python3 -I incident-response/test_responder.py` checks the responder without launching an agent. For a longer local review, use `docker compose up --build` (Docker), then `make test-all` (Docker, uv, Node/npm and Python). These builds and test suites are outside the five-minute check.
 
@@ -157,7 +157,7 @@ The first two rows check the preceding level: role names and clear responsibilit
 5. FAIL returns the QA comment to the engineer for a fix and re-check. If a criterion remains unmet, the orchestrator sends that criterion and its evidence to the owner, who grants or rejects a waiver; the decision is recorded before merge. QA records its verdict on the PR. A PASS goes to the owner with the PR summary.
 6. The owner authorizes merge in chat; the orchestrator performs it. GitHub may close an issue through `Closes #N`. A merge deploys dev. Production needs separate owner approval for a named SHA; the owner can dispatch the promote workflow or instruct the orchestrator to dispatch that approved SHA. Public run metadata records the dispatch, not the private approval conversation.
 
-[Issue #7](https://github.com/alexisdacquay/sail-event/issues/7) records a Phase 1 loop: password echoed in an error → QA FAIL → fix → QA PASS → close. It predates the worktree/PR phase.
+[Issue #7](https://github.com/alexisdacquay/sail-event/issues/7) shows the same handoffs in Phase 1, before PRs: criteria, implementation, a QA review that sent the work back, a re-check and the close.
 
 **Beyond the rubric**
 
