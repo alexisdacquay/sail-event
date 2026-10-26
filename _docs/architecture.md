@@ -1,7 +1,7 @@
 # Architecture — Sail-event
 
 The application runs on Render; the observability, alerting and on-call stack
-runs locally with `make up-all`. **The deployed app sends no telemetry.** Locally,
+runs locally with `make up-all`. The deployed app sends no telemetry. Locally,
 logs and traces correlate by trace ID; the metrics do not carry that ID, a gap
 against the rubric's “share a trace ID” requirement. See
 [observability](../observability/README.md) for collection and privacy limits.
@@ -67,7 +67,8 @@ and [EarlierRuns](../frontend/src/components/EarlierRuns.tsx).
 PR [#150](https://github.com/alexisdacquay/sail-event/pull/150) removed the event
 uniqueness constraint and deleted stored events without start times. That delete
 is irreversible. Rollback across the three migrations added by PRs #128/#150 is
-untested; deploying old code cannot restore deleted events.
+untested; deploying old code cannot restore deleted events. Back up the database
+before promotion and follow the release guide.
 
 ## Adapter interfaces
 
@@ -141,5 +142,4 @@ do not infer it from main or the last merge.
 
 - Duplicate detection depends on the model after the stored-page/date check. Errors can leave both rows (`dedup_errors`). Removing the uniqueness constraint permits different events with the same link and start.
 - Search coverage is limited by provider results and failed page/model calls. A stored `new` row is retried; a page lost during extraction is not recovered by that mechanism.
-- Observability and on-call are local. The two recorded repair runs are injected-fault drills; the live app has no telemetry or alerts. Metrics lack trace IDs, and HTTP telemetry has privacy gaps described in the observability guide.
-- Rollback across the three new migrations is untested; PR #150's deletion is irreversible. Back up the database before promotion and follow the release guide.
+- The two recorded on-call repair runs are injected-fault drills. HTTP telemetry has privacy gaps described in the observability guide.

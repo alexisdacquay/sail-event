@@ -69,8 +69,7 @@ The workflow enqueues background searches; a green job does not prove the search
 
 **Search now** starts on demand. Measurements with live adapters in
 [PR #144](https://github.com/alexisdacquay/sail-event/pull/144) range from **86 to
-493 seconds** across local runs, branches and concurrency settings. They are
-measurements, not a latency guarantee for the deployed service.
+493 seconds** across local runs, branches and concurrency settings.
 
 ### 3. Screen out (code, no model)
 
@@ -151,9 +150,6 @@ flowchart TD
 Boundary values (90 is In calendar, 40 is Out):
 [test_triage_uses_ge_le_cutoffs](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_pipeline.py#L306).
 
-Known UI gap: **Auto-accept above** / **Auto-reject below**
-([ScoreScale.tsx](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/frontend/src/components/ScoreScale.tsx#L80-L86)) describe
-strict comparisons, but the code includes the boundaries (`>=`, `<=`).
 
 ## Expected behaviour
 

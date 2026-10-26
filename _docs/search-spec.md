@@ -122,8 +122,7 @@ One schema-repair call and a separate reason-repair call may follow the initial
 call. An unrepaired judge error leaves the event `new` for retry on a later run.
 
 New users default to upper 90 / lower 40. `score >= upper` accepts,
-`score <= lower` rejects, and the middle queues. The UI labels say “above” and
-“below” although both comparisons include equality. **Out** events remain
+`score <= lower` rejects, and the middle queues. **Out** events remain
 viewable through **show**; a later search does not bring them back.
 
 ## 8. Transparency to the user

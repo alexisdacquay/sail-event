@@ -27,8 +27,7 @@ most 40 goes **Out**, and the middle goes to **Review**. Users can change the
 thresholds. The score is not a calibrated probability, despite the `%` display.
 
 **Out** rows are hidden behind **show**. A later search does not bring them
-back. The UI's “above” and “below” labels omit that equality is included; this
-is a known wording gap, not a different triage rule.
+back. Known wording gap: [Auto-accept above / Auto-reject below](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/frontend/src/components/ScoreScale.tsx#L80-L86) describe strict comparisons, although the code includes equality.
 
 ## 3. Screens
 
@@ -53,7 +52,7 @@ The search text, run chronology, results and supporting rail share one view.
 #### What I'm looking for (card)
 
 A visible textarea and one search action replace separate edit/save/search
-steps. **Search now** (later **Search again**) saves the current text, then runs.
+steps. **Search now** saves the current text, then runs.
 Enter submits; Shift+Enter permits a newline. During a run, Enter can save a
 change for the next search; it does not launch a second run. The button itself
 is disabled while searching.

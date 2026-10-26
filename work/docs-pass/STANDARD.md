@@ -31,6 +31,23 @@ Every writer and reviewer in this pass applies this. It is the owner's standard,
 - Honest labels. A drill with an injected fault is a drill, never "fired for real". A rollback that was never run is "untested". A rule introduced on a date is dated.
 - Known gaps stay visible, and the list is complete. A reviewer who finds an undisclosed gap distrusts everything else. Disclose plainly and briefly, without grovelling, and keep the real strengths visible.
 
+## Honest, not defensive
+
+Added by the orchestrator after reading the first rewrite, which swung from overclaiming to an audit report.
+
+- Tone: confident and factual. State what works plainly, with its proof.
+- State each limitation once, in one sentence, where it matters: in Known gaps, or in the section of the criterion it affects. Do not repeat it as hedges across the page.
+- No legalistic hedging. Examples to remove:
+  - "This does not establish that every commit was tested."
+  - "These counts measure headings, not complete adherence."
+  - "The repository alone cannot establish its live value."
+  - "Those measurements are not a Render benchmark."
+  - "it is not a claim about all earlier work."
+- Keep a caveat only when a reviewer would otherwise be misled about a rubric clause.
+- No bold disclaimers at the top of a page. The scope of a feature belongs in that feature's section. Example: the observability, alerting and on-call stack runs locally. Say so once, in the observability section, then show what it does.
+- Do not document UI trivia, such as which word a button shows after a run, or label inconsistencies between widgets, unless a reviewer needs it to follow a step.
+- The README should read in about 5 minutes. Detail belongs in the guide and the linked docs. The README links to them.
+
 ## Rubric presentation
 
 - The README does not grade itself: no points column, no "Max", no "Total 24", no "Pass is 10".

@@ -129,7 +129,7 @@ bill. See [spec §9](search-spec.md#9-cost-and-limits).
 
 ## 9. Observability
 
-**Local `make up-all` only; the deployed app sends no telemetry.**
+The observability stack runs locally with `make up-all`; the deployed app sends no telemetry.
 [telemetry.py](../backend/app/telemetry.py) enables OTel only when
 `OTEL_EXPORTER_OTLP_ENDPOINT` is set. Local traces and structured logs correlate
 by trace ID; metric series do not carry it. This leaves a gap against “share a

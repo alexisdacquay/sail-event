@@ -2,13 +2,9 @@
 
 [Team](#team) · [Roles](#roles) · [Starting an agent](#how-the-orchestrator-starts-an-agent) · [Lifecycle](#lifecycle) · [Handoffs](#handoffs) · [Rules](#rules) · [Evidence and gaps](#evidence-it-ran-this-way)
 
-The owner directs the main Claude Code session (the orchestrator). It briefs
-separate PM, engineer and QA agents. GitHub issues hold the requirements; PRs
-hold the change and review. Several agents can run in parallel, with one issue
-per agent and one writer per file.
-
-These are the operating rules, not a claim that every past task followed them.
-The dated exceptions and commands below let a reader check the record.
+The owner directs the orchestrator, which briefs separate PM, engineer and QA
+agents. Several can work in parallel: one issue per agent, one writer per file.
+[Evidence and known gaps](#evidence-it-ran-this-way) follow the operating model.
 
 ## Team
 
@@ -27,37 +23,43 @@ engineer and QA agents. The role files are their instructions:
 | Orchestrator | Assigns work, passes evidence between roles, records owner decisions, closes after review | Substitute its own implementation or test result for independent QA; start the next item without the owner's pick |
 | Owner | Sets scope and priority; approves merge and prod separately | No automated role restriction |
 
-The orchestrator did cross these boundaries: it filed issues, edited code and
-re-checked fixes itself. Examples and other gaps are recorded below.
-
 ## How the orchestrator starts an agent
 
-The orchestrator launches PM and engineer as `general-purpose` background
-subagents with an Agent-call brief. QA uses the registered `qa-engineer` agent
-([definition](../.claude/agents/qa-engineer.md)); earlier and exceptional launches
-used `general-purpose`, as dated below. Background launches in the local session transcript use `model: opus`; the 2026-10-23 state
-entry also records Fable for work needing layout or product judgment. These are
-session choices, not models configured by the role files.
+PM and engineer start as `general-purpose` background subagents; QA uses the
+registered [`qa-engineer`](../.claude/agents/qa-engineer.md). Earlier QA launches
+and later exceptions used `general-purpose`. Recorded launches use `model: opus`;
+STATE also records Fable for judgment-heavy work.
 
-A brief supplies:
-
-1. Role file and [AGENTS.md](../AGENTS.md), followed by the issue number and repository.
-2. Read list: PM gets this process, [task template](task-template.md), [plan](plan.md), [architecture](architecture.md), relevant API contract and code. Engineer gets architecture, [openapi.yaml](../openapi.yaml) and relevant code. QA gets the issue, PR, exact head and QA role.
-3. Scope, constraints, known decisions, assigned branch/worktree and checks to run. A prior agent's report is a lead to verify, not proof.
-4. Reply format: PM returns the updated issue and open decisions; engineer returns commits, PR, commands/results and unmet criteria; QA returns its verdict link and evidence.
+The Agent-call brief supplies role file, AGENTS.md, issue, constraints,
+worktree/head and reply format. PM also reads this process, the task template,
+plan, architecture, contract and code; engineer reads architecture, contract and
+code; QA reads the issue, PR and submitted head. Outputs are a groomed issue,
+commits/PR/checks, or a verdict link respectively. [A real brief and context
+handoffs follow](#brief-and-context-details).
 
 ## Lifecycle
 
-1. Owner picks an issue. PM grooms it; unresolved product choices go back through the orchestrator.
-2. Engineer implements in an assigned worktree/branch, runs `make test` and task-specific checks, commits, then opens a PR linking the issue.
-3. QA checks the committed PR head in its own detached worktree and posts a criterion-by-criterion verdict on the PR (on the issue when there is no PR).
-4. A FAIL returns to the engineer with the verdict. QA verifies the new head after the fix. A waiver must name the unmet criterion and the owner's decision in writing.
-5. With QA PASS and green CI, the orchestrator reports the change and evidence. The owner says whether to merge. Merge updates dev; the orchestrator closes the issue, or GitHub closes it through `Closes #N`.
-6. Prod is separate: the owner checks dev and authorizes one commit. The orchestrator uses [the release process](../docs/release-process.md). Rollback across the three migrations added by PRs #128/#150 is untested; PR #150's event deletion is irreversible. A code redeploy does not restore deleted data.
+1. Owner picks; PM grooms. Open product choices return through the orchestrator.
+2. Engineer implements in its worktree, runs checks, commits and opens a linked PR.
+3. QA checks that head independently and posts PASS/FAIL per criterion. FAIL returns to the engineer, then QA re-checks the new head.
+4. With QA PASS and green CI, the orchestrator reports evidence; the owner authorizes merge. Merge updates dev and closes the issue through `Closes #N`, or the orchestrator closes it. Any waiver records the unmet criterion and owner's decision.
+5. Owner checks dev and approves a named commit for [manual prod promotion](../docs/release-process.md).
 
-The owner priority and prod gates date from **2026-10-21**. The original
-2026-10-16 lifecycle said “Pick the next issue” and ran an unattended backlog
-loop. See the history and gaps below; do not apply today's rules backwards.
+Owner priority/prod gates began **2026-10-21**; the original 2026-10-16 process
+ran an unattended backlog loop. Rollback across the three migrations added by
+PRs #128/#150 is untested; PR #150's deletion is irreversible. A code redeploy
+does not restore deleted data.
+
+## Handoffs
+
+| From → To | Artifact | Checkable record |
+|---|---|---|
+| Orchestrator → PM/Engineer/QA | Brief: role, read list, issue, constraints, head/worktree, reply format | Agent prompt in local session transcript; not public |
+| PM → Engineer | Four-section issue body and linked follow-ups | Issue body and **edited** history |
+| Engineer → QA | Committed head, PR, implementation summary, commands/results | PR and issue/PR comments |
+| QA → Engineer/Orchestrator | PASS/FAIL per criterion, checked head, commands and observed failures | PR verdict; issue verdict in the earlier workflow |
+| Owner → Orchestrator | Scope, “merge”, or approval of a prod commit | Chat; some decisions copied to issues, e.g. #136 and #145 |
+| Orchestrator → Owner | Change, test evidence, QA verdict, remaining risks | Chat for approval; merge and promote runs for execution |
 
 ## One cycle in one picture
 
@@ -75,17 +77,6 @@ flowchart LR
 
 For bug fixes since 2026-10-25, the engineer also follows the root-cause gate.
 
-## Handoffs
-
-| From → To | Artifact | Checkable record |
-|---|---|---|
-| Orchestrator → PM/Engineer/QA | Brief: role, read list, issue, constraints, head/worktree, reply format | Agent prompt in local session transcript; not public |
-| PM → Engineer | Four-section issue body and linked follow-ups | Issue body and **edited** history |
-| Engineer → QA | Committed head, PR, implementation summary, commands/results | PR and issue/PR comments |
-| QA → Engineer/Orchestrator | PASS/FAIL per criterion, checked head, commands and observed failures | PR verdict; issue verdict in the earlier workflow |
-| Owner → Orchestrator | Scope, “merge”, or approval of a prod commit | Chat; some decisions copied to issues, e.g. #136 and #145 |
-| Orchestrator → Owner | Change, test evidence, QA verdict, remaining risks | Chat; merge and promote runs prove execution, not the owner's words |
-
 ## Brief and context details
 
 For example, the issue #1 engineer brief began (abridged from the local transcript):
@@ -98,8 +89,7 @@ For example, the issue #1 engineer brief began (abridged from the local transcri
 
 That early brief assigned the shared checkout. Later briefs assign an engineer
 worktree and QA a detached worktree at the PR head. Fix rounds can be sent back
-with `SendMessage`; issue #7 reused the same QA agent for its re-check. A
-separate initial context does not mean every re-check had a new context.
+with `SendMessage`; issue #7 reused the same QA agent for its re-check.
 
 Supervision recorded in [STATE](../work/STATE.md): check progress roughly every
 9 minutes using status, file times and agent output; investigate 20 minutes of
@@ -141,8 +131,7 @@ QA comments on issues. PRs already existed: #30–#32 were created on 2026-10-17
 
 **Phase 2, from issue #65 on 2026-10-20:** assigned worktrees and PR review;
 PR [#66](https://github.com/alexisdacquay/sail-event/pull/66) carries the first QA
-heading on a PR. This describes the intended workflow, not universal compliance.
-The owner gates followed on 2026-10-21. Several engineers and QA could proceed
+heading on a PR. The owner gates followed on 2026-10-21. Several engineers and QA could proceed
 in parallel; dependent changes needed rebase and review at their final head.
 
 ## Labels
@@ -167,15 +156,13 @@ a convention, not authenticated agent identity. Common forms include:
 
 Some comments have none of these headings. PM work is an issue-body edit,
 visible through **edited**, rather than a comment. Session transcripts are
-retained locally, not published; public comments alone cannot identify the agent
-that typed a fix or prove a fresh context.
+retained locally, not published; public comments use role headings for attribution.
 
 ## Evidence it ran this way
 
 Snapshot **2026-10-26**: 58/96 issues have all four sections; 69 have a QA heading,
 23 have a FAIL; 30/56 PRs have a QA heading; 45 issues have a “closed by the
-orchestrator” note. These count text patterns, not PM authorship or successful
-review of every closed item. Reproduce from the public tracker:
+orchestrator” note. Reproduce from the public tracker:
 
 ```sh
 gh issue list -R alexisdacquay/sail-event --state all -L 400 --json number,state,body,comments,labels | python3 -c '
