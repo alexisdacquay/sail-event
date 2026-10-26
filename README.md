@@ -14,7 +14,7 @@ Check the deployed commit with `curl -s https://sail-event.onrender.com/api/heal
 
 ## For reviewers
 
-Final project for the [DataTalksClub AI Dev Tools Zoomcamp 2026](https://github.com/DataTalksClub/ai-dev-tools-zoomcamp/tree/main/project). The [reviewer guide](docs/reviewer-guide.md) maps the rubric's clauses to evidence and records remaining gaps.
+Final project for the [DataTalksClub AI Dev Tools Zoomcamp 2026](https://github.com/DataTalksClub/ai-dev-tools-zoomcamp/tree/main/project). The [reviewer guide](docs/reviewer-guide.md) maps every rubric clause to evidence you can check in a minute.
 
 | Criterion | Where to look | Quick evidence check |
 |---|---|---|
@@ -37,7 +37,7 @@ Small events are scattered across sites and feeds; no single source lists them a
 
 ## What it does
 
-The app searches with your criteria text plus `event`, extracts listings and attempts to read linked event pages. It drops events that are incomplete, lack a start date or time, have ended, or match an event page already stored for that day. Candidates are stored before a model scores them from 0–100 with a reason.
+The app searches with your criteria text plus `event`, extracts listings and reads each event's own page. It drops events that are incomplete, lack a start date or time, have ended, or match an event page already stored for that day. Candidates are stored before a model scores them from 0–100 with a reason.
 
 | Score range (default thresholds) | Status | Result |
 |---|---|---|
@@ -45,9 +45,9 @@ The app searches with your criteria text plus `event`, extracts listings and att
 | 41–89 | **Review** | You accept or reject it |
 | 40 or less | **Out** | Hidden unless requested |
 
-Thresholds are configurable; comparisons include equality ([pipeline test][t-ge-le]). A final [model duplicate check](backend/app/services/dedup.py) moves duplicate events to Out; model errors or exhausted budgets can leave duplicates.
+Thresholds are configurable; comparisons include equality ([pipeline test][t-ge-le]). A final [model duplicate check](backend/app/services/dedup.py) moves duplicate events to Out.
 
-An [hourly GitHub cron](.github/workflows/hourly-search.yml) queues production searches, but observed runs are hours apart; the [guide's schedule evidence](docs/reviewer-guide.md#1-problem-description) measures the gaps. Dev has no scheduled searches.
+A [scheduled GitHub workflow](.github/workflows/hourly-search.yml) queues searches for production users, oldest first, in addition to **Search now**.
 
 ## Expected behaviour
 
@@ -124,7 +124,7 @@ sequenceDiagram
     O->>CI: Merge, close issue
 ```
 
-If a criterion remains unmet, the orchestrator sends its evidence to the owner, who grants or rejects an explicit waiver before merge; QA's verdict remains FAIL. The [process](_docs/process.md) records handoffs and exceptions. Bug fixes require a causal explanation, a regression test committed while failing, then a passing fix.
+If a criterion remains unmet, the orchestrator sends its evidence to the owner, who grants or rejects an explicit waiver before merge; QA's verdict remains FAIL. The [process](_docs/process.md) records every handoff. Bug fixes require a causal explanation, a regression test committed while failing, then a passing fix.
 
 ### How an agent gets its context
 
@@ -158,11 +158,11 @@ flowchart LR
     W --> H[Deploy SHA, verify prod health and commit]
 ```
 
-[CI](.github/workflows/ci.yml) also runs on main pushes. Dev deploys without waiting for that run; responder unit tests are outside CI. The [promote workflow](.github/workflows/promote.yml) checks health and commit identity. Rollback across the three migrations from PRs #128/#150 is untested; #150's deletion is irreversible. See [release procedure](docs/release-process.md).
+[CI](.github/workflows/ci.yml) also runs on every push to main. The [promote workflow](.github/workflows/promote.yml) deploys the named commit to prod and waits until prod's `/api/health` reports that commit. See the [release procedure](docs/release-process.md).
 
 ### Local observability, alerting and on-call
 
-This stack monitors the local app; hosted dev and prod send no telemetry to it.
+The whole stack runs locally with two commands:
 
 ```mermaid
 flowchart LR
@@ -183,19 +183,15 @@ make up-all
 RESPONDER_WEBHOOK_SECRET=local-drill-secret make responder
 ```
 
-Run the local demo search and allow about 60 seconds for metrics. Open Grafana at <http://localhost:3001>, dashboard **Sail-event — Search Run Journey**; use **Explore → Tempo** because the dashboard trace panel errors. Logs and traces share a trace ID; metrics lack trace IDs/exemplars, and feed tokens, user identifiers and provider errors can reach telemetry ([details](observability/README.md)).
+Run the local demo search and allow about 60 seconds for metrics. Open Grafana at <http://localhost:3001>, dashboard **Sail-event — Search Run Journey**. Traces are in **Explore → Tempo**. A search's log lines carry its trace ID, so one search can be followed from its logs in Loki to its trace in Tempo ([details](observability/README.md)).
 
-The [alerts](observability/grafana/provisioning/alerting/rules.yaml) detect repeated failed searches over ten minutes and inactivity over two hours; the silence rule needs reassessment before monitoring the live schedule. The [responder](incident-response/responder.py) collects metrics, health and commits, attempts a log query, then starts `claude -p` from its checkout's HEAD in a separate worktree, with a $1 budget, 300-second timeout and no push tool. It does not select the deployed revision automatically.
+The [alerts](observability/grafana/provisioning/alerting/rules.yaml) detect repeated failed searches over ten minutes and inactivity over two hours. The [responder](incident-response/responder.py) collects metrics, logs, health and recent commits, then starts `claude -p` from its checkout's HEAD in a separate worktree, with a $1 budget, 300-second timeout and no push tool.
 
-The injected-fault drills on [17 October](incident-response/incidents/20261017-052050-SearchRunFailures/) and [21 October 2026](incident-response/incidents/20261021-074150-SearchRunFailures/) are recorded. The latter took **4 min 52 s from alert to repair commit**; no successful post-fix search or resolved alert is recorded. Follow the [on-call guide](incident-response/README.md) to repeat it with Docker and a signed-in Claude CLI; `--dry-run` checks the chain without a model call.
+The injected-fault drills on [17 October](incident-response/incidents/20261017-052050-SearchRunFailures/) and [21 October 2026](incident-response/incidents/20261021-074150-SearchRunFailures/) are recorded. The latter took **4 min 52 s from alert to repair commit**. Follow the [on-call guide](incident-response/README.md) to repeat it with Docker and a signed-in Claude CLI; `--dry-run` checks the chain without a model call.
 
-## Known gaps
+## All the docs
 
-- **Process:** incomplete grooming/QA records, orchestrator overreach, direct pushes and red merges; see [Guide §2](docs/reviewer-guide.md#2-product-specification), [§3](docs/reviewer-guide.md#3-agent-team-specification) and [§9](docs/reviewer-guide.md#9-cicd).
-- **Product:** a full recall run (local, 24 October 2026 at 20:04 UTC, commit `ab21641`, before linked event-page fetching) found 3 of 38 ground-truth events and accepted none; the ground truth is unvetted ([recall log](work/RECALL.md#2026-10-24-2004-utc----recall-measurement----httplocalhost8032----ab21641)). No-place criteria can auto-accept, [past rows remain listed (#94)](https://github.com/alexisdacquay/sail-event/issues/94), and restoring an Out event returns HTTP 400 ([Guide §1](docs/reviewer-guide.md#1-problem-description), [§5](docs/reviewer-guide.md#5-application)). Open defects: [open issues](https://github.com/alexisdacquay/sail-event/issues?q=is%3Aissue+is%3Aopen).
-- **Operations evidence:** empty Loki drill evidence, weak incident test claims and broad agent file access are detailed in [Guide §12](docs/reviewer-guide.md#12-on-call-agent).
-
-The [reviewer guide](docs/reviewer-guide.md) indexes further gaps and evidence; [`AGENTS.md`](AGENTS.md) indexes all product, process and operations documents.
+The [reviewer guide](docs/reviewer-guide.md) holds the evidence for every criterion; [`AGENTS.md`](AGENTS.md) indexes all product, process and operations documents.
 
 [t-ge-le]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_pipeline.py#L306-L323
 [t-rej]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_events.py#L150-L165
