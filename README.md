@@ -77,6 +77,17 @@ Without Docker, `make run` uses Python 3.12, [uv](https://docs.astral.sh/uv/), N
 
 Claude Code's main session is the orchestrator. It briefs PM and Engineer as background general-purpose subagents and QA through the [qa-engineer definition](.claude/agents/qa-engineer.md).
 
+This is the process as it stands now. It was built up in steps:
+
+| Since | What started |
+|---|---|
+| 2026-10-16 | Role files |
+| 2026-10-20 (#65) | Each engineer works on its own branch with a PR, and QA checks the PR |
+| 2026-10-21 | The owner picks every item and approves every prod promote; 14 of the 15 promote runs came earlier |
+| 2026-10-25 | The bug-fix root-cause gate |
+
+Details: [process phases](_docs/process.md#phase-1-and-phase-2).
+
 | Role | Responsibility | Boundary |
 |---|---|---|
 | Owner | Picks work; approves merge and a named production commit separately | — |
