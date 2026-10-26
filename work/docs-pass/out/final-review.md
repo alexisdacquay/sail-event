@@ -337,3 +337,45 @@ README length after the fixes: 1,810 words including tables, diagrams and link d
 Summary: 21 fixed, 1 partly fixed (low), 4 new (1 medium, 3 low). Remaining medium: N1.
 
 FAIL
+
+## Final confirmation
+
+Checked at docs-quality 416c23e on 2026-10-26, read-only. That commit changes README.md, docs/reviewer-guide.md and _docs/process.md, plus this report.
+
+Checks:
+- `python3 -I work/docs-pass/linkcheck.py README.md docs/reviewer-guide.md _docs/process.md AGENTS.md` prints "all links ok".
+- `git diff --stat 542e58c HEAD` on backend, frontend, e2e, the responder scripts, observability config, Makefile, Dockerfiles, compose files, .github and scripts is empty. So "with the code of `542e58c`" holds.
+- The scratchpad/test-all.log summary matches guide:335-339 and ends with "exit=0". The run's start time is not in the log, so the 4 min 49 s comes from the orchestrator's log in work/docs-pass/README.md:52.
+- There are still 15 promote runs; the latest is 969a161 on 2026-10-23.
+
+The five edits:
+
+1. **README.md:86. Fixed (N1), with one low caveat.**
+   - It now reads "14 of the 15 promote runs up to 26 October came before this".
+   - Caveat: the planned promote also happens on 26 October. A reader who takes "up to" as inclusive will count 16 runs. process.md:224 says "before 2026-10-26", which is unambiguous.
+   - Fix: "before 26 October".
+   - Severity: low
+2. **README.md:127, :194. Fixed (N2).**
+   - :127 no longer says "Since 25 October 2026".
+   - The :194 Process bullet no longer repeats the start dates.
+   - The table at README:82-87 is the single dated source.
+3. **docs/reviewer-guide.md:328-332. Fixed (N3).**
+   - It reads "On 2026-10-26, with the code of `542e58c` (the docs PR that followed changed no code), this command exited **0** in 4 min 49 s".
+   - The command block is plain `make test-all`.
+   - No internal run name or work-only sha is left.
+4. **docs/reviewer-guide.md:644. Fixed (N4), with one low remainder.**
+   - It now names "one PR (#143) merged with no QA verdict on its final commit".
+   - Remainder: "rules introduced after implementation" is still vague.
+   - Fix: "rules introduced mid-project (2026-10-20 to 2026-10-25)".
+   - Severity: low
+5. **_docs/process.md:112. Fixed (item 21).** The Exception now says "because `make test` fails on purpose at that point".
+
+Nothing new broke. All links and anchors resolve, and the edited lines read correctly in context. The README-wide checks below were done in the b410455 re-check; the Final confirmation edits are small and add no new section:
+- no new hedging;
+- no internal context;
+- no new stale counts;
+- README length unchanged within a few words.
+
+Remaining: 0 high, 0 medium. Two low wording points (1 and 4 above), left to the owner's discretion.
+
+PASS
