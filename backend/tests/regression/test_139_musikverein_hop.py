@@ -149,7 +149,9 @@ class TestMusikvereinHop:
         assert davidsen_pre[0].start_local == "2026-11-07", "Expected date-only before hop"
 
         # Step 2: detail-page hop
-        with patch("app.services.detail_hop.urllib.request.urlopen", _mock_urlopen(detail_html)):
+        # pages are served offline: no DNS for the public-address check, no fetch
+        with patch("app.services.detail_hop._public", return_value=True), \
+                patch("app.services.detail_hop._OPENER.open", _mock_urlopen(detail_html)):
             hopped, hop_counts = detail_hop(
                 events,
                 model=model,

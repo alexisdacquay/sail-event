@@ -105,7 +105,8 @@ def test_listing_event_gets_its_own_link_and_page(_db_session, stem, listing, ti
     user = _db_session.query(User).filter(User.username == "demo").first()
     with patch("app.services.pipeline.get_search_provider", return_value=_Provider(result)), \
             patch("app.services.pipeline.get_language_model", return_value=_Model(listing, title, own)), \
-            patch("app.services.detail_hop.urllib.request.urlopen", _urlopen(pages)), \
+            patch("app.services.detail_hop._public", return_value=True), \
+            patch("app.services.detail_hop._OPENER.open", _urlopen(pages)), \
             patch("app.services.pipeline.filter_events", side_effect=_spy_filter):
         run_pipeline(user, _db_session, trigger="manual")
 

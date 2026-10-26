@@ -33,6 +33,8 @@ tracer = trace.get_tracer("sail-event.pipeline")
 meter = metrics.get_meter("sail-event.pipeline")
 # 10, not 50: see EXTRACT_CONCURRENCY in extract.py.
 JUDGE_CONCURRENCY = int(os.environ.get("JUDGE_CONCURRENCY", "10"))
+# Only real web results are pages to fetch (listing links, event pages); fixture and test stubs stay offline.
+_WEB_PROVIDERS = {"tavily", "exa", "brave"}
 
 # --- §9 metrics ---
 
@@ -377,8 +379,7 @@ def run_pipeline(
                     user_tz=user_tz,
                     model=model,
                     on_page_done=_on_page_done,
-                    # fixture pages are offline stand-ins: never fetch their URLs
-                    page_links=None if provider_name == "fixture" else page_links,
+                    page_links=page_links if provider_name in _WEB_PROVIDERS else None,
                 )
                 # Count LLM calls: 1 per full-page read + 1 if snippet-only fallback ran
                 snippet_only = len([r for r in all_results if not r.raw_content])
@@ -423,6 +424,7 @@ def run_pipeline(
                     target_city=target_city,
                     target_country=target_country,
                     on_page_done=_on_detail_page_done,
+                    fetch_pages=provider_name in _WEB_PROVIDERS,
                 )
                 counts["pages_detail_fetched"] = hop_counts.pages_detail_fetched
                 counts["detail_fetch_errors"] = hop_counts.detail_fetch_errors

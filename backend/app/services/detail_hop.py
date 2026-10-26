@@ -1,8 +1,8 @@
 """Detail-page hop — fetch each listing event's own page, re-extract.
 
 For every event extracted from a page the model classed as `listing`,
-when the event's link differs from source_url and is HTTP(S) on the listing's host
-or a public one (extract only accepts links found on the listing page), the pipeline
+when the event's link differs from source_url and its host resolves only to public
+addresses (extract only accepts links found on the listing page), the pipeline
 fetches that page, reduces its HTML to text, and re-extracts the event.  The judge
 receives the record from the detail page (richer: title, time, description).
 
@@ -17,8 +17,10 @@ import json
 import logging
 import os
 import re
+import socket
 import threading
 import time
+import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
@@ -54,21 +56,46 @@ class HopCounts:
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
 
+def _public(url: str) -> bool:
+    """True when url is http(s) and every address its host resolves to is global.
+
+    Resolving lets the OS read every spelling (127.1, 2130706433, localhost., metadata names);
+    loopback, private, link-local, unique-local and unspecified addresses are all refused.
+    # shortcut: urllib resolves again to connect (a DNS-rebinding window); pin the checked address if that matters
+    """
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            return False
+        infos = socket.getaddrinfo(parsed.hostname, parsed.port or 443, type=socket.SOCK_STREAM)
+        return bool(infos) and all(ipaddress.ip_address(i[4][0].split("%")[0]).is_global for i in infos)
+    except (OSError, ValueError, UnicodeError):  # unresolvable or malformed: refuse
+        return False
+
+
+class _PublicOnly(urllib.request.BaseHandler):
+    """Refuses every request, the first one and each redirect, to a non-public destination."""
+
+    def http_request(self, req):
+        if not _public(req.full_url):
+            raise urllib.error.URLError(f"non-public destination refused: {req.full_url}")
+        return req
+
+    https_request = http_request
+
+
+_redirects = urllib.request.HTTPRedirectHandler()
+_redirects.max_redirections = 5
+_OPENER = urllib.request.build_opener(_PublicOnly, _redirects)
+
+
 def _needs_hop(ev: ExtractedEvent) -> bool:
-    """True when the event came from a listing and has its own link, on any public host."""
+    """True when the event came from a listing and has its own link on a public host."""
     if ev.page_kind != "listing":
         return False
     if not ev.link or canonical_url(ev.link) == canonical_url(ev.source_url):
         return False
-    parsed_link = urlparse(ev.link)
-    if parsed_link.scheme not in ("http", "https"):
-        return False
-    if parsed_link.hostname == urlparse(ev.source_url).hostname:
-        return True
-    try:  # another host came from the listing page's links; never let one point the hop at a private address
-        return ipaddress.ip_address(parsed_link.hostname or "").is_global
-    except ValueError:
-        return parsed_link.hostname not in (None, "localhost")
+    return _public(ev.link)
 
 
 _SKIP_TAGS = {"script", "style", "noscript", "svg", "template"}
@@ -197,7 +224,7 @@ def _fetch_html(url: str) -> str | None:
     """Fetch a page's HTML under the deadline and size limit, or None on failure."""
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "sail-event/1.0"})
-        with urllib.request.urlopen(req, timeout=DETAIL_FETCH_TIMEOUT) as resp:
+        with _OPENER.open(req, timeout=DETAIL_FETCH_TIMEOUT) as resp:
             if resp.status >= 400:
                 return None
             ct = resp.headers.get_content_type() if hasattr(resp.headers, "get_content_type") else ""
@@ -233,13 +260,17 @@ def detail_hop(
     target_city: str,
     target_country: str,
     on_page_done=None,
+    fetch_pages: bool = True,
 ) -> tuple[list[ExtractedEvent], HopCounts]:
     """Replace listing events with their detail-page re-extraction where possible.
 
     Events that don't need a hop, or whose hop fails, pass through unchanged.
     on_page_done(done, total) is called once with 0 before the first page and after each page.
+    fetch_pages=False (results not from the web) passes every event through.
     """
     counts = HopCounts()
+    if not fetch_pages:
+        return events, counts
 
     # Split: events needing hop vs pass-through
     to_hop: list[tuple[int, ExtractedEvent]] = []

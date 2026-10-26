@@ -47,7 +47,13 @@ def drip_server():
     server.server_close()
 
 
-def test_slow_drip_server_does_not_hold_detail_fetch(drip_server, monkeypatch):
+@pytest.fixture
+def loopback_is_public(monkeypatch):
+    """These tests serve pages from a 127.0.0.1 server, which the hop refuses in production."""
+    monkeypatch.setattr(hop_mod, "_public", lambda url: True)
+
+
+def test_slow_drip_server_does_not_hold_detail_fetch(drip_server, monkeypatch, loopback_is_public):
     monkeypatch.setattr(hop_mod, "DETAIL_FETCH_TIMEOUT", 1)
     ev = ExtractedEvent(
         title="t", start_local="2026-11-07", start_tz=None, end_local=None,
@@ -94,7 +100,7 @@ def status_server():
     server.server_close()
 
 
-def test_fetch_and_extract_errors_are_counted_and_logged_apart(status_server, caplog):
+def test_fetch_and_extract_errors_are_counted_and_logged_apart(status_server, caplog, loopback_is_public):
     """Dev Berlin run 2026-10-25: detail_fetch_errors=26 included one model error ('malformed JSON'
     on visitberlin.de/node/2249214), and fetch failures were logged at DEBUG, below dev's INFO,
     so dev's logs could not show which page failed or why."""
@@ -151,7 +157,7 @@ def page_server():
     server.server_close()
 
 
-def test_model_reads_the_event_page_as_text_not_html(page_server):
+def test_model_reads_the_event_page_as_text_not_html(page_server, loopback_is_public):
     """London run: the event pages' raw HTML was 7,455,055 of 7,590,352 input tokens (98.2%).
     The Musikverein page carries its 19:30 start only in its meta description."""
     model = MagicMock()
