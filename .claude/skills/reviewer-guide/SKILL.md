@@ -41,3 +41,7 @@ Outputs:
 - Counts come from a command you ran today, and the command is in the doc.
 - Never edit files owned by an open PR. Link to them instead.
 - Do not file issues or promote to prod from this skill; report gaps to the owner.
+- A gap that costs a rubric point goes in the README row and the guide's scorecard, not only in Known gaps. Blind reviewers lose trust when a confident row meets a "Partly" 800 lines later.
+- Say which test layers CI runs and in which job. A count that CI does not run is labelled "local only".
+- Name the folder split (`_docs/` vs `docs/`) wherever a reviewer meets both.
+- Docs on a branch do not exist for a reviewer: the guide counts only once it is on the default branch.

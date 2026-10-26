@@ -42,6 +42,7 @@ What would make a role unclear, and why it is not:
 
 - Two roles could close an issue: no, only the orchestrator closes.
 - QA could quietly fix what it finds: no, QA changes no file; `git status --short` must print nothing.
+  QA's agent file grants `Bash, Read, Grep, Glob` (no Edit or Write tool). Bash could still write a file, so this rule rests on the instruction and that clean-tree check, not on a tool block.
 - The engineer could move the goalposts: no, it may only comment on a wrong criterion, never edit it.
 - A merge or a prod deploy could happen without a human: no, both wait for the owner's word.
 
@@ -96,7 +97,7 @@ sequenceDiagram
 - Do not skip grooming, even when the task looks obvious
 - The engineer does not close the issue, QA does not fix the code
 - Do not commit until the tests pass
-- Only the orchestrator closes issues
+- Only the orchestrator closes issues. In Phase 2 a PR body may say `Closes #N`: GitHub then closes the issue when the owner's "merge" lands
 - QA ticks each criterion in its own comment; the boxes in the issue body may stay unticked, the QA comment is the record
 
 ## Root-cause gate
@@ -139,26 +140,43 @@ The first line of each comment names the role:
 | issue body edit (see **edited**) | PM | [team/pm.md](team/pm.md) |
 | `## Implementation ...`, `## What was done`, `## Done`, `## SWE: ...` | Engineer | [team/software-engineer.md](team/software-engineer.md) |
 | `## QA: PASS`, `## QA: FAIL`, `## QA re-check: ...` | QA | [team/qa-engineer.md](team/qa-engineer.md) |
-| `Closed by the orchestrator ...`, `Orchestrator: ...`, `Merged to main; on dev ...` | Orchestrator | this file |
+| `## QA fix: <sha>`, `QA fixes landed`, `## QA defect fixes`, `Fix in <sha>`, `**Fix:**` | the fix that answers a QA FAIL, sent back to the engineer by the lifecycle. "QA fix" means "fix for QA's findings", not "QA fixed it". It is not a verdict: the fresh `## QA: PASS` after it is | [team/software-engineer.md](team/software-engineer.md) |
+| `Closed by the orchestrator ...`, `... closed by the orchestrator.`, `Orchestrator: ...`, `Merged to main; on dev ...` | Orchestrator | this file |
+
+Known gap: session transcripts from 2026-10-16 to 2026-10-17 are not kept. For a fix comment such as `## QA fix: db3499a` on [#7](https://github.com/alexisdacquay/sail-event/issues/7), the record shows the fix and the fresh QA re-check, not which agent typed the fix.
 
 ## Evidence it ran this way
 
-Counts on 2026-10-25 (they grow as work continues), each with the command that produced it. They count comments that start with a `## QA: PASS` / `## QA: FAIL` heading; older verdicts written as `**QA verdict: ...**` are not counted.
+Counts on 2026-10-26 (they grow as work continues), each with the command that produced it. They count comments that start with a `## QA: PASS` / `## QA: FAIL` heading; older verdicts written as `**QA verdict: ...**` are not counted.
 
 | Count | What | Command |
 |---|---|---|
 | 58 | issues groomed into all four sections | `gh issue list -R alexisdacquay/sail-event --state all --limit 400 --json body --jq '[.[] \| select(.body \| test("(?m)^#+ *Goal") and test("(?m)^#+ *Acceptance criteria") and test("(?m)^#+ *Out of scope") and test("(?m)^#+ *Constraints"))] \| length'` |
 | 69 | issues with a QA verdict | `gh issue list -R alexisdacquay/sail-event --state all --limit 400 --json comments --jq '[.[] \| select(any(.comments[]; .body \| test("(?m)^#+ *QA:? *(PASS\|FAIL)")))] \| length'` |
 | 23 | issues sent back on a QA FAIL | same, with `FAIL` only |
-| 29 | PRs with a QA verdict | same as 69, with `gh pr list` |
+| 30 | PRs with a QA verdict | same as 69, with `gh pr list` |
+| 45 | issues whose closing note says "closed by the orchestrator" | `gh issue list -R alexisdacquay/sail-event --state all --limit 400 --json comments --jq '[.[] \| select(any(.comments[]; .body \| test("closed by the orchestrator"; "i")))] \| length'` |
+
+Who closed the 85 closed issues (2026-10-26):
+
+| Closed issues | How |
+|---|---|
+| 45 | a note that says "closed by the orchestrator" (count above) |
+| 28 | the orchestrator's merge note: "Merged to main; on dev ...", "Merged into main in #64", "Merged via PR 144" |
+| 7 | GitHub, when a PR that says `Closes #N` merged on the owner's word: #46, #52, #68, #83, #120, #122, #142 |
+| 5 | other notes: #17, #21, #29 ("Delivered on Render instead of AWS", no role named); #39, #55 (the orchestrator says it fixed or re-checked, then closed; see Known gaps below) |
 
 One full cycle on one page: issue [#7](https://github.com/alexisdacquay/sail-event/issues/7).
-QA failed it because a 400 response echoed the plaintext password; the engineer fixed it; QA passed it.
+QA failed it because a 400 response echoed the plaintext password; fix `db3499a` landed; a fresh QA pass checked it and passed.
 
 The PM groom on one page: open issue [#11](https://github.com/alexisdacquay/sail-event/issues/11), click **edited** above the body.
 The oldest version is the raw task (627 characters); the next is the PM groom (Goal, Acceptance criteria, Out of scope, Constraints).
 
-Known gaps (2026-10-25): issues #139 and #142 (PRs #141, #143) were closed with no QA verdict; PR #144 (#145) merged after three QA FAILs with no written waiver.
+Known gaps (2026-10-26):
+
+- Issues #139 and #142 (PRs #141, #143) were closed with no QA verdict.
+- PR #144 (#145) merged after three QA FAILs with no written waiver.
+- Issues [#39](https://github.com/alexisdacquay/sail-event/issues/39), [#52](https://github.com/alexisdacquay/sail-event/issues/52) and [#55](https://github.com/alexisdacquay/sail-event/issues/55): after a QA FAIL on one item, the orchestrator added the missing line (#39, #52) or re-checked the fix itself (#55) and closed, with no fresh QA pass. Each closing note says so.
 
 ## Test runner — four phases
 

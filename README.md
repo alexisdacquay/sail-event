@@ -23,17 +23,17 @@ The first link opens that criterion in the [reviewer guide](docs/reviewer-guide.
 | # | Criterion | Max | Where to look | One-line proof |
 |---|---|---|---|---|
 | 1 | Problem description | 2 | [guide §1](docs/reviewer-guide.md#1-problem-description) · [Problem](#problem) | Problem, 8 steps, one diagram, and 8 expected-behaviour rules, each linked to its test |
-| 2 | Product specification | 2 | [guide §2](docs/reviewer-guide.md#2-product-specification) · [PRD](_docs/plan.md) · [Issues](https://github.com/alexisdacquay/sail-event/issues?q=is%3Aissue) | Public issues: 58 groomed with acceptance criteria, 69 carry a QA verdict |
-| 3 | Agent team specification | 2 | [guide §3](docs/reviewer-guide.md#3-agent-team-specification) · [process.md](_docs/process.md#team) | Owner + 4 AI roles, a Does / Never does table, a sequence diagram; [issue #7](https://github.com/alexisdacquay/sail-event/issues/7) shows one full loop |
+| 2 | Product specification | 2 | [guide §2](docs/reviewer-guide.md#2-product-specification) · [PRD](_docs/plan.md) · [Issues](https://github.com/alexisdacquay/sail-event/issues?q=is%3Aissue) | Public issues: 58 groomed with acceptance criteria, 69 carry a QA verdict. Example: [issue #11](https://github.com/alexisdacquay/sail-event/issues/11). Agents post as the owner; the comment's first line names the role ([how to tell](_docs/process.md#who-wrote-a-comment)) |
+| 3 | Agent team specification | 2 | [guide §3](docs/reviewer-guide.md#3-agent-team-specification) · [process.md](_docs/process.md#team) | Owner + 4 AI roles, a Does / Never does table, a sequence diagram; [issue #7](https://github.com/alexisdacquay/sail-event/issues/7) shows one full loop. QA is a runnable agent file; PM and Engineer are role files given to a subagent |
 | 4 | Context management | 2 | [guide §4](docs/reviewer-guide.md#4-context-management) · [AGENTS.md](AGENTS.md) | AGENTS.md (loaded through `CLAUDE.md`) links process, team, spec, architecture, ops docs, skills |
 | 5 | Application | 2 | [guide §5](docs/reviewer-guide.md#5-application) · [Try it](#try-it) | React → FastAPI → Postgres, one command; a CI test restarts the app and the data is still there |
-| 6 | Testing | 2 | [guide §6](docs/reviewer-guide.md#6-testing) · [testing.md](docs/testing.md) | `make test-all`: 481 + 117 + 20 unit, 7 integration, 12 e2e; all green in [CI](https://github.com/alexisdacquay/sail-event/actions/runs/40242394581) |
+| 6 | Testing | 2 | [guide §6](docs/reviewer-guide.md#6-testing) · [testing.md](docs/testing.md) | `make test-all` runs unit, integration, e2e. Green in [CI](https://github.com/alexisdacquay/sail-event/actions/runs/40242394581): 481 + 117 unit, 7 integration, 12 e2e (e2e runs inside the job named `integration`). The 20 responder unit tests run in `make test`, not in CI |
 | 7 | Containerization | 2 | [guide §7](docs/reviewer-guide.md#7-containerization) · [docker-compose.yml](docker-compose.yml) | `docker compose up --build` starts app + Postgres; no `.env`, no migrate, no seed step |
 | 8 | Deployment | 2 | [guide §8](docs/reviewer-guide.md#8-deployment) · [live site](https://sail-event.onrender.com) | `/api/health` answers ok with commit `969a161`; registration is open |
 | 9 | CI/CD | 3 | [guide §9](docs/reviewer-guide.md#9-cicd) · [release-process.md](docs/release-process.md) | CI on every PR; merge auto-deploys dev; prod only by the manual [promote.yml](.github/workflows/promote.yml) |
-| 10 | Observability | 2 | [guide §10](docs/reviewer-guide.md#10-observability) · [observability/README.md](observability/README.md) | The search journey: 9 metrics, a 42-span trace, JSON logs; the same trace id in Loki and Tempo |
+| 10 | Observability | 2 | [guide §10](docs/reviewer-guide.md#10-observability) · [observability/README.md](observability/README.md) | The search journey: 9 metrics, a 42-span trace, JSON logs; the same trace id in Loki and Tempo. **Gap:** the calendar feed token lands in HTTP spans, and metrics carry no trace id ([known gaps](docs/reviewer-guide.md#known-gaps)) |
 | 11 | Alerting on user impact | 1 | [guide §11](docs/reviewer-guide.md#11-alerting-on-user-impact) · [rules.yaml](observability/grafana/provisioning/alerting/rules.yaml#L9) | 2 alerts on failed or missing searches; one fired for real ([alert.json](incident-response/incidents/20261021-074150-SearchRunFailures/alert.json)) |
-| 12 | On-call agent | 2 | [guide §12](docs/reviewer-guide.md#12-on-call-agent) · [incident-response/README.md](incident-response/README.md) | Alert → webhook → headless Claude Code → fix commit [8d2f839](https://github.com/alexisdacquay/sail-event/commit/8d2f839), 4 min 52 s after the alert |
+| 12 | On-call agent | 2 | [guide §12](docs/reviewer-guide.md#12-on-call-agent) · [incident-response/README.md](incident-response/README.md) | Alert → webhook → headless Claude Code → fix commit [8d2f839](https://github.com/alexisdacquay/sail-event/commit/8d2f839), 4 min 52 s after the alert. A drill: we injected the fault, on a local branch ([what it does not prove](docs/reviewer-guide.md#what-this-run-does-not-prove)) |
 | | **Total** | **24** | [Known gaps](docs/reviewer-guide.md#known-gaps) | Pass is 10 |
 
 Short on time? [Check it in 5 minutes](docs/reviewer-guide.md#check-it-in-5-minutes): four commands, no Docker.
@@ -159,16 +159,16 @@ Every task was a GitHub issue. One human owner and four AI roles worked each one
 |---|---|---|---|
 | Owner | human | picks the next item; says "merge"; says "push to prod" for one sha | - |
 | Orchestrator | the main Claude Code session | launches the agents, passes work along, closes on QA PASS | grooms, codes, tests |
-| PM | Claude Code subagent | rewrites the issue: Goal, Acceptance criteria, Out of scope, Constraints | writes code |
-| Engineer | Claude Code subagent | red test first, implements, opens a PR, comments what it did | edits the criteria, closes the issue |
-| QA | Claude Code subagent, fresh context | runs the tests, checks every criterion, posts `## QA: PASS` or `## QA: FAIL` | edits any file, closes the issue |
+| PM | Claude Code subagent, given [pm.md](_docs/team/pm.md) as its prompt | rewrites the issue: Goal, Acceptance criteria, Out of scope, Constraints | writes code |
+| Engineer | Claude Code subagent, given [software-engineer.md](_docs/team/software-engineer.md) as its prompt | red test first, implements, opens a PR, comments what it did | edits the criteria, closes the issue |
+| QA | Claude Code subagent, fresh context, runnable file [qa-engineer.md](.claude/agents/qa-engineer.md) | runs the tests, checks every criterion, posts `## QA: PASS` or `## QA: FAIL` | edits any file (a written rule plus a clean-tree check; not a tool block, since it has Bash), closes the issue |
 
 ```
   owner picks ──▶ PM grooms ──▶ Engineer builds ──▶ QA checks ──┬── FAIL ──▶ back to Engineer
                                                                 └── PASS ──▶ owner says merge ──▶ closed
 ```
 
-- Used for real: 58 groomed issues, 69 with a QA verdict, 23 sent back on FAIL ([counts and commands](_docs/process.md#evidence-it-ran-this-way)).
+- Used for real: 58 groomed issues, 69 with a QA verdict, 23 sent back on FAIL, 30 PRs with a QA verdict ([counts, commands, who closed what](_docs/process.md#evidence-it-ran-this-way)).
 - One full loop on one page: [issue #7](https://github.com/alexisdacquay/sail-event/issues/7) (QA caught a password echoed back in a 400 response).
 - Agents post with the owner's `gh` login. The first line of each comment names the role ([who wrote what](_docs/process.md#who-wrote-a-comment)).
 - Details: [process.md](_docs/process.md) · role files [PM](_docs/team/pm.md), [Engineer](_docs/team/software-engineer.md), [QA](_docs/team/qa-engineer.md) · runnable [QA subagent](.claude/agents/qa-engineer.md) · [AGENTS.md](AGENTS.md), which every agent reads first.
@@ -242,6 +242,8 @@ Reproduce it with `RESPONDER_WEBHOOK_SECRET=any-string incident-response/test-in
 
 ## All the docs
 
+Two folders, on purpose: `_docs/` = what to build and how the team works. `docs/` = how to run, test, ship and review it.
+
 | Doc | Answers |
 |---|---|
 | [docs/reviewer-guide.md](docs/reviewer-guide.md) | where each rubric point is proved |
@@ -266,7 +268,8 @@ Reproduce it with `RESPONDER_WEBHOOK_SECRET=any-string incident-response/test-in
 - Prod runs release `969a161` (promoted 2026-10-23). Dev runs the latest `main`. Prod lags dev on purpose: it moves only when the owner promotes a sha.
 - The live sites use a real web search provider and a real model, chosen by env var ([settings](docs/deployment.md)).
 - The app screenshots come from the local stack with recorded data. The GitHub and Grafana screenshots are real pages. All captured 2026-10-26.
-- What is not done yet: [known gaps](docs/reviewer-guide.md#known-gaps). Deferred security findings: issues [#33 to #36](https://github.com/alexisdacquay/sail-event/issues?q=is%3Aissue+label%3Apost-mvp).
+- What is not done yet: [known gaps](docs/reviewer-guide.md#known-gaps).
+- Post-MVP hardening, done: [#33](https://github.com/alexisdacquay/sail-event/issues/33) JWT secret, [#34](https://github.com/alexisdacquay/sail-event/issues/34) responder isolation, [#35](https://github.com/alexisdacquay/sail-event/issues/35) rate and length limits, [#36](https://github.com/alexisdacquay/sail-event/issues/36) feed-token rotation. Each closed after a QA PASS. The label `post-mvp` means "after the MVP", not "not done".
 
 [pipe-triage]: https://github.com/alexisdacquay/sail-event/blob/8305160/backend/app/services/pipeline.py#L739-L745
 [t-bound]: https://github.com/alexisdacquay/sail-event/blob/8305160/backend/tests/test_events.py#L111
