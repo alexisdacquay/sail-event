@@ -21,7 +21,7 @@ Every page a peer reviewer reads must meet [STANDARD.md](STANDARD.md): correct E
 | 2 | Rewrite: 4 codex writers on disjoint files (readme, guide, team, ops) | done 12:42 UTC, links ok | `out/<group>-changes.md` |
 | 3 | Blind verify: fresh reader, facts + links, rubric scorer | done 12:54 UTC: reader FAIL (22, 0 high), facts FAIL (6, 0 high, links ok), rubric 23/24 (Observability 1/2, a code gap) | `out/verify-*.md`, `out/orchestrator-review.md` |
 | 4 | Fix what verify found (4 codex fixers) | done 13:04 UTC, links ok; README 3,300 → 1,665 words | `out/fix-*.md` |
-| 5 | Final Claude reviewer on README + guide, then fix | running since 13:05 UTC (prompt: `prompts/final-review.md`) | `out/final-review.md` |
+| 5 | Final Claude reviewer on README + guide, then fix | review FAIL 0 high / 5 medium / 17 low; round-2 codex fixes + orchestrator checked every item against the files (13:35 UTC): all fixed | `out/final-review.md`, `out/fix2-*.md` |
 | 6 | Commit, PR, green CI, merge (dev only), check GitHub README and dev | PR opened 13:06 UTC; merge waits for green CI + final review PASS | https://github.com/alexisdacquay/sail-event/pull/153 |
 | 7 | Update `work/STATE.md` top block and the prod promote checklist for the owner | pending | |
 
@@ -47,3 +47,6 @@ Groups and files:
 - 12:40 UTC: after reading the README rewrite (accurate, but defensive like an audit), the orchestrator added the 'Honest, not defensive' section to STANDARD.md before the verify step.
 - 12:42 UTC: all 4 writers done. 27 files changed. linkcheck: all links ok.
 - 12:54 UTC: verify done. The lost point is Observability: feed tokens can reach HTTP spans and metrics carry no trace id. That is a code/config gap, frozen; it is listed for the owner, not fixed.
+- 13:30 UTC: round-2 guide and ops fixers ended with OpenAI 'Selected model is at capacity'. The guide fixer's edits had already landed and linked clean. The orchestrator checked every final-review item against the files; the 3 left were fixed by hand (README process dates).
+- 13:36 UTC: `make test-all` running once on the branch (compose project sail-test, port 8030) to record proof for the 'single command, and pass' rubric phrase. Log: scratchpad/test-all.log.
+- 13:36 UTC: orchestrator's `make test-all` on 3e33fc9 exited 0 in 4 min 49 s (backend 507 passed/4 skipped, frontend 117, responder 20 OK, integration 7, e2e 12). It matches the run the round-2 guide fixer made at ca4cf2b, port 8046 (real output in its log), which the guide cites in §6.
