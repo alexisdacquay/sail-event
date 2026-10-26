@@ -106,6 +106,14 @@ def main(files):
             elif frag and target.is_file():
                 if not check_line_anchor(frag, target.read_text().count("\n") + 1):
                     bad.append(f"{f}: {url} -> line anchor past end of file")
+    for f in files:
+        md = (ROOT / f).read_text()
+        for m in re.finditer(r"```mermaid\n(.*?)```", md, re.S):
+            first = md[: m.start()].count("\n") + 2
+            for i, line in enumerate(m.group(1).splitlines()):
+                # a semicolon ends a mermaid statement; GitHub then fails to render the diagram
+                if ";" in re.sub(r'"[^"]*"', "", line) and not line.strip().startswith("%%"):
+                    bad.append(f"{f}:{first + i}: mermaid line has ';' outside quotes")
     print("\n".join(sorted(bad)) or "all links ok")
     return 1 if bad else 0
 
