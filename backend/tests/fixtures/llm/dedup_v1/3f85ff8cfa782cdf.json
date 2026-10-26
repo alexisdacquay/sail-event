@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 3,
+    "reason": "It matches the title, date, start time, venue, and description of the same A-Trane jazz trio performance."
+  },
+  "usage": {
+    "prompt_tokens": 673,
+    "completion_tokens": 434
+  },
+  "recorded_at": "2026-10-25T23:30:41.437686+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

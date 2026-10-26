@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 6,
+    "reason": "Jazz in Berlin fits, but this is on 22 October, outside your 19\u201321 October dates.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 768,
+    "completion_tokens": 84
+  },
+  "recorded_at": "2026-10-25T23:28:33.535339+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

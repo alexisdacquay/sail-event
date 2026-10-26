@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 1,
+    "reason": "Both have the same title, date, start time, location, and description."
+  },
+  "usage": {
+    "prompt_tokens": 419,
+    "completion_tokens": 69
+  },
+  "recorded_at": "2026-10-25T23:29:32.152532+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

@@ -187,8 +187,8 @@ class TestFilterPipeline:
         assert counts.filtered_incomplete == 0
         assert not hasattr(counts, "filtered_non_event")
 
-    def test_same_link_and_start_filtered(self):
-        """The events table is unique on (user, link, date_time); the second row cannot be stored."""
+    def test_same_link_and_start_both_kept(self):
+        """Owner 2026-10-25: two events may share a link and start minute; the after-storage check decides."""
         ev1 = _make_event(link="https://example.com/event1", title="Event 1")
         ev2 = _make_event(link="https://example.com/event1", title="Event 2")
         kept, counts = filter_events(
@@ -200,8 +200,8 @@ class TestFilterPipeline:
             target_country="DE",
             user_tz="Europe/Berlin",
         )
-        assert len(kept) == 1
-        assert counts.filtered_duplicate == 1
+        assert kept == [ev1, ev2]
+        assert counts.filtered_duplicate == 0
 
     def test_in_run_utm_link_variant_kept(self):
         """#136: no in-run link check; the after-storage check compares them."""
@@ -311,6 +311,19 @@ def test_136_stored_listing_url_same_day_other_event_kept():
     stored = [{"link": _LISTING, "date_time": "2026-10-29T18:00+00:00"}]
     debate = _make_event(
         title="Is AI making us less creative?: An Oxford-style debate", start_local="2026-10-29T18:30",
+        start_tz="Europe/London", city="London", country="GB",
+        link=_LISTING, source_url=_LISTING, page_kind="listing",
+    )
+    kept, counts = _filter_one(debate, stored_events=stored, user_tz="Europe/London")
+    assert kept == [debate]
+    assert counts.filtered_duplicate == 0
+
+
+def test_stored_listing_url_same_minute_other_event_kept():
+    """Owner 2026-10-25: a stored event with the same listing link and start minute does not drop another event."""
+    stored = [{"link": _LISTING, "date_time": "2026-10-29T18:00+00:00"}]
+    debate = _make_event(
+        title="Is AI making us less creative?: An Oxford-style debate", start_local="2026-10-29T18:00",
         start_tz="Europe/London", city="London", country="GB",
         link=_LISTING, source_url=_LISTING, page_kind="listing",
     )

@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 4,
+    "reason": "It matches the new event's title, date and start time, Berlin venue, and live jazz trio description with the same ticket price."
+  },
+  "usage": {
+    "prompt_tokens": 753,
+    "completion_tokens": 766
+  },
+  "recorded_at": "2026-10-25T23:31:39.368693+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

@@ -25,8 +25,8 @@ DUPLICATE_PREFIX = "Duplicate of "
 
 
 def _order(e: orm.Event) -> tuple:
-    # (link, date_time) is unique per user, so the order is total
-    return (e.date_time or "", e.title or "", e.link or "")
+    # (link, date_time) is no longer unique: the prompt's fields order the rest; rows equal in them render the same prompt
+    return (e.date_time or "", e.title or "", e.link or "", e.place or "", e.description or "", e.id or "")
 
 
 def _fields(e: orm.Event) -> dict:
