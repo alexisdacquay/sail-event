@@ -24,7 +24,7 @@ Run, test, ship
 
 Agents and tools
 - [`.claude/agents/qa-engineer.md`](.claude/agents/qa-engineer.md) - the QA subagent
-- [`.claude/skills/rubric-review/SKILL.md`](.claude/skills/rubric-review/SKILL.md), [`.claude/skills/status-update/SKILL.md`](.claude/skills/status-update/SKILL.md), [`.claude/skills/field-test/SKILL.md`](.claude/skills/field-test/SKILL.md)
+- [`.claude/skills/rubric-review/SKILL.md`](.claude/skills/rubric-review/SKILL.md), [`.claude/skills/status-update/SKILL.md`](.claude/skills/status-update/SKILL.md), [`.claude/skills/field-test/SKILL.md`](.claude/skills/field-test/SKILL.md), [`.claude/skills/reviewer-guide/SKILL.md`](.claude/skills/reviewer-guide/SKILL.md) (rebuilds [`docs/reviewer-guide.md`](docs/reviewer-guide.md))
 
 State and history
 - [`work/STATE.md`](work/STATE.md) - read the top block for where work stands
