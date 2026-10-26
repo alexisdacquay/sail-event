@@ -61,7 +61,7 @@ groups:
           summary: Two or more search runs failed in the last 10 minutes
           description: 'Observed {{ $values.B.Value | printf "%.0f" }} failed run(s) in a 10-minute window'
           dashboard_url: http://localhost:3001/d/sail-event-overview
-          runbook: TODO
+          runbook: https://github.com/alexisdacquay/sail-event/blob/main/incident-response/README.md
 
       - uid: search-runs-silent
         title: SearchRunsSilent
@@ -118,4 +118,4 @@ groups:
           summary: No search runs completed in the last 2 hours
           description: Zero runs recorded in a 2-hour window; the hourly scheduler may be stopped
           dashboard_url: http://localhost:3001/d/sail-event-overview
-          runbook: TODO
+          runbook: https://github.com/alexisdacquay/sail-event/blob/main/incident-response/README.md

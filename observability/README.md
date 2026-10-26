@@ -9,10 +9,13 @@ Grafana is at `http://localhost:3001` (or `$GRAFANA_PORT`). Every host port has 
 
 Two provisioned alert rules evaluate every minute against the Prometheus datasource.
 
-| Rule | Expression | `for` | Fires when |
+| Rule | PromQL, then threshold | `for` | User impact |
 |------|-----------|-------|------------|
-| **SearchRunFailures** | `increase(sail_runs_total{outcome="error"}[10m]) >= 2` | 5 m | Two or more search runs failed in a 10-minute window and the condition held for 5 minutes |
-| **SearchRunsSilent** | `increase(sail_runs_total[2h]) == 0` | 10 m | No run completed in 2 hours (`noDataState: OK` — a fresh stack with no metrics stays Normal) |
+| **SearchRunFailures** ([rules.yaml#L9](grafana/provisioning/alerting/rules.yaml#L9)) | `increase(sail_runs_total{outcome="error"}[10m])` > 1 | 5 m | Searches fail: users get no new events. Fires when about two or more runs failed in 10 minutes, for 5 minutes in a row |
+| **SearchRunsSilent** ([rules.yaml#L66](grafana/provisioning/alerting/rules.yaml#L66)) | `increase(sail_runs_total[2h])` < 1 | 10 m | Nothing runs: the hourly scheduler may be stopped. `noDataState: OK`, so a fresh stack with no metrics stays Normal |
+
+Both rules carry `summary`, `description`, `dashboard_url` and `runbook` ([incident-response/README.md](../incident-response/README.md)).
+A recorded firing: [alert.json](../incident-response/incidents/20261021-074150-SearchRunFailures/alert.json) (2026-10-21).
 
 Alerts with `severity=critical` route to the **responder-webhook** contact point, which POSTs to `$RESPONDER_WEBHOOK_URL` (default `http://host.docker.internal:8001/alerts`).
 
@@ -98,6 +101,32 @@ Expected: the Loki query returns a log line with a non-zero `trace_id`, and
 the Tempo query returns the same trace with spans including `search_run`,
 `search`, `extract`, `filter`, `persist`. Runs that find new events also
 show `judge` and `triage` spans.
+
+## What telemetry contains, and never contains
+
+Telemetry is on only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set ([telemetry.py](../backend/app/telemetry.py)).
+The local overlay [docker-compose.observability.yml](../docker-compose.observability.yml) sets it.
+
+| Signal | Contains |
+|---|---|
+| Spans | `run_id`, `user_id` (a random UUID), `trigger`, `provider`, counts, `score`, `page_kind`, `source_host`; HTTP spans from FastAPI auto-instrumentation (method, route, path, status) |
+| Logs | message, level, `trace_id`, exception class; public page URLs on fetch or extract errors |
+| Metrics | counters and one histogram; labels are fixed values only (`outcome`, `stage`, `prompt`, `provider`, `trigger`, `guard`, `target`, `which`, `direction`) |
+
+**Never contains:** criteria text, username, password, JWT, prompts or model answers.
+
+**Known exceptions, not fixed yet:**
+
+- HTTP spans record the raw request path, so a calendar request puts the feed token (`/api/calendar/<token>`) in a span. Fix: replace the path with the route at the collector.
+- Some warning logs and `span.record_exception` include the provider's exception text (`str(exc)`).
+- The `filelog` receiver in [collector.yaml](collector.yaml) reads every container log on the Docker host, not only the app's.
+
+Check it yourself:
+
+```bash
+git grep -nE 'set_attribute|start_as_current_span\(.*attributes' backend/app   # every span attribute
+git grep -nE 'logger\.(info|warning|error|exception)' backend/app              # every log line
+```
 
 ## `otel-collector` hostname collision
 
