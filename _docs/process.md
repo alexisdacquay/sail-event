@@ -1,188 +1,231 @@
 # Process: the agent team and how it works
 
-Jump to:
-[Team](#team) ·
-[Roles](#roles) ·
-[One cycle](#one-cycle-in-one-picture) ·
-[Handoffs](#handoffs) ·
-[Root-cause gate](#root-cause-gate) ·
-[Phase 2](#phase-2-from-issue-65-worktrees-and-prs) ·
-[Evidence](#evidence-it-ran-this-way)
+[Team](#team) · [Roles](#roles) · [Starting an agent](#how-the-orchestrator-starts-an-agent) · [Lifecycle](#lifecycle) · [Handoffs](#handoffs) · [Rules](#rules) · [Evidence and gaps](#evidence-it-ran-this-way)
 
-- Tasks are GitHub issues
-- One issue at a time
-- Read the acceptance criteria before starting and before closing
-- Commit regularly
+The owner directs the main Claude Code session (the orchestrator). It briefs
+separate PM, engineer and QA agents. GitHub issues hold the requirements; PRs
+hold the change and review. Several agents can run in parallel, with one issue
+per agent and one writer per file.
+
+These are the operating rules, not a claim that every past task followed them.
+The dated exceptions and commands below let a reader check the record.
 
 ## Team
 
-| Member | Human or AI | How it starts | Decides |
-|---|---|---|---|
-| Owner | human | - | picks the next item; approves every merge; approves every prod promote, per sha |
-| Orchestrator | AI: the main Claude Code session | the owner opens a session in this repo | which agent runs next; closes on QA PASS; may waive a criterion with a written reason |
-| PM | AI: Claude Code subagent, fresh context | orchestrator launches it with its role file `_docs/team/pm.md` as instructions | how the issue is written |
-| Engineer | AI: Claude Code subagent, fresh context | same, with `_docs/team/software-engineer.md` | how the code is written |
-| QA | AI: Claude Code subagent, fresh context | same, with `_docs/team/qa-engineer.md`, or the runnable agent [`.claude/agents/qa-engineer.md`](../.claude/agents/qa-engineer.md) | PASS or FAIL |
-
-Engineers and QA may launch their own subagents for independent parts
-(one test suite, one file, one scenario each) whenever that saves
-wall-clock time; one writer per file.
+The human owner starts the main Claude Code session. That session is the AI
+orchestrator; it loads [AGENTS.md](../AGENTS.md) and launches separate PM,
+engineer and QA agents. The role files are their instructions:
+[PM](team/pm.md), [engineer](team/software-engineer.md), [QA](team/qa-engineer.md).
 
 ## Roles
 
-| Role | Does | Never does | Defined in |
-|---|---|---|---|
-| PM | rewrites the issue into Goal, Acceptance criteria, Out of scope, Constraints; files follow-ups | writes code | [team/pm.md](team/pm.md), template [task-template.md](task-template.md) |
-| Engineer | red test first, implements, commits, opens a PR, comments what it did | changes acceptance criteria; closes the issue | [team/software-engineer.md](team/software-engineer.md) |
-| QA | fresh context; runs `make test`; checks every criterion; posts `## QA: PASS` or `## QA: FAIL` | edits a single file; closes the issue | [team/qa-engineer.md](team/qa-engineer.md) + [.claude/agents/qa-engineer.md](../.claude/agents/qa-engineer.md) |
-| Orchestrator | picks the agent, passes work along, closes on PASS, waives with a written reason | grooms, codes, tests | this file |
-| Owner (human) | picks the next item, says "merge", says "push to prod" for a sha | - | this file, [release-process.md](../docs/release-process.md) |
+| Role | Does | Must not do |
+|---|---|---|
+| PM | Writes Goal, Acceptance criteria, Out of scope and Constraints; links follow-ups | Write code or settle an unresolved product choice without the owner |
+| Engineer | Implements, tests, commits and opens a PR; for bug fixes, follows the dated root-cause gate below | Change acceptance criteria, close the issue or merge without authorization |
+| QA | Runs checks and records a verdict per criterion | Edit any project file, fix the defect, merge or close the issue |
+| Orchestrator | Assigns work, passes evidence between roles, records owner decisions, closes after review | Substitute its own implementation or test result for independent QA; start the next item without the owner's pick |
+| Owner | Sets scope and priority; approves merge and prod separately | No automated role restriction |
 
-What would make a role unclear, and why it is not:
+The orchestrator did cross these boundaries: it filed issues, edited code and
+re-checked fixes itself. Examples and other gaps are recorded below.
 
-- Two roles could close an issue: no, only the orchestrator closes.
-- QA could quietly fix what it finds: no, QA changes no file; `git status --short` must print nothing.
-  QA's agent file grants `Bash, Read, Grep, Glob` (no Edit or Write tool). Bash could still write a file, so this rule rests on the instruction and that clean-tree check, not on a tool block.
-- The engineer could move the goalposts: no, it may only comment on a wrong criterion, never edit it.
-- A merge or a prod deploy could happen without a human: no, both wait for the owner's word.
+## How the orchestrator starts an agent
+
+The orchestrator launches PM and engineer as `general-purpose` background
+subagents with an Agent-call brief. QA uses the registered `qa-engineer` agent
+([definition](../.claude/agents/qa-engineer.md)); earlier and exceptional launches
+used `general-purpose`, as dated below. Background launches in the local session transcript use `model: opus`; the 2026-10-23 state
+entry also records Fable for work needing layout or product judgment. These are
+session choices, not models configured by the role files.
+
+A brief supplies:
+
+1. Role file and [AGENTS.md](../AGENTS.md), followed by the issue number and repository.
+2. Read list: PM gets this process, [task template](task-template.md), [plan](plan.md), [architecture](architecture.md), relevant API contract and code. Engineer gets architecture, [openapi.yaml](../openapi.yaml) and relevant code. QA gets the issue, PR, exact head and QA role.
+3. Scope, constraints, known decisions, assigned branch/worktree and checks to run. A prior agent's report is a lead to verify, not proof.
+4. Reply format: PM returns the updated issue and open decisions; engineer returns commits, PR, commands/results and unmet criteria; QA returns its verdict link and evidence.
 
 ## Lifecycle
 
-1. Owner picks the next issue
-2. PM grooms it
-3. Engineer implements it
-4. QA verifies it
-5. On FAIL: back to engineer with the QA comment
-6. On PASS: the orchestrator closes the issue
-7. Repeat until the backlog is empty
+1. Owner picks an issue. PM grooms it; unresolved product choices go back through the orchestrator.
+2. Engineer implements in an assigned worktree/branch, runs `make test` and task-specific checks, commits, then opens a PR linking the issue.
+3. QA checks the committed PR head in its own detached worktree and posts a criterion-by-criterion verdict on the PR (on the issue when there is no PR).
+4. A FAIL returns to the engineer with the verdict. QA verifies the new head after the fix. A waiver must name the unmet criterion and the owner's decision in writing.
+5. With QA PASS and green CI, the orchestrator reports the change and evidence. The owner says whether to merge. Merge updates dev; the orchestrator closes the issue, or GitHub closes it through `Closes #N`.
+6. Prod is separate: the owner checks dev and authorizes one commit. The orchestrator uses [the release process](../docs/release-process.md). Rollback across the three migrations added by PRs #128/#150 is untested; PR #150's event deletion is irreversible. A code redeploy does not restore deleted data.
+
+The owner priority and prod gates date from **2026-10-21**. The original
+2026-10-16 lifecycle said “Pick the next issue” and ran an unattended backlog
+loop. See the history and gaps below; do not apply today's rules backwards.
 
 ## One cycle in one picture
 
 ```mermaid
-sequenceDiagram
-    actor Owner
-    participant Orch as Orchestrator (main session)
-    participant PM
-    participant Eng as Engineer
-    participant QA
-    Owner->>Orch: pick issue N
-    Orch->>PM: groom issue N
-    PM-->>Orch: issue body rewritten (4 sections)
-    Orch->>Eng: implement issue N
-    Note over Eng: root-cause gate:<br/>red test first, committed red
-    Eng-->>Orch: commits + PR + "what I did" comment
-    Orch->>QA: verify issue N (fresh context)
-    QA-->>Orch: "## QA: FAIL" + one verdict per criterion
-    Orch->>Eng: fix, with the QA comment
-    Eng-->>Orch: new commits
-    Orch->>QA: re-check
-    QA-->>Orch: "## QA: PASS"
-    Orch->>Owner: PR in words, numbers, verdict
-    Owner->>Orch: "merge" (dev only)
-    Owner->>Orch: "push to prod" for one named sha (later, separate)
+flowchart LR
+    O[Owner picks] --> P[PM grooms issue]
+    P --> E[Engineer: commits + PR + checks]
+    E --> Q[QA checks committed head]
+    Q -- FAIL --> E
+    Q -- PASS + green CI --> M[Owner authorizes merge]
+    M --> D[Merge: dev; close issue]
+    D --> A[Owner checks dev and names prod commit]
+    A --> R[Manual prod promote]
 ```
+
+For bug fixes since 2026-10-25, the engineer also follows the root-cause gate.
 
 ## Handoffs
 
-| From → To | Artifact | Where it lives |
+| From → To | Artifact | Checkable record |
 |---|---|---|
-| PM → Engineer | groomed issue body (Goal, Acceptance criteria, Out of scope, Constraints) | issue body; click **edited** above the body to see the original |
-| Engineer → QA | commits + PR + "what I did" comment | issue or PR comment |
-| QA → Orchestrator | `## QA: PASS` or `## QA: FAIL`, one verdict per criterion, the test command and its result | issue or PR comment |
-| Orchestrator → Owner | the PR described in words, numbers, verdict | chat |
-| Owner → Orchestrator | "merge" / "push to prod `<sha>`" | merge commit; [promote.yml](../.github/workflows/promote.yml) run |
+| Orchestrator → PM/Engineer/QA | Brief: role, read list, issue, constraints, head/worktree, reply format | Agent prompt in local session transcript; not public |
+| PM → Engineer | Four-section issue body and linked follow-ups | Issue body and **edited** history |
+| Engineer → QA | Committed head, PR, implementation summary, commands/results | PR and issue/PR comments |
+| QA → Engineer/Orchestrator | PASS/FAIL per criterion, checked head, commands and observed failures | PR verdict; issue verdict in the earlier workflow |
+| Owner → Orchestrator | Scope, “merge”, or approval of a prod commit | Chat; some decisions copied to issues, e.g. #136 and #145 |
+| Orchestrator → Owner | Change, test evidence, QA verdict, remaining risks | Chat; merge and promote runs prove execution, not the owner's words |
+
+## Brief and context details
+
+For example, the issue #1 engineer brief began (abridged from the local transcript):
+
+> You're a Software Engineer on the Sail-event project … Your role is defined in
+> `_docs/team/software-engineer.md`; read it first and follow it exactly. Read
+> `AGENTS.md` and `_docs/architecture.md` too. Implement issue #1: read it with
+> `gh issue view 1 -R alexisdacquay/sail-event` … Reply with only: the commit
+> hashes, the `make test` summary line(s), and anything you could not satisfy.
+
+That early brief assigned the shared checkout. Later briefs assign an engineer
+worktree and QA a detached worktree at the PR head. Fix rounds can be sent back
+with `SendMessage`; issue #7 reused the same QA agent for its re-check. A
+separate initial context does not mean every re-check had a new context.
+
+Supervision recorded in [STATE](../work/STATE.md): check progress roughly every
+9 minutes using status, file times and agent output; investigate 20 minutes of
+silence before stopping and relaunching with a handoff. Before context
+compression, record active issues, heads, worktrees, verdicts, pending owner
+decisions and the next action in STATE. A resumed session reads that top block
+and the referenced evidence; it must not restart from an old backlog position.
 
 ## Rules
 
-- Do not skip grooming, even when the task looks obvious
-- The engineer does not close the issue, QA does not fix the code
-- Do not commit until the tests pass
-- Only the orchestrator closes issues. In Phase 2 a PR body may say `Closes #N`: GitHub then closes the issue when the owner's "merge" lands
-- QA ticks each criterion in its own comment; the boxes in the issue body may stay unticked, the QA comment is the record
+- Groom before implementation. If a criterion is wrong, the engineer comments and waits; it does not edit the contract.
+- Run `make test`, then commit completed work. Agents may use `SKIP_HOOK_TESTS=1` after running it themselves, to avoid a second run. The exception is a deliberately red regression-test commit under the gate below. The hook's secret-pattern scan still runs; it is not a guarantee that every secret is detected.
+- Require green PR CI and a QA verdict before asking to merge. The owner must explicitly accept any unmet criterion; a closing note claiming PASS is not a QA verdict.
+- QA never changes project files. In the shared checkout a clean-tree check also checked the engineer had committed. In a detached QA worktree it checks only that the reviewed checkout remains clean; it cannot prove the engineer left nothing uncommitted elsewhere.
+- The orchestrator closes issues, or GitHub does on merge of `Closes #N`. QA records each criterion in its comment; issue-body boxes need not be the review record.
+- Do not use `rm` or `sed -i`. Keep credentials out of output and tracked files. Do not nest engineer agents unless the brief assigns independent parts; keep one writer per file.
+- Current freeze (owner, 2026-10-26): documentation only; no new product work.
 
 ## Root-cause gate
 
-Written in [software-engineer.md](team/software-engineer.md) and enforced by [qa-engineer.md](team/qa-engineer.md).
+Added to the [engineer](team/software-engineer.md) and [QA](team/qa-engineer.md)
+roles on **2026-10-25**, commit `c0f83e6`; added here on 2026-10-26. It applies to
+bug fixes, not every feature since the project began.
 
-1. On any anomaly, the engineer stops and writes the causal chain on the issue before touching code.
-2. A bug fix starts with a test that reproduces the bug from its root cause, committed while red.
-3. The fix turns it green. The assertion is never changed to pass.
-4. QA fails any bug fix without a regression test that fails on the parent commit.
-5. A red CI job is never "unrelated" until its cause is found.
+1. On a failing test, unexpected result or red CI job, write the observed failure and causal chain on the issue before changing code.
+2. Add a test reproducing the cause and commit it while red, using `SKIP_HOOK_TESTS=1` for this deliberate exception.
+3. Fix the cause and run `make test`. Do not weaken the regression assertion to make it pass.
+4. QA verifies the new test against the pre-fix code (red) and the submitted head (green). See the [QA steps](team/qa-engineer.md#how-you-check).
+5. Explain a red CI job before calling it unrelated. Report an unresolved cause and stop for the orchestrator.
 
-Regression tests live in [`backend/tests/regression/`](../backend/tests/regression/).
+QA checks the regression evidence and criteria; the written causal analysis and
+commit sequence remain review obligations, not a mechanical enforcement gate.
+Regression tests live in [backend/tests/regression/](../backend/tests/regression/).
 
 ## Phase 2 (from issue #65): worktrees and PRs
 
-From issue [#65](https://github.com/alexisdacquay/sail-event/issues/65) on (its PR [#66](https://github.com/alexisdacquay/sail-event/pull/66) carries the first QA verdict on a PR), work moved from direct commits to pull requests:
+**Phase 1, 2026-10-16 to 2026-10-20:** shared checkout, mostly direct commits,
+QA comments on issues. PRs already existed: #30–#32 were created on 2026-10-17.
 
-1. The engineer works in its own git worktree and opens a PR.
-2. CI must be green ([ci.yml](../.github/workflows/ci.yml)).
-3. QA posts its verdict on the PR. Examples: PR [#85](https://github.com/alexisdacquay/sail-event/pull/85) (two FAILs, a fix, then a written waiver), PR [#149](https://github.com/alexisdacquay/sail-event/pull/149) (PASS).
-4. The orchestrator reports to the owner, who says "merge". Merge = dev only.
-5. Prod moves only when the owner names a sha ([release-process.md](../docs/release-process.md)).
+**Phase 2, from issue #65 on 2026-10-20:** assigned worktrees and PR review;
+PR [#66](https://github.com/alexisdacquay/sail-event/pull/66) carries the first QA
+heading on a PR. This describes the intended workflow, not universal compliance.
+The owner gates followed on 2026-10-21. Several engineers and QA could proceed
+in parallel; dependent changes needed rebase and review at their final head.
 
 ## Labels
 
-- `mvp` - needed for the MVP defined in `_docs/plan.md`
-- `post-mvp` - real work, deliberately not now
-- Every issue carries exactly one of the two
-
-Known gap (2026-10-25): 21 later issues (#94-#131) carry neither label.
+The 2026-10-16 rule called for `mvp` or `post-mvp` on each issue. It was not
+applied consistently: 21 issues in #94–#131 have neither as of 2026-10-26.
+Other labels describe topic: `enhancement`, `search-v2`, `ux`, `bug`, `theme`,
+`robustness`. Labels do not prove grooming or completion.
 
 ## Who wrote a comment
 
-Agents post with the owner's `gh` CLI login, so GitHub shows `alexisdacquay` as the author of every comment.
-The first line of each comment names the role:
+The checked GitHub comments use the owner's `alexisdacquay` login. A heading is
+a convention, not authenticated agent identity. Common forms include:
 
-| Comment starts with | Role | Role file |
-|---|---|---|
-| issue body edit (see **edited**) | PM | [team/pm.md](team/pm.md) |
-| `## Implementation ...`, `## What was done`, `## Done`, `## SWE: ...` | Engineer | [team/software-engineer.md](team/software-engineer.md) |
-| `## QA: PASS`, `## QA: FAIL`, `## QA re-check: ...` | QA | [team/qa-engineer.md](team/qa-engineer.md) |
-| `## QA fix: <sha>`, `QA fixes landed`, `## QA defect fixes`, `Fix in <sha>`, `**Fix:**` | the fix that answers a QA FAIL, sent back to the engineer by the lifecycle. "QA fix" means "fix for QA's findings", not "QA fixed it". It is not a verdict: the fresh `## QA: PASS` after it is | [team/software-engineer.md](team/software-engineer.md) |
-| `Closed by the orchestrator ...`, `... closed by the orchestrator.`, `Orchestrator: ...`, `Merged to main; on dev ...` | Orchestrator | this file |
+| Text | Meaning |
+|---|---|
+| `## Implementation`, `## SWE:`, `## S5 implementation complete` | Engineer's report; not a verdict |
+| `## QA: PASS`, `## QA: FAIL`, `## QA FAIL`, `## QA final check: PASS` | QA verdict or re-check; read the criterion results |
+| `## QA fix: <sha>` | Fix for QA findings; does not mean QA wrote the fix |
+| `Closed by the orchestrator`, `Merged to main` | Closing/merge note; not independent QA |
+| `Owner decisions … (recorded by the orchestrator)` | Owner's decision transcribed to the tracker |
 
-Known gap: session transcripts from 2026-10-16 to 2026-10-17 are not kept. For a fix comment such as `## QA fix: db3499a` on [#7](https://github.com/alexisdacquay/sail-event/issues/7), the record shows the fix and the fresh QA re-check, not which agent typed the fix.
+Some comments have none of these headings. PM work is an issue-body edit,
+visible through **edited**, rather than a comment. Session transcripts are
+retained locally, not published; public comments alone cannot identify the agent
+that typed a fix or prove a fresh context.
 
 ## Evidence it ran this way
 
-Counts on 2026-10-26 (they grow as work continues), each with the command that produced it. They count comments that start with a `## QA: PASS` / `## QA: FAIL` heading; older verdicts written as `**QA verdict: ...**` are not counted.
+Snapshot **2026-10-26**: 58/96 issues have all four sections; 69 have a QA heading,
+23 have a FAIL; 30/56 PRs have a QA heading; 45 issues have a “closed by the
+orchestrator” note. These count text patterns, not PM authorship or successful
+review of every closed item. Reproduce from the public tracker:
 
-| Count | What | Command |
-|---|---|---|
-| 58 | issues groomed into all four sections | `gh issue list -R alexisdacquay/sail-event --state all --limit 400 --json body --jq '[.[] \| select(.body \| test("(?m)^#+ *Goal") and test("(?m)^#+ *Acceptance criteria") and test("(?m)^#+ *Out of scope") and test("(?m)^#+ *Constraints"))] \| length'` |
-| 69 | issues with a QA verdict | `gh issue list -R alexisdacquay/sail-event --state all --limit 400 --json comments --jq '[.[] \| select(any(.comments[]; .body \| test("(?m)^#+ *QA:? *(PASS\|FAIL)")))] \| length'` |
-| 23 | issues sent back on a QA FAIL | same, with `FAIL` only |
-| 30 | PRs with a QA verdict | same as 69, with `gh pr list` |
-| 45 | issues whose closing note says "closed by the orchestrator" | `gh issue list -R alexisdacquay/sail-event --state all --limit 400 --json comments --jq '[.[] \| select(any(.comments[]; .body \| test("closed by the orchestrator"; "i")))] \| length'` |
+```sh
+gh issue list -R alexisdacquay/sail-event --state all -L 400 --json number,state,body,comments,labels | python3 -c '
+import json,re,sys
+rows=json.load(sys.stdin)
+groom=lambda x: all(re.search(r"(?m)^#+ *"+h,x["body"]) for h in ("Goal","Acceptance criteria","Out of scope","Constraints"))
+qa=lambda x,pattern: any(re.search(pattern,c["body"]) for c in x["comments"])
+print("issues",len(rows),"groomed",sum(map(groom,rows)))
+print("QA",sum(qa(x,r"(?m)^#+ *QA:? *(PASS|FAIL)") for x in rows),"FAIL",sum(qa(x,r"(?m)^#+ *QA:? *FAIL") for x in rows))
+print("closing notes",sum(qa(x,r"(?i)closed by the orchestrator") for x in rows))
+print("closed without four sections",sorted(x["number"] for x in rows if x["state"]=="CLOSED" and not groom(x)))
+print("without mvp/post-mvp",sorted(x["number"] for x in rows if not {"mvp","post-mvp"}&{v["name"] for v in x["labels"]}))'
+gh pr list -R alexisdacquay/sail-event --state all -L 400 --json number,mergedAt,comments | python3 -c '
+import json,re,sys
+rows=json.load(sys.stdin)
+qa=lambda x: any(re.search(r"(?m)^#+ *QA:? *(PASS|FAIL)",c["body"]) for c in x["comments"])
+merged=[x for x in rows if x["mergedAt"] and x["number"]>=66]
+print("PRs",len(rows),"with QA",sum(map(qa,rows)))
+print("merged since #66",len(merged),"no PR QA heading",sorted(x["number"] for x in merged if not qa(x)))'
+```
 
-Who closed the 85 closed issues (2026-10-26):
+GitHub closed eight issues through a PR merge: #46, #52, #68, #76, #83, #120,
+#122, #142. The closure event, rather than the wording of a comment, proves that:
 
-| Closed issues | How |
-|---|---|
-| 45 | a note that says "closed by the orchestrator" (count above) |
-| 28 | the orchestrator's merge note: "Merged to main; on dev ...", "Merged into main in #64", "Merged via PR 144" |
-| 7 | GitHub, when a PR that says `Closes #N` merged on the owner's word: #46, #52, #68, #83, #120, #122, #142 |
-| 5 | other notes: #17, #21, #29 ("Delivered on Render instead of AWS", no role named); #39, #55 (the orchestrator says it fixed or re-checked, then closed; see Known gaps below) |
+```sh
+gh api graphql -f query='{repository(owner:"alexisdacquay",name:"sail-event"){issues(first:100,states:CLOSED){nodes{number timelineItems(itemTypes:[CLOSED_EVENT],last:1){nodes{... on ClosedEvent{closer{__typename ... on PullRequest{number}}}}}}}}}' --jq '.data.repository.issues.nodes[] | .number as $n | .timelineItems.nodes[] | select(.closer.__typename == "PullRequest") | [$n,.closer.number]'
+```
 
-One full cycle on one page: issue [#7](https://github.com/alexisdacquay/sail-event/issues/7).
-QA failed it because a 400 response echoed the plaintext password; fix `db3499a` landed; a fresh QA pass checked it and passed.
+Read issue [#7](https://github.com/alexisdacquay/sail-event/issues/7) for a full
+FAIL → fix → PASS cycle: the engineer fixed the plaintext-password error in
+`db3499a`; the same QA agent re-checked and passed (local transcript). For a
+groom, issue [#11](https://github.com/alexisdacquay/sail-event/issues/11)'s
+**edited** history shows the raw task followed by the four-section specification.
+Its old implementation details are historical, not today's pipeline contract.
 
-The PM groom on one page: open issue [#11](https://github.com/alexisdacquay/sail-event/issues/11), click **edited** above the body.
-The oldest version is the raw task (627 characters); the next is the PM groom (Goal, Acceptance criteria, Out of scope, Constraints).
+### Known gaps (2026-10-26)
 
-Known gaps (2026-10-26):
+- **Orchestrator overreach:** it filed issues from owner feedback and field tests, changed code and resolved conflicts, and sometimes replaced independent QA with its own re-check. #39, #52 and #55 explicitly record that shortcut. The local transcript also records main-session code edits; it is not public proof.
+- **Grooming skipped:** 38/96 issues lack at least one template section; 27 of them are closed (numbers printed by the command above). A body with acceptance criteria does not establish PM involvement.
+- **Closed without a recorded QA verdict on the issue or its PR:** #17, #21, #29, #59, #60, #74, #139, #142. Check each with `gh issue view N -R alexisdacquay/sail-event --comments`, then any linked PR with `gh pr view P -R alexisdacquay/sail-event --comments`.
+- **Merged without a PR verdict:** 14 of the 42 merged PRs from #66 onward lack the QA heading matched above. PR #144 merged after QA FAILs without a written waiver. Issue #134's closing note says PASS, but its QA comments say FAIL.
+- **CI bypassed:** PRs #31 and #138 merged with a failed integration check. `gh pr view N -R alexisdacquay/sail-event --json mergedAt,statusCheckRollup` shows it. Main also received direct pushes; `git log --first-parent origin/main` and `gh api repos/alexisdacquay/sail-event/commits/SHA/pulls` let a reader check a commit's PR association. No branch protection enforces the written gates.
+- **Rules arrived late:** the initial process dates from 2026-10-16; QA agent file from 2026-10-17 (used from 2026-10-20, with later general-purpose exceptions); owner priority/prod gates from 2026-10-21; regression gate from 2026-10-25. QA's `Bash, Read, Grep, Glob` tool list omits Edit/Write but Bash can still write, so the restriction rests on instructions and review. Fourteen of the 15 recorded promotes predate the owner gate; these are not evidence of owner approval.
 
-- Issues #139 and #142 (PRs #141, #143) were closed with no QA verdict.
-- PR #144 (#145) merged after three QA FAILs with no written waiver.
-- Issues [#39](https://github.com/alexisdacquay/sail-event/issues/39), [#52](https://github.com/alexisdacquay/sail-event/issues/52) and [#55](https://github.com/alexisdacquay/sail-event/issues/55): after a QA FAIL on one item, the orchestrator added the missing line (#39, #52) or re-checked the fix itself (#55) and closed, with no fresh QA pass. Each closing note says so.
+Check rule history with `git log --date=short --format='%h %ad %s' -- _docs/process.md _docs/team .claude/agents/qa-engineer.md`, and promotions with `gh run list -R alexisdacquay/sail-event --workflow promote.yml -L 100`.
 
 ## Test runner — four phases
 
-One runner (`backend/tests/field/runner.py --base-url URL --phase N`) runs phases 1..N:
-1. Invariants battery (13 checks, quick) — are the core promises kept?
-2. Regression tests (`backend/tests/regression/`) — do past bugs stay fixed?
-3. Breadth batch (20 dissimilar searches, quick) — does the system handle variety?
-4. Recall ground truth (38 events) — does it find what exists?
-Each run logs numbers and deltas to `work/RUN-LOG.md`.
+The field runner is described in [docs/testing.md](../docs/testing.md) and the
+[field-test skill](../.claude/skills/field-test/SKILL.md). Live phases spend search
+and model quota and require authorization. The ground-truth set is unvetted, so
+recall is indicative. [RUN-LOG](../work/RUN-LOG.md) is a log template, not evidence
+that a run occurred.

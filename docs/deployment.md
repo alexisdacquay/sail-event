@@ -1,53 +1,59 @@
 # Deployment
 
-The app runs on Render, region Frankfurt: two web services built from the root [Dockerfile](../Dockerfile), each with its own Render Postgres 18. How a commit gets to each one: [release-process.md](release-process.md).
+The app runs on Render: separate dev and prod web services, each with its own database. Both build the root [Dockerfile](../Dockerfile). CI, dev deployment and manual promotion are explained in [release-process.md](release-process.md).
+
+**Monitoring scope:** observability, alerting and the on-call agent run only in the local stack (`make up-all`). The deployed app sends no telemetry to that stack. Render exposes service logs and platform metrics; these are separate from the project’s Grafana dashboard.
 
 ## Which version runs where
 
 | Env | URL | Runs | Check |
 |---|---|---|---|
-| prod | https://sail-event.onrender.com | the sha the owner promoted last | `curl -s https://sail-event.onrender.com/api/health` |
-| dev | https://sail-event-dev.onrender.com | the head of `main`, redeployed on every push | `curl -s https://sail-event-dev.onrender.com/api/health` |
+| prod | https://sail-event.onrender.com | manually selected commit | `curl -s https://sail-event.onrender.com/api/health` |
+| dev | https://sail-event-dev.onrender.com | follows `main`; deployment may still be building | `curl -s https://sail-event-dev.onrender.com/api/health` |
 
 `/api/health` prints `{"status":"ok","commit":"<sha>"}`; the sha comes from Render's `RENDER_GIT_COMMIT`. `git log --oneline -1 <sha>` names the commit.
 
-## Prove CD in 30 seconds
+<a id="prove-cd-in-30-seconds"></a>
+
+## Check deployed commits
 
 ```bash
-# dev runs the newest commit on main (CD on every push)
+# Compare dev with main after the Render build completes
 curl -s https://sail-event-dev.onrender.com/api/health
 git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main
-# prod runs the sha of the last manual promote
+# Compare prod with the manual promotion history
 curl -s https://sail-event.onrender.com/api/health
 gh run list -R alexisdacquay/sail-event --workflow=promote.yml --limit 3
 ```
 
-The auto-deploy setting lives in the Render dashboard, not in the repo: `sail-event-dev` → Settings → Auto-Deploy = On Commit; `sail-event` → Auto-Deploy = Off.
+These commands compare versions; they do not prove the dashboard settings or a completed user journey. Auto-deploy settings were recorded in [the deployment log](../work/DEPLOY-render.md) on 2026-10-17: `sail-event-dev` → Settings → Auto-Deploy = On Commit; `sail-event` → Auto-Deploy = Off.
 
 ## Using the live sites
 
 - Registration is open on both: `curl -s https://sail-event.onrender.com/api/config` prints `{"registrationCodeRequired":false}`.
-- Dev also has a shared `demo` / `demo` account (`SEED_DEMO=1`). Prod has none.
-- A search takes minutes, not seconds: about 300 s on dev ([#145](https://github.com/alexisdacquay/sail-event/issues/145)).
-- Limits: 5 registrations per IP per hour (1000 on dev); 6 **Search now** per user per rolling hour; per day, across all users, 600 search credits and 5000 model calls.
+- The deployment log records `SEED_DEMO=1` on dev, which creates the shared `demo` / `demo` account. Keep it unset on prod. Account access was not tested in this documentation pass.
+- Live-adapter searches measured 86–493 seconds across local runs on different code revisions in [PR #144](https://github.com/alexisdacquay/sail-event/pull/144). This is a measured range, not a service guarantee.
+- Default limits: 5 successful registrations per IP per hour; 6 manual searches per user per rolling hour; daily budgets of 600 search credits and 5000 model calls across users. Settings are configurable; see [Environment variables](#environment-variables).
 
 ## Services
+
+Recorded Render configuration (2026-10-17, [deployment log](../work/DEPLOY-render.md)); plan, region, recovery and network settings were not rechecked in the dashboard during this pass. The log records Frankfurt and Postgres 18.
 
 | Environment | Web service | Database | Deploys when |
 |---|---|---|---|
 | dev | `sail-event-dev` (starter) | `sail-event-dev-db` (basic_256mb) | every push to `main` |
-| prod | `sail-event` (starter) | `sail-event-db` (Basic, point-in-time recovery on) | only through promote.yml |
+| prod | `sail-event` (starter) | `sail-event-db` (Basic, point-in-time recovery on) | manual promotion; dashboard changes can also redeploy |
 
-- Health check path `/api/health` on both services, so Render keeps the old instance serving until a new deploy answers it.
-- The prod database accepts connections from any IP address (inbound rule `0.0.0.0/0`); its credentials are the only barrier. Narrowing the rule is an open owner task.
-- These settings come from the Render dashboard, recorded in [work/DEPLOY-render.md](../work/DEPLOY-render.md) (17 Oct) and [work/STATE.md](../work/STATE.md) (health path, 20 Oct). The repo cannot show them.
+- Required health check path: `/api/health`. The logs still list setting it on both services as an owner task; an HTTP GET proves the endpoint works, not that Render uses it to gate traffic.
+- The recorded prod database inbound rule is `0.0.0.0/0`. The owner must decide whether to restrict or accept that external access; its current value was not rechecked.
+- Saving environment variables can trigger a deploy independently of `promote.yml`; the [work log](../work/STATE.md) records this on 2026-10-20.
 
 ## Scheduled search
 
 - [hourly-search.yml](../.github/workflows/hourly-search.yml) is scheduled at minute 07 of every hour and calls prod only (repo variable `SAIL_BASE_URL` = `https://sail-event.onrender.com`). The app has no scheduler of its own.
-- GitHub delays scheduled runs. The 50 scheduled runs from 17 to 26 Oct were 2.1 to 7.8 hours apart, median 4.5 h. Measure again: `gh run list --workflow=hourly-search.yml --event schedule --limit 50`.
-- Each run checks that `/api/health` answers 200, then calls `POST /api/search/all` with the `X-API-Key` secret. The server queues every user with saved criteria, oldest last search first, up to `MAX_SCHEDULED_USERS`; it skips users whose search is still running. It answers `202` with `usersQueued` and `usersSkipped`, then runs the searches in background tasks.
-- So the job turns red only when prod is down or refuses the key. A search that fails after the 202 never shows there. On 25 Oct the model provider's balance ran out (HTTP 402) and searches on dev and prod failed for about two hours ([work/HANDOVER-2026-10-25.md](../work/HANDOVER-2026-10-25.md)); every scheduled run that day reported success, and prod has no alert ([observability/README.md](../observability/README.md)).
+- GitHub delays scheduled runs. The 50 scheduled runs from 17 to 26 Oct were 2.1 to 7.8 hours apart, median 4.5 h (checked 2026-10-26). Reproduce the timestamps: `gh run list -R alexisdacquay/sail-event --workflow=hourly-search.yml --event schedule --limit 50 --json createdAt`; sort them and subtract adjacent timestamps.
+- Each run checks that `/api/health` answers 200, then calls `POST /api/search/all` with the `X-API-Key` secret. The server queues every user with saved criteria, oldest last search first, up to `MAX_SCHEDULED_USERS`; it skips users with an unfinished run started in the last 55 minutes and those beyond the cap. It answers `202` with `usersQueued` and `usersSkipped`, then runs the searches in background tasks.
+- The job fails on a failed health GET, a non-2xx enqueue response or an unreadable response body. It does not check completed searches. A search that fails after the 202 never shows there. On 25 Oct the model provider's balance ran out (HTTP 402) and searches on dev and prod failed ([work/HANDOVER-2026-10-25.md](../work/HANDOVER-2026-10-25.md)); every scheduled run that day reported success, and prod has no alert ([observability/README.md](../observability/README.md)).
 
 Setup, once per target:
 
@@ -60,7 +66,7 @@ Run it by hand: `gh workflow run hourly-search.yml`; history: `gh run list --wor
 
 ## Environment variables
 
-Set in Render → service → Environment. Values are prod's; dev differs only where the last column says so. Secrets live only in Render and in GitHub secrets, never in the repo.
+Set in Render → service → Environment. These are deployment settings for main, not a live export of either service’s environment. Provider choices follow the owner’s [promotion checklist](../work/STATE.md); confirm them at deployment. Secrets belong in environment variables and GitHub secrets, never in tracked files.
 
 **Required**
 
@@ -68,7 +74,7 @@ Set in Render → service → Environment. Values are prod's; dev differs only w
 |---|---|---|
 | `DATABASE_URL` | Render's internal database URL, with the scheme changed to `postgresql+psycopg://`. With `APP_ENV=prod` the app refuses to start without it | its own database |
 | `APP_ENV` | `prod`: the app refuses to start without `DATABASE_URL` or `JWT_SECRET`, and refuses the fixture search and the fake model | `dev` |
-| `PORT` | `8000`, the port the container listens on | same |
+| `PORT` | `8000`; the Dockerfile runs Uvicorn on this fixed port (it does not read `PORT`) | same |
 | `JWT_SECRET` | random | own value |
 | `SEARCH_ALL_API_KEY` | random; the GitHub secret `SEARCH_ALL_API_KEY` holds the same value | own value |
 | `FORWARDED_ALLOW_IPS` | `*`: take the client IP from Render's proxy header. Unset behind Render, all users share one rate-limit bucket and `/api/calendar-url` returns `http://` links | same |
@@ -107,7 +113,7 @@ Set in Render → service → Environment. Values are prod's; dev differs only w
 
 | Key | Default | Meaning |
 |---|---|---|
-| `REGISTER_RATE_LIMIT_PER_HOUR` | `5` | successful registrations per IP per hour (dev: `1000`) |
+| `REGISTER_RATE_LIMIT_PER_HOUR` | `5` | successful registrations per IP per hour; the work log records dev configured at `1000` |
 | `SEARCH_NOW_PER_HOUR` | `6` | **Search now** runs per user per rolling hour |
 | `REGISTRATION_CODE` | unset | an invite code; unset = open registration |
 | `MAX_SCHEDULED_USERS` | `50` | users per scheduled run |
@@ -117,15 +123,20 @@ Set in Render → service → Environment. Values are prod's; dev differs only w
 | `JUDGE_CONCURRENCY` | `10` | judge calls in parallel per search; `1` = one at a time |
 | `DETAIL_FETCH_TIMEOUT`, `DETAIL_FETCH_MAX_BYTES` | `10` s, 2 MiB | limits for fetching one event page |
 | `JWT_EXPIRY_MINUTES` | `60` | login lifetime |
-| `LOG_LEVEL` | `INFO` | |
+| `LOG_LEVEL` | `INFO` | application log level |
+| `APP_VERSION` | `dev` | telemetry service version; does not set the health endpoint’s `commit` |
 | `CORS_ORIGINS` | `http://localhost:5173` | only for the Vite dev server; Render serves UI and API from one origin |
 | `LLM_USD_PER_1K_IN`, `LLM_USD_PER_1K_OUT`, `SEARCH_USD_PER_CALL` | unset | prices; when all three are set, each run records `cost_usd` |
 
-**Must stay unset on Render**
+**Legacy and local-only settings**
 
 - `SCORER`: a leftover from the first scorer; if it has any value, every search fails with `unset SCORER; use LLM_PROVIDER`.
-- `FAKE_NOW`: fixes the app's clock. Tests, CI, `make run` and docker compose use it so the recorded data stays in the future.
+- `FAKE_NOW`: freezes date-dependent search logic. CI, `make run` and compose use a fixed date for recordings; real-adapter deployments should leave it unset. Dev’s current value was not rechecked in Render.
 - `OTEL_EXPORTER_OTLP_ENDPOINT`: not set, because Render has no collector. The live sites export no metrics or traces; their logs are JSON lines in Render → service → Logs. Telemetry runs in the local stack only ([observability/README.md](../observability/README.md)).
+
+## Health
+
+`GET /api/health` returns a status and the deployed commit, not database or provider readiness. A green health check can coexist with failed searches. The container runs migrations before starting Uvicorn. Rollback across the three migrations `e4f5a6b7c8d9`, `f5a6b7c8d9e0` and `a6b7c8d9e0f1` is untested; PR #150’s event deletion is irreversible without a backup. See [release-process.md](release-process.md#rollback).
 
 ## Access
 

@@ -1,212 +1,137 @@
 # Testing
 
-Three layers: unit, integration, end-to-end.
+The default suites use recordings and a fixed clock. They need no provider keys. Live field tests and adapter smoke runs are separate owner tools and spend provider credits.
 
 ## At a glance
 
-```
-make test-all      # unit + integration + e2e, one exit code, needs Docker
-```
-
-| Layer | Count | Command | Runs in CI |
-|---|---|---|---|
-| Backend unit | 481 | `make test` | `backend` job |
-| Frontend unit | 117 (12 files) | `make test` | `frontend` job |
-| On-call responder unit | 20 | `make test` | no (local only) |
-| Integration (HTTP against the compose stack) | 7 | `make test-integration` | `integration` job |
-| End-to-end (Playwright, Chromium) | 12 | `make test-e2e` | `integration` job |
-
-Verified on commit `8305160`, CI run [40242394581](https://github.com/alexisdacquay/sail-event/actions/runs/40242394581); responder count from `python3 incident-response/test_responder.py`.
-
-**Unit** = one function or component, recorded fixtures, no network.
-Many backend unit tests also go through the routes and the ORM in-process (FastAPI TestClient into SQLite), e.g. `test_events.py`, `test_pipeline.py`, `test_auth.py`.
-**Integration** = the built container plus Postgres, called over HTTP only; no app code imported.
-
-**Needs:** uv, Node 22+, python3; Docker for integration and e2e.
-**No API keys:** search and model are recorded fixtures with a fixed clock (`FAKE_NOW`).
-**Time:** the backend suite takes about 5 minutes (312 s in CI); integration and e2e add about 3-5 minutes, most of it the image build.
-`make test-all` runs `test`, then `test-integration`, then `test-e2e`; make stops at the first failure.
-
-## Unit tests
-
-Backend tests live in `backend/tests/`. They cover auth, criteria, events,
-calendar, pipeline, ORM, adapters, thresholds, and schema contract.
-
-Frontend component tests sit beside their source files in `frontend/src/`.
-
-```
-make test
+```bash
+make test-all      # in-process + integration + e2e; needs Docker
 ```
 
-Runs backend, then frontend, then the on-call responder tests (`incident-response/test_responder.py`). Installs frontend packages on a fresh clone. Does not start Docker. Exits non-zero if any
-fails. Integration tests are excluded by default (`-m "not integration"` in
-pyproject.toml).
-
-## Integration tests
-
-Live in `backend/tests/integration/`. Pure HTTP tests against the compose
-stack — no app internals imported. Marked `@pytest.mark.integration`.
-
-Scenarios: health, full user journey (register → search → decide → re-fetch),
-dedup, user isolation, search/all, ICS feed, data survives restart.
-
-```
-make test-integration
-```
-
-The target uses `TEST_HOST_PORT` (default 8030) and `TEST_COMPOSE_PROJECT`
-(default `sail-test`). Override either to avoid clashes with a running stack:
-
-```
-TEST_HOST_PORT=8031 TEST_COMPOSE_PROJECT=sail-test-2 make test-integration
-```
-
-Steps:
-1. `docker compose up --build -d --wait` under `COMPOSE_PROJECT_NAME=$TEST_COMPOSE_PROJECT`
-2. Runs pytest on `backend/tests/integration/` with `-m integration`
-3. `docker compose down -v` (same project name)
-4. Exit code = pytest exit code
-
-To run against an already-running stack (skips compose lifecycle):
-
-```
-SAIL_BASE_URL=http://localhost:8010 make test-integration
-```
-
-When `SAIL_BASE_URL` is set, `test_data_survives_restart` is skipped by
-default because the caller may not own the compose stack. Set
-`SAIL_COMPOSE_MANAGED=1` to signal that container restarts are safe:
-
-```
-SAIL_BASE_URL=http://localhost:8010 SAIL_COMPOSE_MANAGED=1 make test-integration
-```
-
-## End-to-end tests (Playwright)
-
-Live in `e2e/` at the repo root with their own `package.json`.
-Chromium only.
-
-**First-time setup:** none. `make test-e2e` installs `e2e/` packages and Chromium when they are missing.
-
-**Run:**
-
-```
-make test-e2e
-```
-
-The target uses the same `TEST_HOST_PORT` and `TEST_COMPOSE_PROJECT` variables
-as `test-integration`:
-1. `docker compose up --build -d --wait` under `COMPOSE_PROJECT_NAME=$TEST_COMPOSE_PROJECT`
-2. Runs `npx playwright test` in `e2e/`
-3. `docker compose down -v` (same project name)
-4. Exit code = Playwright exit code
-
-12 tests in three files:
-
-| File | Tests | What |
+| Layer | Command | CI |
 |---|---|---|
-| [journeys.spec.ts](../e2e/journeys.spec.ts) | 4 | Journey 1: register, save a threshold (persists after reload), search, add to calendar and reject from the stream; phone layout; light and dark screenshots. Journey 2: second user sees no events from the first |
-| [field.spec.ts](../e2e/field.spec.ts) | 6 | U1-U4 from field tests: reload keeps the result, the Judged line matches the rows, slider equals the boxes, legend not clipped, copy feedback, the feed link is a `webcal:` subscription |
-| [screenshot-122.spec.ts](../e2e/screenshot-122.spec.ts) | 2 | live progress line mid-run, light and dark |
+| Backend in-process | `make test` | `backend` job |
+| Frontend components | `make test` | `frontend` job |
+| On-call responder | `make test` | absent from CI |
+| HTTP integration against app + Postgres | `make test-integration` | `integration` job |
+| Browser journeys, UI checks and screenshots | `make test-e2e` | `integration` job |
 
-The screenshot tests write PNGs to `e2e/test-results/` (e.g. `stream-desktop-light.png`, `funnel-light.png`).
+“In-process” includes functions, components and API routes through FastAPI TestClient with SQLite. Integration tests call the built app over HTTP without importing its internals. Browser tests use Chromium.
 
-To run against an already-running stack:
+Needs: uv, Python 3.12+, Node/npm (Node 24 in `.nvmrc`; CI uses 22), and Docker for integration/e2e. Run `make test-all` without `-j` to execute the targets in order and stop at the first failure. Targets and CI wiring: [Makefile](../Makefile), [ci.yml](../.github/workflows/ci.yml).
 
-```
-SAIL_BASE_URL=http://localhost:8010 make test-e2e
-```
+Check counts and outcomes from CI rather than relying on a frozen total:
 
-## Field-test runner (four phases against a deployed service)
-
-One runner, four cumulative phases:
-
-```
-SSL_CERT_FILE=$(uv run --project backend python -m certifi) \
-  uv run --project backend python backend/tests/field/runner.py \
-    --base-url https://sail-event.onrender.com --phase 4
+```bash
+gh run list -R alexisdacquay/sail-event --workflow=ci.yml --branch main --limit 3
+gh run view <run-id> --log | grep -E 'passed|Test Files|Tests '
 ```
 
-| Phase | What | Time |
-|-------|------|------|
-| 1 | Invariants battery (13 checks, personas from `personas.yaml`) | 5 min |
-| 2 | Regression tests (`backend/tests/regression/`, offline fixtures) | <1 min |
-| 3 | Breadth batch (20 dissimilar search texts, 10 in parallel) | 5 min |
-| 4 | Recall ground truth (38 events from `triples.json`) | 10 min |
-
-`--phase N` runs phases 1..N.  Each run appends numbers and deltas against
-the last committed run to `work/RUN-LOG.md`.
-
-Prod allows 5 registrations per IP per hour, so the first prod run creates
-the users over a few hours; later runs reuse them and the "already known"
-count shows the dedup at work. Dev has the limit raised.
-
-## Real adapters smoke
-
-`backend/scripts/smoke_search.py` runs the full pipeline (criteria parse,
-window, plan, search, extract, filter, judge) against live adapters using a
-throwaway SQLite database (never touches the dev database).
-
-**Single criteria:**
-
-```
-set -a; . backend/.env.local; set +a
-SSL_CERT_FILE=$(uv run --project backend --directory backend python -m certifi) \
-  uv run --project backend --directory backend python scripts/smoke_search.py \
-    --criteria "jazz in Berlin (Germany) next week (19-21st October 2026)" \
-    --tz Europe/Berlin
-```
-
-**Score spread (consistency check):**
-
-```
-uv run --project backend --directory backend python scripts/smoke_search.py \
-    --criteria "jazz in Berlin" --tz Europe/Berlin --repeat 3
-```
-
-**Record model responses as fixtures:**
-
-```
-FAKE_NOW=2026-10-18T12:00:00+02:00 \
-  uv run --project backend --directory backend python scripts/smoke_search.py \
-    --criteria "jazz in Berlin (Germany) next week" --tz Europe/Berlin --record
-```
-
-Writes to `backend/tests/fixtures/llm/` under the same hash the
-`FakeLanguageModel` replays. Set `FAKE_NOW` so hashes match test
-expectations.
-
-The integration and e2e users register without a time zone and default to
-UTC, so every re-recording must be done for both `--tz Europe/Berlin`
-(unit tests) and `--tz UTC` (integration/e2e).
-
-**Batch suite (10 texts):**
-
-```
-uv run --project backend --directory backend python scripts/smoke_search.py --batch
-```
-
-Prints a Markdown table: text, status, stage counts, calls, seconds, top 3
-kept events.
-
-**Environment:** keys (`TAVILY_API_KEY`, `LLM_BASE_URL`, `LLM_API_KEY`,
-`LLM_MODEL`, `LLM_JSON_MODE`, `GUARDRAIL`) come from `backend/.env.local`
-(git-ignored). Set `GUARDRAIL=none` until the Lakera adapter is wired.
-
-CI stays fixture-only; `make test` never hits the network.
+For a dated example, [run 40251535674](https://github.com/alexisdacquay/sail-event/actions/runs/40251535674) passed on code snapshot `542e58c`. A green browser run includes expected failures and screenshot generation; see [End-to-end tests](#end-to-end-tests-playwright).
 
 ## Adapter-stub approach
 
-`FixtureProvider` returns canned events from `fixtures.json`.
-`FakeLanguageModel` replays recorded responses keyed by prompt hash.
+[FixtureProvider](../backend/app/adapters/fixture.py) returns the same recorded search-result pages regardless of query. [FakeLanguageModel](../backend/app/adapters/llm_fake.py) replays answers keyed by prompt name, version and rendered-prompt hash. It fails if a recording is missing. Use the recorded criteria rather than arbitrary text:
 
-These stubs keep tests key-free and offline. Env vars
-`SEARCH_PROVIDER` and `LLM_PROVIDER` toggle real implementations;
-fixture/fake are the default when unset.
+> jazz in Berlin (Germany) next week (19-21st October 2026)
+
+`SEARCH_PROVIDER=fixture`, `LLM_PROVIDER=fake` and `GUARDRAIL=none` are defaults. Real implementations are selected through those variables. Backend tests block non-local socket connections ([conftest.py](../backend/tests/conftest.py)).
 
 ## Fixed clock
 
-All tests, CI, compose and the dev service run with
-`FAKE_NOW=2026-10-18T12:00:00+02:00` so that fixture recordings and
-date-dependent filters produce stable results. Production never sets
-`FAKE_NOW`.
+Backend tests and CI use `FAKE_NOW=2026-10-18T12:00:00+02:00`; compose and `make run` default to that value. It stabilizes date-dependent prompts and filters for the recordings. Run timestamps and rate limits still use real UTC. Real-adapter deployments should leave `FAKE_NOW` unset; this pass did not inspect Render’s environment values.
+
+The integration HTTP clients omit `timeZone`, so their criteria default to UTC. Playwright sets `timezoneId: Europe/Berlin`, and the UI saves that browser zone with the criteria. Recordings must cover the time zones used by the relevant tests.
+
+## Unit tests
+
+Backend tests in `backend/tests/` cover auth, criteria, events, calendar, pipeline, ORM, adapters, thresholds and the schema contract. Frontend component tests live beside their sources in `frontend/src/`.
+
+```bash
+make test
+```
+
+Runs backend, frontend, then `incident-response/test_responder.py`. Installs missing frontend packages, starts no Docker stack, and returns non-zero on failure. Pytest excludes integration tests by default. Responder tests use the standard library and do not launch a model agent; run them alone with `python3 -I -B incident-response/test_responder.py`.
+
+## Integration tests
+
+[backend/tests/integration/](../backend/tests/integration/) covers health, the full user journey, duplicates, user isolation, scheduled enqueueing, ICS and data persistence across an app-container restart.
+
+```bash
+make test-integration
+# Avoid a port/project collision:
+TEST_HOST_PORT=8031 TEST_COMPOSE_PROJECT=sail-test-2 make test-integration
+```
+
+Without `SAIL_BASE_URL`, the target builds and starts a compose project (default `sail-test`, port 8030), runs pytest with `-m integration`, then tears down that project **and its volumes**. It returns the pytest exit status. Use a dedicated test project; do not point it at a database you need to keep.
+
+Against a stack you already own:
+
+```bash
+SAIL_BASE_URL=http://localhost:8010 make test-integration
+```
+
+This skips compose startup/teardown and normally skips `test_data_survives_restart`. Set `SAIL_COMPOSE_MANAGED=1` only when restarting the app container in your compose project is safe. CI starts compose itself and uses both variables, so its restart check runs.
+
+## End-to-end tests (Playwright)
+
+[e2e/](../e2e/) has its own npm package. Without `SAIL_BASE_URL`, the Make target installs missing packages and Chromium, builds a dedicated compose stack, runs Playwright, and removes that stack and its volumes.
+
+```bash
+make test-e2e
+```
+
+It shares `TEST_HOST_PORT` and `TEST_COMPOSE_PROJECT` with integration tests. For an existing local stack, install packages and Chromium first; that branch of the target does not install them:
+
+```bash
+npm ci --prefix e2e
+npm exec --prefix e2e -- playwright install chromium
+SAIL_BASE_URL=http://localhost:8010 make test-e2e
+```
+
+| File | Coverage and limits |
+|---|---|
+| [journeys.spec.ts](../e2e/journeys.spec.ts) | Search, threshold persistence, decisions, reload, user isolation, phone layout and desktop screenshots |
+| [field.spec.ts](../e2e/field.spec.ts) | Reload, result counts, scoring controls, copy feedback and feed link. Legend clipping ([#94](https://github.com/alexisdacquay/sail-event/issues/94)) and subscription UX ([#95](https://github.com/alexisdacquay/sail-event/issues/95)) are marked `test.fail`; expected failures count as passing |
+| [screenshot-122.spec.ts](../e2e/screenshot-122.spec.ts) | Mid-run progress screenshots in light and dark themes |
+
+Screenshots are written under `e2e/test-results/`. A generated screenshot is not a visual review. See the source annotations before interpreting CI’s pass total.
+
+## Owner tools (live, costs credits)
+
+These commands are outside `make test-all`. Field tests register accounts and change criteria, thresholds and events on the target. Use dev for approved live testing; a field run can consume shared daily budgets and registration limits.
+
+## Field-test runner (four phases against a deployed service)
+
+```bash
+uv run --project backend python backend/tests/field/runner.py \
+  --base-url https://sail-event-dev.onrender.com --phase 4
+```
+
+| Phase | Work |
+|---|---|
+| 1 | Persona battery against the data invariants in [invariants.py](../backend/tests/field/invariants.py) |
+| 2 | Local offline regression tests in `backend/tests/regression/` |
+| 3 | Breadth batch from `BATCH_TEXTS`, using ten workers |
+| 4 | Recall against [triples.json](../backend/tests/ground_truth/triples.json); clears the recall test users’ existing events |
+
+`--phase N` runs phases 1 through N. [runner.py](../backend/tests/field/runner.py) appends results and deltas against the previous log block to [work/RUN-LOG.md](../work/RUN-LOG.md). That log has no completed unified run at the 2026-10-26 check, so no phase duration or end-to-end success is claimed. Earlier separate tools have records in [FIELD-TESTS.md](../work/FIELD-TESTS.md), [SEARCH-BATCHES.md](../work/SEARCH-BATCHES.md) and [RECALL.md](../work/RECALL.md).
+
+## Real adapters smoke
+
+[smoke_search.py](../backend/scripts/smoke_search.py) runs the pipeline with a temporary SQLite database, separate from the deployed databases: criteria, window, search, extraction, event pages, filtering, judging/triage, duplicate checking and persistence. Search submits the criteria text plus ` event`; there is no planner stage.
+
+Configure the shell with `SEARCH_PROVIDER` (`exa`, `tavily` or `brave`), the matching provider key (`EXA_API_KEY`, `TAVILY_API_KEY` or `BRAVE_API_KEY`), and `LLM_PROVIDER=openai_compatible`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_JSON_MODE`. `GUARDRAIL=none` skips Lakera for local smoke runs. With `GUARDRAIL=lakera`, configure `LAKERA_API_KEY` and optionally `GUARD_FALLBACK=self_check`.
+
+```bash
+# Load a locally maintained, git-ignored environment file if you use one:
+set -a
+. backend/.env.local
+set +a
+uv run --project backend python backend/scripts/smoke_search.py \
+  --criteria "jazz in Berlin" --tz Europe/Berlin
+```
+
+Use `--repeat 3` to inspect score variation. At the `542e58c` code snapshot ([CI run](https://github.com/alexisdacquay/sail-event/actions/runs/40251535674)), `--batch` runs twenty entries with **five** workers and prints a Markdown report; its help text still says ten entries. The field runner uses ten workers. Recheck with `git grep -nE "BATCH_TEXTS|ThreadPoolExecutor|max_workers|--batch" -- backend/scripts/smoke_search.py backend/tests/field/runner.py`.
+
+`--record` writes model responses into `backend/tests/fixtures/llm/`. Set the fixed clock and use the exact criteria and time zone required by the tests. Review the recordings before committing them; live answers and web results vary.

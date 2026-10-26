@@ -1,47 +1,50 @@
 ---
 name: reviewer-guide
-description: Rebuild docs/reviewer-guide.md and the README reviewer table from the current rubric and repo. Use before submission or after any doc change.
+description: Rebuild the Sail-event reviewer guide and, when in scope, the README reviewer map from the official rubric and verified repository evidence. Use before submission or when evidence changes.
 ---
 
 # Reviewer guide
 
-A peer reviewer has 15 minutes and scores 0 for anything they cannot find.
-This skill makes every rubric point findable in two clicks from the README, with proof one click further.
+Write for busy, experienced engineers and executives evaluating the project. Follow the owner's [docs quality standard](../../../work/docs-pass/STANDARD.md) completely. Read [verified facts](../../../work/docs-pass/facts.md), especially `rubric`, and any assigned findings before editing. Read each owned file completely; review the whole file, not only flagged lines.
 
-Outputs:
-- [docs/reviewer-guide.md](../../../docs/reviewer-guide.md): one section per criterion, fixed shape.
-- The **For reviewers** table at the top of [README.md](../../../README.md): criterion | max | where to look | one-line proof.
+## Scope and sources
 
-## Steps
+- Respect the current file ownership and change freeze. Update [docs/reviewer-guide.md](../../../docs/reviewer-guide.md); update [README.md](../../../README.md) only when assigned. Report cross-file changes to the owner instead of editing another writer's files.
+- Fetch the [official rubric](https://raw.githubusercontent.com/DataTalksClub/ai-dev-tools-zoomcamp/main/project/README.md) with an HTTP GET and compare it with the saved `work/rubric-*.md` copy. If they differ, report the difference; do not silently replace the scoring contract.
+- Verify claims using files, `git show`, `gh`, CI logs or HTTP GETs. A previous review is a lead, not proof. Do not invent users, numbers, dates, durations, behavior, deployment settings or guarantees. Remove claims without evidence.
+- Write for main. For this docs pass, code-line links are pinned to `542e58cb0fe73065a905febec7637bfa377a77c4`; check every range against `git show 542e58c:<path>`. This is an evidence pin, never a claim about the deployed commit.
+- Live versions come from `curl -s https://sail-event.onrender.com/api/health` and the corresponding dev endpoint. Do not hard-code their expected SHAs or claim a pinned commit is current main. Compare dev with `git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main`, allowing for deployment delay.
 
-1. **Fetch the rubric.** `curl -s https://raw.githubusercontent.com/DataTalksClub/ai-dev-tools-zoomcamp/main/project/README.md`.
-   `diff` it with the saved copy in `work/rubric-*.md`. If it changed, save the new one with today's date and note what moved (criteria, points, levels).
-2. **Split each criterion into atomic claims**, in the rubric's own words.
-   Example, Agent team: roles named · responsibilities clear · team defined · process defined · how they work together.
-3. **Find the evidence for each claim**: a repo-relative link, a URL, or a command the reviewer can copy.
-   Write one proof line per claim. Mark each claim present, weak or missing. Fix weak and missing ones in the doc that owns them first.
-4. **List the lose-a-point risks.** Quote the next-lower level of the rubric. For each way a stranger could land there, say how we are covered. If we are not, write "Not covered yet" or "Partly", never pretend.
-5. **Add extra credit**: 2-3 items beyond the rubric that would win the reviewer back if they dislike something else.
-6. **Pick one visual per criterion**: a mermaid diagram (GitHub renders it) or a screenshot from `docs/images/`.
-   Capture new screenshots on public pages or a local stack. Never sign in to a hosted site unless the owner's request names it.
-7. **Write each section in the fixed shape**, short sentences, tables over prose:
-   - **Full marks**: the rubric text, quoted.
-   - **Checklist**: rubric words | where | proof.
-   - **Why not the lower score**: risk | how we are covered.
-   - **Extra evidence**: bullets with links.
-   - **Picture**.
-   Then rebuild the README table: one row per criterion, first link = the guide section, second = the main evidence. Keep **Known gaps** at the end of the guide, honest.
-8. **Check every link.** Repo-relative paths must exist, `#anchors` must match a heading, `#L` anchors must be inside the file, URLs must answer 200.
-   Pin code-line links to a commit (`blob/<sha>/path#L10`) so they do not drift.
-9. **Blind review.** Run the [rubric-review](../rubric-review/SKILL.md) skill. Every "where I got lost" and "what would raise it" becomes a fix to this guide or the README. Repeat until the three reviewers agree on the score.
+## Build each criterion in this order
 
-## Rules
+Keep every `## N. Name` heading exactly: README links depend on them. Preserve other inbound anchors, or list each old → new anchor in the handoff.
 
-- Every claim has a link or a command. No link, no claim.
-- Counts come from a command you ran today, and the command is in the doc.
-- Never edit files owned by an open PR. Link to them instead.
-- Do not file issues or promote to prod from this skill; report gaps to the owner.
-- A gap that costs a rubric point goes in the README row and the guide's scorecard, not only in Known gaps. Blind reviewers lose trust when a confident row meets a "Partly" 800 lines later.
-- Say which test layers CI runs and in which job. A count that CI does not run is labelled "local only".
-- Name the folder split (`_docs/` vs `docs/`) wherever a reviewer meets both.
-- Docs on a branch do not exist for a reviewer: the guide counts only once it is on the default branch.
+1. **Rubric levels.** Quote every level and its points verbatim, including zero and intermediate levels. Do not paraphrase or narrow a clause.
+2. **Checklist.** Split the full-marks wording into atomic phrases, in rubric order, using the phrase list in `facts.md` as the coverage check. First column: the rubric's phrases, verbatim. Other columns: where to look; a specific proof inspectable in under a minute. Do not mix project extras into this table. For agent-team/context criteria also check the lower-level responsibilities/project-description phrases, clearly labelled as such. Evidence may be partial or absent; say so in that row.
+3. **Why not the lower score.** Quote the lower level exactly and explain what evidence closes that particular concern. Do not invent objections, count lines as proof of clarity, or recount earlier wording fixes. If a full-marks clause is unmet, keep it visible rather than declaring the lower level impossible.
+4. **Beyond the rubric.** Keep only useful extras with evidence. Extras do not compensate for an unmet clause; avoid “extra credit” or self-scores.
+5. **Picture.** Use one only where it helps verification or explains a complex flow. Otherwise say the linked record is more useful. Prefer an inspectable CI run or issue history over a screenshot of a login form. Inspect every retained image; caption its actual content, date/context and limitations. Do not edit images outside scope.
+6. **Known gaps.** State the criterion's limitations plainly, with evidence. Keep the complete end-of-guide index aligned with these disclosures and the opening criteria map. Missing evidence is a gap, not a passed check.
+
+The README map, when assigned, has criterion, guide/evidence links and a short proof or limitation. No points, Max, Total, pass threshold or self-grades. The guide may quote the rubric's points; it does not award itself a score.
+
+## Explain the complex scored parts
+
+Use careful steps for things an outsider cannot infer: agent launches and their context, role boundaries, process handoffs, context loading, CI/CD and promotion, and local telemetry → alerts → responder. Distinguish the written process from observed compliance. Do not explain basic form entry, account creation or web search.
+
+- Agent evidence: name each role's input/output, who starts it and which artifact goes to the next role. Distinguish generic role-brief tasks from a runnable agent definition. A separate QA task is not proof of tool-enforced read-only access. Do not invent launch flags, model names or context behavior absent a source.
+- Process evidence: replace “every task”, “each one” and “always” with a measured count, denominator and reproducible filter. Disclose ungroomed issues, orchestrator overreach, closures/merges without QA PASS, direct pushes and red merges. Date when owner-control and regression rules began. Shared GitHub authorship and role labels do not independently authenticate agents.
+- Delivery evidence: Render settings live outside git. A matching health SHA is indirect evidence, not proof of the auto-deploy trigger. Separate PR CI, CI after push, dev deployment and manual production promotion. Disclose missing enforcement or missing settings captures.
+- Rollback: documented does not mean exercised. In this pass rollback across the three new migrations is untested, and PR #150's deletion is irreversible. Any rollback mention must include those limits; do not prescribe an untested backup restore as a proven fix.
+- Operations evidence: say up front that telemetry, alerts and the responder cover `make up-all` locally; the deployed app sends no telemetry to that stack. Distinguish application logs in Render from exported telemetry. Preserve “share a trace ID” for metrics, traces and logs: metrics lacking that ID is a gap. Include credential/privacy exposure from automatic HTTP spans and container access logs, not only attributes the app selects.
+- Label injected-fault alert/on-call records **drills**, including captions and diagrams. Separate detection, evidence collection, model reasoning, code repair, tests, branch publication, deployment and verified recovery. The responder collects `evidence.md` before launching the agent. JSON fields alone do not prove a webhook's sender. Written autonomy policy is not enforcement; inspect the runtime code.
+- Search behavior: “hourly” is the GitHub cron, not an observed interval. Measure actual gaps or omit an interval. Use sourced duration ranges, never a guessed “1–2 minutes”. Out rows are available through **show**; later searches do not revive them. Default thresholds are configurable and inclusive; the later duplicate check can reject a high-scoring event.
+
+## Freshness and verification
+
+- Avoid moving counts. If retained, state the date or evidence commit, the CI run link where relevant, and the exact command that reproduces them. Fetch latest CI with `gh run list -R alexisdacquay/sail-event --workflow=ci.yml -b main -L 3`; inspect its logs. Name what each CI job actually runs, local-only suites, expected failures and screenshot-oriented tests.
+- Distinguish a combined test command existing from a recorded passing execution of that command. CI proving its component steps is not a captured `make test-all` pass.
+- The five-minute check contains only quick, read-only availability/evidence checks. No builds, full test suites, registrations, logins or paid searches. State prerequisites and move longer local work elsewhere without guessing a runtime.
+- Check local paths, heading anchors, reference links and external GET responses. Check what each anchored code range says, not only whether the number is in bounds. Keep `_docs/` (product/process) distinct from `docs/` (run/test/ship/review) and `work/` (evidence/history).
+- Never print secrets or `.env` files. Do not register, log in or run searches on hosted sites during verification. Local probes must avoid exposing real feed tokens. No code changes, commits, pushes, promotions or issue creation are authorized by this skill.
+- Review once more against STANDARD.md and the complete findings list. Record rejected findings with evidence, changed anchors and genuine owner decisions in the requested handoff. Use independent reviewers only when the current task authorizes delegation; do not repeat self-grading until reviewers agree.

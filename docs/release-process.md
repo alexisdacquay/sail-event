@@ -1,95 +1,87 @@
 # Release process
 
-Three stages: CI tests every pull request and every push to `main`; Render deploys every push to `main` to **dev**; **prod** moves only when the owner runs a workflow with a commit sha.
+GitHub Actions runs CI on pull requests to `main` and pushes to `main`. Render dev follows pushes independently of CI. Prod has auto-deploy off in the recorded configuration; the normal release path is an owner-approved manual promotion. Dashboard deploys and environment changes can also redeploy prod.
 
 ```mermaid
 flowchart LR
-    PR["Pull request<br/>(app code)"] --> CI{"CI: backend + frontend,<br/>then integration + e2e"}
-    CI -- red --> FIX["fix on the branch"] --> PR
-    CI -- green --> M["owner says merge"]
-    M --> MAIN["main"]
-    DIRECT["direct push<br/>(docs, work notes)"] --> MAIN
-    MAIN --> DEV["Render dev<br/>deploys every push"]
-    DEV --> CHECK["owner checks dev,<br/>then the pre-promote checklist"]
-    CHECK --> P["owner runs promote.yml<br/>with a full sha"]
-    P --> PROD["Render prod<br/>/api/health reports that sha"]
+    PR["Pull request"] --> CI["CI: backend + frontend,<br/>then integration + e2e"]
+    CI --> REVIEW["QA and owner review"] --> MAIN["main"]
+    DIRECT["Direct push<br/>(also present in history)"] --> MAIN
+    MAIN --> DEV["Render dev build"]
+    MAIN --> PUSHCI["CI on main<br/>(independent of dev deploy)"]
+    DEV --> CHECK["Owner checks candidate,<br/>migrations and backup"]
+    CHECK --> PROMOTE["Manual promote.yml"] --> PROD["Render prod"]
+    DASH["Render dashboard action"] --> PROD
 ```
 
-| Stage | What does it | Check it yourself |
+| Stage | Mechanism | Evidence |
 |---|---|---|
-| CI | [ci.yml](../.github/workflows/ci.yml): 3 jobs on every PR to `main` and every push to `main` | `gh run list --workflow=ci.yml --limit 5` |
-| CD to dev | Render service `sail-event-dev`, auto-deploy on every push to `main` | dev's `/api/health` prints `main`'s head sha ([commands](deployment.md#prove-cd-in-30-seconds)) |
-| Manual deploy to prod | [promote.yml](../.github/workflows/promote.yml), started by hand with a sha | `gh run list --workflow=promote.yml` (every run is `workflow_dispatch`) |
-| Rollback | promote.yml with an older sha, plus a database restore when a migration lies between the two | [Rollback](#rollback) |
+| CI | [ci.yml](../.github/workflows/ci.yml) | `gh run list -R alexisdacquay/sail-event --workflow=ci.yml --branch main --limit 3` |
+| CD to dev | Render auto-deploy on commit, recorded in the [deployment log](../work/DEPLOY-render.md) | Compare dev’s health response with remote main after the build; [commands](deployment.md#prove-cd-in-30-seconds) |
+| Manual promotion | [promote.yml](../.github/workflows/promote.yml) calls the prod deploy hook and checks the resulting commit | `gh run list -R alexisdacquay/sail-event --workflow=promote.yml` |
+| Rollback | Candidate code and database recovery must be assessed together | Untested across the three new migrations; PR #150 deletes data irreversibly. See [Rollback](#rollback) |
 
 ## How changes reach main
 
-- **App code goes through a pull request.** Since 18 Oct, every change to `backend/app`, `frontend/src`, the migrations, the Dockerfile, the compose file and the workflows landed through a PR. On 16-17 Oct most issues were still committed straight to `main`.
-- **Docs, work notes (`work/`) and field-test tooling are pushed straight to `main`.** Since the first PR (#30), 130 of the 180 commits on `main` were direct pushes; 59 of them are `work:` notes.
-- **Nothing enforces the CI gate.** `main` has no branch protection (`gh api repos/alexisdacquay/sail-event/branches/main/protection` returns 404). "Every CI job is green before it merges" is a rule in [the engineer's role file](../_docs/team/software-engineer.md), checked by people, not by GitHub. Two PRs merged with the integration job red: [#31](https://github.com/alexisdacquay/sail-event/pull/31) (17 Oct) and [#138](https://github.com/alexisdacquay/sail-event/pull/138) (24 Oct).
-- **Dev does not wait for CI.** A push deploys dev while CI on `main` is still running, so dev can run a commit that CI has not passed yet.
+The intended path is engineer PR → CI and QA → owner-approved merge. It is a process rule, not an enforced GitHub gate: `main` has no branch protection or rulesets (checked 2026-10-26).
 
-Count it yourself:
+Direct pushes also occur, including documentation and work notes. For example, `gh api repos/alexisdacquay/sail-event/commits/542e58c/pulls` returns an empty list. A direct push triggers dev deployment before CI has passed. PRs [#31](https://github.com/alexisdacquay/sail-event/pull/31) and [#138](https://github.com/alexisdacquay/sail-event/pull/138) merged with a failed integration check. Check with `gh pr view 138 --json mergedAt,statusCheckRollup`.
 
 ```bash
-git log --first-parent --format=%s a719004^..origin/main | wc -l                                      # commits since PR #30
-git log --first-parent --format=%s a719004^..origin/main | grep -cE '\(#[0-9]+\)$|Merge pull request' # through a PR
+gh api repos/alexisdacquay/sail-event/branches/main/protection  # 404: not protected
+gh api repos/alexisdacquay/sail-event/rulesets                 # [] at the check date
 ```
+
+The [process record](../_docs/process.md#evidence-it-ran-this-way) distinguishes the intended lifecycle from ungroomed issues, closures and merges without QA PASS, and orchestrator overreach. The role files date from 2026-10-16, and owner priority/prod gates from 2026-10-21; the root-cause/regression gate entered them on 2026-10-25 (`git show c0f83e6 -- _docs/team`). It was added to the process summary on 2026-10-26 (`git show ac54483 -- _docs/process.md`). These later rules do not describe all earlier work.
 
 ## CI checks
 
-| Job | What it runs |
+| Job | Checks |
 |---|---|
-| backend | `uv sync --frozen`, `uv run pytest` (unit tests; integration tests are excluded by `addopts` in `pyproject.toml`) |
-| frontend | `npm ci`, `npm test`, `npm run build`, `npx @redocly/cli lint openapi.yaml` |
-| integration | `docker compose up --build -d --wait` (app + Postgres), `make test-integration`, `make test-e2e` (Playwright, Chromium), then `docker compose down -v` |
+| backend | `uv sync --frozen`, then `uv run pytest`; default pytest options exclude integration tests |
+| frontend | `npm ci`, `npm test`, `npm run build`, Redocly lint of `openapi.yaml` |
+| integration | Build and start app + Postgres; `make test-integration`; `make test-e2e`; always tear down the compose stack and its volumes |
 
-`backend` and `frontend` run in parallel; `integration` starts when both pass. A new push to a PR cancels that PR's older run. The 20 on-call responder tests are not in CI; they run in `make test` ([testing.md](testing.md#at-a-glance)).
+Backend and frontend run in parallel. Integration depends on both. A new push cancels an older run for the same PR. CI installs Playwright packages and Chromium, starts compose itself, and sets `SAIL_BASE_URL` and `SAIL_COMPOSE_MANAGED=1` for the Make targets. Responder tests run in local `make test`, but are absent from CI. Test scope and expected failures: [testing.md](testing.md).
 
 ## CD to dev on merge
 
-Render service `sail-event-dev` builds the root `Dockerfile` and deploys on every push to `main` (Auto-Deploy: On Commit). The setting lives in the Render dashboard, not in the repo; dev's `/api/health` reporting `main`'s head sha is the proof ([deployment.md](deployment.md#prove-cd-in-30-seconds)).
+Render builds the root Dockerfile after a push to `main`, including a merge. There is no CI dependency in the repository that delays that build. `/api/health` reports the commit from `RENDER_GIT_COMMIT`; it does not verify database access, providers or a user journey.
 
 ## Manual promotion to prod
 
-Prod (`sail-event`) has auto-deploy off. The owner promotes a sha that already runs on dev.
+Owner checklist:
 
-**Pre-promote checklist (owner):**
-
-1. Dev runs the candidate and CI passed on it:
+1. Identify the candidate already running on dev and inspect its CI run:
    `curl -s https://sail-event-dev.onrender.com/api/health` and `gh run list --workflow=ci.yml --commit <sha>`.
-2. Try the change on dev. This step has no written test list; the [field-test runner](testing.md#field-test-runner-four-phases-against-a-deployed-service) can be pointed at dev.
-3. List the migrations between prod and the candidate:
-   `git diff --name-only <prod sha> <sha> -- backend/alembic/versions`.
-   If one deletes or rewrites data, take a database backup first (Render → `sail-event-db` → Recovery). Example: `f5a6b7c8d9e0` deletes every event without a start time, and its `downgrade()` is empty.
-4. Set the environment variables the release needs (Render → `sail-event` → Environment), then check `/api/health`. Saving variables can trigger a Render deploy of its own: on 2026-10-20 one put `main` 487cb1a on prod with no promote run ([work/STATE.md](../work/STATE.md)).
-5. Promote: `gh workflow run promote.yml -f sha=<full 40-character sha>` (or Actions → Promote to prod → Run workflow). Without `sha`, the workflow promotes the commit it runs from, `main`'s head.
-6. The run passes only when prod's `/api/health` reports that sha with `"status":"ok"`.
+2. Review the change and its validation on dev. Live searches cost provider credits; the [field runner](testing.md#field-test-runner-four-phases-against-a-deployed-service) also changes test accounts and events.
+3. Read prod’s deployed commit with `curl -s https://sail-event.onrender.com/api/health`. Inspect migration changes using `git diff <prod-sha> <candidate-sha> -- backend/alembic/versions`. Before destructive changes, take a database backup and confirm an available recovery point. PR [#150](https://github.com/alexisdacquay/sail-event/pull/150) includes `f5a6b7c8d9e0`, an irreversible deletion of stored events without a start time. Rollback across it and the other two new migrations is untested.
+4. Check required configuration in [deployment.md](deployment.md#environment-variables). The owner’s promotion checklist calls for `EXA_API_KEY`, `SEARCH_PROVIDER=exa`, `MAX_RESULTS_PER_QUERY=10`. Coordinate saving settings with the deployment: an environment save can redeploy independently. The [work log](../work/STATE.md) records such a prod deploy on 2026-10-20.
+5. Run `gh workflow run promote.yml -f sha=<full-40-character-sha>`. Use an explicit candidate; without `sha`, the workflow uses the commit it runs from.
+6. Inspect the workflow result and prod health response. Confirm the commit, then review application validation separately; health alone is not a search test.
 
-**What promote.yml does:** it calls the prod deploy hook with `ref=<sha>`, then polls `GET $SAIL_BASE_URL/api/health` every 10 s. It succeeds when the `commit` field (Render's `RENDER_GIT_COMMIT`) equals the sha, and fails after 10 minutes.
+The workflow POSTs to the Render deploy hook with `ref=<sha>`, then polls health up to 60 times, sleeping 10 seconds between attempts. It succeeds only when `status` is `ok` and `commit` matches. It performs no QA, migration review, backup or search validation.
 
-**One-time setup:** secret `RENDER_PROD_DEPLOY_HOOK` = the Deploy Hook URL from Render → `sail-event` → Settings; variable `SAIL_BASE_URL` = the prod URL. The hourly search job reads the same `SAIL_BASE_URL`, so changing it moves both.
+One-time configuration: GitHub secret `RENDER_PROD_DEPLOY_HOOK` contains the Render prod deploy-hook URL. Repository variable `SAIL_BASE_URL` identifies prod for both promotion verification and the scheduled-search workflow. Changing it changes both targets.
 
 ## Rollback
 
-Not exercised yet: each of the 15 promote runs moved prod to a newer commit.
+**Rollback has not been exercised. Rollback across `e4f5a6b7c8d9` (run pages), `f5a6b7c8d9e0` (event deletion) and `a6b7c8d9e0f1` (unique-constraint removal) is untested. PR #150’s delete cannot be undone by Alembic downgrade.**
 
-1. Find the sha prod ran before:
+Use promotion history to find candidate older commits, then compare it with Render’s deployment history: dashboard actions are absent from GitHub’s promotion history.
 
-   ```bash
-   for id in $(gh run list --workflow=promote.yml --limit 2 --json databaseId --jq '.[].databaseId'); do
-     gh run view $id --log | grep -m1 -oE 'Promoting [0-9a-f]{40}'
-   done   # newest first; the second line is the previous release
-   ```
+```bash
+gh run list -R alexisdacquay/sail-event --workflow=promote.yml --limit 10
+# Inspect the selected run’s log for the "Promoting <sha>" line:
+gh run view <run-id> --log
+```
 
-2. Check for migrations between the two: `git diff --name-only <previous sha> <current sha> -- backend/alembic/versions`.
-3. **No migration:** `gh workflow run promote.yml -f sha=<previous sha>`.
-4. **A migration:** a code rollback alone does not work. The container runs `alembic upgrade head` on start ([Dockerfile](../Dockerfile) line 25), and the older code does not know the newer revision, so it cannot start; promote.yml would fail after 10 minutes (expected from the code, not tried). Restore the database to a point before the promote (Render → `sail-event-db` → Recovery; point-in-time recovery is on), then promote the older sha.
+For a code-only change with the same migration head, redeploying a previous SHA through `promote.yml` is the proposed rollback path; it remains untested. Across a migration, do not assume that command is sufficient: the container runs `alembic upgrade head` before serving, and older code may not recognize the database revision. A safe recovery plan needs a compatible database restore and code deployment, coordinated to avoid writes during recovery. Restoring a backup loses later writes. Confirm Render’s current recovery capability before relying on it; the deployment log’s PITR setting is historical evidence, not a tested restore.
 
 ## Releases
 
-A release is a sha promoted to prod. There are no git tags and no GitHub releases; the promote run history is the record (`gh run list --workflow=promote.yml`).
+A release here means a commit deployed to prod. There are no Git tags or GitHub releases at the 2026-10-26 check (`git ls-remote --tags origin`; `gh release list`). GitHub promotion history records workflow-driven deploys; Render also records dashboard-driven ones.
 
 ## Scheduled search
 
-[hourly-search.yml](../.github/workflows/hourly-search.yml) asks prod to search for every user. What it checks and how often it really runs: [deployment.md](deployment.md#scheduled-search).
+[hourly-search.yml](../.github/workflows/hourly-search.yml) requests searches on prod. It checks health and enqueueing, not completed searches. Schedule, measured delays and setup: [deployment.md](deployment.md#scheduled-search). Project observability, alerts and the on-call responder run only in the local stack; the deployed app sends no telemetry to it.

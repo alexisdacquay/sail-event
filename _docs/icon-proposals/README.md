@@ -8,6 +8,6 @@ Palette: `#0F3057` (dark navy) + `#00A8CC` (ocean teal) + white.
 | `b-sail-mark.svg` | Single curved sail + mast + hull arc, no words | Favicon, app icon, header (reads at 16 px) |
 | `c-sail-calendar.svg` | Calendar tile with a sail filling the date area | Social preview, about page (calendar detail lost below 32 px) |
 
-**Recommendation:** `b-sail-mark.svg` — three elements, reads at every size, and the curved sail is the most memorable shape of the three.
+**Selected:** `b-sail-mark.svg` supplies the sail, mast and hull used by the app.
 
-To adopt: copy the chosen file to `frontend/public/favicon.svg` (replacing the current Vite default).
+Implemented in [frontend/public/favicon.svg](../../frontend/public/favicon.svg) with dark-mode ink, and in [SailMark.tsx](../../frontend/src/components/SailMark.tsx). The original proposals remain here for reference.

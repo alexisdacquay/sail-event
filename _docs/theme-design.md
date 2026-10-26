@@ -1,8 +1,8 @@
 # Theme design — Sail-event visual theme (roadmap P2)
 
-Scope: look only. Copy, selectors, behaviour and layout order stay as `_docs/ux-design.md` defines them. Tailwind v4 tokens, the six shadcn primitives present, `tw-animate-css` (installed), Geist (installed). No new dependency.
+**Historical proposal, last revised 2026-10-17** (`d88831e`). The Stream and later theme-toggle decisions superseded this card/tab layout and OS-only dark mode. Its assumptions, palette calculations, line references and build checklists below describe that proposal. Use [ux-spec.md](ux-spec.md) and [ui-design.md](ui-design.md) for current behavior and decisions.
 
-Facts this design relies on (checked in code):
+Assumptions recorded for the original proposal (not a current code audit):
 
 | Fact | Where |
 |---|---|

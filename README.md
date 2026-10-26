@@ -1,301 +1,267 @@
 # Sail-event
 
-**Write what events you like, in one sentence.**
-**It searches the web every hour, scores each event 0-100 with a reason, and puts the sure ones on your calendar.**
-**It asks you only about the borderline ones.**
+Sail-event finds events from web-search results and scores them against your free-text criteria. It publishes accepted events to your personal ICS calendar feed and leaves borderline matches for you to review.
 
-[![CI](https://github.com/alexisdacquay/sail-event/actions/workflows/ci.yml/badge.svg)](https://github.com/alexisdacquay/sail-event/actions/workflows/ci.yml)
-[![Live](https://img.shields.io/badge/live-sail--event.onrender.com-2ea44f)](https://sail-event.onrender.com)
-[![Hourly search](https://github.com/alexisdacquay/sail-event/actions/workflows/hourly-search.yml/badge.svg)](https://github.com/alexisdacquay/sail-event/actions/workflows/hourly-search.yml)
+![Main page after a search: criteria, search progress, results funnel and event rows](docs/images/review-03-stream-funnel.png)
 
-![The Stream after one search: your sentence, what the run did, the funnel, the results](docs/images/review-03-stream-funnel.png)
+<sub>Local fixture run, captured 26 October 2026. The recorded events use October dates; this run also reports two failed event-page fetches. The funnel is visible at desktop widths.</sub>
 
-<sub>The Stream after one search: your sentence, what the run did, the funnel (found, screened out, judged, in calendar, to review, rejected), the results. Local stack, recorded data, 2026-10-26.</sub>
+## Try it live
 
-Final project for the [DataTalksClub AI Dev Tools Zoomcamp 2026](https://github.com/DataTalksClub/ai-dev-tools-zoomcamp/tree/main/project).
+Open **<https://sail-event.onrender.com>**. Account creation is open, with no invitation code. Use criteria such as *jazz concerts in Berlin next weekend*. **Search now** saves the criteria and starts a search; after a run, the button reads **Search again**. Subscribe to the **Calendar feed** URL for accepted events.
 
-## Try it in 60 seconds
+For a latency reference, [PR #144](https://github.com/alexisdacquay/sail-event/pull/144) records **86–493 seconds** per search with real adapters on a Mac, across several configurations. Those measurements are not a Render benchmark. [Run locally](#try-it) for the recorded demo.
 
-No install, no Docker:
+Check the deployed commit rather than relying on a version in this document:
 
-1. Open **<https://sail-event.onrender.com>**.
-2. Click **Register**: any username and password, no invite code.
-3. Type what you want in one sentence, e.g. *AI events or hackathons in London next week*, and press **Search now**.
-4. Watch the progress line and the funnel fill in. Events land in **Results** and in your calendar feed.
-
-The newest build is on dev: <https://sail-event-dev.onrender.com> (log in **demo / demo**). Running it on your own machine is under [Try it](#try-it).
+```bash
+curl -s https://sail-event.onrender.com/api/health
+```
 
 ## For reviewers
 
-One row per rubric criterion.
-The first link opens that criterion in the [reviewer guide](docs/reviewer-guide.md): the rubric's words, a checklist, the risks we closed, extra evidence, a picture.
+Final project for the [DataTalksClub AI Dev Tools Zoomcamp 2026](https://github.com/DataTalksClub/ai-dev-tools-zoomcamp/tree/main/project). The [reviewer guide](docs/reviewer-guide.md) quotes the rubric and maps its clauses to evidence.
 
-| # | Criterion | Max | Where to look | One-line proof |
-|---|---|---|---|---|
-| 1 | Problem description | 2 | [guide §1](docs/reviewer-guide.md#1-problem-description) · [Problem](#problem) | Problem, 8 steps, one diagram, and 8 expected-behaviour rules, each linked to its test |
-| 2 | Product specification | 2 | [guide §2](docs/reviewer-guide.md#2-product-specification) · [PRD](_docs/plan.md) · [Issues](https://github.com/alexisdacquay/sail-event/issues?q=is%3Aissue) | Public issues: 58 groomed with acceptance criteria, 69 carry a QA verdict. Example: [issue #11](https://github.com/alexisdacquay/sail-event/issues/11). Agents post as the owner; the comment's first line names the role ([how to tell](_docs/process.md#who-wrote-a-comment)) |
-| 3 | Agent team specification | 2 | [guide §3](docs/reviewer-guide.md#3-agent-team-specification) · [process.md](_docs/process.md#team) | Owner + 4 AI roles, a Does / Never does table, a sequence diagram; [issue #7](https://github.com/alexisdacquay/sail-event/issues/7) shows one full loop. QA is a runnable agent file; PM and Engineer are role files given to a subagent |
-| 4 | Context management | 2 | [guide §4](docs/reviewer-guide.md#4-context-management) · [AGENTS.md](AGENTS.md) | AGENTS.md (loaded through `CLAUDE.md`) links process, team, spec, architecture, ops docs, skills |
-| 5 | Application | 2 | [guide §5](docs/reviewer-guide.md#5-application) · [Try it](#try-it) | React → FastAPI → Postgres, one command; a CI test restarts the app and the data is still there |
-| 6 | Testing | 2 | [guide §6](docs/reviewer-guide.md#6-testing) · [testing.md](docs/testing.md) | `make test-all` runs unit, integration, e2e. Green in [CI](https://github.com/alexisdacquay/sail-event/actions/runs/40242394581): 481 + 117 unit, 7 integration, 12 e2e (e2e runs inside the job named `integration`). The 20 responder unit tests run in `make test`, not in CI |
-| 7 | Containerization | 2 | [guide §7](docs/reviewer-guide.md#7-containerization) · [docker-compose.yml](docker-compose.yml) | `docker compose up --build` starts app + Postgres; no `.env`, no migrate, no seed step |
-| 8 | Deployment | 2 | [guide §8](docs/reviewer-guide.md#8-deployment) · [live site](https://sail-event.onrender.com) | `/api/health` answers ok with commit `969a161`; registration is open |
-| 9 | CI/CD | 3 | [guide §9](docs/reviewer-guide.md#9-cicd) · [release-process.md](docs/release-process.md) | CI on every PR; merge auto-deploys dev; prod only by the manual [promote.yml](.github/workflows/promote.yml) |
-| 10 | Observability | 2 | [guide §10](docs/reviewer-guide.md#10-observability) · [observability/README.md](observability/README.md) | The search journey: 9 metrics, a 42-span trace, JSON logs; the same trace id in Loki and Tempo. **Gap:** the calendar feed token lands in HTTP spans, and metrics carry no trace id ([known gaps](docs/reviewer-guide.md#known-gaps)) |
-| 11 | Alerting on user impact | 1 | [guide §11](docs/reviewer-guide.md#11-alerting-on-user-impact) · [rules.yaml](observability/grafana/provisioning/alerting/rules.yaml#L9) | 2 alerts on failed or missing searches; one fired for real ([alert.json](incident-response/incidents/20261021-074150-SearchRunFailures/alert.json)) |
-| 12 | On-call agent | 2 | [guide §12](docs/reviewer-guide.md#12-on-call-agent) · [incident-response/README.md](incident-response/README.md) | Alert → webhook → headless Claude Code → fix commit [8d2f839](https://github.com/alexisdacquay/sail-event/commit/8d2f839), 4 min 52 s after the alert. A drill: we injected the fault, on a local branch ([what it does not prove](docs/reviewer-guide.md#what-this-run-does-not-prove)) |
-| | **Total** | **24** | [Known gaps](docs/reviewer-guide.md#known-gaps) | Pass is 10 |
+**Observability, alerting and the on-call responder run locally. The deployed app exports no telemetry to that stack, so these alerts do not monitor the live sites. The recorded incidents are drills.**
 
-Short on time? [Check it in 5 minutes](docs/reviewer-guide.md#check-it-in-5-minutes): four commands, no Docker.
+| Criterion | Where to look | Quick evidence check |
+|---|---|---|
+| Problem description | [Guide §1](docs/reviewer-guide.md#1-problem-description) · [Problem](#problem) | Read the problem, functionality and [expected behaviour](#expected-behaviour); each behaviour links to code or a test. |
+| Product specification | [Guide §2](docs/reviewer-guide.md#2-product-specification) · [PRD](_docs/plan.md) | [Issue #11](https://github.com/alexisdacquay/sail-event/issues/11) has acceptance criteria; [#7](https://github.com/alexisdacquay/sail-event/issues/7) records a FAIL, fix, PASS and closing note. |
+| Agent team specification | [Guide §3](docs/reviewer-guide.md#3-agent-team-specification) · [Team](#how-it-was-built-an-agent-team) | Roles, boundaries and handoffs below; compare the prescribed cycle with #7's comments. |
+| Context management | [Guide §4](docs/reviewer-guide.md#4-context-management) · [Context](#how-an-agent-gets-its-context) | [`CLAUDE.md`](CLAUDE.md) imports [`AGENTS.md`](AGENTS.md), which links the process, roles, specs and operations docs. |
+| Application | [Guide §5](docs/reviewer-guide.md#5-application) · [Local run](#try-it) | [`test_data_survives_restart`][t-restart] restarts the app and checks stored data; it passed in [CI at 542e58c][ci-proof]. |
+| Testing | [Guide §6](docs/reviewer-guide.md#6-testing) · [Testing](docs/testing.md) | `make test-all` runs unit, integration and browser tests; [CI at 542e58c][ci-proof] passed. Responder tests run in `make test`, outside CI. |
+| Containerization | [Guide §7](docs/reviewer-guide.md#7-containerization) · [Compose](docker-compose.yml) | `docker compose up --build` starts the app and Postgres, including migrations and demo seeding. |
+| Deployment | [Guide §8](docs/reviewer-guide.md#8-deployment) · [Live app](https://sail-event.onrender.com) | The health GET above returns status and deployed commit; `/api/config` reports whether registration needs a code. |
+| CI/CD | [Guide §9](docs/reviewer-guide.md#9-cicd) · [Delivery](#ship-it-watch-it-fix-it) | [CI](.github/workflows/ci.yml) tests PRs to main; compare dev health with main, then inspect a manual [promote run](https://github.com/alexisdacquay/sail-event/actions/workflows/promote.yml). |
+| Observability | [Guide §10](docs/reviewer-guide.md#10-observability) · [Local telemetry](observability/README.md) | Tempo and Loki show the same trace ID. Metrics lack trace IDs; HTTP spans can expose feed tokens. |
+| Alerting on user impact | [Guide §11](docs/reviewer-guide.md#11-alerting-on-user-impact) · [Rules](observability/grafana/provisioning/alerting/rules.yaml) | Inspect the failed-search and silent-search rules; a drill's [`alert.json`](incident-response/incidents/20261021-074150-SearchRunFailures/alert.json) records a firing. |
+| On-call agent | [Guide §12](docs/reviewer-guide.md#12-on-call-agent) · [Recorded drill](incident-response/incidents/20261021-074150-SearchRunFailures/) | Compare the firing time, evidence, verdict and [fix commit](https://github.com/alexisdacquay/sail-event/commit/8d2f839): alert to fix took 4 min 52 s. |
+
+[Known gaps](#known-gaps) · [Quick review commands](docs/reviewer-guide.md#check-it-in-5-minutes)
 
 ## Problem
 
-People who like events spend time every day scanning sites.
-Small events surface late, or never.
-Site filters are fixed boxes. You cannot type what you mean.
-
-| Who | When | Done when |
-|---|---|---|
-| Set up what I like | once, then tweak | my sentence is saved and a search has run |
-| See what was found and decide | every day or two | no borderline event is left to decide |
-| Get it on my calendar | after accepting | accepted events show up in my calendar app |
-
-| Before | With Sail-event |
-|---|---|
-| Open 5-10 sites a day | Write one sentence, once |
-| Miss events on small sites | A web search runs every hour, and on **Search now** |
-| Fixed filter boxes (city, category) | A model reads your own words and scores each event 0-100, with a reason |
-| Copy events into your calendar by hand | Sure ones land in your calendar feed by themselves |
-
-More: [PRD, Problem](_docs/plan.md#problem) · [user jobs](_docs/ux-spec.md#1-who-the-user-is).
+Small events are scattered across sites and feeds; no single source lists them all. Calendar aggregators collect events you already know about. A web search returns pages, not checked events in your calendar: you still have to verify dates, place and fit, copy the events you want, and repeat the search as new listings appear.
 
 ## What it does
 
-1. **Sign up.** Everything is yours alone: sentence, events, thresholds, calendar feed.
-2. **Write one sentence**: what, where, when. Example: *jazz in Berlin (Germany) next week (19-21st October 2026)*.
-3. **Search**, every hour and when you press **Search now**. Your sentence goes to a web search as written.
-4. **Read.** A model reads each page and pulls out the events. From a listing, it also opens each event's own page.
-5. **Screen out.** Code drops events with no date or time, a missing field, already over, or a duplicate. The funnel calls them **screened out**.
-6. **Score.** A model scores each event 0-100 against your sentence, with a one-line reason.
-7. **Triage** with two thresholds you can move (defaults 90 and 40):
-   90 or more → **In calendar** · 41 to 89 → **Review**, you decide · 40 or less → **Out**, never shown again.
-8. **Calendar.** In-calendar events appear in your private ICS feed. Any calendar app can subscribe.
+The app parses criteria such as *jazz concerts in Berlin next weekend*, searches with that text plus the word `event`, and extracts events from the returned pages. When a listing links to an event page, it attempts to fetch and read that page too. Code screens out missing start dates or times, incomplete events, events already over at search time, and event pages already stored for the same day. A model scores the remaining events from 0–100 with a reason.
 
-"Every hour" is a GitHub cron at minute `:07`. GitHub delays scheduled runs, so in practice they land every 2-6 hours ([runs](https://github.com/alexisdacquay/sail-event/actions/workflows/hourly-search.yml)).
-**Search now** is immediate: seconds locally, 1-2 minutes on the live site.
+Your thresholds determine the initial status ([code][pipe-triage], [pipeline test][t-ge-le]):
 
-```mermaid
-flowchart LR
-  A["Your sentence<br/>jazz in Berlin, 19-21 Oct"] --> B["Web search<br/>hourly + Search now"]
-  B --> C["Model reads pages<br/>extracts events"]
-  C --> D{"Code checks<br/>no date or time? missing field?<br/>already over? duplicate?"}
-  D -- yes --> X["Screened out"]
-  D -- no --> E["Model scores 0-100<br/>+ one-line reason"]
-  E -- "90 or more" --> F["In calendar<br/>your ICS feed"]
-  E -- "41 to 89" --> G["Review<br/>you decide"]
-  E -- "40 or less" --> H["Out<br/>never shown again"]
-  G -- "Add to calendar" --> F
+| Default score | Status | Result |
+|---|---|---|
+| 90 or more | **In calendar** | Included in your ICS feed |
+| 41–89 | **Review** | You accept or reject it |
+| 40 or less | **Out** | Hidden behind the **show** toggle |
+
+A final model check compares newly stored events with other stored events and moves duplicates to **Out**, even if their score is high ([deduplication code](backend/app/services/dedup.py)). The funnel calls Review “to review” and Out “rejected”. The scoring inputs say “above” and “below”, but the cutoffs are inclusive, as shown above.
+
+Scheduled searches target production through an [hourly GitHub cron](.github/workflows/hourly-search.yml), not an in-app timer. On 26 October 2026, the latest 25 scheduled jobs were roughly **2–6 hours apart**; the 50-job sample included gaps up to 7.8 hours. Inspect the timestamps with:
+
+```bash
+gh run list -R alexisdacquay/sail-event --workflow hourly-search.yml --event schedule --limit 50 --json createdAt
 ```
 
-The boundaries are exact: 90 is In calendar, 40 is Out ([code][pipe-triage], [test][t-bound]).
-
-| Decide a Review row | Move the thresholds | Subscribe to your feed |
-|---|---|---|
-| ![A Review row selected: score 85%, the judge's reason, Add to calendar and Reject](docs/images/review-06-review-detail.png) | ![Scoring: the slider at 40 and 90, Auto-reject and Auto-accept inputs](docs/images/review-07-scoring.png) | ![Calendar feed: accepted dates in the month, the private feed URL, Copy and Reset link](docs/images/review-08-calendar-feed.png) |
+Each job queues up to `MAX_SCHEDULED_USERS` users (default 50), oldest search first; others wait for a later job ([scheduler code](backend/app/routers/search.py)). A successful job confirms queuing, not completion of those background searches. Dev receives no scheduled searches.
 
 ### What it does not do
 
-- notify you (no email, no push)
-- write into Google Calendar (you subscribe to a feed instead)
-- apply price or budget rules (the judge scores topic, place and dates)
-- share events between users
-- let you edit a score by hand
-
-Full list: [PRD, Out of scope](_docs/plan.md#out-of-scope-for-the-mvp).
-You never see in **In calendar** or **Review**: past events, events without a start time, pages that are not events, duplicates, a score without a reason ([targets](_docs/search-spec.md#2-quality-definition)).
+No email or push notifications, price rules, shared event library, manual score editing, or direct writes into Google Calendar. Calendar apps subscribe to the ICS feed; their refresh schedule determines when changes appear. See the [MVP scope](_docs/plan.md#out-of-scope-for-the-mvp).
 
 ## Expected behaviour
 
-| When you... | The app... | Proved by |
+| Situation | Expected result | Evidence |
 |---|---|---|
-| sign up as a second user | shows you none of the first user's events, sentence or feed | [Journey 2][j2] · [test_user_isolation][t-iso] |
-| run the same search twice | adds no duplicate rows | [test_dedup][t-dedup] |
-| get a score of 90+, 41-89 or 40- (defaults) | marks it In calendar, Review or Out | [test_triage_uses_ge_le_cutoffs][t-ge-le] · [test_triage_exact_boundaries][t-bound] |
-| reject an event | keeps it rejected; a later search never brings it back | [test_rejected_event_survives_later_search][t-rej] |
-| move a threshold and save | keeps it after a reload; the next search uses it | [Journey 1, reload][j1-reload] |
-| reject an event that is in your calendar | removes it from the feed | [test_rejected_event_removed_from_feed][t-feed] |
-| share your feed URL | lets anyone with it read the feed; after **Reset link** the old URL returns 404 | [test_old_token_404_after_rotate][t-rotate] |
-| press **Search now** a 7th time within an hour | answers 429, try later | [test_seventh_call_returns_429][t-429] |
+| Another user signs in | Their criteria and event list are separate | [Browser journey][j2] · [API isolation test][t-iso] |
+| The same search runs twice | Only one copy of an event remains in In calendar or Review; repeat rows may exist in Out | [Integration test][t-dedup] |
+| You reject an event | It stays Out after a later search; **show** still reveals it | [Rejection test][t-rej] · [Browser toggle][j-out] |
+| You save thresholds | They survive a page reload | [Browser journey][j1-reload] |
+| You remove an event from your calendar | Its status becomes Out and the feed omits it | [Browser action][j-remove] · [Feed test][t-feed] |
+| Someone has your feed URL | They can read it without signing in; **Reset link** invalidates the old URL | [Feed router](backend/app/routers/calendar.py) · [Rotation test][t-rotate] |
+| You exceed the default six manual searches per hour | The next request returns HTTP 429 with `Retry-After` | [Rate-limit test][t-429] |
+
+The past-event filter runs during a search. Existing events remain listed after their date passes ([event listing](backend/app/routers/events.py)); the product does not continuously remove them.
 
 ## Try it
 
-| I want to... | Run | Then |
-|---|---|---|
-| use the live app | open <https://sail-event.onrender.com> | **Register** (no invite code), type a sentence, press **Search now**, wait 1-2 minutes |
-| run it locally | `docker compose up --build` | open <http://localhost:8000>, log in **demo / demo**, keep the pre-filled sentence, press **Search now** |
-| run every test | `make test-all` | unit + integration + e2e, one exit code; needs Docker; about 10 minutes |
-| run unit tests only | `make test` | no Docker, no API keys; about 5 minutes |
-| see metrics, traces, logs | `make up-all` | Grafana at <http://localhost:3001>, dashboard "Sail-event — Search Run Journey" |
-| run without Docker | `make run` | needs [uv](https://docs.astral.sh/uv/) and Node 22+; open the URL Vite prints |
-
-- `docker compose up --build` starts 2 containers: `postgres` and `app`. The app image holds both the React frontend and the FastAPI API, so there is no separate frontend container.
-- The first build takes a few minutes. Port 8000 taken? `HOST_PORT=8010 docker compose up --build`.
-- Locally, the search and the model replay recorded answers: no API keys. Those answers match the demo's pre-filled sentence only, so keep it. For your own sentence, use the live site.
-
-<details>
-<summary>Same journey with curl (no browser)</summary>
+With Docker:
 
 ```bash
-B=http://localhost:8000
-curl -s -X POST $B/api/auth/register -H 'Content-Type: application/json' -d '{"username":"me","password":"secret1"}'
-T=$(curl -s -X POST $B/api/auth/login -H 'Content-Type: application/json' -d '{"username":"me","password":"secret1"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
-# locally the model is a recorder: use this exact text, it is the one with recorded answers
-curl -s -X PUT $B/api/criteria -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"text":"jazz in Berlin (Germany) next week (19-21st October 2026)"}'
-curl -s -X POST $B/api/search -H "Authorization: Bearer $T"                   # seconds locally; 1-2 minutes on the live site
-curl -s "$B/api/events?status=queued" -H "Authorization: Bearer $T"          # the Review rows
-ID=$(curl -s "$B/api/events?status=queued" -H "Authorization: Bearer $T" | python3 -c 'import sys,json;print(json.load(sys.stdin)[0]["id"])')
-curl -s -X POST $B/api/events/$ID/decision -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"decision":"accepted"}'
-curl -s $B/api/calendar-url -H "Authorization: Bearer $T"                    # your ICS feed URL
+docker compose up --build
 ```
 
-Full contract: [`openapi.yaml`](openapi.yaml), summarised in [docs/api.md](docs/api.md).
-</details>
+Open <http://localhost:8000>, sign in as **demo / demo**, and keep the pre-filled criteria. The search and model adapters replay recorded responses without API keys. Compose fixes the clock at 18 October 2026 so the recorded 19–21 October events remain usable. This is a canned demo; use the live app for your own criteria. For a port conflict, use `HOST_PORT=8010 docker compose up --build` and open port 8010.
+
+| Task | Command | Requirements / result |
+|---|---|---|
+| Run without Docker | `make run` | Python 3.12, [uv](https://docs.astral.sh/uv/), Node 24 ([pin](.nvmrc)); SQLite backend and Vite frontend, with the same fixed demo clock |
+| Run unit tests | `make test` | Python/uv and Node; backend, frontend and responder tests, no API keys or Docker |
+| Run all test layers | `make test-all` | Same tools plus Docker; stops on the first failing phase |
+
+The image serves the built frontend and API together; Compose adds Postgres with a persistent volume. See [testing](docs/testing.md), [API usage](docs/api.md) and [environment settings](docs/deployment.md).
+
+Dev is at <https://sail-event-dev.onrender.com>. Its **demo / demo** account is shared: criteria, decisions, feed link and the per-user search limit affect everyone using it. Create your own account for isolated checks. Dev's configured clock is an environment setting; the repository alone cannot establish its live value.
 
 ## How it was built: an agent team
 
-Every task was a GitHub issue. One human owner and four AI roles worked each one.
+The team uses Claude Code: the orchestrator is the main session; PM, Engineer and QA run as subagents. The table describes their assigned responsibilities. Historical coverage and breaches are disclosed below.
 
-| Role | Human or AI | Does | Never does |
-|---|---|---|---|
-| Owner | human | picks the next item; says "merge"; says "push to prod" for one sha | - |
-| Orchestrator | the main Claude Code session | launches the agents, passes work along, closes on QA PASS | grooms, codes, tests |
-| PM | Claude Code subagent, given [pm.md](_docs/team/pm.md) as its prompt | rewrites the issue: Goal, Acceptance criteria, Out of scope, Constraints | writes code |
-| Engineer | Claude Code subagent, given [software-engineer.md](_docs/team/software-engineer.md) as its prompt | red test first, implements, opens a PR, comments what it did | edits the criteria, closes the issue |
-| QA | Claude Code subagent, fresh context, runnable file [qa-engineer.md](.claude/agents/qa-engineer.md) | runs the tests, checks every criterion, posts `## QA: PASS` or `## QA: FAIL` | edits any file (a written rule plus a clean-tree check; not a tool block, since it has Bash), closes the issue |
+| Role | Responsibility | Boundary |
+|---|---|---|
+| Owner (human) | Picks the next item; reviews the report; says **“merge”**, then separately **“push to prod”** for a named commit | Merge approves dev delivery; promotion requires a separate decision |
+| Orchestrator | Writes agent briefs, starts roles, passes artifacts along, reports to the owner and closes on PASS; records owner-approved waivers | Must not groom, implement or perform QA itself |
+| [PM](_docs/team/pm.md) | Rewrites an issue into Goal, Acceptance criteria, Out of scope and Constraints | Does not write code |
+| [Engineer](_docs/team/software-engineer.md) | Implements the groomed criteria in a worktree; tests, commits and opens a PR | Does not change acceptance criteria or close the issue |
+| [QA](_docs/team/qa-engineer.md) | Runs tests and checks each criterion; posts `## QA: PASS` or `## QA: FAIL` | Does not edit files or close the issue |
 
 ```mermaid
-flowchart LR
-  O[Owner picks the item] --> PM[PM grooms the issue]
-  PM --> E[Engineer: red test, then the fix]
-  E --> Q{QA checks every criterion}
-  Q -- FAIL --> E
-  Q -- PASS --> M[Owner says merge]
-  M --> C[Issue closed]
+sequenceDiagram
+    actor Owner
+    participant O as Orchestrator
+    participant PM
+    participant E as Engineer
+    participant QA
+    participant GH as GitHub / CI
+    participant R as Render
+    Owner->>O: Pick issue
+    O->>PM: Brief + issue + role file
+    PM-->>O: Groomed issue body
+    O->>E: Brief + groomed issue
+    E->>GH: Commits + PR + implementation note
+    GH-->>O: CI results
+    O->>QA: Issue + PR + verification brief
+    QA-->>O: FAIL with criterion and evidence
+    O->>E: Return findings
+    E->>GH: Fix commits; CI reruns
+    O->>QA: Re-check
+    QA-->>O: PASS with evidence
+    O->>Owner: PR, green CI and QA PASS
+    Owner->>O: "merge"
+    O->>GH: Merge PR; close issue or use Closes #N
+    GH->>R: Main update triggers dev deploy
+    Owner->>O: Later: "push to prod" for named commit
+    O->>GH: Dispatch promote workflow
+    GH->>R: Deploy commit; verify prod health
 ```
 
-- Used for real: 58 groomed issues, 69 with a QA verdict, 23 sent back on FAIL, 30 PRs with a QA verdict ([counts, commands, who closed what](_docs/process.md#evidence-it-ran-this-way)).
-- One full loop on one page: [issue #7](https://github.com/alexisdacquay/sail-event/issues/7) (QA caught a password echoed back in a 400 response).
-- Agents post with the owner's `gh` login. The first line of each comment names the role ([who wrote what](_docs/process.md#who-wrote-a-comment)).
-- Details: [process.md](_docs/process.md) · role files [PM](_docs/team/pm.md), [Engineer](_docs/team/software-engineer.md), [QA](_docs/team/qa-engineer.md) · runnable [QA subagent](.claude/agents/qa-engineer.md) · [AGENTS.md](AGENTS.md), which every agent reads first.
+The issue carries the PM's criteria. The PR and implementation comment carry the engineer's work. QA's verdict records one result per criterion and the test command/output. The orchestrator reports these to the owner in chat. Closing is either an orchestrator action or GitHub's `Closes #N` handling on merge. [Issue #7](https://github.com/alexisdacquay/sail-event/issues/7) shows the FAIL → password-leak fix → PASS → close loop.
 
-QA caught real defects before they shipped: an invalid decision crashing with 500, a validation error echoing the password, the single-page fallback swallowing `/api/*`, a health check calling a binary absent from the image. Full list: [docs/ai-usage-report.md](docs/ai-usage-report.md).
+For bug fixes, the root-cause gate requires a causal explanation before editing, a regression test committed while failing, then a fix that passes the unchanged test. This entered the [role files on 25 October 2026](https://github.com/alexisdacquay/sail-event/commit/c0f83e6); it is not a claim about all earlier work.
+
+On **26 October 2026**, **58 of 96 issues** had all four grooming sections, **69** had a QA verdict heading, **23** had a FAIL heading, and **30 of 56 PRs** had a verdict heading. These counts measure headings, not complete adherence to the process. [Process evidence](_docs/process.md#evidence-it-ran-this-way) gives the reproducing `gh issue list` / `gh pr list` commands and exceptions.
+
+Agents used the owner's GitHub login. Comment headings sometimes identify the role; early fix comments do not reliably identify which agent made the change. See [attribution](_docs/process.md#who-wrote-a-comment) and [known gaps](#known-gaps).
+
+### How an agent gets its context
+
+1. **Repository entry:** [`CLAUDE.md`](CLAUDE.md) imports [`AGENTS.md`](AGENTS.md), the project summary, rules and index into modular docs.
+2. **Role and task:** the orchestrator writes a brief naming the issue, role file, relevant docs, scope and expected response. PM loads the [task template](_docs/task-template.md) and PRD; Engineer loads architecture and contract as needed; QA loads criteria and the work to verify. The role file is a referenced instruction, not the whole launch prompt.
+3. **Independent verification:** new subagents have their own context. QA is instructed to verify against running code; re-checks sometimes returned to the same QA agent. The runnable [QA agent definition](.claude/agents/qa-engineer.md) reads its role and process files. Its Bash access means “no edits” relies on instructions and a clean-tree check, not a filesystem restriction.
+4. **Resume and specialist work:** [`work/STATE.md`](work/STATE.md) carries cross-session state; [skills](.claude/skills/) supply procedures when needed. The issue and PR retain handoff evidence outside the agent's context.
+
+In the main clone, [`make hooks`](Makefile) installs the shared pre-commit hook. It runs `make test` for changes under the code directories; `SKIP_HOOK_TESTS=1` bypasses that test gate. It does not establish that every commit was tested.
 
 ## How it is built: the stack
 
 ```mermaid
 flowchart LR
-  B[Browser] --> FE["React 19 + TypeScript<br/>Vite · Tailwind · shadcn/ui"]
-  FE -- "JSON (openapi.yaml)" --> API["FastAPI<br/>Python 3.12"]
-  API --> DB[("PostgreSQL 18<br/>SQLite for make run")]
-  API --> S["Web search<br/>Exa · Tavily · Brave · fixture"]
-  API --> L["Model<br/>DeepSeek Flash · fake"]
-  API --> G["Guardrail<br/>Lakera · none"]
-  API --> OT[OpenTelemetry] --> COL[Collector] --> OBS["Prometheus · Loki · Tempo"] --> GF[Grafana]
+    B[React / TypeScript browser] -->|JSON API| A[FastAPI / Python]
+    A --> DB[(Postgres in Compose / Render)]
+    A --> S[Search adapter]
+    A --> L[Model adapter]
+    A --> G[Criteria guardrail adapter]
 ```
 
-Each outside service sits behind an adapter picked by an environment variable (`SEARCH_PROVIDER`, `LLM_PROVIDER`, `GUARDRAIL`), so tests run with no keys.
+[Frontend](frontend/package.json): React, Vite and Tailwind. [Backend](backend/pyproject.toml): FastAPI, SQLAlchemy, Alembic and icalendar. [`openapi.yaml`](openapi.yaml) defines the API; CI lints it and a [contract test](backend/tests/test_schema_contract.py) compares paths, methods and operation IDs with the backend.
 
-```mermaid
-flowchart LR
-  CRON["GitHub Actions, every hour"] -- "POST /api/search/all" --> RUN[One search per user]
-  PUSH[Merge to main] --> BUILD[Render builds the Dockerfile] --> DEV[dev]
-  PROMO["Promote workflow<br/>manual, one commit"] --> PROD[prod] --> H["/api/health shows that commit"]
-```
-
-| Layer | Choice | Where |
-|---|---|---|
-| Frontend | React 19, TypeScript, Vite, Tailwind, shadcn/ui, Vitest | [frontend/](frontend/) |
-| Backend | FastAPI, SQLAlchemy 2, Alembic, PyJWT, bcrypt, icalendar | [backend/](backend/) |
-| Contract | written first; CI lints it | [openapi.yaml](openapi.yaml) |
-| Database | PostgreSQL 18 in Docker and on Render; SQLite for `make run` | [docker-compose.yml](docker-compose.yml) |
-| Container | one image: a Node stage builds the UI, Python serves the API and the UI | [Dockerfile](Dockerfile) |
-| Telemetry | OpenTelemetry SDK, collector, Prometheus, Loki, Tempo, Grafana | [observability/](observability/) |
-| On-call | alert webhook, evidence collector, headless Claude Code responder | [incident-response/](incident-response/) |
-
-More: [architecture](_docs/architecture.md).
+`SEARCH_PROVIDER`, `LLM_PROVIDER` and `GUARDRAIL` select adapters ([factory](backend/app/adapters/factory.py)). Search supports Exa, Tavily, Brave and fixtures; models support recorded responses and an OpenAI-compatible endpoint. Compose uses Postgres 18; `make run` defaults to SQLite. [Architecture](_docs/architecture.md) covers the components and [deployment settings](docs/deployment.md) cover hosted configuration.
 
 ## Ship it, watch it, fix it
 
-| Stage | What happens | Where |
-|---|---|---|
-| Pull request | CI: backend and frontend tests, then compose + Postgres + 7 integration + 12 browser tests | [ci.yml](.github/workflows/ci.yml) |
-| Merge to main | Render deploys **dev** | [deployment.md](docs/deployment.md#which-version-runs-where) |
-| Promote | the owner runs a workflow with a sha; it waits until prod's `/api/health` reports that sha | [promote.yml](.github/workflows/promote.yml) |
-| Rollback | the same workflow with the previous sha | [release-process.md](docs/release-process.md#rollback) |
-| Watch | metrics, traces and logs of the search journey, in Grafana (local, `make up-all`) | [observability/README.md](observability/README.md) |
-| Alert | **SearchRunFailures** (searches fail), **SearchRunsSilent** (nothing ran in 2 hours) | [rules.yaml](observability/grafana/provisioning/alerting/rules.yaml#L9) |
-| Fix | the alert wakes a headless Claude Code agent; it fixes the fault on an `incident/...` branch and never pushes | [incident-response/README.md](incident-response/README.md) |
+### CI/CD and promotion
 
-| One search, one trace | The same trace id in a log line | The alert, firing |
-|---|---|---|
-| ![Tempo: POST /api/search, search_run and its child spans](docs/images/review-41-tempo-trace.png) | ![Loki: search run completed, otelTraceID 9da6b9bd](docs/images/review-42-loki-log-line.png) | ![Grafana alert list: SearchRunFailures firing](docs/images/review-43-alert-list.png) |
+1. **PR:** [CI](.github/workflows/ci.yml) runs backend and frontend tests, builds the UI and lints OpenAPI. After those jobs pass, it starts Compose/Postgres and runs integration and Playwright tests. The same workflow runs on pushes to main.
+2. **Merge → dev:** after the owner's “merge”, a main update triggers Render's dev deployment. That setting lives in Render, as recorded in [deployment.md](docs/deployment.md); it does not wait for the new main CI run. Compare dev's health commit with main:
 
+   ```bash
+   curl -s https://sail-event-dev.onrender.com/api/health
+   git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main
+   gh run list -R alexisdacquay/sail-event -b main -L 3
+   ```
+
+3. **Dev → prod:** the owner checks dev and says “push to prod” for a commit. The manual [promote workflow](.github/workflows/promote.yml) deploys the supplied full SHA (or its workflow commit if omitted) and waits for prod health to return that SHA. It checks health and identity, not the user journey. The intended path is manual promotion; a Render environment change also redeployed prod on 20 October ([deployment record](work/STATE.md)).
+4. **Rollback:** selecting an older SHA in that workflow is an untested path across the three migrations introduced in PRs #128 and #150. PR #150's [date-only event deletion](backend/alembic/versions/f5a6b7c8d9e0_cleanup_events_without_start_time.py) is irreversible; a code rollback cannot restore deleted data. Back up the database before promotion and assess schema compatibility separately. See [release procedure](docs/release-process.md#rollback).
+
+For recorded passing tests, inspect [CI at 542e58c][ci-proof]; reproduce locally with `make test-all`. CI does not run the responder unit tests. Green Playwright output includes expected failures for open issues and screenshot-generation tests ([test details](docs/testing.md)).
+
+### Local observability, alerting and on-call
+
+**This is a local stack, not monitoring for prod or dev.** The deployed app exports no telemetry to it. [`make up-all`](Makefile) starts the app, database and observability services; the responder is a separate host process.
+
+```mermaid
+flowchart LR
+    A[Local search journey] --> C[OpenTelemetry Collector]
+    C --> P[Prometheus: metrics]
+    C --> L[Loki: structured logs]
+    C --> T[Tempo: traces]
+    P --> G[Grafana UI and alert rules]
+    L --> G
+    T --> G
+    G -->|Authenticated webhook| R[Host responder: collect evidence]
+    R --> W[Headless Claude Code in a worktree]
+    W --> V[Fix / false positive / escalate verdict]
+    V --> H[Human reviews evidence and any fix branch]
 ```
-  Grafana alert ──▶ responder (port 8001) ──▶ collect evidence (error-run metric, logs, health, git log)
-                                                        │
-                                                        ▼
-                                         headless Claude Code, budget $1, in a git worktree
-                                                        │
-                            ┌───────────────────────────┼───────────────────────────┐
-                            ▼                           ▼                           ▼
-                      verdict: fix             verdict: false_positive        verdict: escalate
-                 commit on a branch              nothing to change              a human reads
-                 incident/<id>, never main                                      evidence.md
+
+Start the stack, run the local demo search, and allow about 60 seconds for the default metrics export interval:
+
+```bash
+export RESPONDER_WEBHOOK_SECRET=local-drill-secret
+make up-all
 ```
 
-It ran for real, twice. On 2026-10-21 a deliberate fault made every search fail. Grafana's alert fired at 07:41:20, the agent read the evidence, found the injected `raise`, and committed the fix [8d2f839](https://github.com/alexisdacquay/sail-event/commit/8d2f839) at 07:46:12.
-Every file of that run: [incident-response/incidents/20261021-074150-SearchRunFailures/](incident-response/incidents/20261021-074150-SearchRunFailures/).
-Reproduce it with `RESPONDER_WEBHOOK_SECRET=any-string incident-response/test-incident.sh` (needs the `claude` CLI; add `--dry-run` to skip the model).
+Open Grafana at <http://localhost:3001>, dashboard **Sail-event — Search Run Journey** (anonymous Admin access). Logs and traces share a trace ID; inspect traces through **Explore → Tempo**, since the dashboard trace panel errors. The rubric asks for “metrics, traces, and structured logs that share a trace ID”; metrics have no trace ID/exemplars here. HTTP spans also expose calendar-feed tokens, so the “no customer data or credentials” requirement is not met. [Telemetry details and screenshots](observability/README.md) document the signals and remaining exposure.
+
+The [rules](observability/grafana/provisioning/alerting/rules.yaml) check failed search runs (`increase` over 10 minutes > 1, held for 5 minutes) and silence (increase over 2 hours < 1, held for 10 minutes). Both are evaluated per metric series. Silence has `noDataState: OK`; it cannot detect every no-data failure. There is no local scheduler, and its two-hour window does not match the live job's observed cadence.
+
+In another terminal, `make responder` uses the same exported secret. A firing critical alert routes to its webhook, which collects metrics, health and recent commits and attempts a Loki query. It launches `claude -p` in a git worktree with a $1 budget and a 300-second timeout. The agent is instructed to test and commit a fix on `incident/<id>`, or return a false-positive/escalation verdict. Its tool allowlist contains no push command; Read and Edit are not restricted to worktree paths ([responder](incident-response/responder.py)). Runtime limits come from this code; `autonomy-policy.yaml` is descriptive and is not loaded.
+
+Two recorded **drills** injected faults on local branches: [17 October](incident-response/incidents/20261017-052050-SearchRunFailures/) and [21 October 2026](incident-response/incidents/20261021-074150-SearchRunFailures/). In the latter, Grafana fired at **07:41:20 UTC** and the agent's [fix](https://github.com/alexisdacquay/sail-event/commit/8d2f839) was committed at **07:46:12 UTC**. The evidence named the injected fault in a commit message; its Loki query returned no logs. This proves the alert-to-fix drill, not diagnosis of an unlabelled production fault.
+
+To repeat the drill, follow the [on-call instructions](incident-response/README.md). The script needs Docker and a signed-in Claude CLI, creates a fault branch/commit in the clone, and can spend up to $1. Run it from a normal terminal outside Claude Code. `--dry-run` skips the model and checks alert → webhook → evidence → worktree only.
 
 ## All the docs
 
-Two folders, on purpose: `_docs/` = what to build and how the team works. `docs/` = how to run, test, ship and review it.
-
-| Doc | Answers |
-|---|---|
-| [docs/reviewer-guide.md](docs/reviewer-guide.md) | where each rubric point is proved |
-| [_docs/plan.md](_docs/plan.md) | what the product does and why (the PRD) |
-| [_docs/search-spec.md](_docs/search-spec.md) | what a good search result is |
-| [_docs/ux-spec.md](_docs/ux-spec.md) | screens and user jobs |
-| [_docs/architecture.md](_docs/architecture.md) | how it is built |
-| [openapi.yaml](openapi.yaml) · [docs/api.md](docs/api.md) | the API contract |
-| [_docs/process.md](_docs/process.md) | the agent team and how it works |
-| [_docs/team/](_docs/team/) | one file per role |
-| [AGENTS.md](AGENTS.md) | what every agent reads first |
-| [docs/testing.md](docs/testing.md) | test layers, counts, commands |
-| [docs/deployment.md](docs/deployment.md) | where it runs, how to use it live, settings |
-| [docs/release-process.md](docs/release-process.md) | CI, CD, promote, rollback |
-| [observability/README.md](observability/README.md) | metrics, logs, traces, alerts |
-| [incident-response/README.md](incident-response/README.md) | the on-call agent |
-| [docs/ai-usage-report.md](docs/ai-usage-report.md) | how AI tools were used, defects QA caught |
-| [docs/operations-and-security-report.md](docs/operations-and-security-report.md) | one incident reconstructed, data policy for AI tools |
+Start with the [reviewer guide](docs/reviewer-guide.md). [`AGENTS.md`](AGENTS.md) indexes product, process and operations docs. For implementation and verification, use the [PRD](_docs/plan.md), [process](_docs/process.md), [testing](docs/testing.md), [release procedure](docs/release-process.md), [observability](observability/README.md) and [on-call guide](incident-response/README.md). The [AI usage report](docs/ai-usage-report.md) and [operations/security report](docs/operations-and-security-report.md) discuss the development record.
 
 ## Status
 
-- Prod runs release `969a161` (promoted 2026-10-23). Dev runs the latest `main`. Prod lags dev on purpose: it moves only when the owner promotes a sha.
-- The live sites use a real web search provider and a real model, chosen by env var ([settings](docs/deployment.md)).
-- The app screenshots come from the local stack with recorded data. The GitHub and Grafana screenshots are real pages. All captured 2026-10-26.
-- What is not done yet: [known gaps](docs/reviewer-guide.md#known-gaps).
-- Post-MVP hardening, done: [#33](https://github.com/alexisdacquay/sail-event/issues/33) JWT secret, [#34](https://github.com/alexisdacquay/sail-event/issues/34) responder isolation, [#35](https://github.com/alexisdacquay/sail-event/issues/35) rate and length limits, [#36](https://github.com/alexisdacquay/sail-event/issues/36) feed-token rotation. Each closed after a QA PASS. The label `post-mvp` means "after the MVP", not "not done".
+Prod is the manually promoted release; dev follows main. The health endpoints above identify the code actually running. Screenshots here show the local recorded demo, not live search results.
 
-[pipe-triage]: https://github.com/alexisdacquay/sail-event/blob/8305160/backend/app/services/pipeline.py#L739-L745
-[t-bound]: https://github.com/alexisdacquay/sail-event/blob/8305160/backend/tests/test_events.py#L111
-[t-ge-le]: https://github.com/alexisdacquay/sail-event/blob/8305160/backend/tests/test_pipeline.py#L306
-[t-rej]: https://github.com/alexisdacquay/sail-event/blob/8305160/backend/tests/test_events.py#L150
-[t-iso]: https://github.com/alexisdacquay/sail-event/blob/8305160/backend/tests/integration/test_integration.py#L131
-[t-dedup]: https://github.com/alexisdacquay/sail-event/blob/8305160/backend/tests/integration/test_integration.py#L103
-[t-feed]: https://github.com/alexisdacquay/sail-event/blob/8305160/backend/tests/test_calendar.py#L112
-[t-rotate]: https://github.com/alexisdacquay/sail-event/blob/8305160/backend/tests/test_calendar.py#L255
-[t-429]: https://github.com/alexisdacquay/sail-event/blob/8305160/backend/tests/test_guardrails.py#L404
-[j1-reload]: https://github.com/alexisdacquay/sail-event/blob/8305160/e2e/journeys.spec.ts#L60-L67
-[j2]: https://github.com/alexisdacquay/sail-event/blob/8305160/e2e/journeys.spec.ts#L158
+### Known gaps
+
+- **Process coverage:** 38 of the 96 issues lacked the four-section groom on 26 October. Items closed without a QA verdict include #139 and #142; PR #144 merged after QA FAILs with no written waiver. The orchestrator edited or re-checked work itself on #39, #52 and #55, then closed without a fresh QA PASS. Direct pushes to main continued alongside PRs; main has no branch protection. PRs [#31](https://github.com/alexisdacquay/sail-event/pull/31) and [#138](https://github.com/alexisdacquay/sail-event/pull/138) merged with a failing integration check. [Process evidence and counting commands](_docs/process.md#evidence-it-ran-this-way).
+- **Rules evolved:** role/process docs began on [16 October 2026](https://github.com/alexisdacquay/sail-event/commit/98f3cf7). Owner control of next-item selection and prod promotion was recorded on 21 October ([handover](work/STATE.md)); the bug-fix regression gate entered role files on 25 October and the process summary on [26 October](https://github.com/alexisdacquay/sail-event/commit/ac54483). These are dated rules, not universal historical guarantees.
+- **Search quality:** discovery is incomplete and model judgments can be wrong. A [local recall run](work/RECALL.md) at `ab21641` on 24 October found 3 of 38 ground-truth events; that is an older measurement, not a result for the current event-page pipeline. Criteria without a place may still auto-accept events ([#101](https://github.com/alexisdacquay/sail-event/issues/101)).
+- **Delivery:** dev deploys without waiting for main CI; responder tests are outside CI. Rollback across the three new migrations is untested, and PR #150's deletion is irreversible.
+- **Operations:** telemetry and alerts are local only. Metrics lack trace IDs; feed tokens and provider exception text can reach telemetry; the collector reads other container logs too. The trace dashboard panel errors, the recorded evidence's Loki query was empty, and the on-call runs were injected-fault drills. The agent's reported test total does not match the suite. The two-hour silence rule needs reassessment before monitoring the live schedule.
+
+The [reviewer guide's gap list](docs/reviewer-guide.md#known-gaps) gives further detail, including open UI issues, incomplete issue labels, comment attribution and responder limits.
+
+[pipe-triage]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/services/pipeline.py#L736-L750
+[t-ge-le]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_pipeline.py#L306-L323
+[t-rej]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_events.py#L150-L165
+[t-iso]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/integration/test_integration.py#L135-L162
+[t-dedup]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/integration/test_integration.py#L103-L129
+[t-feed]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_calendar.py#L112-L132
+[t-rotate]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_calendar.py#L255-L269
+[t-429]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/test_guardrails.py#L404-L417
+[t-restart]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/tests/integration/test_integration.py#L254-L301
+[j1-reload]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/e2e/journeys.spec.ts#L60-L67
+[j2]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/e2e/journeys.spec.ts#L158-L182
+[j-out]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/e2e/journeys.spec.ts#L94-L101
+[j-remove]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/e2e/journeys.spec.ts#L103-L107
+[ci-proof]: https://github.com/alexisdacquay/sail-event/actions/runs/40251535674
