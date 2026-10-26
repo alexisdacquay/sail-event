@@ -12,8 +12,18 @@
 
 <sub>The Stream after one search: your sentence, what the run did, the funnel (found, screened out, judged, in calendar, to review, rejected), the results. Local stack, recorded data, 2026-10-26.</sub>
 
-**Live:** prod <https://sail-event.onrender.com> (register, no invite code) · dev <https://sail-event-dev.onrender.com> (log in **demo / demo**).
 Final project for the [DataTalksClub AI Dev Tools Zoomcamp 2026](https://github.com/DataTalksClub/ai-dev-tools-zoomcamp/tree/main/project).
+
+## Try it in 60 seconds
+
+No install, no Docker:
+
+1. Open **<https://sail-event.onrender.com>**.
+2. Click **Register**: any username and password, no invite code.
+3. Type what you want in one sentence, e.g. *AI events or hackathons in London next week*, and press **Search now**.
+4. Watch the progress line and the funnel fill in. Events land in **Results** and in your calendar feed.
+
+The newest build is on dev: <https://sail-event-dev.onrender.com> (log in **demo / demo**). Running it on your own machine is under [Try it](#try-it).
 
 ## For reviewers
 
@@ -163,9 +173,14 @@ Every task was a GitHub issue. One human owner and four AI roles worked each one
 | Engineer | Claude Code subagent, given [software-engineer.md](_docs/team/software-engineer.md) as its prompt | red test first, implements, opens a PR, comments what it did | edits the criteria, closes the issue |
 | QA | Claude Code subagent, fresh context, runnable file [qa-engineer.md](.claude/agents/qa-engineer.md) | runs the tests, checks every criterion, posts `## QA: PASS` or `## QA: FAIL` | edits any file (a written rule plus a clean-tree check; not a tool block, since it has Bash), closes the issue |
 
-```
-  owner picks ──▶ PM grooms ──▶ Engineer builds ──▶ QA checks ──┬── FAIL ──▶ back to Engineer
-                                                                └── PASS ──▶ owner says merge ──▶ closed
+```mermaid
+flowchart LR
+  O[Owner picks the item] --> PM[PM grooms the issue]
+  PM --> E[Engineer: red test, then the fix]
+  E --> Q{QA checks every criterion}
+  Q -- FAIL --> E
+  Q -- PASS --> M[Owner says merge]
+  M --> C[Issue closed]
 ```
 
 - Used for real: 58 groomed issues, 69 with a QA verdict, 23 sent back on FAIL, 30 PRs with a QA verdict ([counts, commands, who closed what](_docs/process.md#evidence-it-ran-this-way)).
@@ -177,22 +192,24 @@ QA caught real defects before they shipped: an invalid decision crashing with 50
 
 ## How it is built: the stack
 
+```mermaid
+flowchart LR
+  B[Browser] --> FE["React 19 + TypeScript<br/>Vite · Tailwind · shadcn/ui"]
+  FE -- "JSON (openapi.yaml)" --> API["FastAPI<br/>Python 3.12"]
+  API --> DB[("PostgreSQL 18<br/>SQLite for make run")]
+  API --> S["Web search<br/>Exa · Tavily · Brave · fixture"]
+  API --> L["Model<br/>DeepSeek Flash · fake"]
+  API --> G["Guardrail<br/>Lakera · none"]
+  API --> OT[OpenTelemetry] --> COL[Collector] --> OBS["Prometheus · Loki · Tempo"] --> GF[Grafana]
 ```
-   browser ──▶ React 19 + TypeScript (Vite, Tailwind, shadcn/ui)
-                     │  JSON, contract in openapi.yaml
-                     ▼
-               FastAPI (Python 3.12) ──▶ PostgreSQL 18
-                 │         │                (SQLite for make run)
-                 │         └── adapters, chosen by env var:
-                 │              SEARCH_PROVIDER = fixture | tavily | exa | brave
-                 │              LLM_PROVIDER    = fake    | openai_compatible (DeepSeek)
-                 │              GUARDRAIL       = none    | lakera
-                 ▼
-          OpenTelemetry ──▶ collector ──▶ Prometheus + Loki + Tempo ──▶ Grafana
 
-   GitHub Actions cron (hourly, :07) ──▶ POST /api/search/all ──▶ one run per user
-   push to main ──▶ Render builds the Dockerfile ──▶ dev
-   promote workflow (manual, by sha) ──▶ prod ──▶ /api/health reports that sha
+Each outside service sits behind an adapter picked by an environment variable (`SEARCH_PROVIDER`, `LLM_PROVIDER`, `GUARDRAIL`), so tests run with no keys.
+
+```mermaid
+flowchart LR
+  CRON["GitHub Actions, every hour"] -- "POST /api/search/all" --> RUN[One search per user]
+  PUSH[Merge to main] --> BUILD[Render builds the Dockerfile] --> DEV[dev]
+  PROMO["Promote workflow<br/>manual, one commit"] --> PROD[prod] --> H["/api/health shows that commit"]
 ```
 
 | Layer | Choice | Where |
