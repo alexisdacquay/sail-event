@@ -2,6 +2,31 @@
 
 Three layers: unit, integration, end-to-end.
 
+## At a glance
+
+```
+make test-all      # unit + integration + e2e, one exit code, needs Docker
+```
+
+| Layer | Count | Command | Runs in CI |
+|---|---|---|---|
+| Backend unit | 481 | `make test` | `backend` job |
+| Frontend unit | 117 (12 files) | `make test` | `frontend` job |
+| On-call responder unit | 20 | `make test` | no (local only) |
+| Integration (HTTP against the compose stack) | 7 | `make test-integration` | `integration` job |
+| End-to-end (Playwright, Chromium) | 12 | `make test-e2e` | `integration` job |
+
+Verified on commit `8305160`, CI run [40242394581](https://github.com/alexisdacquay/sail-event/actions/runs/40242394581); responder count from `python3 incident-response/test_responder.py`.
+
+**Unit** = one function or component, recorded fixtures, no network.
+Many backend unit tests also go through the routes and the ORM in-process (FastAPI TestClient into SQLite), e.g. `test_events.py`, `test_pipeline.py`, `test_auth.py`.
+**Integration** = the built container plus Postgres, called over HTTP only; no app code imported.
+
+**Needs:** uv, Node 22+, python3; Docker for integration and e2e.
+**No API keys:** search and model are recorded fixtures with a fixed clock (`FAKE_NOW`).
+**Time:** the backend suite takes about 5 minutes (312 s in CI); integration and e2e add about 3-5 minutes, most of it the image build.
+`make test-all` runs `test`, then `test-integration`, then `test-e2e`; make stops at the first failure.
+
 ## Unit tests
 
 Backend tests live in `backend/tests/`. They cover auth, criteria, events,
@@ -13,7 +38,7 @@ Frontend component tests sit beside their source files in `frontend/src/`.
 make test
 ```
 
-Runs backend then frontend. Does not start Docker. Exits non-zero if either
+Runs backend, then frontend, then the on-call responder tests (`incident-response/test_responder.py`). Installs frontend packages on a fresh clone. Does not start Docker. Exits non-zero if any
 fails. Integration tests are excluded by default (`-m "not integration"` in
 pyproject.toml).
 
@@ -61,11 +86,7 @@ SAIL_BASE_URL=http://localhost:8010 SAIL_COMPOSE_MANAGED=1 make test-integration
 Live in `e2e/` at the repo root with their own `package.json`.
 Chromium only.
 
-**First-time setup:**
-
-```
-cd e2e && npm install && npx playwright install chromium
-```
+**First-time setup:** none. `make test-e2e` installs `e2e/` packages and Chromium when they are missing.
 
 **Run:**
 
@@ -80,9 +101,15 @@ as `test-integration`:
 3. `docker compose down -v` (same project name)
 4. Exit code = Playwright exit code
 
-Journeys:
-- Journey 1: register, set criteria, search, queue accept/reject, verify events page
-- Journey 2: second user sees no events from first user
+12 tests in three files:
+
+| File | Tests | What |
+|---|---|---|
+| [journeys.spec.ts](../e2e/journeys.spec.ts) | 4 | Journey 1: register, save a threshold (persists after reload), search, add to calendar and reject from the stream; phone layout; light and dark screenshots. Journey 2: second user sees no events from the first |
+| [field.spec.ts](../e2e/field.spec.ts) | 6 | U1-U4 from field tests: reload keeps the result, the Judged line matches the rows, slider equals the boxes, legend not clipped, copy feedback, the feed link is a `webcal:` subscription |
+| [screenshot-122.spec.ts](../e2e/screenshot-122.spec.ts) | 2 | live progress line mid-run, light and dark |
+
+The screenshot tests write PNGs to `e2e/test-results/` (e.g. `stream-desktop-light.png`, `funnel-light.png`).
 
 To run against an already-running stack:
 

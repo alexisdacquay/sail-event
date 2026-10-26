@@ -5,7 +5,7 @@
 The project follows the method from "AI-Native Development: Specifications, Loop and Graph Engineering" (aishippingblog.com), documented in `work/METHOD.md`.
 
 - **Roles**: PM (grooms issues into the 4-section template), Software Engineer (implements against acceptance criteria), QA Engineer (verdict PASS/FAIL per criterion). Each role runs as a separate Claude Code subagent with its own context.
-- **Orchestrator**: the human operator launches PM, Engineer, QA as subagents via Claude Code. The orchestrator never grooms, implements, or tests — it picks issues, dispatches roles, reviews results, and makes judgment calls.
+- **Orchestrator**: the main Claude Code session launches PM, Engineer, QA as subagents. It never grooms, implements, or tests — it dispatches roles, passes work along, closes on QA PASS, and makes judgment calls with a written reason. The human owner picks issues and approves every merge and every prod promote. Team table: [`_docs/process.md`](../_docs/process.md#team).
 - **One issue at a time**: each issue goes through PM groom, engineer implementation, QA verdict. On FAIL, the issue returns to the engineer with the QA comment. On PASS, the orchestrator closes it.
 
 ## Tools

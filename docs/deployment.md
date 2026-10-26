@@ -1,5 +1,39 @@
 # Deployment
 
+## Use it live in 4 steps
+
+1. Open https://sail-event.onrender.com.
+2. Register with any username and password. No invite code: `curl -s https://sail-event.onrender.com/api/config` prints `{"registrationCodeRequired":false}`.
+3. Type your criteria, press **Search now**, wait 1-2 minutes (real web search, then model calls).
+4. Click a **Review** row, press **Add to calendar**, then **Copy** the URL under **Calendar feed**.
+
+Limits on the live site: 5 registrations per IP per hour; 6 **Search now** per user per hour.
+
+## Which version runs where
+
+| Env | URL | Runs | Check |
+|---|---|---|---|
+| prod | https://sail-event.onrender.com | release `969a161` (promoted 2026-10-23) | `curl -s https://sail-event.onrender.com/api/health` |
+| dev | https://sail-event-dev.onrender.com | latest `main` | `curl -s https://sail-event-dev.onrender.com/api/health` |
+
+`/api/health` prints `{"status":"ok","commit":"<sha>"}`. Compare with `git log --oneline -1 <sha>`.
+Prod lags dev on purpose: it moves only when the owner promotes a sha ([release-process.md](release-process.md#manual-promotion-to-prod)).
+
+## Prove CD in 30 seconds
+
+```bash
+# dev runs the newest commit on main (CD on merge)
+curl -s https://sail-event-dev.onrender.com/api/health
+git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main
+# prod runs the sha the owner promoted last
+curl -s https://sail-event.onrender.com/api/health
+gh run list -R alexisdacquay/sail-event --workflow=promote.yml --limit 3
+```
+
+The Render auto-deploy setting itself lives in the Render dashboard, not in the repo: `sail-event-dev` → Settings → Auto-Deploy = On Commit; `sail-event` → Auto-Deploy = Off.
+
+## Services
+
 The app runs on Render, region Frankfurt, two environments built from the same root `Dockerfile`:
 
 | Environment | Web Service | URL | Database | Deploys when |

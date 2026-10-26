@@ -1,5 +1,28 @@
 # Release process
 
+## The whole flow in one picture
+
+```mermaid
+flowchart LR
+    PR["Pull request"] --> CI{"CI: backend, frontend,<br/>integration + e2e"}
+    CI -- red --> FIX["fix on the branch"] --> PR
+    CI -- green --> M["owner says merge<br/>into main"]
+    M --> DEV["Render dev<br/>auto-deploys main"]
+    DEV --> CHECK["owner checks dev"]
+    CHECK --> P["owner names a sha:<br/>push to prod<br/>promote.yml, by hand"]
+    P --> PROD["Render prod<br/>health reports that sha"]
+    PROD -. bad release .-> RB["rollback: promote.yml<br/>with the previous sha"]
+```
+
+| Level | What | Proof |
+|---|---|---|
+| CI on every PR | [ci.yml](../.github/workflows/ci.yml): 3 jobs on every PR and every push to `main` | PR [#149](https://github.com/alexisdacquay/sail-event/pull/149) checks: backend, frontend, integration all green |
+| CD on merge | Render `sail-event-dev` deploys every push to `main` | `curl -s https://sail-event-dev.onrender.com/api/health` prints the `main` sha |
+| Manual prod | [promote.yml](../.github/workflows/promote.yml), run by hand with a sha | run [39979831552](https://github.com/alexisdacquay/sail-event/actions/runs/39979831552) (2026-10-23, success) |
+| Rollback | the same workflow with the previous sha | [Rollback](#rollback) |
+
+Prod lags dev on purpose: it moves only when the owner promotes a sha.
+
 ## Branching
 
 Trunk-based development. All work lands on `main` via pull request.

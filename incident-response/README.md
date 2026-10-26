@@ -3,6 +3,44 @@
 Automated on-call responder: receives Grafana alert webhooks, collects
 evidence, and launches a headless Claude Code agent to investigate.
 
+## On-call agent at a glance
+
+```mermaid
+sequenceDiagram
+    participant App as App (search runs fail)
+    participant Graf as Grafana
+    participant Resp as responder.py
+    participant Agent as Claude Code agent (headless)
+    actor Human
+    App->>Graf: sail_runs_total outcome=error rises
+    Graf->>Graf: SearchRunFailures true for 5 min
+    Graf->>Resp: POST /alerts (bearer secret)
+    Resp->>Resp: collect-evidence.sh: metrics, logs, health, git log
+    Resp->>Agent: evidence + task, in its own git worktree
+    Agent->>Agent: read code, fix, run tests, commit on incident branch
+    Agent-->>Resp: verdict.json + fix.diff
+    Note over Agent: never pushes (autonomy-policy.yaml)
+    Human->>Human: reviews the incident branch, merges or drops it
+```
+
+Run of 2026-10-21, step by step:
+
+| Step | Time (UTC) | Evidence |
+|---|---|---|
+| Fault injected: `FixtureProvider.search` always raises | 07:32 | commit [3d9f6b8](https://github.com/alexisdacquay/sail-event/commit/3d9f6b8) |
+| Alert rule | - | [rules.yaml#L9](../observability/grafana/provisioning/alerting/rules.yaml#L9) |
+| Alert fires | 07:41:20 | [alert.json](incidents/20261021-074150-SearchRunFailures/alert.json) (`status: firing`, `startsAt`) |
+| Webhook received | 07:41:50 | route `POST /alerts` in [responder.py](responder.py); folder name = arrival time |
+| What the agent saw | 07:41:50 | [evidence.md](incidents/20261021-074150-SearchRunFailures/evidence.md): 28 error runs in 10 min; app health `ok`; newest commit `3d9f6b8 test: inject search-provider fault`; the Loki section came back empty |
+| Verdict + fix | 07:46 | [verdict.json](incidents/20261021-074150-SearchRunFailures/verdict.json) (`fix`) · [fix.diff](incidents/20261021-074150-SearchRunFailures/fix.diff) |
+| Fix commit | 07:46:12 | [8d2f839](https://github.com/alexisdacquay/sail-event/commit/8d2f839) on branch `incident/20261021-074150-SearchRunFailures` |
+
+The agent never pushes ([autonomy-policy.yaml](autonomy-policy.yaml)).
+A human reviews the incident branch and merges it, or drops it.
+Recovery check for a branch: `incident-response/runbooks/verify-recovery.sh <branch>` (runs `git checkout`, so use a throwaway worktree).
+
+Known gap: the Loki query in [collect-evidence.sh](collect-evidence.sh) filters on a `container` label that OTLP logs do not carry, so that section is empty.
+
 ## Required environment variables
 
 | Variable | Required | Description |
@@ -23,7 +61,8 @@ make responder
 ## Recorded incidents
 
 **2026-10-17 (`20261017-052050-SearchRunFailures`)** -- the complete run.
-Alert fired from Grafana after an injected fault in the search provider.
+Alert fired from Grafana after an injected fault in the scorer:
+`FakeScorer.score` in `backend/app/adapters/fake.py`, injected by commit `7318f2f`.
 The agent read the evidence, found the `raise RuntimeError`, fixed it on
 branch `incident/20261017-052050-SearchRunFailures`, and committed
 `dae24e9`.  All five files are present: `alert.json`, `evidence.md`,

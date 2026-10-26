@@ -3,20 +3,39 @@ triages by threshold, and publishes accepted events to a per-user ICS feed.
 
 Documents
 
-- `_docs/plan.md` - what the product does
-- `_docs/architecture.md` - how it is built
-- `_docs/process.md` - how work is organised
-- `_docs/ui-design.md` - UI decisions (what, why, where); mockups in `_docs/ui/`
-- `_docs/team/` - role files: `pm.md`, `software-engineer.md`, `qa-engineer.md`
-- `docs/` - deployment, testing, api, release-process
-- `work/` - state logs, batch results, design reviews
-- `.claude/skills/` - `rubric-review`, `status-update`
-- GitHub issues at github.com/alexisdacquay/sail-event/issues - the backlog; issue N = task N of the original `_docs/outdated/tasks.md`
+Product and design
+- [`_docs/plan.md`](_docs/plan.md) - what the product does and why (PRD)
+- [`_docs/architecture.md`](_docs/architecture.md) - how it is built
+- [`_docs/search-spec.md`](_docs/search-spec.md) - search quality targets
+- [`_docs/ux-spec.md`](_docs/ux-spec.md) - screens and user jobs
+- [`_docs/ui-design.md`](_docs/ui-design.md) - UI decisions (what, why, where); mockups in [`_docs/ui/`](_docs/ui/)
+
+Process and team
+- [`_docs/process.md`](_docs/process.md) - the agent team, how work flows, handoffs, the root-cause gate
+- [`_docs/team/pm.md`](_docs/team/pm.md), [`_docs/team/software-engineer.md`](_docs/team/software-engineer.md), [`_docs/team/qa-engineer.md`](_docs/team/qa-engineer.md) - one file per role
+- [`_docs/task-template.md`](_docs/task-template.md) - the four sections of a groomed issue
+- GitHub issues at https://github.com/alexisdacquay/sail-event/issues - the backlog; issue N = task N of the original [`_docs/outdated/tasks.md`](_docs/outdated/tasks.md)
+
+Run, test, ship
+- [`docs/testing.md`](docs/testing.md), [`docs/deployment.md`](docs/deployment.md), [`docs/release-process.md`](docs/release-process.md), [`docs/api.md`](docs/api.md)
+- [`openapi.yaml`](openapi.yaml) - the API contract
+- [`observability/README.md`](observability/README.md) - metrics, logs, traces, alerts
+- [`incident-response/README.md`](incident-response/README.md) - the on-call agent
+
+Agents and tools
+- [`.claude/agents/qa-engineer.md`](.claude/agents/qa-engineer.md) - the QA subagent
+- [`.claude/skills/rubric-review/SKILL.md`](.claude/skills/rubric-review/SKILL.md), [`.claude/skills/status-update/SKILL.md`](.claude/skills/status-update/SKILL.md), [`.claude/skills/field-test/SKILL.md`](.claude/skills/field-test/SKILL.md)
+
+State and history
+- [`work/STATE.md`](work/STATE.md) - read the top block for where work stands
+- [`work/`](work/) - logs, batch results, reviews; not instructions
+- [`_docs/outdated/`](_docs/outdated/) - history only
 
 Commands
 
 - `make run` - start frontend and backend
 - `make test` - backend and frontend tests, single exit code
+- `make test-all` - unit + integration + e2e, single exit code (needs Docker)
 - `make test-e2e` - bring up compose, run Playwright, tear down
 - `make compose-up` - app + Postgres via docker-compose
 
