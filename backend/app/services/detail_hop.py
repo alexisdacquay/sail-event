@@ -68,25 +68,40 @@ def _public(url: str) -> bool:
         if parsed.scheme not in ("http", "https") or not parsed.hostname:
             return False
         infos = socket.getaddrinfo(parsed.hostname, parsed.port or 443, type=socket.SOCK_STREAM)
-        return bool(infos) and all(ipaddress.ip_address(i[4][0].split("%")[0]).is_global for i in infos)
+        return bool(infos) and all(_global(ipaddress.ip_address(i[4][0].split("%")[0])) for i in infos)
     except (OSError, ValueError, UnicodeError):  # unresolvable or malformed: refuse
         return False
 
 
-class _PublicOnly(urllib.request.BaseHandler):
-    """Refuses every request, the first one and each redirect, to a non-public destination."""
+_NAT64 = ipaddress.ip_network("64:ff9b::/96")
 
-    def http_request(self, req):
+
+def _global(ip) -> bool:
+    """Global, and so is any IPv4 address it embeds (NAT64, 6to4)."""
+    if ip.version == 6:
+        embedded = ip.sixtofour or (ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF) if ip in _NAT64 else None)
+        if embedded is not None and not embedded.is_global:
+            return False
+    return ip.is_global
+
+
+class _PublicOnly(urllib.request.BaseHandler):
+    """Refuses every open, the first one and each redirect, of a non-public or non-http(s) URL."""
+
+    def default_open(self, req):  # runs before any scheme's own handler
         if not _public(req.full_url):
             raise urllib.error.URLError(f"non-public destination refused: {req.full_url}")
-        return req
-
-    https_request = http_request
+        return None
 
 
 _redirects = urllib.request.HTTPRedirectHandler()
 _redirects.max_redirections = 5
-_OPENER = urllib.request.build_opener(_PublicOnly, _redirects)
+# http and https only: no FTP, file or data handler, so even a wrong address check cannot dial another protocol
+_OPENER = urllib.request.OpenerDirector()
+for _handler in (urllib.request.ProxyHandler(), urllib.request.UnknownHandler(), urllib.request.HTTPHandler(),
+                 urllib.request.HTTPSHandler(), urllib.request.HTTPDefaultErrorHandler(), _redirects,
+                 urllib.request.HTTPErrorProcessor(), _PublicOnly()):
+    _OPENER.add_handler(_handler)
 
 
 def _needs_hop(ev: ExtractedEvent) -> bool:
