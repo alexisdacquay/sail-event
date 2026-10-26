@@ -1,5 +1,12 @@
 # ProjectOne — work state (resumable)
 
+## 2026-10-26 00:50 UTC — change freeze; main ac54483 on dev, prod still 969a161
+
+- Merged to main (dev) on 25-26 Oct: PR 144 (speed, text event pages, concurrency 10, judge fixes), 146 (screened out + live counts), 147 (Exa search), 148 (not scored yet, labels), 149 (duplicates: one exact skip + LLM check after storage), 150 (delete events without a start time; drop the (user, link, date_time) rule), 151 (listing events get their own page on any host; tests offline; internal-address guard), 152 (README for reviewers, docs/reviewer-guide.md, reviewer-guide skill).
+- Blind review of the docs branch: 23/24 from all three reviewers; the lost point is Observability (calendar token can reach HTTP span paths; metrics have no trace id; dashboard traces panel errors). Listed in docs/reviewer-guide.md Known gaps.
+- Freeze: owner, 2026-10-26: no new work. Deadline: Project 1 due 2026-10-26 23:00 (course platform).
+- PROD PROMOTE CHECKLIST (owner only): 1) take a prod DB backup in Render (sail-event-db -> Recovery): PR 150 deletes 3,279 date-only events on prod, 603 of them in users' calendars, irreversible; 2) set on sail-event (prod): EXA_API_KEY, SEARCH_PROVIDER=exa, MAX_RESULTS_PER_QUERY=10; 3) promote.yml -f sha=<checked dev sha>.
+
 ## 2026-10-25 — merged to main (dev only, prod still 969a161)
 
 - Owner decision: search switches to Exa (live pages, 0 stale copies vs Tavily's 11 Sep arclight copy). Branch search-exa adds `SEARCH_PROVIDER=exa` (`adapters/search_exa.py`); owner sets `EXA_API_KEY` and `SEARCH_PROVIDER=exa` on sail-event-dev; Tavily stays selectable.
