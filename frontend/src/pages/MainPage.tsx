@@ -22,7 +22,7 @@ import {
   getCalendarUrl,
   rotateCalendarUrl,
 } from '@/services/api'
-import type { Event, RunSummary, SearchResult } from '@/services/api'
+import type { Event, RunSummary, SearchResult, Thresholds } from '@/services/api'
 
 const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
@@ -185,7 +185,8 @@ export function MainPage() {
   const [lower, setLower] = useState(0)
   const [upper, setUpper] = useState(100)
   const [scoringSaved, setScoringSaved] = useState(false)
-  const [scoringError, setScoringError] = useState('')
+  const [savedThresholds, setSavedThresholds] = useState<Thresholds | null>(null)
+  const [failedScoring, setFailedScoring] = useState<Thresholds | null>(null)
   const [scoringSaving, setScoringSaving] = useState(false)
 
   const [searching, setSearching] = useState(false)
@@ -207,6 +208,8 @@ export function MainPage() {
   const tieRef = useRef<SVGSVGElement>(null)
 
   const thresholdInvalid = !(lower >= 0 && lower < upper && upper <= 100)
+  const scoringCurrent = savedThresholds?.lowerThreshold === lower && savedThresholds?.upperThreshold === upper
+  const scoringError = failedScoring?.lowerThreshold === lower && failedScoring?.upperThreshold === upper
 
   const refreshEvents = useCallback(async () => {
     try {
@@ -233,6 +236,7 @@ export function MainPage() {
     getThresholds().then((t) => {
       setLower(t.lowerThreshold)
       setUpper(t.upperThreshold)
+      setSavedThresholds(t)
     })
     getCalendarUrl().then((r) => setCalendarUrl(r.url))
     refreshEvents()
@@ -282,23 +286,32 @@ export function MainPage() {
     }, 3000)
   }
 
-  async function handleSaveScoring() {
-    if (thresholdInvalid) return
-    setScoringSaving(true)
-    setScoringSaved(false)
-    setScoringError('')
-    try {
-      const saved = await saveThresholds({ lowerThreshold: lower, upperThreshold: upper })
-      setLower(saved.lowerThreshold)
-      setUpper(saved.upperThreshold)
-      setScoringSaved(true)
-      setTimeout(() => setScoringSaved(false), 2000)
-    } catch {
-      setScoringError("Couldn't save. Try again.")
-    } finally {
-      setScoringSaving(false)
-    }
-  }
+  useEffect(() => {
+    // Wait for loading and serialize writes so an older request cannot win.
+    if (!savedThresholds || thresholdInvalid || scoringCurrent || scoringSaving || scoringError) return
+    const timer = setTimeout(async () => {
+      const pair = { lowerThreshold: lower, upperThreshold: upper }
+      setScoringSaving(true)
+      setScoringSaved(false)
+      try {
+        const saved = await saveThresholds(pair)
+        // Keep any edits made while the request was in flight.
+        setSavedThresholds(saved)
+        setScoringSaved(true)
+      } catch {
+        setFailedScoring(pair)
+      } finally {
+        setScoringSaving(false)
+      }
+    }, 600)
+    return () => clearTimeout(timer)
+  }, [lower, upper, savedThresholds, thresholdInvalid, scoringCurrent, scoringSaving, scoringError])
+
+  useEffect(() => {
+    if (!scoringSaved) return
+    const timer = setTimeout(() => setScoringSaved(false), 2000)
+    return () => clearTimeout(timer)
+  }, [scoringSaved])
 
   /** One action: save what is in the box (PUT), then start the run (POST). While a run goes, only save. */
   async function handleSearch(e?: FormEvent) {
@@ -405,7 +418,7 @@ export function MainPage() {
   const earlier = runs.filter((r) => r.runId !== lastRun?.runId)
 
   return (
-    <div ref={screenRef} className="relative grid grid-cols-1 gap-6 md:grid-cols-[1fr_260px] md:gap-8 items-start">
+    <div ref={screenRef} className="relative grid grid-cols-1 gap-6 md:grid-cols-[1fr_288px] md:gap-8 items-start">
       <div className="min-w-0">
         {/* Search box: one form, Search takes whatever is in the box */}
         <form data-testid="search-box" className={`${PANEL} text-sm`} onSubmit={handleSearch}>
@@ -558,16 +571,13 @@ export function MainPage() {
           <p className="text-sm">{criteriaText || <span className="text-muted-foreground">no search yet</span>}</p>
           <button disabled title="coming later" className="mt-1 text-sm text-muted-foreground disabled:opacity-60">+ new search</button>
         </div>
-        <details data-testid="scoring-card" className="text-sm">
+        <details open data-testid="scoring-card" className="text-sm">
           <summary className={`cursor-pointer ${label}`}>Scoring</summary>
           <div className="mt-2 grid gap-3">
-            <ScoreScale lower={lower} upper={upper} onChange={(l, u) => { setLower(l); setUpper(u) }} />
+            <ScoreScale lower={lower} upper={upper} onChange={(l, u) => { setLower(l); setUpper(u); setScoringSaved(false); setFailedScoring(null) }} />
             <div className="flex items-center gap-2">
-              <Button size="sm" aria-label="Save scoring" disabled={thresholdInvalid || scoringSaving} onClick={handleSaveScoring}>
-                Save
-              </Button>
-              {scoringSaved && <span role="status" className="font-medium text-accent-foreground">Saved.</span>}
-              {scoringError && <span className="text-destructive">{scoringError}</span>}
+              {scoringSaved && scoringCurrent && <span role="status" className="font-medium text-accent-foreground">Saved.</span>}
+              {scoringError && <span role="alert" className="text-destructive">Couldn't save. Try again.</span>}
             </div>
           </div>
         </details>

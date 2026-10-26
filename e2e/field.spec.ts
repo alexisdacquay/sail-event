@@ -38,7 +38,8 @@ test("U2 the Judged line matches the rows", async ({ page }) => {
 
 test("U3 slider knobs equal the boxes", async ({ page }) => {
   await signUp(page);
-  await page.getByText("Scoring", { exact: true }).click();
+  // Wait for persisted thresholds before comparing boxes and thumbs.
+  await expect(page.getByRole("spinbutton", { name: "Auto-accept above" })).toHaveValue("90");
   for (const name of ["Auto-reject below", "Auto-accept above"]) {
     const box = await page.getByRole("spinbutton", { name }).inputValue();
     await expect(page.getByRole("slider", { name })).toHaveAttribute("aria-valuenow", box);
@@ -46,20 +47,33 @@ test("U3 slider knobs equal the boxes", async ({ page }) => {
 });
 
 test("U3 the zone legend is not clipped on a narrow desktop", async ({ page }) => {
-  test.fail(true, "legend clipped: 'ı your cale' (#94)");
   await page.setViewportSize({ width: 700, height: 900 });
   await signUp(page);
-  await page.getByText("Scoring", { exact: true }).click();
-  const clipped = await page
-    .getByTestId("scoring-card")
-    .locator("*")
-    .evaluateAll((els) =>
-      els
-        // visible, wider than the 1px sr-only legend, and overflowing
-        .filter((e) => (e as HTMLElement).offsetParent !== null && e.clientWidth > 1 && e.scrollWidth > e.clientWidth + 1)
-        .map((e) => e.textContent?.trim())
-    );
-  expect(clipped).toEqual([]);
+  const scoring = page.getByTestId("scoring-card");
+  await expect(scoring).toHaveAttribute("open", "");
+  await expect(page.getByRole("spinbutton", { name: "Auto-accept above" })).toHaveValue("90");
+  for (const width of [700, 900, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const [lower, upper] of [[40, 90], [24, 72], [5, 95], [45, 55]]) {
+      await page.getByRole("spinbutton", { name: "Auto-reject below" }).fill(String(lower));
+      await page.getByRole("spinbutton", { name: "Auto-accept above" }).fill(String(upper));
+      for (const label of ["Out", "You decide", "On your calendar"]) {
+        await expect(scoring.getByText(label, { exact: true }).first()).toBeVisible();
+      }
+      const clipped = await scoring.locator("*").evaluateAll((els) =>
+        els
+          // visible, wider than the 1px sr-only legend, and overflowing
+          .filter((e) => (e as HTMLElement).offsetParent !== null && e.clientWidth > 1 && e.scrollWidth > e.clientWidth + 1)
+          .map((e) => e.textContent?.trim())
+      );
+      expect(clipped, `legend at ${width}px, thresholds ${lower}/${upper}`).toEqual([]);
+    }
+  }
+  // The expanded section can still be collapsed and reopened.
+  await scoring.locator("summary").click();
+  await expect(page.getByRole("spinbutton", { name: "Auto-reject below" })).toBeHidden();
+  await scoring.locator("summary").click();
+  await expect(page.getByRole("spinbutton", { name: "Auto-reject below" })).toBeVisible();
 });
 
 test("U4 copy gives feedback", async ({ page, context }) => {

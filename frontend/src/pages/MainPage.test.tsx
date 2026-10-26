@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { MainPage, groupByDay, mostlyReason, runHeader, stageFraction, stageLines, stageText } from './MainPage'
 import type { Event, SearchResult } from '@/services/api'
@@ -37,6 +37,10 @@ async function mockEvents(events: Event[]) {
 
 beforeEach(() => {
   vi.restoreAllMocks()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('Stream page from mock data', () => {
@@ -337,19 +341,113 @@ describe('Stream page rail', () => {
     expect(screen.getByTestId('copy-calendar-url')).toHaveTextContent('Copy')
   })
 
-  it('scoring stays reachable: validation and save', async () => {
-    renderMainPage()
-    const lower = await screen.findByRole('spinbutton', { name: 'Auto-reject below' })
+
+})
+
+
+describe('Scoring auto-save (#157)', () => {
+  async function setupScoring() {
+    const api = await import('@/services/api')
+    vi.spyOn(api, 'getThresholds').mockResolvedValue({ lowerThreshold: 30, upperThreshold: 70 })
+    const save = vi.spyOn(api, 'saveThresholds').mockImplementation(async (pair) => pair)
+    const view = renderMainPage()
+    const lower = screen.getByRole('spinbutton', { name: 'Auto-reject below' })
     const upper = screen.getByRole('spinbutton', { name: 'Auto-accept above' })
     await waitFor(() => expect(lower).toHaveValue(30))
-    fireEvent.change(lower, { target: { value: '80' } })
-    fireEvent.change(upper, { target: { value: '50' } })
+    vi.useFakeTimers()
+    return { ...view, lower, upper, save }
+  }
+
+  it('starts open with visible thresholds and no Save button', async () => {
+    await setupScoring()
+    expect(screen.getByTestId('scoring-card')).toHaveAttribute('open')
+    expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument()
+  })
+
+  it('does not save the initial values', async () => {
+    const { save } = await setupScoring()
+    await act(() => vi.advanceTimersByTimeAsync(1000))
+    expect(save).not.toHaveBeenCalled()
+  })
+
+  it('debounces number and slider edits for 600 ms, then briefly confirms Saved', async () => {
+    const { lower, save } = await setupScoring()
+    fireEvent.change(lower, { target: { value: '24' } })
+    await act(() => vi.advanceTimersByTimeAsync(300))
+    fireEvent.change(screen.getByRole('slider', { name: 'Auto-accept above' }), { target: { value: '72' } })
+    await act(() => vi.advanceTimersByTimeAsync(599))
+    expect(save).not.toHaveBeenCalled()
+    await act(() => vi.advanceTimersByTimeAsync(1))
+    expect(save).toHaveBeenCalledExactlyOnceWith({ lowerThreshold: 24, upperThreshold: 72 })
+    expect(screen.getByText('Saved.')).toHaveAttribute('role', 'status')
+    await act(() => vi.advanceTimersByTimeAsync(2000))
+    expect(screen.queryByText('Saved.')).not.toBeInTheDocument()
+  })
+
+  it.each([[50, 50], [80, 50], [-1, 70], [30, 101]])('does not save invalid thresholds %s/%s', async (l, u) => {
+    const { lower, upper, save } = await setupScoring()
+    fireEvent.change(lower, { target: { value: String(l) } })
+    fireEvent.change(upper, { target: { value: String(u) } })
+    await act(() => vi.advanceTimersByTimeAsync(1000))
+    expect(save).not.toHaveBeenCalled()
     expect(screen.getByText('The auto-accept line must be higher than the auto-reject line.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Save scoring' })).toBeDisabled()
-    fireEvent.change(lower, { target: { value: '20' } })
-    fireEvent.change(upper, { target: { value: '90' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Save scoring' }))
-    await waitFor(() => expect(screen.getByText('Saved.')).toBeInTheDocument())
+    expect(screen.queryByText('Saved.')).not.toBeInTheDocument()
+  })
+
+  it('cancels a pending save when an edit becomes invalid, then saves a corrected pair', async () => {
+    const { lower, upper, save } = await setupScoring()
+    fireEvent.change(lower, { target: { value: '24' } })
+    await act(() => vi.advanceTimersByTimeAsync(300))
+    fireEvent.change(upper, { target: { value: '24' } })
+    await act(() => vi.advanceTimersByTimeAsync(1000))
+    expect(save).not.toHaveBeenCalled()
+    fireEvent.change(upper, { target: { value: '72' } })
+    await act(() => vi.advanceTimersByTimeAsync(600))
+    expect(save).toHaveBeenCalledExactlyOnceWith({ lowerThreshold: 24, upperThreshold: 72 })
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('keeps later edits while a save is in flight and saves them in order', async () => {
+    const { lower, upper, save } = await setupScoring()
+    let finishSave!: (pair: { lowerThreshold: number; upperThreshold: number }) => void
+    save.mockImplementationOnce(() => new Promise((resolve) => { finishSave = resolve }))
+    fireEvent.change(lower, { target: { value: '24' } })
+    await act(() => vi.advanceTimersByTimeAsync(600))
+    expect(save).toHaveBeenCalledTimes(1)
+    fireEvent.change(upper, { target: { value: '72' } })
+    await act(() => vi.advanceTimersByTimeAsync(700))
+    expect(save).toHaveBeenCalledTimes(1)
+    await act(async () => finishSave({ lowerThreshold: 24, upperThreshold: 70 }))
+    expect(upper).toHaveValue(72)
+    expect(screen.queryByText('Saved.')).not.toBeInTheDocument()
+    await act(() => vi.advanceTimersByTimeAsync(600))
+    expect(save).toHaveBeenLastCalledWith({ lowerThreshold: 24, upperThreshold: 72 })
+    expect(save).toHaveBeenCalledTimes(2)
+    expect(screen.getByText('Saved.')).toBeInTheDocument()
+  })
+
+  it('shows save failures without retrying in a loop, and retries after a new edit', async () => {
+    const { lower, save } = await setupScoring()
+    save.mockRejectedValueOnce(new Error('offline'))
+    fireEvent.change(lower, { target: { value: '24' } })
+    await act(() => vi.advanceTimersByTimeAsync(600))
+    expect(screen.getByText("Couldn't save. Try again.")).toBeInTheDocument()
+    expect(screen.queryByText('Saved.')).not.toBeInTheDocument()
+    await act(() => vi.advanceTimersByTimeAsync(3000))
+    expect(save).toHaveBeenCalledTimes(1)
+    fireEvent.change(lower, { target: { value: '25' } })
+    await act(() => vi.advanceTimersByTimeAsync(600))
+    expect(save).toHaveBeenLastCalledWith({ lowerThreshold: 25, upperThreshold: 70 })
+    expect(screen.getByText('Saved.')).toBeInTheDocument()
+    expect(screen.queryByText("Couldn't save. Try again.")).not.toBeInTheDocument()
+  })
+
+  it('cancels a pending save on unmount', async () => {
+    const { lower, save, unmount } = await setupScoring()
+    fireEvent.change(lower, { target: { value: '24' } })
+    unmount()
+    await act(() => vi.advanceTimersByTimeAsync(1000))
+    expect(save).not.toHaveBeenCalled()
   })
 })
 

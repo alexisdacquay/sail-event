@@ -107,26 +107,17 @@ export function ScoreScale({ lower, upper, onChange }: ScoreScaleProps) {
         </span>
       </div>
 
-      {/* Zone legend — desktop: labels sized to their zone */}
-      <div className="hidden sm:flex text-[13px] font-medium">
-        <span
-          style={{ flexBasis: `${l}%` }}
-          className="flex items-center justify-center gap-1 truncate"
-        >
+      {/* Zone legend — labels keep their natural width and wrap as needed. */}
+      <div className="hidden sm:flex flex-wrap gap-x-3 gap-y-1 text-[13px] font-medium">
+        <span className="flex items-center gap-1 shrink-0">
           <span className="size-2 rounded-full bg-zone-rejected shrink-0" aria-hidden="true" />
           Out
         </span>
-        <span
-          style={{ flexBasis: `${u - l}%` }}
-          className="flex items-center justify-center gap-1 truncate"
-        >
+        <span className="flex items-center gap-1 shrink-0">
           <span className="size-2 rounded-full bg-zone-decide shrink-0" aria-hidden="true" />
           You decide
         </span>
-        <span
-          style={{ flexBasis: `${100 - u}%` }}
-          className="flex items-center justify-center gap-1 truncate"
-        >
+        <span className="flex items-center gap-1 shrink-0">
           <span className="size-2 rounded-full bg-zone-calendar shrink-0" aria-hidden="true" />
           On your calendar
         </span>
