@@ -80,7 +80,7 @@ flowchart LR
     V -- No --> E
     V -- Yes: record decision --> S
     S -- green CI --> M[Owner authorizes merge]
-    M --> D[Merge: dev; close issue]
+    M --> D[Merge to dev, close issue]
     D --> A[Owner checks dev and names prod commit]
     A --> R[Manual prod promote]
 ```

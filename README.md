@@ -108,20 +108,20 @@ sequenceDiagram
     O->>PM: Brief and role instructions
     PM-->>O: Groomed issue
     O->>E: Brief and issue
-    E->>CI: Commits and PR; tests run
+    E->>CI: Commits and PR, tests run
     E-->>O: PR and implementation evidence
     O->>QA: Issue, PR and exact commit to check
     QA-->>O: PASS or FAIL per criterion
     loop While QA reports FAIL
         O->>E: Findings to fix
-        E->>CI: Fix commits; tests rerun
+        E->>CI: Fix commits, tests rerun
         E-->>O: New commit and evidence
         O->>QA: Re-check new commit
         QA-->>O: Updated verdict
     end
     O->>Owner: PR, QA PASS and green CI
     Owner->>O: "merge"
-    O->>CI: Merge; close issue
+    O->>CI: Merge, close issue
 ```
 
 If a criterion remains unmet, the orchestrator sends its evidence to the owner, who grants or rejects an explicit waiver before merge; QA's verdict remains FAIL. The [process](_docs/process.md) records handoffs and exceptions. Bug fixes require a causal explanation, a regression test committed while failing, then a passing fix.
@@ -155,7 +155,7 @@ flowchart LR
     D --> C[Owner checks dev and names commit]
     C --> A[Owner approves that SHA]
     A --> W[Manual promote workflow]
-    W --> H[Deploy SHA; verify prod health and commit]
+    W --> H[Deploy SHA, verify prod health and commit]
 ```
 
 [CI](.github/workflows/ci.yml) also runs on main pushes. Dev deploys without waiting for that run; responder unit tests are outside CI. The [promote workflow](.github/workflows/promote.yml) checks health and commit identity. Rollback across the three migrations from PRs #128/#150 is untested; #150's deletion is irreversible. See [release procedure](docs/release-process.md).

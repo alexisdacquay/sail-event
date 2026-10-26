@@ -13,12 +13,12 @@ sequenceDiagram
     actor Human
     App->>Graf: Error-run metric rises after injected fault
     Graf->>Resp: Firing alert, POST /alerts with Bearer secret
-    Resp->>Resp: Save alert; collect metrics, logs, health, git log
+    Resp->>Resp: Save alert, collect metrics, logs, health, git log
     Resp->>Agent: Versioned task + fenced evidence, worktree from local HEAD
     Agent->>Agent: Investigate, fix, test, commit on incident branch
     Agent-->>Resp: verdict.json
-    Resp->>Resp: Save verdict and agent log; remove worktree
-    Human->>Human: Review branch; decide whether to deploy
+    Resp->>Resp: Save verdict and agent log, remove worktree
+    Human->>Human: Review branch, decide whether to deploy
     Note over Human: fix.diff was saved manually after recorded drills
 ```
 
