@@ -33,7 +33,7 @@ Final project for the [DataTalksClub AI Dev Tools Zoomcamp 2026](https://github.
 
 ## Problem
 
-Small events are scattered across sites and feeds; no single source lists them all. Calendar aggregation collects known listings. A web search returns pages, not checked events in your calendar: you still have to verify dates, place and fit, copy the events you want, and repeat discovery as listings change.
+Small events are scattered across sites and feeds; no single source lists them all. Calendar aggregators only collect listings from sources they already know. A web search returns pages, not checked events in your calendar: you still have to verify dates, place and fit, copy the events you want, and repeat discovery as listings change.
 
 ## What it does
 
@@ -47,21 +47,23 @@ The app searches with your criteria text plus `event`, extracts listings and att
 
 Thresholds are configurable; comparisons include equality ([pipeline test][t-ge-le]). A final [model duplicate check](backend/app/services/dedup.py) moves duplicate events to Out; model errors or exhausted budgets can leave duplicates.
 
-An [hourly GitHub cron](.github/workflows/hourly-search.yml) queues production searches, but observed runs are hours apart; the [guide's schedule evidence](docs/reviewer-guide.md#1-problem-description) explains the delays. Dev has no scheduled searches.
+An [hourly GitHub cron](.github/workflows/hourly-search.yml) queues production searches, but observed runs are hours apart; the [guide's schedule evidence](docs/reviewer-guide.md#1-problem-description) measures the gaps. Dev has no scheduled searches.
 
 ## Expected behaviour
 
 | Situation | Expected result | Evidence |
 |---|---|---|
 | Another user signs in | Separate criteria and events | [Isolation test][t-iso] |
-| The fixture search repeats | No duplicate accepted/queued events in this scenario; rejected repeat rows may remain | [Integration test][t-dedup] |
+| The fixture search repeats | No event shows twice in In calendar or Review | [Integration test][t-dedup] |
 | An event is rejected | Stays Out after later searches; disappears from the feed | [Rejection][t-rej], [feed test][t-feed] |
 | Thresholds are saved | Survive reloads and govern subsequent triage | [Browser journey][j1-reload], [pipeline](backend/app/services/pipeline.py) |
 | Someone holds the feed URL | Can read it without signing in; resetting invalidates the old URL | [Rotation test][t-rotate] |
 
 Calendar apps control feed refresh timing. There are no email/push notifications or direct Google Calendar writes; see [MVP scope](_docs/plan.md#out-of-scope-for-the-mvp).
 
-## Try it
+<a id="try-it"></a>
+
+## Run it locally
 
 ```bash
 docker compose up --build
@@ -124,9 +126,9 @@ flowchart LR
     H --> R[Orchestrator routes the next handoff]
 ```
 
-[`CLAUDE.md`](CLAUDE.md) imports AGENTS.md. PM adds the [task template](_docs/task-template.md); Engineer reads architecture and API contract; QA reads criteria and the submitted work. [`work/STATE.md`](work/STATE.md) preserves active work and next actions across sessions; [skills](.claude/skills/) supply specialist procedures. [Launch details](_docs/process.md#how-the-orchestrator-starts-an-agent) include a recorded brief and re-check handling.
+[`CLAUDE.md`](CLAUDE.md) imports AGENTS.md. PM also reads the [task template](_docs/task-template.md); Engineer reads architecture and API contract; QA reads criteria and the submitted work. [`work/STATE.md`](work/STATE.md) preserves active work and next actions across sessions; [skills](.claude/skills/) supply specialist procedures. [Launch details](_docs/process.md#how-the-orchestrator-starts-an-agent) include a recorded brief and re-check handling.
 
-## How it is built
+## Architecture
 
 React/TypeScript → FastAPI/Python → Postgres (SQLite for `make run`). [`openapi.yaml`](openapi.yaml) defines the API. Environment variables select search, model and guardrail adapters; [architecture](_docs/architecture.md) explains the interfaces. The [Dockerfile](Dockerfile) builds the frontend and serves it with the API; Compose adds persistent Postgres.
 
@@ -140,7 +142,7 @@ flowchart LR
     I --> M[Owner: merge]
     M --> D[Main update: Render deploys dev]
     D --> C[Owner checks dev and names commit]
-    C --> A[Owner: push to prod]
+    C --> A[Owner approves that SHA]
     A --> W[Manual promote workflow]
     W --> H[Deploy SHA; verify prod health and commit]
 ```
@@ -174,12 +176,12 @@ Run the local demo search and allow about 60 seconds for metrics. Open Grafana a
 
 The [alerts](observability/grafana/provisioning/alerting/rules.yaml) detect repeated failed searches over ten minutes and inactivity over two hours; the silence rule needs reassessment before monitoring the live schedule. The [responder](incident-response/responder.py) collects metrics, health and commits, attempts a log query, then starts `claude -p` from its checkout's HEAD in a separate worktree, with a $1 budget, 300-second timeout and no push tool. It does not select the deployed revision automatically.
 
-Two injected-fault drills are recorded: [17 October](incident-response/incidents/20261017-052050-SearchRunFailures/) and [21 October 2026](incident-response/incidents/20261021-074150-SearchRunFailures/). The latter took **4 min 52 s from alert to repair commit**; no successful post-fix search or resolved alert is recorded. Follow the [on-call guide](incident-response/README.md) to repeat it with Docker and a signed-in Claude CLI; `--dry-run` checks the chain without a model call.
+The injected-fault drills on [17 October](incident-response/incidents/20261017-052050-SearchRunFailures/) and [21 October 2026](incident-response/incidents/20261021-074150-SearchRunFailures/) are recorded. The latter took **4 min 52 s from alert to repair commit**; no successful post-fix search or resolved alert is recorded. Follow the [on-call guide](incident-response/README.md) to repeat it with Docker and a signed-in Claude CLI; `--dry-run` checks the chain without a model call.
 
 ## Known gaps
 
-- **Process:** incomplete grooming/QA records, orchestrator overreach, direct pushes and red merges; see [Guide §2](docs/reviewer-guide.md#2-product-specification), [§3](docs/reviewer-guide.md#3-agent-team-specification) and [§9](docs/reviewer-guide.md#9-cicd).
-- **Product:** discovery and model judgments are imperfect; no-place criteria can auto-accept, past rows remain listed, and restoring an Out event returns HTTP 400 ([Guide §1](docs/reviewer-guide.md#1-problem-description), [§5](docs/reviewer-guide.md#5-application)).
+- **Process:** incomplete grooming/QA records, orchestrator overreach, direct pushes and red merges; see [Guide §2](docs/reviewer-guide.md#2-product-specification), [§3](docs/reviewer-guide.md#3-agent-team-specification) and [§9](docs/reviewer-guide.md#9-cicd). Worktrees and PR review began with [#65](https://github.com/alexisdacquay/sail-event/issues/65) on 20 October 2026; QA began using its agent definition that day. Owner pick and prod approval began on 21 October 2026.
+- **Product:** a full recall run (local, 24 October 2026 at 20:04 UTC, commit `ab21641`, before linked event-page fetching) found 3 of 38 ground-truth events and accepted none; the ground truth is unvetted ([recall log](work/RECALL.md#2026-10-24-2004-utc----recall-measurement----httplocalhost8032----ab21641)). No-place criteria can auto-accept, [past rows remain listed (#94)](https://github.com/alexisdacquay/sail-event/issues/94), and restoring an Out event returns HTTP 400 ([Guide §1](docs/reviewer-guide.md#1-problem-description), [§5](docs/reviewer-guide.md#5-application)). Open defects: [open issues](https://github.com/alexisdacquay/sail-event/issues?q=is%3Aissue+is%3Aopen).
 - **Operations evidence:** empty Loki drill evidence, weak incident test claims and broad agent file access are detailed in [Guide §12](docs/reviewer-guide.md#12-on-call-agent).
 
 The [reviewer guide](docs/reviewer-guide.md) indexes further gaps and evidence; [`AGENTS.md`](AGENTS.md) indexes all product, process and operations documents.

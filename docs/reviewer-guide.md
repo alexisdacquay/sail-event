@@ -2,7 +2,7 @@
 
 Sail-event turns a free-text event search into scored events and a personal ICS feed. [Production](https://sail-event.onrender.com) · [Dev](https://sail-event-dev.onrender.com) · [Local setup](../README.md#try-it).
 
-Each criterion below has the rubric's levels, a phrase-by-phrase checklist, the evidence against the lower level, extras, a picture where useful, and known gaps. Proof checks mean inspecting a linked file, record or screenshot; building and running the system takes longer.
+Each criterion below has the rubric's levels, a phrase-by-phrase checklist, the evidence against the lower level, extras, a picture where useful, and known gaps. Each proof is a file, record or screenshot you can open in under a minute.
 
 Rubric: [saved copy](../work/rubric-2026-10-16.md), compared with the [course source](https://github.com/DataTalksClub/ai-dev-tools-zoomcamp/tree/main/project) on 2026-10-26. Source links were checked at `542e58cb0fe73065a905febec7637bfa377a77c4` on 2026-10-26. Check the deployed commit with `curl -fsS https://sail-event.onrender.com/api/health`.
 
@@ -79,11 +79,12 @@ The [expected-behavior table](../README.md#expected-behaviour) links the product
 
 ![Local recorded demo: selected Review row, score and reason, calendar actions, and the Out show toggle](images/review-06-review-detail.png)
 
-Local demo data, with the application clock fixed at 18 October 2026 so the 19–21 October fixtures remain usable. The chronology also shows two failed event-page fetches.
+Local demo data. The server clock is fixed at 18 October 2026 so the 19–21 October fixtures remain usable; the run time and mini-calendar show the real capture date, 26 October. The chronology also shows two failed event-page fetches.
 
 **Known gaps**
 
 - “Hourly” describes the GitHub cron, not a delivery guarantee. The 50 scheduled runs inspected on 2026-10-26 had gaps of **2.1–7.8 hours**; [reproduce the measurement](#schedule-measurement).
+- Each scheduled run queues at most 50 users by default (`MAX_SCHEDULED_USERS`); the [2026-10-26 12:51 UTC run](https://github.com/alexisdacquay/sail-event/actions/runs/40325804781) queued 50 and skipped 23. [Read the recorded output](#schedule-measurement).
 - Criteria without a place can still auto-accept events; [#101](https://github.com/alexisdacquay/sail-event/issues/101), which requires queuing them instead, is unshipped ([search spec](../_docs/search-spec.md#3-criteria-understanding)).
 - Price rules are unsupported; other product exclusions are in [the PRD](../_docs/plan.md#out-of-scope-for-the-mvp).
 
@@ -103,8 +104,8 @@ Local demo data, with the application clock fixed at 18 October 2026 so the 19�
 |---|---|---|
 | A specification exists | [PRD](../_docs/plan.md) · [search spec](../_docs/search-spec.md) · [API contract](../openapi.yaml) | Product behavior, quality targets and API operations are written down. |
 | publicly accessible task tracker | [GitHub Issues](https://github.com/alexisdacquay/sail-event/issues?q=is%3Aissue) | Issues and comments are readable in the public repository. |
-| The tasks define acceptance criteria | [task template](../_docs/task-template.md) · [issue #11](https://github.com/alexisdacquay/sail-event/issues/11) | The example has Goal, Acceptance criteria, Out of scope and Constraints. Coverage counts and exceptions are below. |
-| evidence that the agents used the tracker | [#11 edit history and comments](https://github.com/alexisdacquay/sail-event/issues/11) · [PR #149 QA](https://github.com/alexisdacquay/sail-event/pull/149) | Body rewrite, implementation report, and a per-criterion QA PASS are preserved as separate artifacts. Role labels are project attribution, not separate GitHub identities. |
+| The tasks define acceptance criteria | [task template](../_docs/task-template.md) · [issue #11](https://github.com/alexisdacquay/sail-event/issues/11) | Among issues #1–#152, 91 of 96 contain acceptance criteria; 58 use all four template sections (2026-10-26; command in [Tracker evidence](#tracker-evidence)). |
+| evidence that the agents used the tracker | [#11 edit history and comments](https://github.com/alexisdacquay/sail-event/issues/11) · [PR #149 QA](https://github.com/alexisdacquay/sail-event/pull/149) | Among issues #1–#152, 69 carry a QA verdict; 23 include a FAIL requesting a fix (2026-10-26; [command](#tracker-evidence)). Issue #11 preserves its body rewrite, implementation report and per-criterion QA PASS. |
 
 **Why not the lower score**
 
@@ -119,9 +120,9 @@ Local demo data, with the application clock fixed at 18 October 2026 so the 19�
 
 **Known gaps**
 
-- On 2026-10-26, **38 of 96 issue bodies** lacked at least one template heading; **27** were closed. **91** contained “acceptance criteria”. [Tracker audit](#tracker-audit) gives the filters and exceptions.
-- **14 of 42 merged PRs** from #66 onward lacked a PR QA heading; some closed or merged work had no verdict or no fresh PASS after FAIL. [Exception records](#tracker-audit) distinguish these cases.
-- Shared GitHub authorship, incomplete role headings and **21 issues** without MVP/post-MVP labels limit attribution and classification; [the audit](#tracker-audit) lists them.
+- Among issues #1–#152 on 2026-10-26, **38 of 96 issue bodies** lacked at least one template heading; **27** were closed. [Tracker evidence](#tracker-evidence) gives the filters and exceptions.
+- **14 of 42 merged PRs** in #66–#152 lacked a PR QA heading; some closed or merged work had no verdict or no fresh PASS after FAIL. [Exception records](#tracker-evidence) distinguish these cases.
+- Shared GitHub authorship, incomplete role headings and **21 issues** in #1–#152 without MVP/post-MVP labels limit attribution and classification; [the evidence](#tracker-evidence) lists them.
 
 ## 3. Agent team specification
 
@@ -152,7 +153,7 @@ The first two rows check the preceding level: role names and clear responsibilit
 1. The owner selects work; the orchestrator starts a PM task with [pm.md](../_docs/team/pm.md), the issue and [task template](../_docs/task-template.md). PM rewrites the body; it does not implement code. [Recorded launches](../_docs/process.md#how-the-orchestrator-starts-an-agent) use background `general-purpose` tasks for PM and engineer, with the role file and read list supplied in the brief.
 2. The orchestrator starts an engineer task with [software-engineer.md](../_docs/team/software-engineer.md) and the groomed issue. In Phase 2 the engineer uses its own copy of the repository on a separate branch, implements within scope and opens a PR with its report. It may question criteria in a comment, not rewrite them or close the issue.
 3. CI runs on the PR. Green CI is the written merge rule; historical violations are listed in §9.
-4. The orchestrator starts a separate QA task, using [qa-engineer.md](../.claude/agents/qa-engineer.md) or the QA role brief. “Fresh” means a separate verification task: read the criteria, inspect/run the code and do not trust the implementation report. QA posts a verdict, edits no files and leaves the issue open.
+4. The orchestrator starts a separate QA task, using [qa-engineer.md](../.claude/agents/qa-engineer.md) or the QA role brief. The QA definition says “Start fresh”: read the criteria, inspect/run the code and do not trust the implementation report. QA posts a verdict, edits no files and leaves the issue open.
 5. FAIL returns the QA comment to the engineer for a fix and re-check. If a criterion remains unmet, the orchestrator sends that criterion and its evidence to the owner, who grants or rejects a waiver; the decision is recorded before merge. QA records its verdict on the PR. A PASS goes to the owner with the PR summary.
 6. The owner authorizes merge in chat; the orchestrator performs it. GitHub may close an issue through `Closes #N`. A merge deploys dev. Production needs separate owner approval for a named SHA; the owner can dispatch the promote workflow or instruct the orchestrator to dispatch that approved SHA. Public run metadata records the dispatch, not the private approval conversation.
 
@@ -160,7 +161,7 @@ The first two rows check the preceding level: role names and clear responsibilit
 
 **Beyond the rubric**
 
-The root-cause/regression rule entered the role files on **2026-10-25** (`c0f83e6`, part of the test-runner PR), then process.md on **2026-10-26** (`ac54483`). Verify with `git log -S 'committed while red' --format='%h %cs %s' -- _docs/team/software-engineer.md` and `git log -S 'Root-cause gate' --format='%h %cs %s' -- _docs/process.md`.
+The root-cause/regression rule entered the role files on **2026-10-25** (`c0f83e6`, part of the test-runner PR), then process.md on **2026-10-26** (`ac54483`). Verify with `git show --format='%h %cs %s' c0f83e6 -- _docs/team/software-engineer.md` and `git show --format='%h %cs %s' ac54483 -- _docs/process.md`.
 
 **Picture**
 
@@ -196,10 +197,10 @@ sequenceDiagram
 
 **Known gaps**
 
-- The orchestrator groomed, edited code and substituted its own verification for QA in recorded cases ([tracker audit](#tracker-audit), [AI usage report](ai-usage-report.md)).
-- Owner control of work selection and production approval began on **2026-10-21** ([state record](../work/STATE.md)); the regression gate began later, as dated above.
+- The orchestrator groomed, edited code and substituted its own verification for QA in recorded cases ([tracker evidence](#tracker-evidence), [AI usage report](ai-usage-report.md)).
+- Owner control of work selection and production approval began on **2026-10-21** ([state record](../work/STATE.md)).
 - QA has Bash. “No edits” rests on instructions and the clean-tree check, not a write-proof sandbox. The runnable QA definition was added on **2026-10-17** (`git log -1 --format='%h %cs %s' a41b405`).
-- QA re-checks can reuse an agent; #7 did so ([launch record](../_docs/process.md#how-the-orchestrator-starts-an-agent)). Dependent parallel changes also need review at their final commit, as [#142](https://github.com/alexisdacquay/sail-event/issues/142) depended on #141.
+- A re-check by the same QA agent keeps its earlier context ([#7](https://github.com/alexisdacquay/sail-event/issues/7), [launch record](../_docs/process.md#how-the-orchestrator-starts-an-agent)). [PR #143](https://github.com/alexisdacquay/sail-event/pull/143) (#142) depended on #141 and merged with no recorded QA verdict at its final commit.
 
 ## 4. Context management
 
@@ -286,11 +287,11 @@ flowchart LR
 **Known gaps**
 
 - Local defaults replay fixture search pages and recorded model answers. Use the pre-filled demo criteria; other text can lack a model recording and remain unscored ([fixture provider][fixture], [fake model][fake]). The backend, HTTP client and database still run normally.
-- `mock.ts` is also selected by a bare frontend dev run when `VITE_API_URL` is absent; it is not limited to tests ([client selection][client]). Use the documented startup commands.
 - The restart assertion compares event **counts**, not event IDs or full contents; the exact-score boundary test seeds its expected statuses instead of exercising triage ([test source][seeded-boundaries]).
-- Search quality after the event-page changes is unmeasured in [the recall log](../work/RECALL.md), and its ground-truth set remains unvetted ([testing](testing.md#field-test-runner-four-phases-against-a-deployed-service)).
+- The full recall run at 2026-10-24 20:04 UTC ([local, `ab21641`](../work/RECALL.md#2026-10-24-2004-utc----recall-measurement----httplocalhost8032----ab21641), before the event-page hop) found **3 of 38** ground-truth events and accepted **none**; the ground truth is unvetted. Recall after the event-page changes is unmeasured ([testing](testing.md#field-test-runner-four-phases-against-a-deployed-service)).
 - Out events offer “Add to calendar”, but the backend returns HTTP 400; the [UI specification](../_docs/ux-spec.md#3e-all-events) records this mismatch.
 - Model duplicate-check failure or budget exhaustion can retain both events ([duplicate checker][duplicate-checker]).
+- Past events remain listed ([#94](https://github.com/alexisdacquay/sail-event/issues/94)). Open defects: [open issues](https://github.com/alexisdacquay/sail-event/issues?q=is%3Aissue+is%3Aopen).
 
 ## 6. Testing
 
@@ -307,8 +308,8 @@ flowchart LR
 | Rubric phrase | Where to look | Proof checkable in under a minute |
 |---|---|---|
 | Both unit and integration tests exist | [backend tests](../backend/tests/) · [frontend tests](../frontend/src/) · [HTTP integration tests][integration] | Unit: pytest and Vitest suites. Integration: HTTP against the container and PostgreSQL, including restart. Results are below. |
-| run with a single command | [Makefile][makefile] | `make test-all` invokes `test`, `test-integration`, `test-e2e` sequentially under normal make execution. |
-| pass | [CI run 40251535674](https://github.com/alexisdacquay/sail-event/actions/runs/40251535674) | At the evidence commit, unit, integration and browser steps passed; see the logs below. |
+| run with a single command | [Makefile][makefile] | `make test-all` invokes `test`, `test-integration` and `test-e2e`. |
+| pass | [Local combined run](#combined-test-run) · [CI run 40251535674](https://github.com/alexisdacquay/sail-event/actions/runs/40251535674) | `make test-all` exited 0 locally at `ca4cf2b` on 2026-10-26; the command and summary are below. |
 
 **Why not the lower score**
 
@@ -320,13 +321,33 @@ At **542e58c**, [CI run 40251535674](https://github.com/alexisdacquay/sail-event
 gh run view 40251535674 -R alexisdacquay/sail-event --log | grep -E 'passed|test_data_survives_restart'
 ```
 
+<a id="combined-test-run"></a>
+
+**Local combined run**
+
+At `ca4cf2b` on 2026-10-26, this command exited **0**:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 TEST_COMPOSE_PROJECT=sail-docs-guide-round2 TEST_HOST_PORT=8046 make test-all
+```
+
+```text
+Backend:     507 passed, 4 skipped, 7 deselected
+Frontend:    117 passed
+Responder:   Ran 20 tests; OK
+Integration: 7 passed, including test_data_survives_restart
+Playwright:  12 passed
+```
+
+Test setup and suite details: [docs/testing.md](testing.md).
+
 **Beyond the rubric**
 
-The responder's **20** stdlib tests passed locally on 2026-10-26: `python3 -I incident-response/test_responder.py`. They do not launch an agent. The [schema-contract test][contract] checks API drift, and the [browser journeys][journeys] exercise user isolation. Bug fixes require a red regression test under the rule introduced on 2026-10-25 (see §3).
+The responder's **20** stdlib tests passed locally on 2026-10-26: `python3 -I incident-response/test_responder.py`. They do not launch an agent. The [schema-contract test][contract] checks API drift, and the [browser journeys][journeys] exercise user isolation.
 
 **Known gaps**
 
-- The responder suite runs in `make test`, but **not CI**. No captured combined `make test-all` result is offered here.
+- The responder suite runs in `make test`, but **not CI**.
 - The 12-test Playwright result includes **two expected-failure markers** for [#94](https://github.com/alexisdacquay/sail-event/issues/94) (clipped scoring legend) and [#95](https://github.com/alexisdacquay/sail-event/issues/95) (feed subscription), plus **three screenshot-oriented tests**. Inspect [field.spec.ts][field] and the [journey/screenshot specs](../e2e/); a green result does not mean those bugs are fixed.
 - The backend excludes marked integration tests from its default run; those run in the integration job. Other skips are conditional on a live model, PostgreSQL test URL or built frontend ([testing.md](testing.md)).
 
@@ -344,7 +365,7 @@ The responder's **20** stdlib tests passed locally on 2026-10-26: `python3 -I in
 
 | Rubric phrase | Where to look | Proof checkable in under a minute |
 |---|---|---|
-| The full system | [Dockerfile][dockerfile] · [SPA mount][spa] | One image builds React and serves it with FastAPI; Compose adds storage. External trigger/ops components are disclosed below. |
+| The full system | [Dockerfile][dockerfile] · [SPA mount][spa] | One image builds React and serves it with FastAPI; Compose adds storage. |
 | including the database | [Compose][compose] | `postgres:18-alpine`, healthcheck and named `pgdata` volume; the app connects to that service. |
 | runs via Docker or Docker Compose | [Compose][compose] | `docker compose config --services` prints `postgres` and `app`. |
 | starts with a single command | [Dockerfile][dockerfile] · [Compose][compose] | `docker compose up --build`; health dependency, migrations and demo seed run automatically. |
@@ -369,7 +390,7 @@ flowchart LR
 
 **Known gaps**
 
-The one-command application path uses fixture search, the fake/recorded model and a fixed clock. Real providers need environment configuration and keys. The GitHub scheduled trigger is external to Compose; observability uses `make up-all`, and the responder starts separately. “Full system” here describes the application and database, not an unattended production operations deployment.
+The one-command application path uses fixture search, the fake/recorded model and a fixed clock. Real providers need environment configuration and keys. The GitHub scheduled trigger is external to Compose; observability uses `make up-all`, and the responder starts separately.
 
 ## 8. Deployment
 
@@ -418,7 +439,7 @@ Live searches depend on provider availability and balance. Measured searches in 
 | Rubric phrase | Where to look | Proof checkable in under a minute |
 |---|---|---|
 | CI runs tests | [CI][ci] · [run evidence](#6-testing) | PRs targeting main and pushes to main trigger unit, integration and browser checks. |
-| CD deploys to dev | [deployment instructions](deployment.md) · [live dev health](https://sail-event-dev.onrender.com/api/health) | The [deployment record](../work/DEPLOY-render.md#devprod-split-issue-21-started-2026-10-17) records an automatic dev deployment on 2026-10-17. For current version alignment, compare dev health with `git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main`. |
+| CD deploys to dev | [deployment instructions](deployment.md) · [live dev health](https://sail-event-dev.onrender.com/api/health) | The [2026-10-17 deployment log](../work/DEPLOY-render.md#devprod-split-issue-21-started-2026-10-17) shows dev auto-deploying `10d4701`. For current version alignment, compare dev health with `git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main`. |
 | manual deploy to production | [promote.yml][promote] · [run history](https://github.com/alexisdacquay/sail-event/actions/workflows/promote.yml) | Only `workflow_dispatch` triggers this workflow. An optional full SHA overrides the dispatched ref's commit. |
 
 **Why not the lower score**
@@ -456,9 +477,9 @@ Dev deployment and CI on main start from the same push; dev does not wait for CI
 
 **Known gaps**
 
-- Main has no branch protection/ruleset gate; direct pushes and merges with failed CI occurred ([delivery audit](#delivery-audit)).
+- Main has no branch protection/ruleset gate; direct pushes and merges with failed CI occurred ([delivery evidence](#delivery-evidence)).
 - Current Render trigger settings are external to git and have no sanitized dashboard capture here; the manual workflow checks SHA format and health, but neither prior green CI nor production approval.
-- Rollback was never exercised, the three new migrations make rollback untested, and PR #150 deletes data irreversibly ([migration evidence](#delivery-audit), [release process](release-process.md#rollback)).
+- Rollback is untested; PR #150’s migration deletes data irreversibly ([migration evidence](#delivery-evidence), [release process](release-process.md#rollback)).
 
 ## 10. Observability
 
@@ -480,8 +501,8 @@ Telemetry, alerts and the responder cover the local stack started with `make up-
 | metrics | [metric definitions][metrics] | Run count, duration, event counts and provider/model activity are instrumented. |
 | traces | [pipeline][pipeline] · picture below | Search, extraction, event-page hop, filter, judge, triage, dedup and persist appear as spans. |
 | structured logs | [JSON formatter][logging] | Timestamp, level, logger, message, trace ID and span ID form each application JSON record. |
-| share a trace ID | picture below · [telemetry][telemetry] | **Partial:** Loki and Tempo display the same ID; metric correlation is a [known gap](#telemetry-audit). |
-| no customer data or credentials are sent to telemetry | [pipeline][pipeline] · [telemetry][telemetry] · [collector](../observability/collector.yaml) · [calendar route][calendar] | **Not met:** check customer identifiers/client metadata in spans and bearer feed tokens in HTTP paths; [the privacy evidence](#telemetry-audit) covers both. |
+| share a trace ID | picture below · [telemetry][telemetry] | **Partial:** Loki and Tempo display the same ID; metric correlation is a [known gap](#telemetry-evidence). |
+| no customer data or credentials are sent to telemetry | [pipeline][pipeline] · [telemetry][telemetry] · [collector](../observability/collector.yaml) · [calendar route][calendar] | **Not met:** check customer identifiers/client metadata in spans and bearer feed tokens in HTTP paths; [the privacy evidence](#telemetry-evidence) covers both. |
 | collected | [collector](../observability/collector.yaml) | OTLP receivers feed signal pipelines; filelog also reads container logs. |
 | stored | [observability Compose](../observability/docker-compose.yml) | Prometheus, Loki and Tempo store metrics, logs and traces. |
 | viewable in a UI | [dashboard](../observability/dashboard.json) · [Grafana provisioning](../observability/grafana/provisioning/) | The dashboard shows metrics/logs; use **Explore → Tempo** for traces, as demonstrated below. |
@@ -508,9 +529,9 @@ Local fixture run, 2026-10-25. The matching trace ID is `9da6b9bd797b3bdc96b1758
 
 **Known gaps**
 
-- Metrics lack trace-ID/exemplar correlation; user UUIDs, HTTP client metadata, feed-token paths and provider exceptions can reach unsanitized telemetry ([telemetry audit](#telemetry-audit)).
+- Metrics lack trace-ID/exemplar correlation; user UUIDs, HTTP client metadata, feed-token paths and provider exceptions can reach unsanitized telemetry ([telemetry evidence](#telemetry-evidence)).
 - The traces dashboard panel errors in [the captured dashboard](images/review-40-grafana-dashboard.png); use **Explore → Tempo**, shown above.
-- The collector reads all host-container logs, may find no files on some Docker hosts, and Grafana grants anonymous Admin access; `service.version` defaults to `dev` ([configuration and probe evidence](#telemetry-audit)).
+- The collector reads all host-container logs, may find no files on some Docker hosts, and Grafana grants anonymous Admin access; `service.version` defaults to `dev` ([configuration and probe evidence](#telemetry-evidence)).
 
 ## 11. Alerting on user impact
 
@@ -534,7 +555,7 @@ Local fixture run, 2026-10-25. The matching trace ID is `9da6b9bd797b3bdc96b1758
 
 The route is also configured: `severity=critical` → [notification policy](../observability/grafana/provisioning/alerting/policies.yaml) → [Bearer-authenticated webhook](../observability/grafana/provisioning/alerting/contactpoints.yaml) → responder. Current rules link the runbook; the recorded alert predates that change and still says `TODO`.
 
-A second rule, `SearchRunsSilent`, evaluates `increase(sail_runs_total[2h]) < 1`, held ten minutes, with `noDataState: OK`. It evaluates each series separately; it is not an aggregate count of all search activity. This behavior follows from the expression/configuration; a live false-alarm test is not recorded.
+A second rule, `SearchRunsSilent`, evaluates `increase(sail_runs_total[2h]) < 1`, held ten minutes, with `noDataState: OK`. It evaluates each series separately; it is not an aggregate count of all search activity.
 
 **Picture**
 
@@ -549,7 +570,7 @@ flowchart LR
 **Known gaps**
 
 - On **2026-10-25**, DeepSeek balance exhaustion caused HTTP 402 search failures on dev and production. The local-only rules did not cover that outage; a human resolved the balance problem ([handover](../work/HANDOVER-2026-10-25.md)).
-- `SearchRunsSilent` watches local series, not the production scheduler. A quiet outcome/trigger series can satisfy it while other searches succeed; no-data is treated as OK. Its window is shorter than the observed scheduled-search gaps (§1), so it is not a validated scheduler alarm. Useful-result quality and recall are not alerted on.
+- `SearchRunsSilent` watches local series, not the production scheduler. It can fire for one quiet series, for example `trigger=scheduled`, while other searches succeed; no-data is treated as OK. Its window is shorter than the observed scheduled-search gaps (§1), so it is not a validated scheduler alarm. Useful-result quality and recall are not alerted on.
 - [The scheduled workflow][schedule] checks health and the enqueue response only. [`POST /api/search/all`][enqueue] returns **202** before background searches finish. Search failures cannot turn that workflow red.
 
 ## 12. On-call agent
@@ -566,7 +587,7 @@ flowchart LR
 |---|---|---|
 | An agent | [responder launch][responder-launch] · [task](../incident-response/responder-task.md) | The HTTP responder starts headless Claude Code with model `sonnet`; the model process is the agent. |
 | wakes up on an alert | [drill script][drill] · [stored alert](../incident-response/incidents/20261021-074150-SearchRunFailures/alert.json) | The script injects failures and waits for Grafana's firing rule. Its only direct `/alerts` POST is a resolved liveness ping, ignored by the responder. The rule, route and stored alert are linked together in §11. |
-| fixes the issue | [verdict](../incident-response/incidents/20261021-074150-SearchRunFailures/verdict.json) · [diff](../incident-response/incidents/20261021-074150-SearchRunFailures/fix.diff) · [commit 8d2f839](https://github.com/alexisdacquay/sail-event/commit/8d2f839) | The commit removes the injected exception stub and restores the method name (+1/−4). Recovery evidence is a [known gap](#responder-audit). |
+| fixes the issue | [verdict](../incident-response/incidents/20261021-074150-SearchRunFailures/verdict.json) · [diff](../incident-response/incidents/20261021-074150-SearchRunFailures/fix.diff) · [commit 8d2f839](https://github.com/alexisdacquay/sail-event/commit/8d2f839) | The commit removes the injected exception stub and restores the method name (+1/−4). Recovery evidence is a [known gap](#responder-evidence). |
 
 **Why not the lower score**
 
@@ -608,36 +629,39 @@ sequenceDiagram
 
 **Known gaps**
 
-- The repair worktree can differ from the running build, and the drills reveal the injected fault in the commit subject while preserving the original method ([responder audit](#responder-audit)).
-- Evidence collection returned empty Loki results and missing version/health data; test success and service recovery are unverified ([recorded evidence](#what-this-run-does-not-prove)).
-- Broad Edit access, the operator's login/configuration and shared git identity limit isolation and attribution; written autonomy policy is not runtime enforcement ([controls](#what-this-run-does-not-prove)).
+- The repair worktree can differ from the running build, and the drills reveal the injected fault in the commit subject while preserving the original method ([responder evidence](#responder-evidence)).
+- Evidence collection returned empty Loki results and missing version/health data; test success and service recovery are unverified ([recorded evidence](#drill-limits)).
+- Broad Edit access, the operator's login/configuration and shared git identity limit isolation and attribution; written autonomy policy is not runtime enforcement ([controls](#drill-limits)).
 
 ## Known gaps
 
-This index groups the disclosures by criterion; follow the evidence links for details.
+Each row links to the criterion’s limitations and evidence.
 
-| Criteria | Gaps | Evidence |
+| Criterion | Gaps | Evidence |
 |---|---|---|
-| [1](#1-problem-description) | Schedule delays; no-place acceptance rule unshipped; unsupported price rules | [Schedule measurement](#schedule-measurement) · [#101](https://github.com/alexisdacquay/sail-event/issues/101) · [product exclusions](../_docs/plan.md#out-of-scope-for-the-mvp) |
-| [2](#2-product-specification), [3](#3-agent-team-specification) | Incomplete grooming/labels/attribution; closure or merge without QA/fresh PASS; overreach and late role rules | [Tracker audit](#tracker-audit) · [process records](../_docs/process.md#process-records-and-exceptions) |
-| [4](#4-context-management) | Dated handovers; private launch/context records; instruction-based QA separation | [Context gaps](#4-context-management) · [role boundaries](#3-agent-team-specification) |
-| [5](#5-application), [7](#7-containerization) | Fixture providers/fixed clock; frontend mock selection; count-only restart check; seeded boundary test; unmeasured recall and unvetted ground truth; Out restore error; duplicates on model failure | [Application gaps](#5-application) · [UI spec](../_docs/ux-spec.md) |
-| [6](#6-testing) | Responder absent from CI; no captured combined run; expected browser failures/screenshot tests; conditional skips | [Testing gaps](#6-testing) |
-| [7](#7-containerization) | External scheduler and separately started operations components | [Container scope](#7-containerization) |
-| [8](#8-deployment), [11](#11-alerting-on-user-impact) | Provider availability/balance and variable latency; hosted monitoring absent | [Deployment gaps](#8-deployment) · [outage record](#11-alerting-on-user-impact) |
-| [9](#9-cicd) | Direct pushes/red merges; unenforced CI/approval gates; external trigger settings; untested rollback and irreversible delete | [Delivery audit](#delivery-audit) |
-| [10](#10-observability) | Metric correlation, privacy, collector scope/portability, dashboard traces, version labels and Grafana access | [Telemetry audit](#telemetry-audit) · [working trace UI](#10-observability) |
-| [11](#11-alerting-on-user-impact) | Per-series silence rule/no-data behavior; no useful-result alert; enqueue-only workflow status | [Alerting gaps](#11-alerting-on-user-impact) |
-| [12](#12-on-call-agent) | Checkout revision, easy drill, incomplete evidence/tests/recovery, broad tools, host runtime and shared identity | [Responder audit](#responder-audit) |
+| [1](#1-problem-description) | Schedule delays; scheduled-user cap; place-less criteria auto-accept; price rules unsupported | [Schedule measurement](#schedule-measurement) · [#101](https://github.com/alexisdacquay/sail-event/issues/101) · [product exclusions](../_docs/plan.md#out-of-scope-for-the-mvp) |
+| [2](#2-product-specification) | Missing specification sections; incomplete labels; shared author identity; missing QA verdicts; merges after QA FAIL | [Tracker evidence](#tracker-evidence) · [process records](../_docs/process.md#process-records-and-exceptions) |
+| [3](#3-agent-team-specification) | Orchestrator crossed role boundaries; rules introduced after implementation; QA can write through Bash; QA reuses prior context; final commits lack QA | [Team gaps](#3-agent-team-specification) · [tracker evidence](#tracker-evidence) |
+| [4](#4-context-management) | Handovers can become stale; private launch records; reads depend on briefs | [Context gaps](#4-context-management) |
+| [5](#5-application) | Fixture providers; count-only restart assertion; seeded boundary test; low measured recall; unvetted ground truth; later recall unmeasured; Out restore fails; duplicate-check failures retain duplicates; past events remain listed; open product defects | [Application gaps](#5-application) · [open issues](https://github.com/alexisdacquay/sail-event/issues?q=is%3Aissue+is%3Aopen) |
+| [6](#6-testing) | Responder absent from CI; expected browser failures; screenshots need visual review; conditional skips | [Testing gaps](#6-testing) |
+| [7](#7-containerization) | Fixture providers and fixed clock; real providers need keys; scheduler outside Compose; operations need separate startup | [Container gaps](#7-containerization) |
+| [8](#8-deployment) | Provider availability and balance; variable search latency | [Deployment gaps](#8-deployment) |
+| [9](#9-cicd) | Direct pushes; merges with failed CI; approval gates unenforced; Render settings capture missing; rollback untested; irreversible data deletion | [Delivery evidence](#delivery-evidence) |
+| [10](#10-observability) | Metrics lack trace IDs; sensitive telemetry; broad container-log collection; container-log mount portability; traces panel errors; default version label; anonymous Grafana Admin | [Telemetry evidence](#telemetry-evidence) · [working trace UI](#10-observability) |
+| [11](#11-alerting-on-user-impact) | Hosted monitoring absent; silence checks individual series; missing data treated as OK; scheduler alarm unvalidated; no result-quality alerts; workflow checks enqueue only | [Alerting gaps](#11-alerting-on-user-impact) |
+| [12](#12-on-call-agent) | Checkout may differ from deployment; fault disclosed to agent; incomplete collected evidence; tests lack full output; recovery unverified; broad editing access; autonomy policy unenforced; host process needs startup; operator login and identity | [Responder evidence](#responder-evidence) · [Drill limits](#drill-limits) |
 
 ## Evidence commands
 
-### Tracker audit
+<a id="tracker-audit"></a>
 
-Snapshot checked on 2026-10-26. The filters below reproduce **58/96** issues with four headings, **69** with QA headings (**23** FAIL), **30/56** PRs with QA headings, and **45** orchestrator closing notes. All comments use the owner's GitHub login; role headings supply project attribution.
+### Tracker evidence
+
+Snapshot checked on 2026-10-26, limited to issues and PRs #1–#152. The filters below reproduce **58/96** issues with four headings, **69** with QA headings (**23** FAIL), **30/56** PRs with QA headings, and **45** orchestrator closing notes. All comments use the owner's GitHub login; role headings supply project attribution.
 
 - **Specification coverage:** 38 issue bodies lacked at least one heading, including 27 closed issues. Five bodies lacked “acceptance criteria”: #17, #21, #46, #102 and #145. Issue #11's edited history shows its boxes were ticked after closure; its QA comment is the contemporaneous check.
-- **No PR QA heading among 42 merged PRs from #66:** #67, #88, #89, #91, #92, #93, #137, #138, #140, #141, #143, #144, #146, #152.
+- **No PR QA heading among 42 merged PRs in #66–#152:** #67, #88, #89, #91, #92, #93, #137, #138, #140, #141, #143, #144, #146, #152.
 - **Closed with no QA verdict on the issue or associated PR:** #17, #21, #29, #59, #60, #74, #139, #142. #59 deferred verification to #60, whose PR #64 has no verdict.
 - **Closed or merged after FAIL without a fresh QA PASS:** issues #14, #15, #39, #52, #55, #63, #76, #134; PRs #86, #115, #127, #128, #129, #144. #76 corresponds to #86; #144's FAILs are on #145. #134's closing PASS is an orchestrator assertion. PR #85 instead records an orchestrator waiver of criterion 6b; the comment cites sessionmaker construction and stale-run release.
 - **Role separation:** the orchestrator corrected the #24 groom, edited missing lines for #39/#52 and verified #14/#15/#55 itself ([AI usage report](ai-usage-report.md)).
@@ -653,7 +677,9 @@ def get(kind):
     fields = 'number,state,body,comments,labels' if kind == 'issue' else 'number,body,comments,mergedAt'
     return json.loads(subprocess.check_output([
         'gh', kind, 'list', '-R', repo, '--state', 'all', '--limit', '400', '--json', fields]))
-issues, prs = get('issue'), get('pr')
+# Fixed sample: exclude docs PR #153 and all later issues/PRs.
+issues = [x for x in get('issue') if x['number'] <= 152]
+prs = [x for x in get('pr') if x['number'] <= 152]
 def groom(x):
     return all(re.search(r'^#+ *'+h, x['body'], re.M)
                for h in ['Goal', 'Acceptance criteria', 'Out of scope', 'Constraints'])
@@ -671,13 +697,13 @@ print('PR QA / total:', sum(map(qa, prs)), len(prs))
 print('closed-by-orchestrator notes:', sum(any('closed by the orchestrator' in c['body'].lower()
       for c in x['comments']) for x in issues))
 merged = [x for x in prs if x['mergedAt'] and x['number'] >= 66]
-print('merged since #66 / no QA heading:', len(merged), sorted(x['number'] for x in merged if not qa(x)))
+print('merged #66–#152 / no QA heading:', len(merged), sorted(x['number'] for x in merged if not qa(x)))
 print('no MVP label:', sorted(x['number'] for x in issues
       if not {'mvp','post-mvp'} & {a['name'] for a in x['labels']}))
 PY
 ```
 
-For the exception claims, inspect the complete comments, including the closing note, rather than interpreting the counts as PASS coverage:
+For the exception claims, inspect the complete comments, including the closing note:
 
 ```bash
 # No verdict cases: repeat with 21, 29, 59, 60, 74, 139, 142 and PRs 64, 141, 143.
@@ -691,38 +717,51 @@ gh issue view 145 -R alexisdacquay/sail-event --comments
 
 ### Schedule measurement
 
-The workflow name “Hourly search” and cron are in [hourly-search.yml][schedule]. This command measures actual start gaps, without triggering a search:
+The workflow name “Hourly search” and cron are in [hourly-search.yml][schedule]. This command measures start gaps in the last 50 scheduled runs through 2026-10-26 12:51:46 UTC:
 
 ```bash
-gh run list -R alexisdacquay/sail-event --workflow=hourly-search.yml --event=schedule -L 50 --json createdAt | python3 -c 'import sys,json,datetime; t=sorted(datetime.datetime.fromisoformat(x["createdAt"].replace("Z","+00:00")) for x in json.load(sys.stdin)); g=[(b-a).total_seconds()/3600 for a,b in zip(t,t[1:])]; print(len(t), "runs; gap hours", round(min(g),1), "to", round(max(g),1))'
+gh run list -R alexisdacquay/sail-event --workflow=hourly-search.yml --event=schedule --created '<=2026-10-26T12:51:46Z' -L 50 --json createdAt | python3 -c 'import sys,json,datetime; t=sorted(datetime.datetime.fromisoformat(x["createdAt"].replace("Z","+00:00")) for x in json.load(sys.stdin)); g=[(b-a).total_seconds()/3600 for a,b in zip(t,t[1:])]; print(len(t), "runs; gap hours", round(min(g),1), "to", round(max(g),1))'
 ```
 
-### Delivery audit
+The default queue cap is in [`search_all`][enqueue]. Inspect the recorded enqueue result:
+
+```bash
+gh run view 40325804781 -R alexisdacquay/sail-event --log | grep -E 'usersQueued: 50$|usersSkipped: 23$'
+```
+
+<a id="delivery-audit"></a>
+
+### Delivery evidence
 
 On 2026-10-26, main's protection API returned “Branch not protected”, rulesets and deployments were empty, and PRs **#31 and #138** showed merged timestamps with failed integration checks. A fixed sample of the last 60 first-parent subjects at `542e58c` contains **34** without a PR marker; inspect their changed paths to distinguish docs/work notes from code.
 
-Rollback has no recorded execution: all 15 [promotion runs](https://github.com/alexisdacquay/sail-event/actions/workflows/promote.yml) inspected on 2026-10-26 moved forward. The new migrations are `e4f5a6b7c8d9`, `f5a6b7c8d9e0` and `a6b7c8d9e0f1`. PR #150's [deletion migration][delete-migration] has no restorative downgrade. Old code may not recognize a newer database revision at `alembic upgrade head`, and an older application SHA cannot restore deleted events; follow the [release rollback requirements](release-process.md#rollback).
+Rollback has no recorded execution: all 15 [promotion runs](https://github.com/alexisdacquay/sail-event/actions/workflows/promote.yml) through 2026-10-26 12:51:46 UTC moved forward. The three migrations added in [PR #128](https://github.com/alexisdacquay/sail-event/pull/128) and [PR #150](https://github.com/alexisdacquay/sail-event/pull/150) are `e4f5a6b7c8d9`, `f5a6b7c8d9e0` and `a6b7c8d9e0f1`. PR #150's [deletion migration][delete-migration] has no restorative downgrade. Old code may not recognize a newer database revision at `alembic upgrade head`, and an older application SHA cannot restore deleted events; follow the [release rollback requirements](release-process.md#rollback).
 
-The [2026-10-17 deployment record](../work/DEPLOY-render.md#devprod-split-issue-21-started-2026-10-17) documents dev auto-deploy and prod auto-deploy being disabled. Current health/version alignment and that historical record are separate checks; a sanitized current Render settings/history capture is still missing.
+The [2026-10-17 deployment record](../work/DEPLOY-render.md#devprod-split-issue-21-started-2026-10-17) documents dev auto-deploy and prod auto-deploy being disabled.
 
 ```bash
 # A 404 saying Branch not protected was returned on 2026-10-26.
 gh api repos/alexisdacquay/sail-event/branches/main/protection
 gh api repos/alexisdacquay/sail-event/rulesets
 gh api repos/alexisdacquay/sail-event/deployments
-gh run list -R alexisdacquay/sail-event --workflow=promote.yml -L 100 --json databaseId,event,conclusion,createdAt,headSha
+gh run list -R alexisdacquay/sail-event --workflow=promote.yml --created '<=2026-10-26T12:51:46Z' -L 100 --json databaseId,event,conclusion,createdAt,headSha
 gh pr view 31 -R alexisdacquay/sail-event --json mergedAt,statusCheckRollup
 gh pr view 138 -R alexisdacquay/sail-event --json mergedAt,statusCheckRollup
 # Fixed historical sample: 34 subjects without a PR marker; inspect paths to classify them.
 git log --first-parent 542e58c -60 --format='%s' | python3 -c 'import re,sys; print(sum(not re.search(r"\(#\d+\)$|^Merge pull request", s) for s in sys.stdin.read().splitlines()))'
+# Examples of direct pushes: field-test code/tests, then incident records.
 git show --stat 8ceef57 6b2fcc4 571b751
 ```
 
-### Responder audit
+<a id="responder-audit"></a>
+
+### Responder evidence
 
 [responder.py][responder] starts the repair worktree at the operator checkout's `HEAD`; health collection does not select its revision. Compare the two before a drill.
 
-### What this run does not prove
+<a id="what-this-run-does-not-prove"></a>
+
+### Drill limits
 
 | Limit | Recorded evidence and consequence |
 |---|---|
@@ -736,21 +775,23 @@ git show --stat 8ceef57 6b2fcc4 571b751
 
 Read the [recorded folders](../incident-response/incidents/) without running another drill. The script's `--dry-run` still needs Docker, creates/cleans a temporary fault branch, builds the stack and waits for Grafana; it skips only the model agent. It is not a quick read-only check.
 
-### Telemetry audit
+<a id="telemetry-audit"></a>
+
+### Telemetry evidence
 
 - [Metrics][metrics] have no trace-ID attribute or demonstrated exemplars; [the screenshots](#10-observability) correlate logs and traces.
 - The [search span][pipeline] includes the user's UUID. HTTP auto-instrumentation adds client address, user-agent and URL metadata; the [calendar route][calendar] carries the feed credential in its path. Provider warnings and `record_exception` can also export provider text. The [collector](../observability/collector.yaml) has no redaction processor.
 - Collector filelog covers `/var/lib/docker/containers/*/*.log`, including other applications' logs; this mount can be empty on some Docker hosts ([telemetry comments][telemetry]). [Grafana Compose](../observability/docker-compose.yml) enables anonymous Admin access, and [telemetry][telemetry] defaults `service.version` to `dev` unless `APP_VERSION` is set.
-- The 2026-10-26 invalid-path probe returned HTTP 404 and appeared in the Uvicorn access log with client IP; its Loki query returned no lines, and no matching probe trace was found. Loki transport of that access-log line remains unverified.
+- A local probe on 2026-10-26, using the commands below, returned HTTP 404 and appeared in the Uvicorn access log with client IP; its Loki query returned no lines.
 
 ### Local privacy check
 
 Use the local app port and the same Compose project and override flags used to start it. The example below matches `make up-all` with `HOST_PORT=8010`; for the base stack, omit both `-f` flags. The probe is deliberately invalid; never substitute a real feed credential.
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8010/api/calendar/docs-quality-invalid-probe
-docker compose -f docker-compose.yml -f docker-compose.observability.yml logs --since 5m app | grep 'docs-quality-invalid-probe'
-curl -sG http://localhost:3100/loki/api/v1/query_range --data-urlencode 'query={service_name="sail-event-backend"} |= "docs-quality-invalid-probe"' --data-urlencode 'limit=10'
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8010/api/calendar/invalid-probe-token
+docker compose -f docker-compose.yml -f docker-compose.observability.yml logs --since 5m app | grep 'invalid-probe-token'
+curl -sG http://localhost:3100/loki/api/v1/query_range --data-urlencode 'query={service_name="sail-event-backend"} |= "invalid-probe-token"' --data-urlencode 'limit=10'
 ```
 
 [auth]: https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/routers/auth.py#L100-L101

@@ -18,7 +18,7 @@ engineer and QA agents. The role files are their instructions:
 | Role | Does | Must not do |
 |---|---|---|
 | PM | Writes Goal, Acceptance criteria, Out of scope and Constraints; links follow-ups | Write code or settle an unresolved product choice without the owner |
-| Engineer | Implements, tests, commits and opens a PR; for bug fixes, follows the dated root-cause gate below | Change acceptance criteria, close the issue or merge without authorization |
+| Engineer | Implements, tests, commits and opens a PR; for bug fixes, follows the root-cause gate below | Change acceptance criteria, close the issue or merge without authorization |
 | QA | Runs checks and records a verdict per criterion | Edit any project file, fix the defect, merge or close the issue |
 | Orchestrator | Assigns work, passes evidence between roles, records owner decisions, closes after review | Groom issues, implement changes or perform QA; start the next item without the owner's pick |
 | Owner | Sets scope and priority; approves merge and prod separately | — |
@@ -27,8 +27,9 @@ engineer and QA agents. The role files are their instructions:
 
 The orchestrator starts PM and engineer tasks as `general-purpose` background
 subagents. QA uses the registered [`qa-engineer`](../.claude/agents/qa-engineer.md)
-agent; earlier launches and later exceptions used `general-purpose`. Recorded
-launches select `model: opus`.
+agent; earlier launches and later exceptions used `general-purpose`. Most
+recorded launches select `model: opus`; `qa-engineer` launches usually inherit
+the session model, and some engineer launches used another model.
 
 Each launch gets a brief naming the role file, AGENTS.md, issue, constraints,
 assigned checkout and expected reply. A worktree is a separate copy of the repo;
@@ -84,8 +85,6 @@ flowchart LR
     A --> R[Manual prod promote]
 ```
 
-For bug fixes since 2026-10-25, the engineer also follows the root-cause gate.
-
 ## Brief and context details
 
 For example, the issue #1 engineer brief began (abridged from the local transcript):
@@ -110,18 +109,22 @@ and the referenced evidence; it must not restart from an old backlog position.
 ## Rules
 
 - Groom before implementation. If a criterion is wrong, the engineer comments and waits; it does not rewrite the issue's acceptance criteria.
-- Run `make test`, then commit completed work. Agents may use `SKIP_HOOK_TESTS=1` after running it themselves, to avoid a second run. The exception is a deliberately red regression-test commit under the gate below. The hook's secret-pattern scan still runs.
+- Run `make test`, then commit completed work. Agents may use `SKIP_HOOK_TESTS=1` after running it themselves, to avoid a second run. Exception: a deliberately red regression-test commit (root-cause gate step 2) is committed with `SKIP_HOOK_TESTS=1`. The hook's secret-pattern scan still runs.
 - Require green PR CI and a QA verdict before asking to merge. The owner must explicitly accept any unmet criterion; a closing note claiming PASS is not a QA verdict.
-- QA never changes project files. In the shared checkout a clean-tree check covered the engineer's work too; in a separate QA worktree it covers only the reviewed checkout.
-- The orchestrator closes issues, or GitHub does on merge of `Closes #N`. QA records each criterion in its comment; issue-body boxes need not be the review record.
+- QA never changes project files. In Phase 1, QA shared the engineer's checkout, so its `git status` check also caught uncommitted engineer work. In a QA worktree, it only shows that QA changed nothing.
+- The orchestrator closes issues, or GitHub does on merge of `Closes #N`. QA records each criterion in its comment.
 - Do not use `rm` or `sed -i`. Keep credentials out of output and tracked files. Do not nest engineer agents unless the brief assigns independent parts; keep one writer per file.
-- Current freeze (owner, 2026-10-26): documentation only; no new product work.
 
 ## Root-cause gate
 
-Added to the [engineer](team/software-engineer.md) and [QA](team/qa-engineer.md)
-roles on **2026-10-25**, commit `c0f83e6`; added here on 2026-10-26. It applies to
-bug fixes, not every feature since the project began.
+For bug fixes, this gate was added to the [engineer](team/software-engineer.md)
+and [QA](team/qa-engineer.md) roles on **2026-10-25**, commit `c0f83e6`; added here
+on 2026-10-26 in `ac54483`. Verify the additions directly:
+
+```sh
+git show c0f83e6 -- _docs/team/software-engineer.md _docs/team/qa-engineer.md
+git show ac54483 -- _docs/process.md
+```
 
 1. On a failing test, unexpected result or red CI job, write the observed failure and causal chain on the issue before changing code.
 2. Add a test reproducing the cause and commit it while red, using `SKIP_HOOK_TESTS=1` for this deliberate exception.
@@ -129,11 +132,11 @@ bug fixes, not every feature since the project began.
 4. QA verifies the new test against the pre-fix code (red) and the submitted head (green). See the [QA steps](team/qa-engineer.md#how-you-check).
 5. Explain a red CI job before calling it unrelated. Report an unresolved cause and stop for the orchestrator.
 
-QA checks the regression evidence and criteria; the written causal analysis and
-commit sequence remain review obligations, not a mechanical enforcement gate.
 Regression tests live in [backend/tests/regression/](../backend/tests/regression/).
 
-## Phase 2 (from issue #65): worktrees and PRs
+<a id="phase-2-from-issue-65-worktrees-and-prs"></a>
+
+## Phase 1 and Phase 2
 
 **Phase 1, 2026-10-16 to 2026-10-20:** shared checkout, mostly direct commits,
 QA comments on issues. PRs already existed: #30–#32 were created on 2026-10-17.
@@ -149,7 +152,7 @@ at their final commit.
 The 2026-10-16 rule called for `mvp` or `post-mvp` on each issue. It was not
 applied consistently: 21 issues in #94–#131 have neither as of 2026-10-26.
 Other labels describe topic: `enhancement`, `search-v2`, `ux`, `bug`, `theme`,
-`robustness`. Labels do not prove grooming or completion.
+`robustness`.
 
 ## Who wrote a comment
 
@@ -172,14 +175,15 @@ retained locally, not published; public comments use role headings for attributi
 
 ## Process records and exceptions
 
-Snapshot **2026-10-26**: 58/96 issues have all four sections; 69 have a QA heading,
-23 have a FAIL; 30/56 PRs have a QA heading; 45 issues have a “closed by the
-orchestrator” note. Reproduce from the public tracker:
+Tracker snapshot **2026-10-26**, limited to issues and PRs **#1–#152**: 58/96
+issues have all four sections; 69 have a QA heading, 23 have a FAIL; 30/56 PRs
+have a QA heading; 45 issues have a “closed by the orchestrator” note.
+Reproduce from the public tracker within that range:
 
 ```sh
 gh issue list -R alexisdacquay/sail-event --state all -L 400 --json number,state,body,comments,labels | python3 -c '
 import json,re,sys
-rows=json.load(sys.stdin)
+rows=[x for x in json.load(sys.stdin) if x["number"]<=152]
 groom=lambda x: all(re.search(r"(?m)^#+ *"+h,x["body"]) for h in ("Goal","Acceptance criteria","Out of scope","Constraints"))
 qa=lambda x,pattern: any(re.search(pattern,c["body"]) for c in x["comments"])
 print("issues",len(rows),"groomed",sum(map(groom,rows)))
@@ -189,18 +193,18 @@ print("closed without four sections",sorted(x["number"] for x in rows if x["stat
 print("without mvp/post-mvp",sorted(x["number"] for x in rows if not {"mvp","post-mvp"}&{v["name"] for v in x["labels"]}))'
 gh pr list -R alexisdacquay/sail-event --state all -L 400 --json number,mergedAt,comments | python3 -c '
 import json,re,sys
-rows=json.load(sys.stdin)
+rows=[x for x in json.load(sys.stdin) if x["number"]<=152]
 qa=lambda x: any(re.search(r"(?m)^#+ *QA:? *(PASS|FAIL)",c["body"]) for c in x["comments"])
 merged=[x for x in rows if x["mergedAt"] and x["number"]>=66]
 print("PRs",len(rows),"with QA",sum(map(qa,rows)))
-print("merged since #66",len(merged),"no PR QA heading",sorted(x["number"] for x in merged if not qa(x)))'
+print("merged PRs #66–#152",len(merged),"no PR QA heading",sorted(x["number"] for x in merged if not qa(x)))'
 ```
 
-GitHub closed eight issues through a PR merge: #46, #52, #68, #76, #83, #120,
-#122, #142. The closure event, rather than the wording of a comment, proves that:
+Within issues #1–#152, GitHub closed eight through a PR merge: #46, #52, #68,
+#76, #83, #120, #122, #142. Check the closure events:
 
 ```sh
-gh api graphql -f query='{repository(owner:"alexisdacquay",name:"sail-event"){issues(first:100,states:CLOSED){nodes{number timelineItems(itemTypes:[CLOSED_EVENT],last:1){nodes{... on ClosedEvent{closer{__typename ... on PullRequest{number}}}}}}}}}' --jq '.data.repository.issues.nodes[] | .number as $n | .timelineItems.nodes[] | select(.closer.__typename == "PullRequest") | [$n,.closer.number]'
+gh api graphql -f query='{repository(owner:"alexisdacquay",name:"sail-event"){issues(first:100,states:CLOSED){nodes{number timelineItems(itemTypes:[CLOSED_EVENT],last:1){nodes{... on ClosedEvent{closer{__typename ... on PullRequest{number}}}}}}}}}' --jq '.data.repository.issues.nodes[] | select(.number <= 152) | .number as $n | .timelineItems.nodes[] | select(.closer.__typename == "PullRequest") | [$n,.closer.number]'
 ```
 
 Read issue [#7](https://github.com/alexisdacquay/sail-event/issues/7) for a full
@@ -208,19 +212,18 @@ FAIL → fix → PASS cycle: the engineer fixed the plaintext-password error in
 `db3499a`; the same QA agent re-checked and passed (local transcript). For a
 groom, issue [#11](https://github.com/alexisdacquay/sail-event/issues/11)'s
 **edited** history shows the raw task followed by the four-section specification.
-Its old implementation details are historical, not today's pipeline contract.
 
 ### Known gaps (2026-10-26)
 
 - **Orchestrator overreach:** it filed issues from owner feedback and field tests, changed code and resolved conflicts, and sometimes replaced independent QA with its own re-check. #39, #52 and #55 explicitly record that shortcut. The local transcript also records main-session code edits; it is not public proof.
-- **Grooming skipped:** 38/96 issues lack at least one template section; 27 of them are closed (numbers printed by the command above). A body with acceptance criteria does not establish PM involvement.
+- **Grooming skipped:** 38/96 issues lack at least one template section; 27 of them are closed (numbers printed by the command above).
 - **Closed without a recorded QA verdict on the issue or its PR:** #17, #21, #29, #59, #60, #74, #139, #142. Check each with `gh issue view N -R alexisdacquay/sail-event --comments`, then any linked PR with `gh pr view P -R alexisdacquay/sail-event --comments`.
-- **Merged without a PR verdict:** 14 of the 42 merged PRs from #66 onward lack the QA heading matched above. PR #144 merged after QA FAILs without a written waiver. Issue #134's closing note says PASS, but its QA comments say FAIL.
+- **Merged without a PR verdict:** 14 of the 42 merged PRs in #66–#152 lack the QA heading matched above. PR #144 merged after QA FAILs without a written waiver. Issue #134's closing note says PASS, but its QA comments say FAIL.
 - **CI bypassed:** PRs #31 and #138 merged with a failed integration check. `gh pr view N -R alexisdacquay/sail-event --json mergedAt,statusCheckRollup` shows it. Main also received direct pushes; `git log --first-parent origin/main` and `gh api repos/alexisdacquay/sail-event/commits/SHA/pulls` let a reader check a commit's PR association. No branch protection enforces the written gates.
 - **Rollback untested:** migration and data-recovery limits are in the [release process](../docs/release-process.md#rollback).
-- **Rules arrived late:** the initial process dates from 2026-10-16; QA agent file from 2026-10-17 (used from 2026-10-20, with later general-purpose exceptions); owner priority/prod gates from 2026-10-21; regression gate from 2026-10-25. QA's `Bash, Read, Grep, Glob` tool list omits Edit/Write but Bash can still write, so the restriction rests on instructions and review. Fourteen of the 15 recorded promotes predate the owner gate; these are not evidence of owner approval.
+- **Rules arrived late:** the initial process dates from 2026-10-16; QA agent file from 2026-10-17 (used from 2026-10-20, with later general-purpose exceptions); owner priority/prod gates from 2026-10-21. The regression gate's history is [above](#root-cause-gate). QA's `Bash, Read, Grep, Glob` tool list omits Edit/Write but Bash can still write, so the restriction rests on instructions and review. Fourteen of the 15 promotes before 2026-10-26 predate the owner gate.
 
-Check rule history with `git log --date=short --format='%h %ad %s' -- _docs/process.md _docs/team .claude/agents/qa-engineer.md`, and promotions with `gh run list -R alexisdacquay/sail-event --workflow promote.yml -L 100`.
+Check rule history with `git log --date=short --format='%h %ad %s' -- _docs/process.md _docs/team .claude/agents/qa-engineer.md`, and promotions with `gh run list -R alexisdacquay/sail-event --workflow promote.yml --created '<2026-10-26' -L 100`.
 
 ## Field-test references
 
