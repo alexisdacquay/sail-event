@@ -592,12 +592,13 @@ def _cycling_judge(scores):
 
 
 def _assert_bands(sc: dict) -> None:
-    # #136: 20 events judged; cycling [5,20,40,95] over the titles: 5×5, 5×20, 3×40, 7×95.
+    # #136 + owner 2026-10-25 (no same link + start skip): 23 events judged; cycling [5,20,40,95] over the
+    # titles: 5×5, 5×20, 4×40, 9×95 (Jazz Trio twice more, Jazz night Potsdam once more).
     # A 95 merged after storage is rejected, counted in dedup_merged, never in a band.
     assert sc["rejected_date_place"] == 5
     assert sc["rejected_off_topic"] == 5
-    assert sc["rejected_other"] == 3
-    assert sc["dedup_merged"] == 3
+    assert sc["rejected_other"] == 4
+    assert sc["dedup_merged"] == 5
     assert sc["rejected_date_place"] + sc["rejected_off_topic"] + sc["rejected_other"] + sc["dedup_merged"] == sc["rejected"]
 
 
@@ -608,8 +609,8 @@ def test_rejected_bands_sum_to_rejected(client, auth_headers, _db_session, monke
     with patch("app.services.pipeline.judge_event", side_effect=_cycling_judge([5, 20, 40, 95])):
         body = client.post("/api/search", headers=h).json()
     sc = body["stageCounts"]
-    assert sc["events_judged"] == 20  # #136: no in-run or title checks in code
-    assert sc["accepted"] == 4  # 7 scored 95, 3 of them merged after storage
+    assert sc["events_judged"] == 23  # #136 + owner 2026-10-25: no in-run, title or same link + start checks in code
+    assert sc["accepted"] == 4  # 9 scored 95, 5 of them merged after storage
     _assert_bands(sc)
 
 

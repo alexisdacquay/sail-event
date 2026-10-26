@@ -457,7 +457,10 @@ def test_runs_summary_fields_and_set_aside(client, auth_headers):
 
 
 def test_runs_invariant_holds_for_every_finished_run(client, auth_headers):
-    """Manual run with a no-date event (#112), repeat run with nothing new, and an error run (no criteria)."""
+    """Manual run with a no-date event (#112), repeat run, and an error run (no criteria).
+
+    Owner 2026-10-25: the repeat run re-stores and re-judges the listing events whose link is the listing URL.
+    """
     from unittest.mock import patch
     from app.services import pipeline as pipeline_mod
     from app.services.extract import ExtractedEvent
@@ -486,7 +489,8 @@ def test_runs_invariant_holds_for_every_finished_run(client, auth_headers):
     client.post("/api/search", headers=h)
     h_fresh = auth_headers("fresh", "freshpw")
     client.post("/api/search", headers=h_fresh)
-    for hdr in (h, h_fresh):
+    # repeat run: its own 8 re-judged events band 3 + 2 (the other 3 merged after storage); error run: none
+    for hdr, bands in ((h, (3, 2, 0)), (h_fresh, (0, 0, 0))):
         runs = client.get("/api/search/runs", headers=hdr).json()["runs"]
         assert runs
         for s in runs:
@@ -495,7 +499,7 @@ def test_runs_invariant_holds_for_every_finished_run(client, auth_headers):
             assert s["accepted"] + s["queued"] + s["rejected"] + s["setAside"] == s["eventsFound"]
         last = client.get("/api/search/last-run", headers=hdr).json()["run"]
         sc = last["stageCounts"]
-        assert (sc["rejected_date_place"], sc["rejected_off_topic"], sc["rejected_other"]) == (0, 0, 0)
+        assert (sc["rejected_date_place"], sc["rejected_off_topic"], sc["rejected_other"]) == bands
 
 
 def test_runs_invariant_holds_with_incomplete_and_unjudged(client, auth_headers, monkeypatch):
@@ -532,11 +536,12 @@ def test_runs_invariant_holds_with_incomplete_and_unjudged(client, auth_headers,
 
     assert sc["filtered_incomplete"] == 1
     # #134: no per-page cap and no per-search cap → all survivors are judged: 1 error, the rest scored 95
-    # #136: 20 survivors (no in-run or title checks); the after-storage check merges the repeats
+    # #136 + owner 2026-10-25: 23 survivors (no in-run, title or same link + start checks); the after-storage
+    # check merges the repeats
     assert "events_capped" not in sc
-    assert sc["events_to_judge"] == 20
+    assert sc["events_to_judge"] == 23
     assert sc["judge_errors"] == 1
-    assert (sc["accepted"], sc["dedup_merged"]) == (12, 7)
+    assert (sc["accepted"], sc["dedup_merged"]) == (12, 10)
     s = client.get("/api/search/runs", headers=h).json()["runs"][0]
     assert s["eventsFound"] == sc["events_extracted"]
     assert s["accepted"] + s["queued"] + s["rejected"] + s["setAside"] == s["eventsFound"]

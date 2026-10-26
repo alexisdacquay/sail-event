@@ -13,7 +13,6 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -62,7 +61,6 @@ class Criteria(Base):
 class Event(Base):
     __tablename__ = "events"
     __table_args__ = (
-        UniqueConstraint("user_id", "link", "date_time", name="uq_event_user_link_date"),
         CheckConstraint(
             "status IN ('new','accepted','rejected','queued')",
             name="ck_event_status",

@@ -187,9 +187,6 @@ def filter_events(
     stored = stored_events or []
     # #136: the one duplicate check, an event page already stored for the same calendar date
     stored_pages = {(canonical_url(se.get("link", "")), (se.get("date_time") or "")[:10]) for se in stored}
-    # The events table is unique on (user, link, date_time): a second row with that key cannot be stored
-    stored_keys = {(se.get("link", ""), se.get("date_time") or "") for se in stored}
-    run_keys: set[tuple[str, str]] = set()
 
     kept: list[ExtractedEvent] = []
 
@@ -219,13 +216,10 @@ def filter_events(
 
         # 5. Duplicate: the event's own page (never a listing's URL) stored for the same day
         own_page = ev.page_kind != "listing" or canonical_url(ev.link) != canonical_url(ev.source_url)
-        key = (ev.link, attach_offset(ev.start_local, ev.start_tz, ev.country))
-        if (own_page and (canonical_url(ev.link), _event_calendar_date(ev)) in stored_pages) \
-                or key in stored_keys or key in run_keys:
+        if own_page and (canonical_url(ev.link), _event_calendar_date(ev)) in stored_pages:
             counts.filtered_duplicate += 1
             continue
 
-        run_keys.add(key)
         kept.append(ev)
 
     return kept, counts

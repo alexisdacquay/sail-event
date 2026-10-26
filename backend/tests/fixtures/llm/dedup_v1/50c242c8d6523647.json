@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 1,
+    "reason": "Candidate 1 matches the new event exactly on the same day, start time, Tiergarten location, and photography meetup description."
+  },
+  "usage": {
+    "prompt_tokens": 1582,
+    "completion_tokens": 117
+  },
+  "recorded_at": "2026-10-25T23:29:51.443324+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

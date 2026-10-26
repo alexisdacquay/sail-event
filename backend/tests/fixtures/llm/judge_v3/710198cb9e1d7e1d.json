@@ -1,0 +1,14 @@
+{
+  "response": {
+    "score": 6,
+    "reason": "This is a jazz night on 20 October, but it is in Potsdam, not Berlin as you asked.",
+    "is_event": true
+  },
+  "usage": {
+    "prompt_tokens": 756,
+    "completion_tokens": 128
+  },
+  "recorded_at": "2026-10-25T23:28:31.577574+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

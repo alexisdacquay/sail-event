@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 3,
+    "reason": "Candidate 3 has the identical title, date/time, and location (Bern, CH) describing the same jazz concert."
+  },
+  "usage": {
+    "prompt_tokens": 1263,
+    "completion_tokens": 133
+  },
+  "recorded_at": "2026-10-25T23:30:04.532967+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

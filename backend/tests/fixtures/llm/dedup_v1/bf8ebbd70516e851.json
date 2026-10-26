@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 3,
+    "reason": "Candidate 3 has the same title, exact start time and venue (Zig Zag Jazz Club, Berlin), and its description of an open jam session matches the new event."
+  },
+  "usage": {
+    "prompt_tokens": 564,
+    "completion_tokens": 125
+  },
+  "recorded_at": "2026-10-25T23:38:42.116689+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

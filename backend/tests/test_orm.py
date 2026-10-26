@@ -101,10 +101,10 @@ def test_duplicate_ics_token(db: Session) -> None:
         db.commit()
 
 
-# --- (c) duplicate (user_id, link, date_time) on Event ---
+# --- (c) same (user_id, link, date_time) on Event: allowed since 2026-10-25 ---
 
-def test_duplicate_user_link_date(db: Session) -> None:
-    """Same user + link + date_time → IntegrityError."""
+def test_same_user_link_date_both_stored(db: Session) -> None:
+    """Owner 2026-10-25: two events may share a link and start (listing pages); both rows are stored."""
     user = _insert_user(db)
     e1 = Event(
         user_id=user.id,
@@ -128,8 +128,8 @@ def test_duplicate_user_link_date(db: Session) -> None:
         status="new",
     )
     db.add(e2)
-    with pytest.raises(IntegrityError):
-        db.commit()
+    db.commit()
+    assert db.query(Event).filter_by(user_id=user.id, link="https://example.com/dup").count() == 2
 
 
 def test_same_link_different_date_allowed(db: Session) -> None:

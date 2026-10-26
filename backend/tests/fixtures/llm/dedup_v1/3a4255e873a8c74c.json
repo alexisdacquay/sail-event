@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 1,
+    "reason": "Same date, time, and Mauerpark location, and both describe a free open-air jazz concert."
+  },
+  "usage": {
+    "prompt_tokens": 558,
+    "completion_tokens": 1912
+  },
+  "recorded_at": "2026-10-25T23:31:13.190988+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

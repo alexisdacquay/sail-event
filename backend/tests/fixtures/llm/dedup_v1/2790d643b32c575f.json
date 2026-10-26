@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 10,
+    "reason": "Same title, same day and 21:00 start, and the same venue A-Trane in Berlin, describing the same jazz trio performance."
+  },
+  "usage": {
+    "prompt_tokens": 1263,
+    "completion_tokens": 157
+  },
+  "recorded_at": "2026-10-25T23:30:16.234118+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}

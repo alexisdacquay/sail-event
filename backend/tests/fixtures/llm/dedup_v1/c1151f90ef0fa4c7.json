@@ -1,0 +1,13 @@
+{
+  "response": {
+    "same_as": 1,
+    "reason": "Same title, date, 21:00 start time and A-Trane venue, both describing a live jazz trio performance."
+  },
+  "usage": {
+    "prompt_tokens": 629,
+    "completion_tokens": 184
+  },
+  "recorded_at": "2026-10-25T23:28:36.374951+00:00",
+  "model": "openai_compatible:deepseek-flash",
+  "recorded": "live"
+}
