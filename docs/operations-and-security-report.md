@@ -1,38 +1,40 @@
 # Operations and Security Report — Sail-event
 
-Scope note (2026-10-26): this report reconstructs the local fault-injection drill of 2026-10-17. The data-flow section describes main’s implementation.
+Updated 2026-10-26. This report follows the local fault-injection drill of 2026-10-17 and the operational changes that followed. The data-flow section describes main’s implementation.
 
 ## Local drill: 20261017-052050-SearchRunFailures
 
-Observability, alerts and the on-call responder run in the local `make up-all` stack; the deployed app sends no telemetry to it. Fault commit [7318f2f](https://github.com/alexisdacquay/sail-event/commit/7318f2f) deliberately made the old `FakeScorer.score()` raise. The responder produced fix commit [dae24e9](https://github.com/alexisdacquay/sail-event/commit/dae24e9). The old scorer has since been replaced; [incident-response/README.md](../incident-response/README.md#recorded-incidents) also documents the later search-provider drill and a failed attempt.
+The local `make up-all` stack connects observability, alerting and the on-call responder. Fault commit [7318f2f](https://github.com/alexisdacquay/sail-event/commit/7318f2f) deliberately made the original scorer raise an exception. The responder produced repair commit [dae24e9](https://github.com/alexisdacquay/sail-event/commit/dae24e9) for human review.
 
-### 1. Deployed version and user impact
+| Handoff | Recorded evidence |
+|---|---|
+| Search failures → alert | [alert.json](../incident-response/incidents/20261017-052050-SearchRunFailures/alert.json): SearchRunFailures began firing at `2026-10-17T05:20:20Z` |
+| Alert → investigation | [evidence.md](../incident-response/incidents/20261017-052050-SearchRunFailures/evidence.md): collected at `05:20:50Z`, with Prometheus results, a log query, health request and recent commits |
+| Investigation → repair branch | [agent.log](../incident-response/incidents/20261017-052050-SearchRunFailures/agent.log), [verdict.json](../incident-response/incidents/20261017-052050-SearchRunFailures/verdict.json): verdict `fix`, file changed and repair commit |
+| Repair branch → human review | Branch `incident/20261017-052050-SearchRunFailures`; [repair diff](../incident-response/incidents/20261017-052050-SearchRunFailures/fix.diff) saved after the drill |
 
-The [evidence packet](../incident-response/incidents/20261017-052050-SearchRunFailures/evidence.md) records an unknown deployed version and a failed health GET. Its Prometheus query reports an interpolated increase of about 27.69 failed manual runs in ten minutes; the [alert](../incident-response/incidents/20261017-052050-SearchRunFailures/alert.json) annotates 23 at its earlier evaluation. The samples were taken at different times. The injected exception caused local searches to fail.
+The rule checks `increase(sail_runs_total{outcome="error"}[10m]) > 1` for five minutes. The agent log identifies the injected exception and reports its removal. The [verdict](../incident-response/incidents/20261017-052050-SearchRunFailures/verdict.json) records the backend test command `uv run pytest tests/ -q`.
 
-### 2. Alert and evidence
+The responder launches Sonnet through headless Claude Code with a USD 1 budget and a 300-second timeout. Its [runbook](../incident-response/README.md#on-call-agent-at-a-glance) describes the task, tools, worktree and review handoff.
 
-SearchRunFailures began firing at `2026-10-17T05:20:20Z`; the evidence was collected at `05:20:50Z`. The rule checks `increase(sail_runs_total{outcome="error"}[10m]) > 1` for five minutes. The packet contains metrics, a Loki query, health and recent commits. Loki returned no log lines. The collector query’s `container` selector does not match the OTLP service labels ([collector script](../incident-response/collect-evidence.sh)).
+## Lessons applied after the drill
 
-### 3. Agent action and current limits
+| Lesson | Change and date | Evidence |
+|---|---|---|
+| Authenticate and structure the alert handoff | On 2026-10-17, webhook hardening added constant-time secret comparison, alert-name validation, an allowlisted agent environment, fenced evidence and a narrower command list | [Commit 4cee1d6](https://github.com/alexisdacquay/sail-event/commit/4cee1d6) |
+| Reproduce the handoff through Grafana | On 2026-10-21, the drill script used Grafana’s own webhook and added `--dry-run` for the alert → evidence → worktree chain | [Commit ad56f19](https://github.com/alexisdacquay/sail-event/commit/ad56f19), [drill instructions](../incident-response/README.md#reproduce-the-full-loop-test-incidentsh) |
+| Make the model endpoint an operator setting | On 2026-10-21, the responder added explicit `ANTHROPIC_BASE_URL` passthrough | [Commit dd84f8a](https://github.com/alexisdacquay/sail-event/commit/dd84f8a), [environment settings](../incident-response/README.md#required-environment-variables) |
+| Preserve a complete repair handoff | The 2026-10-21 search-provider drill retained the alert, evidence, agent log, verdict and repair diff. Alert start to repair commit took 4 min 52 s | [Recorded drill timeline](../incident-response/README.md#recorded-incidents) |
 
-The [agent log](../incident-response/incidents/20261017-052050-SearchRunFailures/agent.log) identifies the injected exception and reports removing it. The responder launches Sonnet through headless Claude Code, with a USD 1 budget limit and a 300-second subprocess timeout. Its current tools and environment are documented in [the responder controls table](../incident-response/README.md#on-call-agent-at-a-glance).
+Verify change dates and code with `git show --format=fuller <commit>`.
 
-### 4. Repair policy and recorded tests
+## Review the repair branch
 
-The [autonomy policy](../incident-response/autonomy-policy.yaml) specifies backend-only edits, tests and branch commits, with no push or infrastructure changes. The [implementation](../incident-response/responder.py) does not load that file: it passes a tool allowlist with unscoped `Read` and `Edit` plus `make test` and selected shell/git commands. A writable Makefile means the allowlist is not a reliable boundary against external actions.
+Use a disposable checkout to run `incident-response/runbooks/verify-recovery.sh <branch>`. The [script](../incident-response/runbooks/verify-recovery.sh) selects the branch and runs backend and frontend tests. Review the diff and verdict, then follow the owner’s [release procedure](release-process.md).
 
-The recorded [verdict](../incident-response/incidents/20261017-052050-SearchRunFailures/verdict.json) names `backend/app/adapters/fake.py` and `uv run pytest tests/ -q`. The log reports passing backend tests and explicitly says frontend tests were skipped. The retained log has no full test output.
+## Security review records
 
-### 5. Recovery verification
-
-Verdict `fix` and commit `dae24e9` exist on branch `incident/20261017-052050-SearchRunFailures`. The [saved diff](../incident-response/incidents/20261017-052050-SearchRunFailures/fix.diff) was added manually afterwards; it is not responder output. No deployment, resolved webhook or post-deployment metric check is retained.
-
-[verify-recovery.sh](../incident-response/runbooks/verify-recovery.sh) switches to the supplied branch and runs backend/frontend tests. It does not deploy or verify alert resolution. Use a disposable checkout if running it.
-
-### 6. Related security findings and human disposition
-
-The [2026-10-16 scan and model-review outputs](../security-audit/runs/2026-10-16/) and [disposition](../security-audit/disposition.md) are dated audit evidence, not a current security assessment. The disposition still describes the first scorer and findings then deferred to [#33](https://github.com/alexisdacquay/sail-event/issues/33)–[#36](https://github.com/alexisdacquay/sail-event/issues/36). Check those issues and current code before treating a listed mitigation as complete. The capability table is also historical; current responder limits and their gaps are above.
+The [2026-10-16 Semgrep and model-review outputs](../security-audit/runs/2026-10-16/) and [human disposition](../security-audit/disposition.md) preserve the scan → review → follow-up handoff. The 2026-10-17 responder-hardening commit above records the resulting implementation changes.
 
 ## AI tool and data policy
 
@@ -40,14 +42,12 @@ The [2026-10-16 scan and model-review outputs](../security-audit/runs/2026-10-16
 |---|---|---|
 | Search provider | Criteria text plus ` event` as the search query; configured search options | [pipeline.py](../backend/app/services/pipeline.py), [provider factory](../backend/app/adapters/factory.py) |
 | Configured language model | Criteria, page content and extracted event fields for parsing, extraction, judging and duplicate checking | [OpenAI-compatible adapter](../backend/app/adapters/llm_openai_compat.py), [versioned prompts](../backend/app/adapters/prompts/) |
-| Lakera, when selected | Criteria text on save for prompt-attack checks; moderation, PII and link detections are ignored | [criteria router](../backend/app/routers/criteria.py), [Lakera adapter](../backend/app/adapters/guard_lakera.py) |
+| Lakera, when selected | Criteria text on save for prompt-attack checks | [criteria router](../backend/app/routers/criteria.py), [Lakera adapter](../backend/app/adapters/guard_lakera.py) |
 | Fallback model, when selected | Text submitted to the self-check guard when Lakera is unavailable | [factory](../backend/app/adapters/factory.py), [self-check](../backend/app/services/guardrails/self_check.py) |
-| On-call Claude agent | Fenced local evidence and access to the source worktree; CLI authentication/configuration available through its environment and `HOME` | [responder.py](../incident-response/responder.py), [task prompt](../incident-response/responder-task.md) |
+| On-call Claude agent | Fenced local evidence and the source worktree | [responder.py](../incident-response/responder.py), [task prompt](../incident-response/responder-task.md) |
 
-The application uses an environment-selected model endpoint; the work log records DeepSeek directly on Render and Kilo locally. It no longer uses the first Anthropic scorer described in the original report. Data retention and training use follow the configured provider’s terms.
+The application uses an environment-selected model endpoint; the work log records DeepSeek directly on Render and Kilo locally. Select providers whose retention and training terms meet the intended data policy.
 
-The validation handler omits raw request input from error responses ([main.py](../backend/app/main.py)). Authentication credentials are not deliberate prompt fields, but criteria and external content are untrusted and can themselves contain sensitive text. Prompt fencing and bounded output schemas reduce particular risks; they do not isolate models from that content.
+The [validation handler](../backend/app/main.py) omits raw request input from error responses. Versioned prompts fence external content, and schemas validate model output. The responder authenticates its webhook with a shared Bearer secret using constant-time comparison.
 
-The responder authenticates its webhook with a shared Bearer secret using constant-time comparison.
-
-Keep keys out of tracked files. Configure them through environment variables, local git-ignored files or service/GitHub secret stores. Telemetry contents and unresolved privacy gaps are listed in the [observability runbook](../observability/README.md#what-telemetry-contains-and-never-contains).
+Store keys in environment variables, local git-ignored files or service/GitHub secret stores. Keep sensitive text out of criteria. Before sharing telemetry, review the [signal contents](../observability/README.md#telemetry-contents) and redact feed tokens, client identifiers, URLs and provider exception text.

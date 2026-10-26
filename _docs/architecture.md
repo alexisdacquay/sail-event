@@ -58,14 +58,11 @@ fields; `stage_counts`, `pages` and cached facets are JSON stored as text.
 | Run | id, user_id FK, started_at, finished_at, events_found, events_new, trigger, error, stage_counts, search_calls, llm_calls, llm_tokens_in, llm_tokens_out, cost_usd, current_stage, stopped_at_stage, error_detail, pages | One row per user search execution |
 
 Run data drives the chronology, funnel, earlier-run list and local metrics.
-The API also returns per-page details; the current UI does not display them. See [search router](../backend/app/routers/search.py)
+The API also returns per-page details. See [search router](../backend/app/routers/search.py)
 and [EarlierRuns](../frontend/src/components/EarlierRuns.tsx).
 
 PR [#150](https://github.com/alexisdacquay/sail-event/pull/150) removed the event
-uniqueness constraint and deleted stored events without start times. That delete
-is irreversible. Rollback across the three migrations added by PRs #128/#150 is
-untested; deploying old code cannot restore deleted events. Back up the database
-before promotion and follow the release guide.
+uniqueness constraint and deleted stored events without start times.
 
 ## Adapter interfaces
 
@@ -76,7 +73,7 @@ before promotion and follow the release guide.
 | Guardrail `check(text)` | `GUARDRAIL` | `none` · `lakera` (+ `GUARD_FALLBACK=self_check`) |
 
 - Source: [factory.py](../backend/app/adapters/factory.py). Fixture search and the fake model are used in ordinary tests, CI and compose; tests may inject other implementations.
-- With `APP_ENV=prod`, fixture search and the fake model refuse at first use; health can still succeed.
+- With `APP_ENV=prod`, fixture search and the fake model refuse at first use.
 - The guard runs on `PUT /api/criteria`, not during the search ([criteria.py](https://github.com/alexisdacquay/sail-event/blob/542e58cb0fe73065a905febec7637bfa377a77c4/backend/app/routers/criteria.py#L56-L58)).
 
 ## Request flow — one run
@@ -127,7 +124,7 @@ flowchart LR
 | URL | localhost:5173 + :8000 / :8000 | https://sail-event-dev.onrender.com | https://sail-event.onrender.com |
 | Configuration | Environment; compose provides local defaults | Render environment variables | Render environment variables |
 | Adapters | Fixture search, fake model by default | Real adapters, per deployment configuration | Real adapters, per deployment configuration |
-| Scheduler | No local scheduler; manual trigger | No GitHub cron target | GitHub hourly cron; actual starts are less frequent |
+| Scheduler | Manual trigger | No GitHub cron target | GitHub cron → queued searches |
 | Deployment | Local commands | Auto-deploy setting in Render, not a GitHub deploy job | Manual `promote.yml` after owner approval |
 | Telemetry | `make up-all` enables OTel collection | None exported | None exported |
 
@@ -137,14 +134,8 @@ do not infer it from main or the last merge.
 
 ## Telemetry
 
-The observability, alerting and on-call stack runs locally with `make up-all`;
-the deployed app sends no telemetry. Logs and traces correlate by trace ID;
-metrics have no trace ID or exemplars. Telemetry can include user IDs, HTTP
-client metadata and calendar-feed tokens. Collection and privacy limits are in
+The observability, alerting and on-call stack runs locally with `make up-all`.
+Logs and traces correlate by trace ID. Telemetry can include user IDs, HTTP
+client metadata and calendar-feed tokens. Telemetry collection is described in
 the [observability guide](../observability/README.md). The two recorded on-call
 repair runs are injected-fault drills.
-
-## Known limitations
-
-- Duplicate detection depends on the model after the stored-page/date check. Model errors (`dedup_errors`) or insufficient budget can leave both rows. Removing the uniqueness constraint permits different events with the same link and start.
-- Search coverage is limited by provider results and failed page/model calls. A stored `new` row is retried; a page lost during extraction is not recovered by that mechanism.

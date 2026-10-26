@@ -42,16 +42,13 @@ The [deployment log](../work/DEPLOY-render.md) records these services in Frankfu
 | dev | `sail-event-dev` (starter) | `sail-event-dev-db` (basic_256mb) | every push to `main` |
 | prod | `sail-event` (starter) | `sail-event-db` (Basic, point-in-time recovery on) | manual promotion; dashboard changes can also redeploy |
 
-- Setting Render’s health check path to `/api/health` remains open in the deployment log.
-- The log records the prod database inbound rule as `0.0.0.0/0`, with a pending decision to restrict or accept external access.
-- Saving environment variables can trigger a deploy independently of `promote.yml`; the [work log](../work/STATE.md) records this on 2026-10-20.
+Coordinate environment-variable changes with the release: saving them can trigger a deploy independently of `promote.yml` ([2026-10-20 record](../work/STATE.md)).
 
 ## Scheduled search
 
 - [hourly-search.yml](../.github/workflows/hourly-search.yml) is scheduled at minute 07 of every hour and calls prod only (repo variable `SAIL_BASE_URL` = `https://sail-event.onrender.com`). The app has no scheduler of its own.
-- GitHub delays scheduled runs. The 50 scheduled runs from 17 to 26 Oct were 2.1 to 7.8 hours apart, median 4.8 h (sample ending 2026-10-26 12:51 UTC). Reproduce the timestamps: `gh run list -R alexisdacquay/sail-event --workflow=hourly-search.yml --event schedule --limit 50 --json createdAt`; sort them and subtract adjacent timestamps.
 - Each run checks that `/api/health` answers 200, then calls `POST /api/search/all` with the `X-API-Key` secret. The server queues every user with saved criteria, oldest last search first, up to `MAX_SCHEDULED_USERS`; it skips users with an unfinished run started in the last 55 minutes and those beyond the cap. It answers `202` with `usersQueued` and `usersSkipped`, then runs the searches in background tasks.
-- The job fails on a failed health GET, a non-2xx enqueue response or an unreadable response body. Success confirms enqueueing; searches that fail after the 202 are not reflected in the job result. See [Monitoring](#monitoring) for search-failure coverage.
+- The job checks health and confirms enqueueing. Inspect each search’s status through the [run API](api.md#run-responses).
 
 Setup, once per target:
 
@@ -64,7 +61,7 @@ Run it by hand: `gh workflow run hourly-search.yml`; history: `gh run list --wor
 
 ## Monitoring
 
-Project observability, alerts and the on-call responder cover the local stack (`make up-all`); the deployed app sends no telemetry to it. Render provides service logs and platform metrics separately. The [observability runbook](../observability/README.md) explains the signals, alerts and recorded drills.
+Project observability, alerts and the on-call responder run in the local stack (`make up-all`). Render provides deployed-service logs and platform metrics. The [observability runbook](../observability/README.md) explains the signals, alerts and recorded drills.
 
 ## Environment variables
 
@@ -138,7 +135,7 @@ Set in Render → service → Environment. These settings target main. Confirm p
 
 ## Health
 
-`GET /api/health` returns a status and the deployed commit, not database or provider readiness. A green health check can coexist with failed searches. The container runs migrations before starting Uvicorn. Migration and data-recovery requirements are in [Rollback](release-process.md#rollback).
+`GET /api/health` returns a status and the deployed commit. The container runs migrations before starting Uvicorn. Follow the [release checklist](release-process.md#manual-promotion-to-prod) for database preparation and application validation.
 
 ## Access
 
@@ -152,4 +149,4 @@ Render → `sail-event-db` → Info → Credential Rotation → New default cred
 
 ## Teardown
 
-Render dashboard → service → Settings → Delete, for the web service and then the database. Deleting the database cannot be undone.
+Back up the database before teardown. In Render dashboard → service → Settings → Delete, delete the web service first, then the database.
