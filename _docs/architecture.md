@@ -21,7 +21,7 @@ separate database. The app runs locally and on Render.
 | Tests (backend) | pytest | 9.1 |
 | Tests (e2e) | Playwright | 1.64 |
 | CI/CD | GitHub Actions | — |
-| Deploy | Render Web Service (Docker) + Render Postgres. Dev auto-deploy is a Render service setting; prod promotion uses manual `promote.yml` | — |
+| Deploy | Render Web Service (Docker) + Render Postgres. Prod is promoted through the manual `promote.yml`; saving its environment variables can also redeploy it. The dev service is suspended | — |
 | Scheduler | GitHub Actions cron → POST /api/search/all | — |
 | Contract | openapi.yaml (backend implements it; [test_schema_contract.py](../backend/tests/test_schema_contract.py) checks they match) | — |
 | Container | Docker; docker-compose for app + Postgres | — |
@@ -118,17 +118,17 @@ flowchart LR
 
 ## Environments
 
-| Aspect | Local (`make run` / compose) | Render dev | Render prod |
-|---|---|---|---|
-| DB | SQLite / Postgres | Render Postgres | Render Postgres |
-| URL | localhost:5173 + :8000 / :8000 | https://sail-event-dev.onrender.com | https://sail-event.onrender.com |
-| Configuration | Environment; compose provides local defaults | Render environment variables | Render environment variables |
-| Adapters | Fixture search, fake model by default | Real adapters, per deployment configuration | Real adapters, per deployment configuration |
-| Scheduler | Manual trigger | No GitHub cron target | GitHub cron → queued searches |
-| Deployment | Local commands | Auto-deploy setting in Render, not a GitHub deploy job | Manual `promote.yml` after owner approval |
-| Telemetry | `make up-all` enables OTel collection | None exported | None exported |
+| Aspect | Local (`make run` / compose) | Render prod |
+|---|---|---|
+| DB | SQLite / Postgres | Render Postgres |
+| URL | localhost:5173 + :8000 / :8000 | https://sail-event.onrender.com |
+| Configuration | Environment; compose provides local defaults | Render environment variables |
+| Adapters | Fixture search, fake model by default | Real adapters, per deployment configuration |
+| Scheduler | Manual trigger | GitHub cron → queued searches (workflow disabled since 2026-10-27) |
+| Deployment | Local commands | Manual `promote.yml` after owner approval |
+| Telemetry | `make up-all` enables OTel collection | None exported |
 
-See [deployment.md](../docs/deployment.md) for service settings. To inspect the
+A Render dev service auto-deployed `main` from 2026-10-17 to 2026-11-14 and is now suspended. See [deployment.md](../docs/deployment.md#services) for service settings. To inspect the
 currently deployed commit, run `curl -s https://sail-event.onrender.com/api/health`;
 do not infer it from main or the last merge.
 

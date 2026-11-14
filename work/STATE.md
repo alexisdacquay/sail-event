@@ -1,5 +1,13 @@
 # ProjectOne — work state (resumable)
 
+## 2026-11-14 — dev suspended; prod (468eacf, = main) is the only live environment
+
+- The owner's call, to cut hosting cost: Render `sail-event-dev` (srv-db9viuijnfac73dpph20) and `sail-event-dev-db` (dpg-db9viomq1p3s739okpm0-a) were suspended on 2026-11-14. They keep their settings and data; to bring dev back, resume the DB, then the service, in the Render dashboard. The dev DB holds the owner's 2026-11-13 test session, which prod does not have.
+- Before the suspension, prod passed a read-only check: health on 468eacf (= main), migrations at head, no schema drift, no restarts or errors in 19 days, memory at 35% of 512 MB, DB 18 MB of 1 GB, point-in-time recovery available.
+- A merge to main now deploys nothing. Release: merge, read the commit's CI run (integration + Playwright on compose), then, on the owner's go for that sha, `gh workflow run promote.yml -R alexisdacquay/sail-event -f sha=<full sha>`. The 2026-10-26 checklist below is history.
+- There never was a `dev` git branch in this repo: both services build from `main`.
+- `hourly-search.yml` has been disabled since 2026-10-27 17:10 UTC (GitHub: disabled_manually); the last scheduled run was 2026-10-27 16:30 UTC.
+
 ## 2026-10-26 ~13:45 UTC — docs pass (PR 153) on dev; prod still 969a161, waiting on the owner
 
 - PR 153 changes docs only. It rewrites every reviewer-facing page to the owner's standard (`work/docs-pass/STANDARD.md`). The record and how to resume are in `work/docs-pass/README.md`.

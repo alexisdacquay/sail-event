@@ -35,9 +35,9 @@ This is the final project for the [DataTalksClub AI Dev Tools Zoomcamp 2026](htt
 ```bash
 # §8: the live app answers and reports its deployed commit
 curl -fsS --max-time 20 https://sail-event.onrender.com/api/health
-# §9: dev runs the head of main
-curl -fsS --max-time 20 https://sail-event-dev.onrender.com/api/health
+# §9: compare it with the head of main and the last manual deploys to prod
 git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main
+gh run list -R alexisdacquay/sail-event --workflow=promote.yml -L 3
 # §6: the latest CI runs on main
 gh run list -R alexisdacquay/sail-event --workflow=ci.yml -b main -L 3
 # §3: one PR with every role's record: engineer report, QA verdict per criterion, merge
@@ -59,7 +59,7 @@ With a clone: `python3 -I incident-response/test_responder.py` runs the on-call 
 
 ### What it does
 
-1. **Search:** sends your sentence to a web search, on demand (**Search now**) and on a schedule.
+1. **Search:** sends your sentence to a web search when you press **Search now**. A scheduled workflow can re-run every saved search hourly; it has been switched off since 27 October 2026.
 2. **Read:** extracts events from each page and opens each event's own page.
 3. **Screen:** drops events with no date or start time, events already over, and events already stored.
 4. **Score:** a model scores each event 0–100 against your sentence and gives a reason.
@@ -163,7 +163,7 @@ The cycle, step by step:
 3. **CI runs** on the PR.
 4. **QA checks** the exact commit, criterion by criterion, and posts PASS or FAIL. It edits no files.
 5. **On FAIL**, the findings go back to the engineer, and QA re-checks the new commit. A criterion that can't be met goes to the owner, who decides.
-6. **The owner merges**, and dev deploys. Prod needs a second, separate approval for a named commit.
+6. **The owner merges.** Prod needs a second, separate approval for a named commit.
 
 For how each agent is started, a real brief and every handoff, read [the process doc](_docs/process.md).
 
@@ -251,25 +251,16 @@ flowchart LR
 
 - **Live:** <https://sail-event.onrender.com>. Anyone can register.
 - **Health:** `curl -fsS https://sail-event.onrender.com/api/health` returns the status and the deployed commit.
-- **Two environments:** separate dev and prod services, each with its own database ([deployment](docs/deployment.md#services)).
+- **Database:** a Render Postgres 18 instance with point-in-time recovery ([the Render services](docs/deployment.md#services)).
 
 ## 9. CI/CD
 
-*Covers: CI runs the tests · CD deploys to dev · a manual deploy to production.*
+*Covers: CI runs the tests · CD to dev (17 October to 14 November 2026) · a manual deploy to production.*
 
-```mermaid
-flowchart LR
-    P[PR: unit tests, UI build, API lint] --> I[Compose: integration and Playwright]
-    I --> M[Owner: merge]
-    M --> D[Main update: Render deploys dev]
-    D --> C[Owner checks dev and names commit]
-    C --> A[Owner approves that SHA]
-    A --> W[Manual promote workflow]
-    W --> H[Deploy SHA, verify prod health and commit]
-```
+![A PR runs unit tests, the UI build and the API lint, then integration and Playwright tests on the compose stack. The owner merges, names a commit, and the manual promote workflow deploys that commit and checks prod's health and commit. To roll back code, the owner promotes an earlier commit.](docs/diagrams/release-flow.svg)
 
 - **CI** runs on every PR and every push to main ([the CI workflow][ci]).
-- **CD to dev:** every merge to main deploys dev on Render ([the deployment log](work/DEPLOY-render.md#devprod-split-issue-21-started-2026-10-17)). Dev's `/api/health` reports the head of main.
+- **CD to dev:** from 17 October to 14 November 2026, every merge to main was deployed automatically to a dev service on Render ([the deployment log](work/DEPLOY-render.md#devprod-split-issue-21-started-2026-10-17)). Dev is now suspended to save hosting cost. Its settings and data are kept, so it can be resumed from the Render dashboard.
 - **Manual deploy to prod:** [the promote workflow][promote] only runs when someone starts it. It deploys the named commit, then waits until prod's `/api/health` reports that exact commit. Open [its run history](https://github.com/alexisdacquay/sail-event/actions/workflows/promote.yml) to see each release. The steps are in [the release procedure](docs/release-process.md).
 
 ## 10. Observability

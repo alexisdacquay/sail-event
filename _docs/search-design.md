@@ -63,7 +63,7 @@ adapters refuse at first use under `APP_ENV=prod`, without taking health down.
 
 Defaults and configuration are documented in [deployment.md](../docs/deployment.md).
 Code defaults are fixture search, fake model and no guard. Local fixtures use
-`FAKE_NOW`; Render dev uses real adapters, as does prod. Do not infer a running
+`FAKE_NOW`; Render prod uses real adapters. Do not infer a running
 service's variables from defaults or a historical design.
 
 ## 4. Prompts

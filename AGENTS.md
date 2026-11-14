@@ -1,7 +1,7 @@
 Sail-event scores web-search results against a user's free-text criteria,
 triages by threshold, and publishes accepted events to a per-user ICS feed.
 
-If you are the main session, you are the orchestrator: follow [_docs/process.md](_docs/process.md). The owner picks work and authorizes merges; merge updates dev. Prod needs a separate owner check and approval for a named commit. Current freeze (2026-10-26): docs only.
+If you are the main session, you are the orchestrator: follow [_docs/process.md](_docs/process.md). The owner picks work and authorizes merges; a merge deploys nothing (the dev service has been suspended since 2026-11-14). Prod needs a separate owner check and approval for a named commit. Current freeze (2026-10-26): docs only.
 
 ## Documents
 
@@ -63,4 +63,4 @@ Two doc folders: `_docs/` = what to build and how the team works (product, desig
 - Follow the commit and regression-test rules in [_docs/process.md](_docs/process.md#rules)
 - Adapters are interfaces selected by env var
   (`SEARCH_PROVIDER`, `LLM_PROVIDER`, `GUARDRAIL`). Defaults: fixture search,
-  fake model, no guard. Render dev and prod use real adapters
+  fake model, no guard. Render prod uses real adapters

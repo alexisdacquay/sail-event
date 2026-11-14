@@ -1,13 +1,10 @@
 # Deployment
 
-The app runs on Render: separate dev and prod web services, each with its own database. Both build the root [Dockerfile](../Dockerfile). CI, dev deployment and manual promotion are explained in [release-process.md](release-process.md).
+The app runs on Render as one web service, prod, with its own database. It builds the root [Dockerfile](../Dockerfile). A dev service and database ran until 2026-11-14 and are now suspended ([Services](#services)). CI and manual promotion are explained in [release-process.md](release-process.md).
 
-## Which version runs where
+## Which version prod runs
 
-| Env | URL | Runs | Check |
-|---|---|---|---|
-| prod | https://sail-event.onrender.com | manually selected commit | `curl -s https://sail-event.onrender.com/api/health` |
-| dev | https://sail-event-dev.onrender.com | follows `main`; deployment may still be building | `curl -s https://sail-event-dev.onrender.com/api/health` |
+Prod, <https://sail-event.onrender.com>, runs a manually selected commit; `curl -s https://sail-event.onrender.com/api/health` shows which.
 
 `/api/health` prints `{"status":"ok","commit":"<sha>"}`; the sha comes from Render's `RENDER_GIT_COMMIT`. `git log --oneline -1 <sha>` names the commit.
 
@@ -16,20 +13,18 @@ The app runs on Render: separate dev and prod web services, each with its own da
 ## Check deployed commits
 
 ```bash
-# Compare dev with main after the Render build completes
-curl -s https://sail-event-dev.onrender.com/api/health
-git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main
-# Compare prod with the manual promotion history
+# Compare prod with main and with the manual promotion history
 curl -s https://sail-event.onrender.com/api/health
+git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main
 gh run list -R alexisdacquay/sail-event --workflow=promote.yml --limit 3
 ```
 
-The commands compare the deployed commits with main and promotion history. [The deployment log](../work/DEPLOY-render.md) records an automatic dev deploy after a push on 2026-10-17, with these settings: `sail-event-dev` → Settings → Auto-Deploy = On Commit; `sail-event` → Auto-Deploy = Off.
+Prod has Auto-Deploy = Off, so it changes only through a promotion or a settings change (dashboard or Render API). `sail-event-dev` has Auto-Deploy = On Commit and deployed every push to `main` until its suspension on 2026-11-14; [the deployment log](../work/DEPLOY-render.md) records its first automatic deploy, after a push on 2026-10-17.
 
-## Using the live sites
+## Using the live site
 
-- Registration is open on both: `curl -s https://sail-event.onrender.com/api/config` prints `{"registrationCodeRequired":false}`.
-- The deployment log records `SEED_DEMO=1` on dev, which creates the shared `demo` / `demo` account. Keep it unset on prod.
+- Registration is open: `curl -s https://sail-event.onrender.com/api/config` prints `{"registrationCodeRequired":false}`.
+- Keep `SEED_DEMO` unset on prod: it creates a shared `demo` / `demo` account. The suspended dev service has it set to `1`.
 - Live-adapter searches measured 86–493 seconds across local runs on different code revisions in [PR #144](https://github.com/alexisdacquay/sail-event/pull/144).
 - Default limits: 5 successful registrations per IP per hour; 6 manual searches per user per rolling hour; daily budgets of 600 search credits and 5000 model calls across users. Settings are configurable; see [Environment variables](#environment-variables).
 
@@ -39,14 +34,14 @@ The [deployment log](../work/DEPLOY-render.md) records these services in Frankfu
 
 | Environment | Web service | Database | Deploys when |
 |---|---|---|---|
-| dev | `sail-event-dev` (starter) | `sail-event-dev-db` (basic_256mb) | every push to `main` |
+| dev (suspended since 2026-11-14) | `sail-event-dev` (starter) | `sail-event-dev-db` (basic_256mb) | every push to `main`, until 2026-11-14 |
 | prod | `sail-event` (starter) | `sail-event-db` (Basic, point-in-time recovery on) | manual promotion; dashboard changes can also redeploy |
 
 Coordinate environment-variable changes with the release: saving them can trigger a deploy independently of `promote.yml` ([2026-10-20 record](../work/STATE.md)).
 
 ## Scheduled search
 
-- [hourly-search.yml](../.github/workflows/hourly-search.yml) is scheduled at minute 07 of every hour and calls prod only (repo variable `SAIL_BASE_URL` = `https://sail-event.onrender.com`). The app has no scheduler of its own.
+- [hourly-search.yml](../.github/workflows/hourly-search.yml) runs at minute 07 of every hour while enabled and calls prod only (repo variable `SAIL_BASE_URL` = `https://sail-event.onrender.com`). It has been disabled since 2026-10-27; `gh workflow enable hourly-search.yml` turns it back on. The app has no scheduler of its own.
 - Each run checks that `/api/health` answers 200, then calls `POST /api/search/all` with the `X-API-Key` secret. The server queues every user with saved criteria, oldest last search first, up to `MAX_SCHEDULED_USERS`; it skips users with an unfinished run started in the last 55 minutes and those beyond the cap. It answers `202` with `usersQueued` and `usersSkipped`, then runs the searches in background tasks.
 - The job checks health and confirms enqueueing. Inspect each search’s status through the [run API](api.md#run-responses).
 
@@ -65,7 +60,7 @@ Project observability, alerts and the on-call responder run in the local stack (
 
 ## Environment variables
 
-Set in Render → service → Environment. These settings target main. Confirm provider choices against the [promotion checklist](release-process.md#manual-promotion-to-prod) when deploying. Secrets belong in environment variables and GitHub secrets, never in tracked files.
+Set in Render → service → Environment. These settings target main. The Dev column lists the suspended dev service's values, kept in case dev is resumed. Confirm provider choices against the [promotion checklist](release-process.md#manual-promotion-to-prod) when deploying. Secrets belong in environment variables and GitHub secrets, never in tracked files.
 
 **Required**
 

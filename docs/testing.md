@@ -97,7 +97,7 @@ Screenshots are written under `e2e/test-results/`.
 
 ## Owner tools (live, costs credits)
 
-These commands are outside `make test-all`. Field tests register accounts and change criteria, thresholds and events on the target. Use dedicated test accounts on dev for owner-approved live testing.
+These commands are outside `make test-all`. Field tests need the real search and model adapters, so they run against prod, the only live service, with the owner's approval and dedicated test accounts. They register accounts and change criteria, thresholds and events on the target. Prod allows 5 new accounts per IP per hour; the runner logs in to accounts it created before, so only a first run hits that limit.
 
 <a id="four-phase-field-runner"></a>
 
@@ -105,7 +105,7 @@ These commands are outside `make test-all`. Field tests register accounts and ch
 
 ```bash
 uv run --project backend python backend/tests/field/runner.py \
-  --base-url https://sail-event-dev.onrender.com --phase 4
+  --base-url https://sail-event.onrender.com --phase 4
 ```
 
 | Phase | Work |

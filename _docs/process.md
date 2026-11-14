@@ -43,11 +43,11 @@ handoffs follow](#brief-and-context-details).
 2. The engineer implements in its worktree, runs checks, commits and opens a linked PR.
 3. QA independently checks the submitted commit and posts PASS/FAIL per criterion. On FAIL, the orchestrator sends the findings to the engineer for a fix, then asks QA to check the new commit.
 4. To request an exception, the orchestrator sends the unmet criterion and evidence to the owner. The owner grants or rejects a waiver; the decision is recorded on the issue or PR. A waiver leaves the QA verdict as FAIL.
-5. With green CI and either QA PASS or a recorded owner waiver, the orchestrator reports the evidence and asks the owner to authorize merge. Merge updates dev; GitHub closes the issue through `Closes #N`, or the orchestrator closes it.
-6. The owner checks dev and approves a named commit for [manual prod promotion](../docs/release-process.md).
+5. With green CI and either QA PASS or a recorded owner waiver, the orchestrator reports the evidence and asks the owner to authorize merge. The merge lands on `main` and deploys nothing; GitHub closes the issue through `Closes #N`, or the orchestrator closes it.
+6. The owner checks the merged commit's CI run and approves that commit by name for [manual prod promotion](../docs/release-process.md).
 
-Since **2026-10-21**, the process requires the owner's pick for each next item
-and a dev check before each prod promotion, retaining priority and release decisions.
+Since **2026-10-21**, the owner picks each next item and approves each prod commit,
+so priority and release decisions stay with the owner.
 
 ## Handoffs
 
@@ -65,22 +65,7 @@ each report and briefs the next role.
 
 ## One cycle in one picture
 
-```mermaid
-flowchart LR
-    O[Owner picks] --> P[PM grooms issue]
-    P --> E[Engineer: commits + PR + checks]
-    E --> Q[QA checks committed head]
-    Q -- FAIL --> E
-    Q -- PASS --> S[Orchestrator reports evidence]
-    Q -- FAIL: exception requested --> W[Orchestrator sends criterion + evidence to owner]
-    W --> V{Owner grants waiver?}
-    V -- No --> E
-    V -- Yes: record decision --> S
-    S -- green CI --> M[Owner authorizes merge]
-    M --> D[Merge to dev, close issue]
-    D --> A[Owner checks dev and names prod commit]
-    A --> R[Manual prod promote]
-```
+![One cycle: the owner picks an issue, PM grooms it, the engineer commits and opens a PR, QA checks the committed head. On FAIL the work goes back to the engineer, or a waiver request goes to the owner. On PASS or a recorded waiver, with green CI, the owner authorizes the merge, then checks the CI run and names the commit for the manual prod promote.](../docs/diagrams/delivery-cycle.svg)
 
 ## Brief and context details
 
