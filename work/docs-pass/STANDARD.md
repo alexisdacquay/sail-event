@@ -6,7 +6,7 @@ Every writer and reviewer in this pass applies this. It is the owner's standard,
 
 - Sail-event is the final project of the DataTalksClub AI Dev Tools Zoomcamp 2026. Peers score it against a 12-criterion rubric (full text in `work/docs-pass/facts.md`, section `rubric`). They read `README.md` and `docs/reviewer-guide.md` first.
 - The owner calls the docs the most important part of the project.
-- Live sites: prod <https://sail-event.onrender.com> runs an OLD commit (969a161). Dev <https://sail-event-dev.onrender.com> runs main. **The owner will promote prod to the final docs commit before submission**, so write for main. Do not add "prod is older" caveats. Report a prod mismatch only if it would still exist after the promote.
+- Live site: prod <https://sail-event.onrender.com>. The dev service (`sail-event-dev`) has been suspended since 2026-11-14: never present it as live. **The owner will promote prod to the final docs commit before submission**, so write for main. Do not add "prod is older" caveats. Report a prod mismatch only if it would still exist after the promote.
 - The README before PR 152 is `git show 'ac54483^:README.md'`. Its product wording was more accurate.
 - Change freeze: docs only, no code changes.
 

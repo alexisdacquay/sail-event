@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How a change reaches production</title>
+  <!-- Font source: system (no Google Fonts link); stacks fall through to platform faces. -->
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #bf4520;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Noto Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+
+    .frame { max-width: 1200px; width: 100%; min-width: 0; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-ink);
+      margin-bottom: 1.5rem;
+    }
+
+    svg { width: 100%; min-width: 960px; display: block; }
+    @media print {
+      .diagram-container { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Flowchart · Sail-event</p>
+    <h1>How a change reaches production</h1>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 960 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="release-flow-title release-flow-desc">
+        <title id="release-flow-title">How a change reaches production</title>
+        <desc id="release-flow-desc">CI tests every pull request, the owner merges, and production changes only when the owner promotes one named commit, which a workflow deploys and verifies; rollback promotes the previous commit.</desc>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker>
+          <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+        <!-- Zone: CI (drawn first) -->
+        <rect x="40" y="40" width="368" height="168" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <rect x="48" y="44" width="248" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="52" y="53" fill="#5a6580" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.14em">CI · EVERY PULL REQUEST AND PUSH TO MAIN</text>
+
+        <!-- Arrows (behind nodes) -->
+        <!-- Backend -> full-stack (fan-in, upper port) -->
+        <path d="M192,96 H204 Q212,96 212,104 V112 Q212,120 220,120 H232" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <!-- Frontend -> full-stack (fan-in, lower port) -->
+        <path d="M192,168 H204 Q212,168 212,160 V152 Q212,144 220,144 H232" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <!-- Full-stack -> owner merges -->
+        <line x1="392" y1="132" x2="440" y2="132" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <!-- Owner merges -> owner promotes -->
+        <line x1="568" y1="132" x2="608" y2="132" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <!-- Owner promotes -> deploy to prod -->
+        <line x1="744" y1="132" x2="784" y2="132" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <!-- Rollback: prod -> owner promotes (dashed return) -->
+        <path d="M852,164 V184 Q852,192 844,192 H684 Q676,192 676,184 V166" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+
+        <!-- Arrow label (mask below the horizontal segment, 8px gap) -->
+        <rect x="736" y="200" width="56" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="764" y="209" fill="#5a6580" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">ROLLBACK</text>
+
+        <!-- Backend tests -->
+        <rect x="56" y="72" width="136" height="48" rx="6" fill="#f5f5f5"/>
+        <rect x="56" y="72" width="136" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="124" y="94" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Backend tests</text>
+        <text x="124" y="108" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">pytest</text>
+
+        <!-- Frontend tests -->
+        <rect x="56" y="144" width="136" height="48" rx="6" fill="#f5f5f5"/>
+        <rect x="56" y="144" width="136" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="124" y="166" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Frontend tests</text>
+        <text x="124" y="180" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">tests, build, API lint</text>
+
+        <!-- Full-stack tests -->
+        <rect x="232" y="100" width="160" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="232" y="100" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="312" y="124" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Full-stack tests</text>
+        <text x="312" y="138" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">app + Postgres in Docker</text>
+        <text x="312" y="150" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">integration + UI tests</text>
+
+        <!-- Owner merges (focal: human gate) -->
+        <rect x="440" y="100" width="128" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="440" y="100" width="128" height="64" rx="6" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1"/>
+        <text x="504" y="130" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Owner merges</text>
+        <text x="504" y="144" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">into main</text>
+
+        <!-- Owner promotes (focal: human gate) -->
+        <rect x="608" y="100" width="136" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="608" y="100" width="136" height="64" rx="6" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1"/>
+        <text x="676" y="130" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Owner promotes</text>
+        <text x="676" y="144" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">names one commit</text>
+
+        <!-- Deploy to prod -->
+        <rect x="784" y="100" width="136" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="784" y="100" width="136" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="852" y="124" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', system-ui, sans-serif" text-anchor="middle">Deploy to prod</text>
+        <text x="852" y="138" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">promote.yml</text>
+        <text x="852" y="150" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">verifies prod's commit</text>
+
+        <!-- Legend strip -->
+        <line x1="40" y1="236" x2="920" y2="236" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <text x="40" y="259" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.18em">LEGEND</text>
+
+        <rect x="104" y="250" width="24" height="12" rx="2" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1"/>
+        <text x="136" y="259" fill="#4f5d75" font-size="9" font-family="'Geist', system-ui, sans-serif">Owner decides</text>
+
+        <rect x="232" y="250" width="24" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="264" y="259" fill="#4f5d75" font-size="9" font-family="'Geist', system-ui, sans-serif">Runs automatically</text>
+
+        <line x1="384" y1="256" x2="412" y2="256" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+        <text x="420" y="259" fill="#4f5d75" font-size="9" font-family="'Geist', system-ui, sans-serif">Code-only rollback: promote an earlier commit</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>

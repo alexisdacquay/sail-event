@@ -42,7 +42,7 @@ UI invariants are still `make test-e2e`.
 
 5-8 Opus-high subagents in parallel, at most 2 searches each, brief below:
 
-Prod has the real adapters; dev runs fixtures, so tiers 1-3 run against prod. Limits that bite:
+Tiers 1-3 run against prod, the only live service (dev has been suspended since 2026-11-14). Limits that bite:
 `REGISTER_RATE_LIMIT_PER_HOUR` (5 per IP: a fresh host registers five personas per run),
 `SEARCH_NOW_PER_HOUR` (6 per user), `SEARCH_DAILY_CALLS` (global). Persona users are `field_<id>`.
 

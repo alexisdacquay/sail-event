@@ -1,29 +1,19 @@
 # Release process
 
-GitHub Actions runs CI on pull requests to `main` and pushes to `main`. Render builds dev after each push to `main`. Production uses a separate, owner-approved manual promotion of a named commit.
+GitHub Actions runs CI on pull requests to `main` and pushes to `main`. Production uses a separate, owner-approved manual promotion of a named commit. A merge deploys nothing: the [dev service](#dev-environment-suspended) is suspended.
 
-```mermaid
-flowchart LR
-    PR["Pull request"] --> CI["CI: backend + frontend,<br/>then integration + e2e"]
-    CI --> REVIEW["QA and owner review"] --> MAIN["main"]
-    MAIN --> DEV["Render dev build"]
-    MAIN --> PUSHCI["CI on main<br/>(independent of dev deploy)"]
-    DEV --> CHECK["Owner checks candidate,<br/>migrations and backup"]
-    CHECK --> APPROVE["Owner approves named commit"]
-    APPROVE --> PROMOTE["Manual promote.yml"] --> PROD["Render prod"]
-```
+![A PR runs unit tests, the UI build and the API lint, then integration and Playwright tests on the compose stack. The owner merges, names a commit, and the manual promote workflow deploys that commit and checks prod's health and commit. To roll back code, the owner promotes an earlier commit.](diagrams/release-flow.svg)
 
 | Stage | Mechanism | Evidence |
 |---|---|---|
 | CI | [ci.yml](../.github/workflows/ci.yml) | `gh run list -R alexisdacquay/sail-event --workflow=ci.yml --branch main --limit 3` |
-| CD to dev | Render auto-deploy on commit, recorded in the [deployment log](../work/DEPLOY-render.md) | Compare dev’s health response with remote main after the build; [commands](deployment.md#prove-cd-in-30-seconds) |
 | Manual promotion | [promote.yml](../.github/workflows/promote.yml) calls the prod deploy hook and checks the resulting commit | `gh run list -R alexisdacquay/sail-event --workflow=promote.yml` |
 
 ## How changes reach main
 
 The engineer submits a PR and test evidence. QA checks the submitted commit and records a verdict per criterion. The orchestrator presents that evidence and green CI to the owner for merge authorization. The [process records](../_docs/process.md#process-records) show the handoffs and re-checks.
 
-Since 2026-10-21, the owner picks each next item and checks dev before approving a production commit. The bug-fix root-cause gate was added to the role files on 2026-10-25 and the process summary on 2026-10-26: [gate and verification commands](../_docs/process.md#root-cause-gate).
+Since 2026-10-21, the owner picks each next item and approves each production commit by name. The bug-fix root-cause gate was added to the role files on 2026-10-25 and the process summary on 2026-10-26: [gate and verification commands](../_docs/process.md#root-cause-gate).
 
 ## CI checks
 
@@ -35,17 +25,17 @@ Since 2026-10-21, the owner picks each next item and checks dev before approving
 
 Backend and frontend run in parallel. Integration depends on both. A new push cancels an older run for the same PR. CI installs Playwright packages and Chromium, starts compose itself, and sets `SAIL_BASE_URL` and `SAIL_COMPOSE_MANAGED=1` for the Make targets. Local `make test` also runs the responder suite. Commands and coverage: [testing.md](testing.md).
 
-## CD to dev on merge
+## Dev environment (suspended)
 
-Render builds the root Dockerfile after a push to `main`, including a merge. Dev deployment and CI run independently. `/api/health` reports status and the commit from `RENDER_GIT_COMMIT`.
+From 2026-10-17 to 2026-11-14, Render's `sail-event-dev` service rebuilt the root Dockerfile after every push to `main`, with its own database, `sail-event-dev-db` ([deployment log](../work/DEPLOY-render.md)). Both have been suspended since 2026-11-14 to save hosting cost, and they keep their settings and data. To restore CD to dev, resume the database, then the service, in the Render dashboard.
 
 ## Manual promotion to prod
 
 Owner checklist:
 
-1. Identify the candidate already running on dev and inspect its CI run:
-   `curl -s https://sail-event-dev.onrender.com/api/health` and `gh run list --workflow=ci.yml --commit <sha>`.
-2. Review the change and its validation on dev. Use dedicated test accounts for the [field runner](testing.md#field-test-runner-four-phases-against-a-deployed-service).
+1. Pick the candidate on `main` and inspect its CI run:
+   `git ls-remote https://github.com/alexisdacquay/sail-event refs/heads/main` and `gh run list --workflow=ci.yml --commit <sha>`.
+2. Review the change and its CI validation: the integration job runs the app and Postgres in compose, then the integration tests and the Playwright journeys.
 3. Read prod’s deployed commit with `curl -s https://sail-event.onrender.com/api/health`. Inspect migrations using `git diff <prod-sha> <candidate-sha> -- backend/alembic/versions`. Back up the database before promoting a release that contains a migration, and confirm an available recovery point.
 4. Check required configuration in [deployment.md](deployment.md#environment-variables), including `EXA_API_KEY`, `SEARCH_PROVIDER=exa` and `MAX_RESULTS_PER_QUERY=10`. Coordinate environment saves with the approved release: saving settings can trigger a Render deployment.
 5. Approve the full candidate SHA, then run `gh workflow run promote.yml -f sha=<full-40-character-sha>`.
@@ -78,4 +68,4 @@ A release here means a commit deployed to prod. GitHub promotion history records
 
 ## Scheduled search
 
-[hourly-search.yml](../.github/workflows/hourly-search.yml) checks prod health and requests searches. Follow each queued search through the [run API](api.md#run-responses). Schedule and setup: [deployment.md](deployment.md#scheduled-search).
+[hourly-search.yml](../.github/workflows/hourly-search.yml) checks prod health and requests searches. It has been disabled since 2026-10-27. Follow each queued search through the [run API](api.md#run-responses). Schedule and setup: [deployment.md](deployment.md#scheduled-search).
